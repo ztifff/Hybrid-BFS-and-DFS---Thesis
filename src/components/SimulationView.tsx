@@ -6,6 +6,7 @@ import { getScenario, getAlgorithm } from '../config/scenarios';
 import { NetworkCanvas } from './NetworkCanvas';
 import { MetricsPanel } from './MetricsPanel';
 import { Legend } from './Legend';
+import { runGraphBFS } from '../algorithms/bfs';
 
 interface Props {
   scenario: ScenarioType;
@@ -25,6 +26,11 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
   const simResult: SimulationResult = useMemo(() => {
     return runSimulation(scenario, algorithm, scenario.charCodeAt(0));
   }, [scenario, algorithm]);
+
+  // BFS gives us the optimal path for comparison (shortest path in unweighted graph)
+  const bfsResult = useMemo(() => {
+    return runGraphBFS(simResult.graph);
+  }, [simResult.graph]);
 
   const [stepIndex, setStepIndex] = useState(0);
   const [status, setStatus] = useState<Status>('idle');
@@ -149,6 +155,9 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
             currentExplored={currentStep?.explored.length ?? 0}
             currentPath={currentStep?.path.length ?? 0}
             phaseLabel={phaseLabel}
+            totalNodes={simResult.graph.nodes.length}
+            dynamicEvents={simResult.dynamicEvents}
+            optimalPathLength={bfsResult.pathLength}
           />
           <Legend algorithm={algorithm} scenario={scenario} />
 
