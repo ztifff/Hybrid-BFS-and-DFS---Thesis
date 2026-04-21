@@ -7,7 +7,6 @@ type OverpassElement =
 
 type OverpassResponse = { elements: OverpassElement[] };
 
-// --- Match your app types (minimal subset) ---
 type ScenarioNodeType = "origin" | "highway" | "intersection" | "street" | "closed";
 interface GraphNode {
   id: string;
@@ -35,240 +34,203 @@ interface ScenarioGraph {
   height: number;
 }
 
-// ---------- CONFIG (Cabuyao bbox - adjust if needed) ----------
-const BBOX = {
-  south: 14.20,
-  west: 121.08,
-  north: 14.32,
-  east: 121.18,
-};
-
-// canvas (match your trafficGraph.ts)
+const BBOX = { south: 14.20, west: 121.08, north: 14.32, east: 121.18 };
 const W = 1000;
 const H = 760;
-
-// choose which road classes to include (smaller = faster UI)
-const HIGHWAY_REGEX = "motorway|trunk|primary|secondary|tertiary|unclassified|residential";
+const HIGHWAY_REGEX = "motorway|trunk|primary|secondary|tertiary";
 
 function haversineMeters(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371000;
   const toRad = (d: number) => (d * Math.PI) / 180;
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 
 function estimateSpeedKph(highway: string | undefined) {
-  // simple defaults (you can tune)
-  if (!highway) return 25;
   if (highway === "motorway") return 80;
   if (highway === "trunk") return 60;
   if (highway === "primary") return 50;
   if (highway === "secondary") return 40;
   if (highway === "tertiary") return 35;
-  if (highway === "residential") return 25;
-  return 30;
-}
-
-function minutesFromMeters(meters: number, speedKph: number) {
-  const mPerMin = (speedKph * 1000) / 60;
-  return meters / mPerMin;
+  return 35;
 }
 
 async function fetchOverpassRoads(): Promise<OverpassResponse> {
-  const { south, west, north, east } = BBOX;
+  const query = `[out:json][timeout:90];(way["highway"~"${HIGHWAY_REGEX}"](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east}););out body;>;out skel qt;`;
+  
+  const endpoints = [
+    "https://overpass-api.de/api/interpreter",
+    "https://lz4.overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter"
+  ];
 
-  const query = `
-[out:json][timeout:60];
-(
-  way["highway"~"${HIGHWAY_REGEX}"](${south},${west},${north},${east});
-  node["highway"="motorway_junction"](${south},${west},${north},${east});
-);
-out body;
->;
-out skel qt;
-`.trim();
+  for (const url of endpoints) {
+    try {
+      console.log(`Connecting to Overpass (${new URL(url).hostname})...`);
+      
+      const r = await fetch(url, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/x-www-form-urlencoded",
+          "Accept": "application/json",
+          "User-Agent": "HybridBFSDFSPerformanceThesis/1.0 (contact: student-researcher@example.com)"
+        },
+        body: `data=${encodeURIComponent(query)}`
+      });
 
-  const overpassUrl = "https://overpass-api.de/api/interpreter";
+      const text = await r.text();
 
-  const body = new URLSearchParams({ data: query });
+      if (!r.ok) {
+        console.warn(`Server ${new URL(url).hostname} returned ${r.status}. Trying next...`);
+        continue;
+      }
 
-  const r = await fetch(overpassUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-      "User-Agent": "hybrid-bfs-dfs-thesis/1.0"
-    },
-    body
-  });
-
-  const text = await r.text();
-  if (!r.ok) {
-    throw new Error(`Overpass error: ${r.status} ${r.statusText}\n${text.slice(0, 500)}`);
+      try {
+        return JSON.parse(text) as OverpassResponse;
+      } catch (e) {
+        console.warn(`Server ${new URL(url).hostname} sent non-JSON response. Trying next...`);
+        continue;
+      }
+    } catch (err) {
+      console.warn(`Could not reach ${new URL(url).hostname}. Trying next...`);
+    }
   }
-
-  return JSON.parse(text) as OverpassResponse;
+  
+  throw new Error("All Overpass servers rejected the request or are unreachable. Please wait 2 minutes for the rate-limit to reset and try again.");
 }
 
 function project(nodes: { lat: number; lon: number }[]) {
-  let minLat = Infinity, maxLat = -Infinity, minLon = Infinity, maxLon = -Infinity;
-  for (const n of nodes) {
-    if (n.lat < minLat) minLat = n.lat;
-    if (n.lat > maxLat) maxLat = n.lat;
-    if (n.lon < minLon) minLon = n.lon;
-    if (n.lon > maxLon) maxLon = n.lon;
-  }
   const pad = 20;
-  return (lat: number, lon: number) => {
-    const x = pad + ((lon - minLon) / (maxLon - minLon)) * (W - pad * 2);
-    const y = pad + ((maxLat - lat) / (maxLat - minLat)) * (H - pad * 2);
-    return { x, y };
-  };
-}
-
-function nearestNodeId(centerLat: number, centerLon: number, nodeMap: Map<number, { lat: number; lon: number }>) {
-  let bestId: number | null = null;
-  let bestD = Infinity;
-  for (const [id, p] of nodeMap.entries()) {
-    const d = haversineMeters(centerLat, centerLon, p.lat, p.lon);
-    if (d < bestD) { bestD = d; bestId = id; }
-  }
-  return bestId;
+  return (lat: number, lon: number) => ({
+    x: pad + ((lon - BBOX.west) / (BBOX.east - BBOX.west)) * (W - pad * 2),
+    y: pad + ((BBOX.north - lat) / (BBOX.north - BBOX.south)) * (H - pad * 2)
+  });
 }
 
 async function main() {
   const data = await fetchOverpassRoads();
+  const osmNodes = new Map<number, { lat: number; lon: number }>();
+  const ways: { nodes: number[]; tags?: Record<string, string> }[] = [];
 
-  const osmNodes = new Map<number, { lat: number; lon: number; tags?: Record<string, string> }>();
-  const ways: { id: number; nodes: number[]; tags?: Record<string, string> }[] = [];
-  const motorwayJunctions: number[] = [];
-
-  for (const el of data.elements) {
+  data.elements.forEach(el => {
     if (el.type === "node") {
-      osmNodes.set(el.id, { lat: el.lat, lon: el.lon, tags: el.tags });
-      if (el.tags?.highway === "motorway_junction") motorwayJunctions.push(el.id);
+      osmNodes.set(el.id, { lat: el.lat, lon: el.lon });
     } else if (el.type === "way") {
-      ways.push({ id: el.id, nodes: el.nodes, tags: el.tags });
+      ways.push(el);
     }
-  }
+  });
 
-  // Build directed edges list (add reverse edge if not oneway)
-  const edgePairs: Array<{ from: number; to: number; minutes: number; highway?: string; wayId: number }> = [];
+  const nodeUsageCount = new Map<number, number>();
+  ways.forEach(w => w.nodes.forEach(id => nodeUsageCount.set(id, (nodeUsageCount.get(id) || 0) + 1)));
 
-  for (const w of ways) {
-    const refs = w.nodes;
-    const highway = w.tags?.highway;
-    const speed = estimateSpeedKph(highway);
-    const oneway = w.tags?.oneway === "yes" || w.tags?.oneway === "1" || w.tags?.oneway === "true";
-
-    for (let i = 0; i < refs.length - 1; i++) {
-      const a = osmNodes.get(refs[i]);
-      const b = osmNodes.get(refs[i + 1]);
-      if (!a || !b) continue;
-
-      const meters = haversineMeters(a.lat, a.lon, b.lat, b.lon);
-      const minutes = minutesFromMeters(meters, speed);
-
-      edgePairs.push({ from: refs[i], to: refs[i + 1], minutes, highway, wayId: w.id });
-      if (!oneway) edgePairs.push({ from: refs[i + 1], to: refs[i], minutes, highway, wayId: w.id });
-    }
-  }
-
-  // Degree for classification
-  const outDeg = new Map<number, number>();
-  for (const e of edgePairs) outDeg.set(e.from, (outDeg.get(e.from) ?? 0) + 1);
-
-  // Build projection
-  const projector = project([...osmNodes.values()]);
-
-  // Pick source = nearest node to bbox center
+  // Find Center (Start Node)
   const centerLat = (BBOX.south + BBOX.north) / 2;
   const centerLon = (BBOX.west + BBOX.east) / 2;
-  const sourceOsm = nearestNodeId(centerLat, centerLon, osmNodes);
-  if (!sourceOsm) throw new Error("No nodes found in bbox.");
+  let sourceOsm = Array.from(osmNodes.keys())[0];
+  let minD = Infinity;
+  osmNodes.forEach((p, id) => {
+    const d = haversineMeters(centerLat, centerLon, p.lat, p.lon);
+    if (d < minD) { minD = d; sourceOsm = id; }
+  });
 
-  // Destinations: use motorway_junction nodes if available; else pick a few farthest nodes
-  let destOsm = motorwayJunctions.slice(0, 3);
-  if (destOsm.length === 0) {
-    // fallback: farthest 3 nodes from source
-    const src = osmNodes.get(sourceOsm)!;
-    const scored = [...osmNodes.entries()].map(([id, p]) => ({
-      id,
-      d: haversineMeters(src.lat, src.lon, p.lat, p.lon),
-    }));
-    scored.sort((a, b) => b.d - a.d);
-    destOsm = scored.slice(0, 3).map(s => s.id);
-  }
+  // EXACT BORDER EXITS (No middle map nodes)
+  let nId = sourceOsm, sId = sourceOsm, eId = sourceOsm, wId = sourceOsm;
+  let maxLat = -Infinity, minLat = Infinity, maxLon = -Infinity, minLon = Infinity;
+  osmNodes.forEach((p, id) => {
+    if (p.lat > maxLat) { maxLat = p.lat; nId = id; }
+    if (p.lat < minLat) { minLat = p.lat; sId = id; }
+    if (p.lon > maxLon) { maxLon = p.lon; eId = id; }
+    if (p.lon < minLon) { minLon = p.lon; wId = id; }
+  });
 
-  // Create GraphNodes for *all* OSM nodes used in edges (keeps it consistent)
-  const usedNodeIds = new Set<number>();
-  for (const e of edgePairs) { usedNodeIds.add(e.from); usedNodeIds.add(e.to); }
+  // Only the extreme edges of the city are marked as destinations
+  const specialDestinations = new Set([nId, sId, eId, wId]);
+  const isJunction = (id: number) => (nodeUsageCount.get(id) || 0) > 1 || specialDestinations.has(id) || id === sourceOsm;
 
-  const nodes: GraphNode[] = [];
-  for (const osmId of usedNodeIds) {
-    const p = osmNodes.get(osmId);
-    if (!p) continue;
-    const { x, y } = projector(p.lat, p.lon);
+  const finalNodes = new Map<number, GraphNode>();
+  const finalEdges: GraphEdge[] = [];
+  const projector = project(Array.from(osmNodes.values()));
 
-    let type: ScenarioNodeType = "street";
-    const deg = outDeg.get(osmId) ?? 0;
-    if (osmId === sourceOsm) type = "origin";
-    else if (destOsm.includes(osmId)) type = "highway";
-    else if (deg >= 3) type = "intersection";
+  ways.forEach((w, wayIdx) => {
+    const highway = w.tags?.highway;
+    const speed = estimateSpeedKph(highway);
+    let lastJunctionIdx = 0;
 
-    nodes.push({
-      id: `osm_n_${osmId}`,
-      label: type === "origin" ? "Cabuyao (Start)" : type === "highway" ? "Highway Exit" : `Node ${osmId}`,
-      type,
-      x,
-      y,
-      level: 0,
-      metadata: { lat: p.lat, lon: p.lon, deg },
-    });
-  }
+    for (let i = 1; i < w.nodes.length; i++) {
+      if (isJunction(w.nodes[i]) || i === w.nodes.length - 1) {
+        const uId = w.nodes[lastJunctionIdx];
+        const vId = w.nodes[i];
+        
+        let distMeters = 0;
+        for (let j = lastJunctionIdx; j < i; j++) {
+          const p1 = osmNodes.get(w.nodes[j])!;
+          const p2 = osmNodes.get(w.nodes[j+1])!;
+          distMeters += haversineMeters(p1.lat, p1.lon, p2.lat, p2.lon);
+        }
+        const latency = (distMeters / ((speed * 1000) / 60));
 
-  // Edges
-  const edges: GraphEdge[] = [];
-  let ei = 0;
-  for (const e of edgePairs) {
-    if (!usedNodeIds.has(e.from) || !usedNodeIds.has(e.to)) continue;
-    const latency = Math.max(0.05, e.minutes); // keep non-zero
-    edges.push({
-      id: `e_${e.wayId}_${ei++}`,
-      from: `osm_n_${e.from}`,
-      to: `osm_n_${e.to}`,
-      latency,
-      label: `${latency.toFixed(2)}m`,
-      type: "road",
-    });
-  }
+        [uId, vId].forEach(id => {
+          if (!finalNodes.has(id)) {
+            const p = osmNodes.get(id)!;
+            const { x, y } = projector(p.lat, p.lon);
+            let type: ScenarioNodeType = "street";
+            let label = `Node ${id}`;
+            
+            if (id === sourceOsm) {
+              type = "origin";
+              label = "Cabuyao Center (Start)";
+            } else if (specialDestinations.has(id)) {
+              type = "highway";
+              // Nicely formatted border exits
+              if (id === nId) label = "North Exit (Santa Rosa)";
+              else if (id === sId) label = "South Exit (Calamba)";
+              else if (id === wId) label = "West Exit (Silang)";
+              else if (id === eId) label = "East Exit (Lake Road)";
+            } else if ((nodeUsageCount.get(id) || 0) > 1) {
+              type = "intersection";
+            }
+
+            finalNodes.set(id, {
+              id: `osm_n_${id}`,
+              label,
+              type, x, y, level: (type === "street" ? 2 : 1),
+            });
+          }
+        });
+
+        finalEdges.push({
+          id: `e_${wayIdx}_${i}`,
+          from: `osm_n_${uId}`, to: `osm_n_${vId}`,
+          latency: Math.max(0.1, latency),
+          type: "road"
+        });
+
+        if (w.tags?.oneway !== "yes") {
+            finalEdges.push({
+                id: `e_rev_${wayIdx}_${i}`,
+                from: `osm_n_${vId}`, to: `osm_n_${uId}`,
+                latency: Math.max(0.1, latency),
+                type: "road"
+            });
+        }
+        lastJunctionIdx = i;
+      }
+    }
+  });
 
   const graph: ScenarioGraph = {
-    nodes,
-    edges,
+    nodes: Array.from(finalNodes.values()),
+    edges: finalEdges,
     sourceId: `osm_n_${sourceOsm}`,
-    destinationIds: destOsm.map(id => `osm_n_${id}`),
-    width: W,
-    height: H,
+    destinationIds: Array.from(specialDestinations).map(id => `osm_n_${id}`),
+    width: W, height: H,
   };
 
   const outFile = path.join(process.cwd(), "src", "data", "traffic.cabuyao.ts");
-  fs.mkdirSync(path.dirname(outFile), { recursive: true });
-
-  const content =
-    `// AUTO-GENERATED. Do not edit by hand.\n` +
-    `import type { ScenarioGraph } from "../types";\n` +
-    `export const cabuyaoTrafficGraph: ScenarioGraph = ${JSON.stringify(graph, null, 2)} as ScenarioGraph;\n`;
-
-  fs.writeFileSync(outFile, content, "utf8");
-  console.log(`Wrote ${outFile}`);
-  console.log(`Nodes: ${nodes.length}, Edges: ${edges.length}`);
+  fs.writeFileSync(outFile, `import type { ScenarioGraph } from "../types";\nexport const cabuyaoTrafficGraph: ScenarioGraph = ${JSON.stringify(graph, null, 2)} as ScenarioGraph;\n`);
+  console.log(`Wrote simplified graph. Nodes: ${graph.nodes.length}, Edges: ${graph.edges.length}`);
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+main().catch(console.error);

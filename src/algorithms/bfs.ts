@@ -1,6 +1,8 @@
 import { ScenarioGraph, AlgorithmStep } from '../types';
 
-interface BFSResult {
+const yieldToMain = () => new Promise(resolve => setTimeout(resolve, 0));
+
+export interface BFSResult {
   steps: AlgorithmStep[];
   nodesExplored: number;
   pathLength: number;
@@ -8,13 +10,13 @@ interface BFSResult {
   foundDestination: string | null;
 }
 
-export function runGraphBFS(
+export async function runGraphBFS(
   graph: ScenarioGraph,
-  blockedNodes: Set<string> = new Set()
-): BFSResult {
+  blockedNodes: Set<string> = new Set(),
+  onStepProgress?: (step: AlgorithmStep) => void
+): Promise<BFSResult> {
   const { nodes, edges, sourceId, destinationIds } = graph;
 
-  // Build adjacency map
   const adj = new Map<string, { to: string; latency: number }[]>();
   nodes.forEach((n) => adj.set(n.id, []));
   edges.forEach((e) => {
@@ -22,41 +24,69 @@ export function runGraphBFS(
     adj.get(e.from)!.push({ to: e.to, latency: e.latency });
   });
 
+  const destSet = new Set(destinationIds);
   const visited = new Set<string>();
   const parentMap = new Map<string, string | null>();
   const steps: AlgorithmStep[] = [];
 
-  // BFS queue
   const queue: string[] = [sourceId];
   visited.add(sourceId);
   parentMap.set(sourceId, null);
 
   let nodesExplored = 0;
-  
-  // --- Step Sampling Setup ---
+  let foundDestination: string | null = null;
   let iteration = 0;
-  const isMassive = nodes.length > 5000;
+  
+  let lastYieldTime = performance.now();
+  const isMassive = nodes.length > 200;
 
-  while (queue.length > 0) {
-    const current = queue.shift()!;
-    nodesExplored++;
+  const syncUI = async (current: string) => {
     iteration++;
+    const now = performance.now();
 
-    // Only save state every 150 steps if massive, or every step for small graphs
-    if (!isMassive || iteration % 150 === 0) {
-      const exploredSoFar = Array.from(visited);
-      const frontier = [...queue];
-      const path = reconstructPath(parentMap, current);
+    const shouldRender = onStepProgress && (
+      iteration < 100 || (now - lastYieldTime > 10)
+    );
 
-      steps.push({
-        explored: exploredSoFar,
-        frontier,
-        path,
+    const shouldStore =
+      iteration < 50 ||
+      !isMassive ||
+      iteration % 25 === 0;
+
+    if (shouldRender || shouldStore) {
+      const step: AlgorithmStep = {
+        stepIndex: iteration,
+        explored: Array.from(visited),
+        frontier: [...queue],
+        path: reconstructPath(parentMap, current),
         current,
         done: false,
         foundDestination: null,
-        phaseLabel: 'BFS — Level-by-Level Broadcast',
-      });
+        phaseLabel: '📡 BFS — Level-by-Level Broadcast'
+      };
+
+      if (shouldStore) steps.push(step);
+
+      if (shouldRender) {
+        onStepProgress?.(step);
+        await new Promise(r => setTimeout(r, 15));
+        await yieldToMain();
+        lastYieldTime = performance.now();
+      }
+    }
+  };
+
+  while (queue.length > 0 && !foundDestination) {
+    const current = queue.shift()!;
+    nodesExplored++;
+
+    await syncUI(current);
+
+    // EARLY EXIT: Stop the entire traversal immediately if we hit an exit
+    if (destSet.has(current)) {
+      foundDestination = current;
+      await syncUI(current);
+      break;
     }
 
     const neighbors = adj.get(current) ?? [];
@@ -69,57 +99,56 @@ export function runGraphBFS(
     }
   }
 
-  // Find best destination (first found = shortest hops since BFS)
-  const destSet2 = new Set(destinationIds);
-  const reachedDests = destinationIds.filter((d) => visited.has(d) && destSet2.has(d));
-  const bestDest = reachedDests[0] ?? null;
-  const finalPath = bestDest ? reconstructPath(parentMap, bestDest) : [];
-
-  // Calculate total latency on final path
+  const finalPath = foundDestination ? reconstructPath(parentMap, foundDestination) : [];
   const totalLatency = calcPathLatency(finalPath, edges);
 
-  // Mark final step as done
-  if (steps.length > 0) {
+  if (steps.length === 0) {
+    steps.push({
+      stepIndex: iteration,
+      explored: Array.from(visited),
+      frontier: [],
+      path: finalPath,
+      current: foundDestination ?? sourceId,
+      done: true,
+      foundDestination,
+      phaseLabel: 'Final State'
+    });
+  } else {
     const last = steps[steps.length - 1];
     steps[steps.length - 1] = {
       ...last,
       done: true,
-      foundDestination: bestDest,
-      path: finalPath,
+      foundDestination,
+      path: finalPath
     };
   }
 
-  return {
-    steps,
-    nodesExplored,
-    pathLength: Math.max(0, finalPath.length - 1),
-    totalLatency,
-    foundDestination: bestDest,
+  return { 
+    steps, 
+    nodesExplored, 
+    pathLength: foundDestination ? finalPath.length - 1 : -1, 
+    totalLatency, 
+    foundDestination 
   };
 }
 
-function reconstructPath(
-  parentMap: Map<string, string | null>,
-  nodeId: string
-): string[] {
+function reconstructPath(parentMap: Map<string, string | null>, nodeId: string): string[] {
   const path: string[] = [];
   let cur: string | null = nodeId;
-  while (cur !== null) {
-    path.unshift(cur);
-    cur = parentMap.get(cur) ?? null;
+  const seen = new Set<string>();
+  while (cur !== null) { 
+    if (seen.has(cur)) break; // Cycle protection
+    seen.add(cur);
+    path.unshift(cur); 
+    cur = parentMap.get(cur) ?? null; 
   }
   return path;
 }
 
-function calcPathLatency(
-  path: string[],
-  edges: ScenarioGraph['edges']
-): number {
+function calcPathLatency(path: string[], edges: ScenarioGraph['edges']): number {
   let total = 0;
   for (let i = 0; i < path.length - 1; i++) {
-    const edge = edges.find(
-      (e) => e.from === path[i] && e.to === path[i + 1]
-    );
+    const edge = edges.find((e) => e.from === path[i] && e.to === path[i + 1]);
     if (edge) total += edge.latency;
   }
   return total;

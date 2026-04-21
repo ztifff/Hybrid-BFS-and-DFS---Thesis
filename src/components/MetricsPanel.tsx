@@ -12,9 +12,9 @@ interface Props {
   currentExplored: number;
   currentPath: number;
   phaseLabel?: string;
-  totalNodes?: number;           // For completion rate calculation
-  dynamicEvents?: DynamicEvent[]; // For adaptability score
-  optimalPathLength?: number;     // For path optimality comparison
+  totalNodes?: number;
+  dynamicEvents?: DynamicEvent[];
+  optimalPathLength?: number;
 }
 
 const statusColors: Record<string, string> = {
@@ -63,17 +63,15 @@ const METRIC_CONFIG: Record<ScenarioType, {
   },
 };
 
-// Helper: Calculate path optimality ratio
 function getPathOptimality(
   actualPath: number,
   optimalPath?: number
-  // Removed unused 'algorithm' parameter
 ): { ratio: number; label: string; color: string } {
   if (!optimalPath || optimalPath === 0) {
     return { ratio: 0, label: 'N/A', color: '#64748b' };
   }
   
-  const ratio = optimalPath / actualPath; // Higher is better
+  const ratio = optimalPath / actualPath; 
   const percentage = (ratio * 100).toFixed(1);
   
   if (ratio >= 0.95) {
@@ -87,8 +85,6 @@ function getPathOptimality(
   }
 }
 
-
-// Helper: Calculate completion rate
 function getCompletionRate(
   explored: number,
   totalNodes?: number
@@ -101,7 +97,6 @@ function getCompletionRate(
   return { percentage, label: `${percentage.toFixed(1)}%` };
 }
 
-// Helper: Convert KB to MB
 function getMemoryInMB(memoryKB: number): string {
   const memoryMB = memoryKB / 1024;
   return memoryMB >= 1 
@@ -109,44 +104,33 @@ function getMemoryInMB(memoryKB: number): string {
     : `${memoryKB.toFixed(1)} KB`;
 }
 
-// Helper: Calculate adaptability score (how well algorithm handles dynamic events)
 function getAdaptabilityScore(
   status: 'idle' | 'running' | 'done' | 'paused',
   metrics: PerformanceMetrics | null,
   algorithm: AlgorithmType,
   dynamicEvents?: DynamicEvent[]
-  // Moved 'totalSteps' and 'stepIndex' to end as they're unused anyway
 ): { score: number; label: string; color: string } {
   if (status !== 'done' || !metrics) {
     return { score: 0, label: 'Calculating...', color: '#64748b' };
   }
   
   const eventCount = dynamicEvents?.length ?? 0;
-  
-  // Base score for finding destination
   let score = metrics.exitFound ? 50 : 0;
   
-  // Bonus for handling dynamic events
   if (eventCount > 0) {
-    // More events = higher potential score (if destination found)
     const eventBonus = Math.min(40, eventCount * 10);
     score += metrics.exitFound ? eventBonus : Math.floor(eventBonus / 3);
     
-    // Bonus for algorithm type (Hybrid handles dynamic scenarios better)
     if (algorithm === 'hybrid' && metrics.exitFound) {
       score += 10;
     } else if (algorithm === 'bfs' && metrics.exitFound) {
       score += 5;
     }
-    // DFS gets lower adaptability score (doesn't handle failures well)
   } else {
-    // No dynamic events - maximum score based on destination found
     score = metrics.exitFound ? 85 : 15;
   }
   
-  // Adjust for path efficiency
   if (metrics.pathLength > 0 && metrics.totalLatency > 0) {
-    // Good latency efficiency bonus
     const efficiencyBonus = Math.min(10, (1 / metrics.pathLength) * 20);
     score += Math.floor(efficiencyBonus);
   }
@@ -185,7 +169,6 @@ export const MetricsPanel: React.FC<Props> = ({
   const mc = METRIC_CONFIG[scenario];
   const progress = totalSteps > 0 ? (stepIndex / totalSteps) * 100 : 0;
 
-    // Calculated metrics
   const completionRate = getCompletionRate(currentExplored, totalNodes);
   const pathOptimality = getPathOptimality(currentPath, optimalPathLength);
   const adaptability = getAdaptabilityScore(status, metrics, algorithm, dynamicEvents);
@@ -278,7 +261,7 @@ export const MetricsPanel: React.FC<Props> = ({
             style={{ 
               width: `${completionRate.percentage}%`, 
               backgroundColor: completionRate.percentage >= 80 ? '#22c55e' : 
-                              completionRate.percentage >= 50 ? '#84cc16' : '#ef4444'
+                               completionRate.percentage >= 50 ? '#84cc16' : '#ef4444'
             }}
           />
         </div>
@@ -289,33 +272,29 @@ export const MetricsPanel: React.FC<Props> = ({
         )}
       </div>
 
-      {/* Path Optimality */}
+      {/* Path Optimality - FIXED LAYOUT */}
       {metrics && metrics.pathLength > 0 && (
-        <div className="bg-gray-800 rounded-lg p-3">
-          <div className="flex justify-between items-center">
-            <div>
-              <span className="text-xs text-gray-400 block">🎯 Path Optimality</span>
-              {optimalPathLength && (
-                <span className="text-xs text-gray-500">
-                  {currentPath} hops vs {optimalPathLength} optimal
-                </span>
-              )}
-            </div>
-            <div className="text-right">
-              <span className="text-sm font-bold" style={{ color: pathOptimality.color }}>
-                {pathOptimality.label}
-              </span>
-            </div>
+        <div className="bg-gray-800 rounded-lg p-3 flex flex-col gap-1">
+          <div className="flex justify-between items-start">
+            <span className="text-xs text-gray-400 whitespace-nowrap">🎯 Path Optimality</span>
+            <span className="text-sm font-bold text-right leading-tight" style={{ color: pathOptimality.color }}>
+              {pathOptimality.label}
+            </span>
           </div>
+          {optimalPathLength && (
+            <span className="text-[10px] text-gray-500 pt-1">
+              {currentPath} hops vs {optimalPathLength} optimal
+            </span>
+          )}
         </div>
       )}
 
-      {/* Latency metric (scenario-specific) */}
+      {/* Latency metric - FIXED DECIMAL AND LAYOUT */}
       {metrics && (
-        <div className="bg-gray-800 rounded-lg p-3 flex items-center justify-between">
-          <span className="text-xs text-gray-400">{mc.latencyIcon} {mc.latencyLabel}</span>
-          <span className="text-sm font-bold" style={{ color: algo.color }}>
-            {metrics.totalLatency > 0 ? `${metrics.totalLatency}${mc.latencyUnit}` : '—'}
+        <div className="bg-gray-800 rounded-lg p-3 flex items-center justify-between gap-2">
+          <span className="text-xs text-gray-400 whitespace-nowrap">{mc.latencyIcon} {mc.latencyLabel}</span>
+          <span className="text-sm font-bold text-right" style={{ color: algo.color }}>
+            {metrics.totalLatency > 0 ? `${metrics.totalLatency.toFixed(2)} ${mc.latencyUnit}` : '—'}
           </span>
         </div>
       )}
@@ -386,8 +365,10 @@ interface MetricCardProps {
 }
 
 const MetricCard: React.FC<MetricCardProps> = ({ label, value, icon, color }) => (
-  <div className="bg-gray-800 rounded-lg p-2.5">
-    <div className="text-xs text-gray-400 mb-1">{icon} {label}</div>
-    <div className="text-base font-bold" style={{ color }}>{value}</div>
+  <div className="bg-gray-800 rounded-lg p-2.5 flex flex-col justify-center overflow-hidden">
+    <div className="text-[10px] text-gray-400 mb-1 leading-tight whitespace-nowrap text-ellipsis overflow-hidden">
+      {icon} {label}
+    </div>
+    <div className="text-sm font-bold truncate" style={{ color }}>{value}</div>
   </div>
 );

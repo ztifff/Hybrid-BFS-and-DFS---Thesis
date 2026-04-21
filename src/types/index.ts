@@ -82,13 +82,14 @@ export interface ScenarioGraph {
 
 // ── Algorithm Step (graph-based) ───────────────────────────────────────────
 export interface AlgorithmStep {
-  explored: string[];       // node ids explored so far
-  frontier: string[];       // node ids currently in queue/stack
-  path: string[];           // node ids on current best path
-  current: string | null;   // node id being processed
+  stepIndex: number;        // ✅ ADDED (for dynamic event synchronization)
+  explored: string[];       
+  frontier: string[];       
+  path: string[];           
+  current: string | null;   
   done: boolean;
-  foundDestination: string | null; // destination node id if found
-  phaseLabel?: string;      // e.g. "BFS Macro Phase", "DFS Micro Phase"
+  foundDestination: string | null;
+  phaseLabel?: string;
 }
 
 // ── Performance Metrics ────────────────────────────────────────────────────
@@ -107,7 +108,7 @@ export interface DynamicEvent {
   stepIndex: number;
   nodeId: string;
   blocked: boolean; // true = node failed, false = restored
-  label: string;    // e.g. "Router A_Floor3 failed"
+  label: string;    
 }
 
 // ── Simulation Result ──────────────────────────────────────────────────────

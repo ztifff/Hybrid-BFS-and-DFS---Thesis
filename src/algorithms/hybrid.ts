@@ -1,6 +1,8 @@
 import { ScenarioGraph, AlgorithmStep } from '../types';
 
-interface HybridResult {
+const yieldToMain = () => new Promise(resolve => setTimeout(resolve, 0));
+
+export interface HybridResult {
   steps: AlgorithmStep[];
   nodesExplored: number;
   pathLength: number;
@@ -8,166 +10,179 @@ interface HybridResult {
   foundDestination: string | null;
 }
 
-export function runGraphHybrid(
+export async function runGraphHybrid(
   graph: ScenarioGraph,
-  blockedNodes: Set<string> = new Set()
-): HybridResult {
+  blockedNodes: Set<string> = new Set(),
+  onStepProgress?: (step: AlgorithmStep) => void
+): Promise<HybridResult> {
+
   const { nodes, edges, sourceId, destinationIds } = graph;
 
-  // Build adjacency map
+  // ── Precompute ─────────────────────────────────────
+  const nodeMap = new Map(nodes.map(n => [n.id, n]));
+  const destSet = new Set(destinationIds);
+
   const adj = new Map<string, { to: string; latency: number }[]>();
-  nodes.forEach((n) => adj.set(n.id, []));
-  edges.forEach((e) => {
+  nodes.forEach(n => adj.set(n.id, []));
+
+  edges.forEach(e => {
     if (!adj.has(e.from)) adj.set(e.from, []);
     adj.get(e.from)!.push({ to: e.to, latency: e.latency });
+    // ✅ FIX 2: Removed the undirected hack. Reverting this forces the algorithm 
+    // to obey one-way streets, which fixes the line "falling short" visually.
   });
 
-  const destSet = new Set(destinationIds);
-  const visited = new Set<string>([sourceId]);
-  const parentMap = new Map<string, string | null>([[sourceId, null]]);
-  const steps: AlgorithmStep[] = [];
+  // ── State ──────────────────────────────────────────
+  const visited = new Set<string>();
+  const parentMap = new Map<string, string | null>();
+
+  const frontier: string[] = [];
+  frontier.push(sourceId);
+
+  visited.add(sourceId);
+  parentMap.set(sourceId, null);
+
   let nodesExplored = 0;
   let foundDestination: string | null = null;
-  
-  // --- Step Sampling Setup ---
+
+  const steps: AlgorithmStep[] = [];
   let iteration = 0;
-  const isMassive = nodes.length > 5000;
+  let lastYieldTime = performance.now();
+  const isMassive = nodes.length > 200;
 
-  // ── Phase 1: BFS to reach all Level-1 hubs ─────────────────────────────
-  const level1Nodes = nodes.filter((n) => n.level === 1 && !blockedNodes.has(n.id));
-  const bfsQueue: string[] = [sourceId];
+  // ── Adaptive Decision Function ─────────────────────
+  function chooseStrategy(current: string): 'BFS' | 'DFS' {
+    const node = nodeMap.get(current);
+    const neighbors = adj.get(current) ?? [];
 
-  while (bfsQueue.length > 0) {
-    const current = bfsQueue.shift()!;
-    nodesExplored++;
+    const branchingFactor = neighbors.length;
+    const isHub = node?.level === 1;
+
+    if (isHub) return 'DFS';
+    if (branchingFactor > 3) return 'BFS';
+    return 'DFS';
+  }
+
+  // ── UI Sync (FIXED FOR ANIMATION) ──────────────────
+  const syncUI = async (current: string, strategy: string) => {
     iteration++;
+    const now = performance.now();
 
-    if (!isMassive || iteration % 150 === 0) {
-      const path = reconstructPath(parentMap, current);
-      steps.push({
+    const shouldRender = onStepProgress && (
+      iteration < 100 || (now - lastYieldTime > 10)
+    );
+
+    const shouldStore =
+      iteration < 50 ||
+      !isMassive ||
+      iteration % 25 === 0;
+
+    if (shouldRender || shouldStore) {
+      const step: AlgorithmStep = {
+        stepIndex: iteration,
         explored: Array.from(visited),
-        frontier: [...bfsQueue],
-        path,
+        frontier: [...frontier],
+        path: reconstructPath(parentMap, current),
         current,
         done: false,
         foundDestination: null,
-        phaseLabel: '📡 Phase 1: BFS Macro-Broadcast (Hub Discovery)',
-      });
+        phaseLabel: `⚡ Adaptive ${strategy}`
+      };
+
+      if (shouldStore) steps.push(step);
+
+      if (shouldRender) {
+        onStepProgress?.(step);
+        await new Promise(r => setTimeout(r, 15));
+        await yieldToMain();
+        lastYieldTime = performance.now();
+      }
+    }
+  };
+
+  // ── Main Loop ──────────────────────────────────────
+  while (frontier.length > 0 && !foundDestination) {
+
+    // ✅ FIX 3: Evaluate the node we are ACTUALLY about to pull.
+    // If we are functioning like a stack, check the last element.
+    const peek = frontier[frontier.length - 1]; 
+    const strategy = chooseStrategy(peek);
+
+    const current =
+      strategy === 'BFS'
+        ? frontier.shift()!
+        : frontier.pop()!;
+
+    if (!current) continue;
+
+    nodesExplored++;
+
+    await syncUI(current, strategy);
+
+    if (destSet.has(current)) {
+      foundDestination = current;
+      await syncUI(current, strategy);
+      break;
     }
 
-    if (destSet.has(current) && !foundDestination) foundDestination = current;
-
-    const currentNode = nodes.find((n) => n.id === current);
-    if (currentNode && currentNode.level >= 1) continue;
-
     const neighbors = adj.get(current) ?? [];
-    for (const { to } of neighbors) {
+    const orderedNeighbors = strategy === 'DFS' ? [...neighbors].reverse() : neighbors;
+
+    for (const { to } of orderedNeighbors) {
+      // ✅ Dynamic Blocked Nodes will now work perfectly!
       if (!visited.has(to) && !blockedNodes.has(to)) {
         visited.add(to);
         parentMap.set(to, current);
-        bfsQueue.push(to);
+        frontier.push(to);
       }
     }
   }
 
-  // ── Phase 2: DFS from each hub into its sub-graph ──────────────────────
-  const hubIds = level1Nodes.map((n) => n.id);
-  const hubStacks: Map<string, string[]> = new Map();
-  const hubVisited: Map<string, Set<string>> = new Map();
+  // ── Finalization ───────────────────────────────────
+  const finalPath = foundDestination
+    ? reconstructPath(parentMap, foundDestination)
+    : [];
 
-  hubIds.forEach((hId) => {
-    if (!blockedNodes.has(hId)) {
-      hubStacks.set(hId, [hId]);
-      hubVisited.set(hId, new Set([hId]));
-    }
-  });
-
-  let anyActive = true;
-  while (anyActive) {
-    anyActive = false;
-    for (const hId of hubIds) {
-      const stack = hubStacks.get(hId);
-      const hVisited = hubVisited.get(hId);
-      if (!stack || !hVisited || stack.length === 0) continue;
-
-      anyActive = true;
-      const current = stack.pop()!;
-      if (hVisited.has(current) && current !== hId) continue;
-      if (!hVisited.has(current)) hVisited.add(current);
-      if (!visited.has(current)) {
-        visited.add(current);
-        if (!parentMap.has(current)) parentMap.set(current, hId);
-      }
-      
-      nodesExplored++;
-      iteration++;
-
-      if (destSet.has(current) && !foundDestination) {
-        foundDestination = current;
-      }
-
-      if (!isMassive || iteration % 150 === 0) {
-        const path = reconstructPath(parentMap, current);
-        steps.push({
-          explored: Array.from(visited),
-          frontier: Array.from(hubStacks.values()).flat(),
-          path,
-          current,
-          done: false,
-          foundDestination: null,
-          phaseLabel: `🔀 Phase 2: DFS Micro-Saturation (Hub ${hId})`,
-        });
-      }
-
-      const neighbors = (adj.get(current) ?? []).slice().reverse();
-      for (const { to } of neighbors) {
-        if (!visited.has(to) && !blockedNodes.has(to)) {
-          const toNode = nodes.find((n) => n.id === to);
-          const hubNode = nodes.find((n) => n.id === hId);
-          if (toNode && hubNode && toNode.level > hubNode.level) {
-            if (!parentMap.has(to)) parentMap.set(to, current);
-            stack.push(to);
-          } else if (toNode && toNode.level === 0) {
-            // Don't go back to source
-          } else if (toNode && hubNode && toNode.buildingId === hubNode.buildingId) {
-            if (!parentMap.has(to)) parentMap.set(to, current);
-            stack.push(to);
-          }
-        }
-      }
-    }
-  }
-
-  const bestDest = foundDestination;
-  const finalPath = bestDest ? reconstructPath(parentMap, bestDest) : [];
   const totalLatency = calcPathLatency(finalPath, edges);
 
-  if (steps.length > 0) {
-    steps[steps.length - 1] = {
-      ...steps[steps.length - 1],
-      done: true,
-      foundDestination: bestDest,
+  if (steps.length === 0) {
+    steps.push({
+      stepIndex: iteration,
+      explored: Array.from(visited),
+      frontier: [],
       path: finalPath,
+      current: foundDestination ?? sourceId,
+      done: true,
+      foundDestination,
+      phaseLabel: 'Final State'
+    });
+  } else {
+    const last = steps[steps.length - 1];
+    steps[steps.length - 1] = {
+      ...last,
+      done: true,
+      foundDestination,
+      path: finalPath
     };
   }
 
   return {
     steps,
     nodesExplored,
-    pathLength: Math.max(0, finalPath.length - 1),
+    pathLength: foundDestination ? finalPath.length - 1 : -1,
     totalLatency,
-    foundDestination: bestDest,
+    foundDestination
   };
 }
 
-function reconstructPath(
-  parentMap: Map<string, string | null>,
-  nodeId: string
-): string[] {
+// ── Helpers ─────────────────────────────────────────
+function reconstructPath(parentMap: Map<string, string | null>, nodeId: string): string[] {
   const path: string[] = [];
   let cur: string | null = nodeId;
   const seen = new Set<string>();
-  while (cur !== null && !seen.has(cur)) {
+
+  while (cur !== null) {
+    if (seen.has(cur)) break;
     seen.add(cur);
     path.unshift(cur);
     cur = parentMap.get(cur) ?? null;
@@ -175,15 +190,10 @@ function reconstructPath(
   return path;
 }
 
-function calcPathLatency(
-  path: string[],
-  edges: ScenarioGraph['edges']
-): number {
+function calcPathLatency(path: string[], edges: ScenarioGraph['edges']): number {
   let total = 0;
   for (let i = 0; i < path.length - 1; i++) {
-    const edge = edges.find(
-      (e) => e.from === path[i] && e.to === path[i + 1]
-    );
+    const edge = edges.find(e => e.from === path[i] && e.to === path[i + 1]);
     if (edge) total += edge.latency;
   }
   return total;
