@@ -6,7 +6,7 @@ import { NetworkCanvas } from './NetworkCanvas';
 import { MetricsPanel } from './MetricsPanel';
 import { Legend } from './Legend';
 import { runGraphBFS } from '../algorithms/bfs';
-import { buildScenarioGraph } from '../utils/graphBuilder'; // <-- 1. Import this
+import { buildScenarioGraph } from '../utils/graphBuilder';
 
 interface Props {
   scenario: ScenarioType;
@@ -22,8 +22,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
   const al = getAlgorithm(algorithm);
 
   const [useRealWorld, setUseRealWorld] = useState(false);
-
-  // 2. Build the base graph immediately so the Canvas always has a map to draw on
   const currentGraph = useMemo(() => buildScenarioGraph(scenario, useRealWorld), [scenario, useRealWorld]);
 
   const [simResult, setSimResult] = useState<SimulationResult | null>(null);
@@ -140,17 +138,17 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
 
   return (
     <div className="min-h-screen bg-[#0a0f1e] text-white flex flex-col">
-      <header className="border-b border-gray-800 px-6 py-3 flex items-center justify-between bg-[#0d1224]">
+      <header className="border-b border-gray-800 px-4 md:px-6 py-3 flex items-center justify-between bg-[#0d1224] flex-wrap gap-2">
         <div className="flex items-center gap-4">
           <button onClick={onBack} className="text-gray-400 hover:text-white transition-colors text-sm flex items-center gap-1 cursor-pointer">
             ← Back
           </button>
-          <div className="h-5 w-px bg-gray-700" />
+          <div className="h-5 w-px bg-gray-700 hidden sm:block" />
           <div className="text-sm flex items-center gap-2">
             <span className="text-xl">{sc.icon}</span>
             <span className="font-bold text-white">{sc.name}</span>
             <span className="text-gray-500">·</span>
-            <span style={{ color: al.color }} className="font-semibold">{al.name}</span>
+            <span style={{ color: al.color }} className="font-semibold truncate max-w-[150px] sm:max-w-none">{al.name}</span>
           </div>
         </div>
         <div className="text-xs text-gray-500 hidden md:block">
@@ -158,8 +156,11 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
         </div>
       </header>
 
-      <div className="flex flex-1 gap-0 overflow-hidden">
-        <aside className="w-64 flex-shrink-0 border-r border-gray-800 p-3 flex flex-col gap-3 overflow-y-auto">
+      {/* RESPONSIVE FIX: Change from hardcoded flex-row to flex-col on mobile, flex-row on lg screens */}
+      <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto lg:overflow-hidden">
+        
+        {/* Left Sidebar - Full width on mobile, 320px on desktop */}
+        <aside className="w-full lg:w-80 flex-shrink-0 border-b lg:border-b-0 lg:border-r border-gray-800 p-4 flex flex-col gap-4 lg:overflow-y-auto">
           {simResult && !isComputing ? (
             <MetricsPanel
               metrics={status === 'done' ? simResult.metrics : null}
@@ -198,9 +199,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
           </div>
         </aside>
 
-        <main className="flex-1 flex flex-col items-center justify-start p-4 overflow-y-auto">
-          <div className="mb-3 flex flex-col items-center gap-3">
-            <div className="flex items-center gap-3 flex-wrap justify-center">
+        {/* Main Canvas Area */}
+        <main className="flex-1 flex flex-col items-center justify-start p-4 lg:overflow-y-auto w-full">
+          <div className="mb-3 flex flex-col items-center gap-3 w-full">
+            <div className="flex items-center gap-3 flex-wrap justify-center text-center">
               <div className="px-4 py-1.5 rounded-full text-sm font-bold" style={{ backgroundColor: al.color + '22', color: al.color, border: `1px solid ${al.color}55` }}>
                 {al.name} · {sc.name}
               </div>
@@ -210,8 +212,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
             </div>
 
             {scenario === 'traffic' && (
-              <div className="flex flex-col items-center gap-2 mt-2">
-                <label className={`flex items-center gap-2 cursor-pointer text-sm font-semibold bg-gray-800 px-4 py-2 rounded-lg border ${isComputing ? 'border-gray-700 opacity-50 cursor-not-allowed' : 'border-gray-600 hover:bg-gray-700 transition-colors'}`}>
+              <div className="flex flex-col items-center gap-2 mt-2 w-full max-w-sm">
+                <label className={`flex justify-center items-center gap-2 cursor-pointer text-sm font-semibold bg-gray-800 px-4 py-2 rounded-lg border w-full ${isComputing ? 'border-gray-700 opacity-50 cursor-not-allowed' : 'border-gray-600 hover:bg-gray-700 transition-colors'}`}>
                   <input
                     type="checkbox"
                     checked={useRealWorld}
@@ -225,9 +227,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
             )}
           </div>
 
-          <div className="rounded-2xl overflow-hidden border border-gray-700 w-full relative" style={{ maxWidth: 980, boxShadow: `0 0 48px ${al.color}22`, background: '#0a0f1e' }}>
+          {/* RESPONSIVE FIX: Added min-h-[400px] on mobile so the Canvas doesn't collapse */}
+          <div className="rounded-2xl overflow-hidden border border-gray-700 w-full relative flex-1 min-h-[400px] lg:min-h-[500px]" style={{ maxWidth: 1200, boxShadow: `0 0 48px ${al.color}22`, background: '#0a0f1e' }}>
             <NetworkCanvas
-              graph={currentGraph} // <-- 3. Pass the instantly generated graph here!
+              graph={currentGraph}
               explored={exploredSet}
               frontier={frontierSet}
               path={pathSet}
@@ -241,30 +244,30 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
             />
           </div>
 
-          <div className="mt-4 flex items-center gap-2 flex-wrap justify-center">
-            <button disabled={isComputing} onClick={handleReset} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30">↺ Reset</button>
-            <button disabled={isComputing || stepIndex === 0} onClick={handleStepBackward} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30">◀ Step Back</button>
+          <div className="mt-4 flex items-center gap-2 flex-wrap justify-center w-full">
+            <button disabled={isComputing} onClick={handleReset} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none">↺ Reset</button>
+            <button disabled={isComputing || stepIndex === 0} onClick={handleStepBackward} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none">◀ Back</button>
 
             {status === 'running' ? (
-              <button disabled={isComputing} onClick={handlePause} className="px-6 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer disabled:opacity-30" style={{ backgroundColor: al.color, color: '#000' }}>⏸ Pause</button>
+              <button disabled={isComputing} onClick={handlePause} className="px-6 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer disabled:opacity-30 flex-1 sm:flex-none" style={{ backgroundColor: al.color, color: '#000' }}>⏸ Pause</button>
             ) : status === 'paused' ? (
-              <button disabled={isComputing} onClick={handleResume} className="px-6 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer disabled:opacity-30" style={{ backgroundColor: al.color, color: '#000' }}>▶ Resume</button>
+              <button disabled={isComputing} onClick={handleResume} className="px-6 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer disabled:opacity-30 flex-1 sm:flex-none" style={{ backgroundColor: al.color, color: '#000' }}>▶ Resume</button>
             ) : status === 'done' ? (
-              <button disabled={isComputing} onClick={handleRun} className="px-6 py-2 rounded-lg font-bold text-sm cursor-pointer disabled:opacity-30" style={{ backgroundColor: al.color, color: '#000' }}>↺ Replay</button>
+              <button disabled={isComputing} onClick={handleRun} className="px-6 py-2 rounded-lg font-bold text-sm cursor-pointer disabled:opacity-30 flex-1 sm:flex-none" style={{ backgroundColor: al.color, color: '#000' }}>↺ Replay</button>
             ) : (
-              <button disabled={isComputing} onClick={handleRun} className="px-6 py-2 rounded-lg font-bold text-sm cursor-pointer hover:opacity-90 disabled:opacity-30 disabled:bg-gray-700" style={!isComputing ? { backgroundColor: al.color, color: '#000' } : {}}>
-                {isComputing ? 'Computing Simulation...' : '▶ Run Simulation'}
+              <button disabled={isComputing} onClick={handleRun} className="px-6 py-2 rounded-lg font-bold text-sm cursor-pointer hover:opacity-90 disabled:opacity-30 disabled:bg-gray-700 flex-1 sm:flex-none w-full sm:w-auto" style={!isComputing ? { backgroundColor: al.color, color: '#000' } : {}}>
+                {isComputing ? 'Computing...' : '▶ Run Simulation'}
               </button>
             )}
 
-            <button disabled={isComputing || stepIndex >= totalSteps} onClick={handleStepForward} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30">Step Fwd ▶</button>
-            <button disabled={isComputing} onClick={handleSkipEnd} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30">⏭ Skip to End</button>
+            <button disabled={isComputing || stepIndex >= totalSteps} onClick={handleStepForward} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none">Fwd ▶</button>
+            <button disabled={isComputing} onClick={handleSkipEnd} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none">⏭ Skip</button>
           </div>
 
           {simResult && simResult.dynamicEvents.length > 0 && (
-            <div className="mt-4 w-full max-w-3xl">
-              <h3 className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">Dynamic Events Log</h3>
-              <div className="flex flex-wrap gap-2">
+            <div className="mt-4 w-full max-w-4xl">
+              <h3 className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2 text-center lg:text-left">Dynamic Events Log</h3>
+              <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
                 {simResult.dynamicEvents.map((ev, i) => (
                   <div key={i} className={`text-xs px-2 py-1 rounded border transition-all ${stepIndex >= ev.stepIndex ? ev.blocked ? 'border-orange-500 bg-orange-900/30 text-orange-300' : 'border-green-600 bg-green-900/30 text-green-300' : 'border-gray-700 bg-gray-800 text-gray-500'}`}>
                     {ev.blocked ? '⚡' : '✅'} Step {ev.stepIndex}: {ev.label}
@@ -275,10 +278,11 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
           )}
         </main>
 
+        {/* Right Sidebar - Full width on mobile, stacks neatly. Fixed 288px width on Desktop. */}
         {simResult && !isComputing && status === 'done' && (
-          <aside className="w-72 flex-shrink-0 border-l border-gray-800 p-4 flex flex-col gap-4 overflow-y-auto">
-            <div className="bg-gray-900 border border-gray-700 rounded-xl p-5">
-              <h3 className="font-bold text-white mb-4 flex items-center gap-2">📊 Final Performance Report</h3>
+          <aside className="w-full lg:w-72 flex-shrink-0 border-t lg:border-t-0 lg:border-l border-gray-800 p-4 flex flex-col gap-4 lg:overflow-y-auto">
+            <div className="bg-gray-900 border border-gray-700 rounded-xl p-5 shadow-lg">
+              <h3 className="font-bold text-white mb-4 flex items-center gap-2">📊 Final Report</h3>
               <div className="space-y-3">
                 <StatRow label="Nodes Explored" value={simResult.metrics.nodesExplored.toLocaleString()} color={al.color} />
                 <StatRow label="Exec Time" value={`${simResult.metrics.timeElapsed.toFixed(3)}ms`} color={al.color} />
@@ -294,5 +298,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
 
 interface StatRowProps { label: string; value: string; color: string; }
 const StatRow: React.FC<StatRowProps> = ({ label, value, color }) => (
-  <div className="flex justify-between items-center"><span className="text-xs text-gray-400">{label}</span><span className="text-sm font-bold" style={{ color }}>{value}</span></div>
+  <div className="flex justify-between items-center border-b border-gray-800 pb-2 last:border-0 last:pb-0">
+    <span className="text-xs text-gray-400">{label}</span>
+    <span className="text-sm font-bold" style={{ color }}>{value}</span>
+  </div>
 );
