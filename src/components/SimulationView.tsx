@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { ScenarioType, AlgorithmType, AlgorithmStep } from '../types';
+import { ScenarioType, AlgorithmType, AlgorithmStep, SimulationResult } from '../types';
 import { runSimulation } from '../utils/simulationRunner';
-import { SimulationResult } from '../types';
 import { getScenario, getAlgorithm } from '../config/scenarios';
 import { NetworkCanvas } from './NetworkCanvas';
 import { MetricsPanel } from './MetricsPanel';
@@ -15,19 +14,20 @@ interface Props {
 }
 
 type Status = 'idle' | 'running' | 'done' | 'paused';
-
 const STEP_INTERVAL_MS = 60;
 
 export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack }) => {
   const sc = getScenario(scenario);
   const al = getAlgorithm(algorithm);
 
-  // Run simulation (deterministic per scenario+algorithm)
-  const simResult: SimulationResult = useMemo(() => {
-    return runSimulation(scenario, algorithm, scenario.charCodeAt(0));
-  }, [scenario, algorithm]);
+  // --- NEW STATE: Real-World Toggle ---
+  const [useRealWorld, setUseRealWorld] = useState(false);
 
-  // BFS gives us the optimal path for comparison (shortest path in unweighted graph)
+  // Pass useRealWorld to runSimulation
+  const simResult: SimulationResult = useMemo(() => {
+    return runSimulation(scenario, algorithm, scenario.charCodeAt(0), useRealWorld);
+  }, [scenario, algorithm, useRealWorld]);
+
   const bfsResult = useMemo(() => {
     return runGraphBFS(simResult.graph);
   }, [simResult.graph]);
@@ -38,21 +38,19 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
 
   const totalSteps = simResult.steps.length;
 
+  // Reset animation state when toggling between maps
+  useEffect(() => {
+    setStepIndex(0);
+    setStatus('idle');
+    if (animRef.current) clearInterval(animRef.current);
+  }, [useRealWorld]);
+
   const currentStep: AlgorithmStep | null =
     stepIndex > 0 ? simResult.steps[Math.min(stepIndex - 1, totalSteps - 1)] : null;
 
-  const exploredSet = useMemo(
-    () => new Set<string>(currentStep?.explored ?? []),
-    [currentStep]
-  );
-  const frontierSet = useMemo(
-    () => new Set<string>(currentStep?.frontier ?? []),
-    [currentStep]
-  );
-  const pathSet = useMemo(
-    () => new Set<string>(currentStep?.path ?? []),
-    [currentStep]
-  );
+  const exploredSet = useMemo(() => new Set<string>(currentStep?.explored ?? []), [currentStep]);
+  const frontierSet = useMemo(() => new Set<string>(currentStep?.frontier ?? []), [currentStep]);
+  const pathSet = useMemo(() => new Set<string>(currentStep?.path ?? []), [currentStep]);
 
   const currentNode = currentStep?.current ?? null;
   const phaseLabel = currentStep?.phaseLabel;
@@ -120,13 +118,9 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
 
   return (
     <div className="min-h-screen bg-[#0a0f1e] text-white flex flex-col">
-      {/* Header */}
       <header className="border-b border-gray-800 px-6 py-3 flex items-center justify-between bg-[#0d1224]">
         <div className="flex items-center gap-4">
-          <button
-            onClick={onBack}
-            className="text-gray-400 hover:text-white transition-colors text-sm flex items-center gap-1 cursor-pointer"
-          >
+          <button onClick={onBack} className="text-gray-400 hover:text-white transition-colors text-sm flex items-center gap-1 cursor-pointer">
             ← Back
           </button>
           <div className="h-5 w-px bg-gray-700" />
@@ -143,7 +137,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
       </header>
 
       <div className="flex flex-1 gap-0 overflow-hidden">
-        {/* Left sidebar */}
         <aside className="w-64 flex-shrink-0 border-r border-gray-800 p-3 flex flex-col gap-3 overflow-y-auto">
           <MetricsPanel
             metrics={status === 'done' ? simResult.metrics : null}
@@ -161,7 +154,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
           />
           <Legend algorithm={algorithm} scenario={scenario} />
 
-          {/* Algorithm info */}
           <div className="bg-gray-900 border border-gray-700 rounded-xl p-4">
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
               Algorithm Behavior
@@ -179,24 +171,43 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
           </div>
         </aside>
 
-        {/* Main content */}
         <main className="flex-1 flex flex-col items-center justify-start p-4 overflow-y-auto">
-          {/* Label bar */}
-          <div className="mb-3 flex items-center gap-3 flex-wrap justify-center">
-            <div
-              className="px-4 py-1.5 rounded-full text-sm font-bold"
-              style={{ backgroundColor: al.color + '22', color: al.color, border: `1px solid ${al.color}55` }}
-            >
-              {al.name} · {sc.name}
+          <div className="mb-3 flex flex-col items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap justify-center">
+              <div
+                className="px-4 py-1.5 rounded-full text-sm font-bold"
+                style={{ backgroundColor: al.color + '22', color: al.color, border: `1px solid ${al.color}55` }}
+              >
+                {al.name} · {sc.name}
+              </div>
+              <div className="text-sm text-gray-400">
+                Dynamic: <span className="text-orange-400">{sc.dynamicDescription}</span>
+              </div>
             </div>
-            <div className="text-sm text-gray-400">
-              Dynamic: <span className="text-orange-400">{sc.dynamicDescription}</span>
-            </div>
+
+            {/* --- NEW UI: Real-World Toggle --- */}
+            {scenario === 'traffic' && (
+              <div className="flex flex-col items-center gap-2 mt-2">
+                <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold bg-gray-800 px-4 py-2 rounded-lg border border-gray-700 hover:bg-gray-700 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={useRealWorld}
+                    onChange={(e) => setUseRealWorld(e.target.checked)}
+                    className="w-4 h-4 rounded border-gray-600 text-blue-500 bg-gray-900"
+                  />
+                  🌍 Enable Real-World Map (Cabuyao City)
+                </label>
+                {useRealWorld && (
+                  <span className="text-xs text-orange-400 bg-orange-900/30 px-3 py-1.5 rounded border border-orange-800/50">
+                    ⚠️ Rendering {simResult.graph.nodes.length.toLocaleString()} nodes. Animation might be computationally heavy.
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Network Graph Canvas */}
           <div
-            className="rounded-2xl overflow-hidden border border-gray-700 w-full"
+            className="rounded-2xl overflow-hidden border border-gray-700 w-full relative"
             style={{
               maxWidth: 980,
               boxShadow: `0 0 48px ${al.color}22`,
@@ -218,79 +229,47 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
             />
           </div>
 
-          {/* Controls */}
           <div className="mt-4 flex items-center gap-2 flex-wrap justify-center">
-            <button
-              onClick={handleReset}
-              className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer"
-            >
+            <button onClick={handleReset} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer">
               ↺ Reset
             </button>
-            <button
-              onClick={handleStepBackward}
-              disabled={stepIndex === 0}
-              className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-40"
-            >
+            <button onClick={handleStepBackward} disabled={stepIndex === 0} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-40">
               ◀ Step Back
             </button>
 
             {status === 'running' ? (
-              <button
-                onClick={handlePause}
-                className="px-6 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer"
-                style={{ backgroundColor: al.color, color: '#000' }}
-              >
+              <button onClick={handlePause} className="px-6 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer" style={{ backgroundColor: al.color, color: '#000' }}>
                 ⏸ Pause
               </button>
             ) : status === 'paused' ? (
-              <button
-                onClick={handleResume}
-                className="px-6 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer"
-                style={{ backgroundColor: al.color, color: '#000' }}
-              >
+              <button onClick={handleResume} className="px-6 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer" style={{ backgroundColor: al.color, color: '#000' }}>
                 ▶ Resume
               </button>
             ) : status === 'done' ? (
-              <button
-                onClick={handleRun}
-                className="px-6 py-2 rounded-lg font-bold text-sm cursor-pointer"
-                style={{ backgroundColor: al.color, color: '#000' }}
-              >
+              <button onClick={handleRun} className="px-6 py-2 rounded-lg font-bold text-sm cursor-pointer" style={{ backgroundColor: al.color, color: '#000' }}>
                 ↺ Replay
               </button>
             ) : (
-              <button
-                onClick={handleRun}
-                className="px-6 py-2 rounded-lg font-bold text-sm cursor-pointer hover:opacity-90"
-                style={{ backgroundColor: al.color, color: '#000' }}
-              >
+              <button onClick={handleRun} className="px-6 py-2 rounded-lg font-bold text-sm cursor-pointer hover:opacity-90" style={{ backgroundColor: al.color, color: '#000' }}>
                 ▶ Run Simulation
               </button>
             )}
 
-            <button
-              onClick={handleStepForward}
-              disabled={stepIndex >= totalSteps}
-              className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-40"
-            >
+            <button onClick={handleStepForward} disabled={stepIndex >= totalSteps} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-40">
               Step Fwd ▶
             </button>
-            <button
-              onClick={handleSkipEnd}
-              className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer"
-            >
+            <button onClick={handleSkipEnd} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer">
               ⏭ Skip to End
             </button>
           </div>
 
-          {/* Dynamic events log */}
           {simResult.dynamicEvents.length > 0 && (
             <div className="mt-4 w-full max-w-3xl">
               <h3 className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">
                 Dynamic Events Log
               </h3>
               <div className="flex flex-wrap gap-2">
-                {simResult.dynamicEvents.map((ev: import('../types').DynamicEvent, i: number) => (
+                {simResult.dynamicEvents.map((ev, i) => (
                   <div
                     key={i}
                     className={`text-xs px-2 py-1 rounded border transition-all ${
@@ -309,7 +288,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
           )}
         </main>
 
-        {/* Right panel — Final Stats */}
         {status === 'done' && (
           <aside className="w-72 flex-shrink-0 border-l border-gray-800 p-4 flex flex-col gap-4 overflow-y-auto">
             <div className="bg-gray-900 border border-gray-700 rounded-xl p-5">
@@ -317,51 +295,20 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
                 📊 Final Performance Report
               </h3>
               <div className="space-y-3">
-                <StatRow label="Algorithm"   value={al.name}  color={al.color} />
-                <StatRow label="Scenario"    value={sc.name}  color={sc.color} />
+                <StatRow label="Algorithm" value={al.name} color={al.color} />
+                <StatRow label="Scenario" value={useRealWorld ? "Cabuyao Traffic" : sc.name} color={sc.color} />
                 <div className="border-t border-gray-700 my-2" />
-                <StatRow
-                  label="Nodes Explored"
-                  value={simResult.metrics.nodesExplored.toLocaleString()}
-                  color={al.color}
-                />
-                <StatRow
-                  label="Path Length"
-                  value={simResult.metrics.pathLength > 0 ? `${simResult.metrics.pathLength} hops` : 'N/A'}
-                  color={al.color}
-                />
-                <StatRow
-                  label="Path Latency"
-                  value={simResult.metrics.totalLatency > 0 ? `${simResult.metrics.totalLatency}ms` : 'N/A'}
-                  color={al.color}
-                />
-                <StatRow
-                  label="Exec Time"
-                  value={`${simResult.metrics.timeElapsed.toFixed(3)}ms`}
-                  color={al.color}
-                />
-                <StatRow
-                  label="Memory Used"
-                  value={`${simResult.metrics.memoryUsed.toFixed(2)} KB`}
-                  color={al.color}
-                />
+                <StatRow label="Nodes Explored" value={simResult.metrics.nodesExplored.toLocaleString()} color={al.color} />
+                <StatRow label="Path Length" value={simResult.metrics.pathLength > 0 ? `${simResult.metrics.pathLength} hops` : 'N/A'} color={al.color} />
+                <StatRow label="Path Latency" value={simResult.metrics.totalLatency > 0 ? `${simResult.metrics.totalLatency}ms` : 'N/A'} color={al.color} />
+                <StatRow label="Exec Time" value={`${simResult.metrics.timeElapsed.toFixed(3)}ms`} color={al.color} />
+                <StatRow label="Memory Used" value={`${simResult.metrics.memoryUsed.toFixed(2)} KB`} color={al.color} />
                 <div className="border-t border-gray-700 my-2" />
-                <StatRow
-                  label="Destination Found"
-                  value={simResult.metrics.exitFound
-                    ? `Yes (#${(simResult.metrics.exitIndex ?? 0) + 1})`
-                    : 'No'}
-                  color={simResult.metrics.exitFound ? '#22c55e' : '#ef4444'}
-                />
-                <StatRow
-                  label="Dynamic Events"
-                  value={`${simResult.dynamicEvents.length} events`}
-                  color="#f97316"
-                />
+                <StatRow label="Destination Found" value={simResult.metrics.exitFound ? `Yes (#${(simResult.metrics.exitIndex ?? 0) + 1})` : 'No'} color={simResult.metrics.exitFound ? '#22c55e' : '#ef4444'} />
+                <StatRow label="Dynamic Events" value={`${simResult.dynamicEvents.length} events`} color="#f97316" />
               </div>
             </div>
 
-            {/* Complexity Notes */}
             <div className="bg-gray-900 border border-gray-700 rounded-xl p-4">
               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
                 Complexity Analysis
@@ -397,7 +344,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
               </div>
             </div>
 
-            {/* Scenario context */}
             <div className="bg-gray-900 border border-gray-700 rounded-xl p-4">
               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
                 Scenario Context

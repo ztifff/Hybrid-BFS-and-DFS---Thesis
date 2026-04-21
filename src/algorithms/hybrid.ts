@@ -1,14 +1,3 @@
-/**
- * Hybrid BFS-DFS Graph Algorithm
- *
- * Strategy:
- *   Phase 1 (BFS Macro): BFS from source to all Level-1 hub nodes simultaneously.
- *   Phase 2 (DFS Micro): From each hub, perform DFS independently into its sub-graph.
- *
- * This mirrors the real-world pattern: broadcast to buildings (BFS), then
- * each building saturates its own floors/APs in parallel (DFS).
- */
-
 import { ScenarioGraph, AlgorithmStep } from '../types';
 
 interface HybridResult {
@@ -39,6 +28,10 @@ export function runGraphHybrid(
   const steps: AlgorithmStep[] = [];
   let nodesExplored = 0;
   let foundDestination: string | null = null;
+  
+  // --- Step Sampling Setup ---
+  let iteration = 0;
+  const isMassive = nodes.length > 5000;
 
   // ── Phase 1: BFS to reach all Level-1 hubs ─────────────────────────────
   const level1Nodes = nodes.filter((n) => n.level === 1 && !blockedNodes.has(n.id));
@@ -47,21 +40,23 @@ export function runGraphHybrid(
   while (bfsQueue.length > 0) {
     const current = bfsQueue.shift()!;
     nodesExplored++;
+    iteration++;
 
-    const path = reconstructPath(parentMap, current);
-    steps.push({
-      explored: Array.from(visited),
-      frontier: [...bfsQueue],
-      path,
-      current,
-      done: false,
-      foundDestination: null,
-      phaseLabel: '📡 Phase 1: BFS Macro-Broadcast (Hub Discovery)',
-    });
+    if (!isMassive || iteration % 150 === 0) {
+      const path = reconstructPath(parentMap, current);
+      steps.push({
+        explored: Array.from(visited),
+        frontier: [...bfsQueue],
+        path,
+        current,
+        done: false,
+        foundDestination: null,
+        phaseLabel: '📡 Phase 1: BFS Macro-Broadcast (Hub Discovery)',
+      });
+    }
 
     if (destSet.has(current) && !foundDestination) foundDestination = current;
 
-    // Only BFS to level 1 — stop expanding beyond hubs
     const currentNode = nodes.find((n) => n.id === current);
     if (currentNode && currentNode.level >= 1) continue;
 
@@ -76,10 +71,7 @@ export function runGraphHybrid(
   }
 
   // ── Phase 2: DFS from each hub into its sub-graph ──────────────────────
-  // Interleave DFS steps across hubs to simulate parallel execution
   const hubIds = level1Nodes.map((n) => n.id);
-
-  // Build per-hub DFS stacks
   const hubStacks: Map<string, string[]> = new Map();
   const hubVisited: Map<string, Set<string>> = new Map();
 
@@ -90,7 +82,6 @@ export function runGraphHybrid(
     }
   });
 
-  // Interleaved DFS: one step per hub per round
   let anyActive = true;
   while (anyActive) {
     anyActive = false;
@@ -107,28 +98,30 @@ export function runGraphHybrid(
         visited.add(current);
         if (!parentMap.has(current)) parentMap.set(current, hId);
       }
+      
       nodesExplored++;
+      iteration++;
 
       if (destSet.has(current) && !foundDestination) {
         foundDestination = current;
       }
 
-      const path = reconstructPath(parentMap, current);
-
-      steps.push({
-        explored: Array.from(visited),
-        frontier: Array.from(hubStacks.values()).flat(),
-        path,
-        current,
-        done: false,
-        foundDestination: null,
-        phaseLabel: `🔀 Phase 2: DFS Micro-Saturation (Hub ${hId})`,
-      });
+      if (!isMassive || iteration % 150 === 0) {
+        const path = reconstructPath(parentMap, current);
+        steps.push({
+          explored: Array.from(visited),
+          frontier: Array.from(hubStacks.values()).flat(),
+          path,
+          current,
+          done: false,
+          foundDestination: null,
+          phaseLabel: `🔀 Phase 2: DFS Micro-Saturation (Hub ${hId})`,
+        });
+      }
 
       const neighbors = (adj.get(current) ?? []).slice().reverse();
       for (const { to } of neighbors) {
         if (!visited.has(to) && !blockedNodes.has(to)) {
-          // Only expand within this hub's sub-graph (level >= hub's level)
           const toNode = nodes.find((n) => n.id === to);
           const hubNode = nodes.find((n) => n.id === hId);
           if (toNode && hubNode && toNode.level > hubNode.level) {
@@ -161,7 +154,7 @@ export function runGraphHybrid(
   return {
     steps,
     nodesExplored,
-    pathLength: finalPath.length - 1,
+    pathLength: Math.max(0, finalPath.length - 1),
     totalLatency,
     foundDestination: bestDest,
   };

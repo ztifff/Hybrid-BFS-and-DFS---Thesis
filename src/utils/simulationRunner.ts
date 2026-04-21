@@ -7,13 +7,11 @@ import { runGraphDFS } from '../algorithms/dfs';
 import { runGraphHybrid } from '../algorithms/hybrid';
 
 function estimateMemory(nodesExplored: number, algorithm: AlgorithmType): number {
-  // Each node ~80 bytes (id string, parent ref, visited set entry, queue/stack)
   const nodeBytes = 80;
   const multiplier = algorithm === 'hybrid' ? 2.2 : algorithm === 'bfs' ? 1.5 : 1.2;
   return (nodesExplored * nodeBytes * multiplier) / 1024;
 }
 
-// Seeded RNG
 function makeRng(seed: number) {
   let s = seed;
   return () => {
@@ -52,7 +50,6 @@ function generateDynamicEvents(
         label: `${node?.label ?? nodeId} failed`,
       });
 
-      // Optionally restore
       if (rng() > 0.45) {
         const clearStep = stepIndex + Math.floor(rng() * (totalSteps * 0.2)) + 8;
         if (clearStep < totalSteps) {
@@ -73,9 +70,11 @@ function generateDynamicEvents(
 export function runSimulation(
   scenario: ScenarioType,
   algorithm: AlgorithmType,
-  dynamicSeed: number = 42
+  dynamicSeed: number = 42,
+  useRealWorld: boolean = false // <-- Added parameter
 ): SimulationResult {
-  const graph = buildScenarioGraph(scenario);
+  // Pass the flag to your graph builder
+  const graph = buildScenarioGraph(scenario, useRealWorld); 
 
   const startTime = performance.now();
 
@@ -99,7 +98,6 @@ export function runSimulation(
   const timeElapsed = Math.max(endTime - startTime, 0.001);
 
   const dynamicEvents = generateDynamicEvents(graph, scenario, result.steps.length, dynamicSeed);
-
   const memoryUsed = estimateMemory(result.nodesExplored, algorithm);
 
   const exitIndex = result.foundDestination

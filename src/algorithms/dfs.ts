@@ -33,6 +33,10 @@ export function runGraphDFS(
 
   let foundDestination: string | null = null;
   let nodesExplored = 0;
+  
+  // --- Step Sampling Setup ---
+  let iteration = 0;
+  const isMassive = nodes.length > 5000;
 
   while (stack.length > 0) {
     const current = stack.pop()!;
@@ -40,23 +44,27 @@ export function runGraphDFS(
     if (visited.has(current)) continue;
     visited.add(current);
     nodesExplored++;
-
-    const exploredSoFar = Array.from(visited);
-    const frontier = [...stack];
-    const path = reconstructPath(parentMap, current);
-
-    steps.push({
-      explored: exploredSoFar,
-      frontier,
-      path,
-      current,
-      done: false,
-      foundDestination: null,
-      phaseLabel: 'DFS — Deep Dive (Tunnel Vision)',
-    });
+    iteration++;
 
     if (destSet.has(current) && foundDestination === null) {
       foundDestination = current;
+    }
+
+    // Only save state every 150 steps if massive, or every step for small graphs
+    if (!isMassive || iteration % 150 === 0) {
+      const exploredSoFar = Array.from(visited);
+      const frontier = [...stack];
+      const path = reconstructPath(parentMap, current);
+
+      steps.push({
+        explored: exploredSoFar,
+        frontier,
+        path,
+        current,
+        done: false,
+        foundDestination: null,
+        phaseLabel: 'DFS — Deep Dive (Tunnel Vision)',
+      });
     }
 
     // Push neighbors in reverse so first neighbor is processed first
@@ -87,7 +95,7 @@ export function runGraphDFS(
   return {
     steps,
     nodesExplored,
-    pathLength: finalPath.length - 1,
+    pathLength: Math.max(0, finalPath.length - 1),
     totalLatency,
     foundDestination: bestDest,
   };

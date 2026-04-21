@@ -32,26 +32,32 @@ export function runGraphBFS(
   parentMap.set(sourceId, null);
 
   let nodesExplored = 0;
+  
+  // --- Step Sampling Setup ---
+  let iteration = 0;
+  const isMassive = nodes.length > 5000;
 
   while (queue.length > 0) {
     const current = queue.shift()!;
     nodesExplored++;
+    iteration++;
 
-    const exploredSoFar = Array.from(visited);
-    const frontier = [...queue];
+    // Only save state every 150 steps if massive, or every step for small graphs
+    if (!isMassive || iteration % 150 === 0) {
+      const exploredSoFar = Array.from(visited);
+      const frontier = [...queue];
+      const path = reconstructPath(parentMap, current);
 
-    // Build path to current node
-    const path = reconstructPath(parentMap, current);
-
-    steps.push({
-      explored: exploredSoFar,
-      frontier,
-      path,
-      current,
-      done: false,
-      foundDestination: null,
-      phaseLabel: 'BFS — Level-by-Level Broadcast',
-    });
+      steps.push({
+        explored: exploredSoFar,
+        frontier,
+        path,
+        current,
+        done: false,
+        foundDestination: null,
+        phaseLabel: 'BFS — Level-by-Level Broadcast',
+      });
+    }
 
     const neighbors = adj.get(current) ?? [];
     for (const { to } of neighbors) {
@@ -86,7 +92,7 @@ export function runGraphBFS(
   return {
     steps,
     nodesExplored,
-    pathLength: finalPath.length - 1,
+    pathLength: Math.max(0, finalPath.length - 1),
     totalLatency,
     foundDestination: bestDest,
   };

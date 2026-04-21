@@ -1,25 +1,16 @@
-/**
- * City Road Network Graph
- *
- * Topology:
- *   City Center (source)
- *     ├── North Corridor → Intersections → Streets → Highway Exit N
- *     ├── East Corridor  → Intersections → Streets → Highway Exit E
- *     └── South Corridor → Intersections → Streets → Highway Exit S
- *
- * Edge costs (travel time):
- *   City Center → Major Intersection : 3 min
- *   Intersection → Intersection       : 4 min
- *   Intersection → Street             : 2 min
- *   Street → Highway Exit             : 2 min
- */
-
 import { ScenarioGraph, GraphNode, GraphEdge } from '../types';
+import { cabuyaoTrafficGraph } from '../data/traffic.cabuyao'; // <-- Import the real-world graph
 
 const W = 1000;
 const H = 760;
 
-export function buildTrafficGraph(): ScenarioGraph {
+export function buildTrafficGraph(useRealWorld: boolean = false): ScenarioGraph {
+  // Return the real-world API data if toggled
+  if (useRealWorld) {
+    return cabuyaoTrafficGraph;
+  }
+
+  // --- Existing Mock Graph Logic Below ---
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
 
@@ -56,7 +47,6 @@ export function buildTrafficGraph(): ScenarioGraph {
   const corridorY = 165;
 
   corridors.forEach((cor) => {
-    // Major corridor node
     const corId = `corridor_${cor.id}`;
     nodes.push({
       id: corId,
@@ -102,7 +92,6 @@ export function buildTrafficGraph(): ScenarioGraph {
         type: 'road',
       });
 
-      // Streets off each intersection
       const streetList = cor.streets[ii] ?? [];
       const spread = 52;
       streetList.forEach((stLabel, si) => {
@@ -129,7 +118,6 @@ export function buildTrafficGraph(): ScenarioGraph {
       });
     });
 
-    // Highway exit at bottom of each corridor
     const exitId = `exit_${cor.id}`;
     const lastIntId = `int_${cor.id}_${cor.intersections.length}`;
     const exitY = intStartY + (cor.intersections.length - 1) * intGapY + 205;
