@@ -16,7 +16,6 @@ interface Props {
   phaseLabel?: string;
 }
 
-// Node visual config per type
 const NODE_CONFIG: Record<string, { icon: string; radius: number; baseColor: string; shape: 'circle' | 'rect' | 'diamond' }> = {
   datacenter:      { icon: '🖥️',  radius: 28, baseColor: '#1e40af', shape: 'circle' },
   building_router: { icon: '📡',  radius: 22, baseColor: '#1d4ed8', shape: 'circle' },
@@ -71,22 +70,36 @@ export const NetworkCanvas: React.FC<Props> = ({
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  
+  const [activeFloor, setActiveFloor] = useState<string>('L2');
+
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
   const { nodes, edges, width, height } = graph;
   const isMassive = nodes.length > 200;
 
+  const isLayeredMap = useMemo(() => {
+    return nodes.some(n => n.buildingId === 'GL' || n.buildingId === 'L2');
+  }, [nodes]);
+
   const SVG_W = 960;
   const SVG_H = 680;
-  const scaleX = SVG_W / width;
-  const scaleY = SVG_H / height;
 
-  const sx = (x: number) => x * scaleX;
-  const sy = (y: number) => y * scaleY;
+  // 🚀 THE FIX: Uniform Scaling and Centering Math
+  // 1. Find the best scale to fit the entire graph without stretching
+  // 2. Multiply by 0.95 to add a nice 5% padding around the edges
+  const scale = Math.min(SVG_W / width, SVG_H / height) * 0.95;
+
+  // 3. Calculate the leftover empty space and divide by 2 to perfectly center it
+  const offsetX = (SVG_W - (width * scale)) / 2;
+  const offsetY = (SVG_H - (height * scale)) / 2;
+
+  // 4. Apply scale and offset to all coordinates
+  const sx = (x: number) => (x * scale) + offsetX;
+  const sy = (y: number) => (y * scale) + offsetY;
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -110,6 +123,12 @@ export const NetworkCanvas: React.FC<Props> = ({
     const currentNode = nodes.find(n => n.id === current);
     if (!currentNode) return;
 
+    if (isLayeredMap && currentNode.buildingId && currentNode.buildingId !== activeFloor) {
+      if (currentNode.buildingId === 'GL' || currentNode.buildingId === 'L2') {
+        setActiveFloor(currentNode.buildingId);
+      }
+    }
+
     const rect = svgRef.current.getBoundingClientRect();
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
@@ -118,19 +137,16 @@ export const NetworkCanvas: React.FC<Props> = ({
     const targetPanY = centerY - (sy(currentNode.y) * zoom);
 
     setPan({ x: targetPanX, y: targetPanY });
-  }, [current, isFollowing, zoom, nodes]);
+  }, [current, isFollowing, zoom, nodes, activeFloor, isLayeredMap]);
 
 
   const handleWheel = (e: React.WheelEvent<SVGSVGElement>) => {
     if (isFollowing) setIsFollowing(false);
-
     const scaleAdjust = e.deltaY > 0 ? 0.9 : 1.1;
     const newZoom = Math.max(0.2, Math.min(zoom * scaleAdjust, 30)); 
-    
     const rect = e.currentTarget.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
-
     setPan(prev => ({
       x: mouseX - (mouseX - prev.x) * (newZoom / zoom),
       y: mouseY - (mouseY - prev.y) * (newZoom / zoom)
@@ -140,7 +156,6 @@ export const NetworkCanvas: React.FC<Props> = ({
 
   const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
     if (isFollowing) setIsFollowing(false);
-
     setIsDragging(true);
     setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
   };
@@ -159,7 +174,6 @@ export const NetworkCanvas: React.FC<Props> = ({
     setPan({ x: 0, y: 0 }); 
   };
 
-
   const activeBlocked = useMemo(() => {
     const blocked = new Set<string>(blockedNodes);
     dynamicEvents.forEach((ev) => {
@@ -170,6 +184,19 @@ export const NetworkCanvas: React.FC<Props> = ({
     });
     return blocked;
   }, [blockedNodes, dynamicEvents, stepIndex]);
+
+  const visibleNodes = useMemo(() => {
+    if (!isLayeredMap) return nodes;
+    return nodes.filter(n => !n.buildingId || n.buildingId === activeFloor);
+  }, [nodes, activeFloor, isLayeredMap]);
+
+  const visibleNodeIds = useMemo(() => {
+    return new Set(visibleNodes.map(n => n.id));
+  }, [visibleNodes]);
+
+  const visibleEdges = useMemo(() => {
+    return edges.filter(e => visibleNodeIds.has(e.from) && visibleNodeIds.has(e.to));
+  }, [edges, visibleNodeIds]);
 
   function getNodeStyle(node: GraphNode) {
     const cfg = NODE_CONFIG[node.type] ?? { icon: '⬤', radius: 16, baseColor: '#374151', shape: 'circle' };
@@ -237,19 +264,34 @@ export const NetworkCanvas: React.FC<Props> = ({
     return { color: cfg.color, width: isMassive ? 0.4 : cfg.width, dash: cfg.dash, opacity: isMassive ? 0.25 : 0.35 }; 
   }
 
-  const buildingGroups = useMemo(() => {
-    const groups = new Map<string, GraphNode[]>();
-    nodes.forEach((n) => {
-      if (!n.buildingId) return;
-      if (!groups.has(n.buildingId)) groups.set(n.buildingId, []);
-      groups.get(n.buildingId)!.push(n);
-    });
-    return groups;
-  }, [nodes]);
-
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-hidden" style={{ background: '#0a0f1e' }}>
       
+      {isLayeredMap && (
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-gray-900/90 p-1.5 rounded-xl border border-gray-700 backdrop-blur-sm z-20 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.5)]">
+          <button
+            onClick={() => setActiveFloor('GL')}
+            className={`px-8 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer ${
+              activeFloor === 'GL' 
+                ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.5)]' 
+                : 'text-gray-400 hover:text-white hover:bg-gray-800'
+            }`}
+          >
+            GL (Ground Level)
+          </button>
+          <button
+            onClick={() => setActiveFloor('L2')}
+            className={`px-8 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer ${
+              activeFloor === 'L2' 
+                ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.5)]' 
+                : 'text-gray-400 hover:text-white hover:bg-gray-800'
+            }`}
+          >
+            L2 (Second Level)
+          </button>
+        </div>
+      )}
+
       <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-20">
         <button 
           onClick={toggleFullscreen} 
@@ -297,7 +339,6 @@ export const NetworkCanvas: React.FC<Props> = ({
         viewBox={`0 0 ${SVG_W} ${SVG_H}`}
         width="100%"
         height="100%"
-        // ✅ FIX: Added userSelect: 'none' to the main SVG to prevent dragging text highlights globally
         style={{ 
             display: 'block', 
             cursor: isDragging ? 'grabbing' : 'grab', 
@@ -334,31 +375,10 @@ export const NetworkCanvas: React.FC<Props> = ({
         </defs>
 
         <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
-            {Array.from(buildingGroups.entries()).map(([bid, bNodes]) => {
-            if (bNodes.length < 2) return null;
-            const xs = bNodes.map((n) => sx(n.x));
-            const ys = bNodes.map((n) => sy(n.y));
-            const minX = Math.min(...xs) - 38;
-            const minY = Math.min(...ys) - 28;
-            const maxX = Math.max(...xs) + 38;
-            const maxY = Math.max(...ys) + 28;
-            return (
-                <rect
-                key={`bg-${bid}`}
-                x={minX} y={minY}
-                width={maxX - minX} height={maxY - minY}
-                rx={12}
-                fill="#ffffff08"
-                stroke="#ffffff11"
-                strokeWidth={1}
-                style={{ pointerEvents: 'none' }}
-                />
-            );
-            })}
-
-            {edges.map((edge) => {
-            const fromNode = nodes.find((n) => n.id === edge.from);
-            const toNode = nodes.find((n) => n.id === edge.to);
+            
+            {visibleEdges.map((edge) => {
+            const fromNode = visibleNodes.find((n) => n.id === edge.from);
+            const toNode = visibleNodes.find((n) => n.id === edge.to);
             if (!fromNode || !toNode) return null;
 
             const style = getEdgeStyle(edge.from, edge.to, edge.type);
@@ -398,7 +418,7 @@ export const NetworkCanvas: React.FC<Props> = ({
             );
             })}
 
-            {nodes.map((node) => {
+            {visibleNodes.map((node) => {
             const { fillColor, strokeColor, strokeWidth, opacity, glowColor, cfg, isBlocked, isCurrent, isSource, isDest } =
                 getNodeStyle(node);
             const cx = sx(node.x);
@@ -409,7 +429,6 @@ export const NetworkCanvas: React.FC<Props> = ({
             const showLabels = !isMassive || isImportant;
 
             return (
-                // ✅ FIX: Added pointerEvents: 'none' and userSelect: 'none' to ensure text is completely ignored by clicks/drags
                 <g key={node.id} opacity={opacity} style={{ pointerEvents: 'none', userSelect: 'none' }}>
                 {isCurrent && (
                     <circle cx={cx} cy={cy} r={r + (isMassive ? 4 : 10)} fill={glowColor + '33'} filter="url(#glow-strong)" />

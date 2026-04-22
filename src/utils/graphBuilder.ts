@@ -11,7 +11,7 @@ export function buildScenarioGraph(scenario: ScenarioType, useRealWorld: boolean
     case 'network':    return buildNetworkGraph();
     case 'robotics':   return buildRoboticsGraph();
     case 'traffic':    return buildTrafficGraph(useRealWorld); // Passed to traffic
-    case 'evacuation': return buildEvacuationGraph();
+    case 'evacuation': return buildEvacuationGraph(useRealWorld);
     case 'gameai':     return buildGameAIGraph();
   }
 }

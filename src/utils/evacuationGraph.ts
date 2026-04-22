@@ -1,29 +1,40 @@
 /**
- * Multi-Story Office Building Evacuation Graph
+ * Multi-Story Office Building Evacuation Graph (Mock Fallback)
  *
  * Topology:
- *   Evacuation Start Points (3 zones on Floor 4)
- *     └── Corridors → Stairwells → Ground Floor → Emergency Exits
+ * Evacuation Start Points (3 zones on Floor 4)
+ * └── Corridors → Stairwells → Ground Floor → Emergency Exits
  *
  * Buildings have:
- *   - 4 floors
- *   - 2 stairwells (North and South)
- *   - 2-3 corridors per floor
- *   - 3 ground-floor emergency exits
+ * - 4 floors
+ * - 2 stairwells (North and South)
+ * - 2-3 corridors per floor
+ * - 3 ground-floor emergency exits
  *
  * Edge costs (evacuation time in seconds):
- *   Zone → Corridor      : 10s
- *   Corridor → Stairwell : 8s
- *   Stairwell descent    : 15s per floor
- *   Stairwell → Exit     : 5s
+ * Zone → Corridor      : 10s
+ * Corridor → Stairwell : 8s
+ * Stairwell descent    : 15s per floor
+ * Stairwell → Exit     : 5s
  */
 
 import { ScenarioGraph, GraphNode, GraphEdge } from '../types';
 
+// ✅ Import the generated SM Santa Rosa map
+import { buildingEvacuationGraph } from '../data/evacuation.building';
+
 const W = 1000;
 const H = 760;
 
-export function buildEvacuationGraph(): ScenarioGraph {
+// ✅ Added the useRealWorld parameter with a default of false
+export function buildEvacuationGraph(useRealWorld: boolean = false): ScenarioGraph {
+  
+  // 🏢 IF ENABLED: Return the real SM Sta Rosa Map
+  if (useRealWorld) {
+    return buildingEvacuationGraph as any;
+  }
+
+  // 🏢 IF DISABLED: Generate the default 4-story mock office
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
 

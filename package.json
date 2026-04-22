@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "clsx": "2.1.1",
+    "dxf-parser": "^1.1.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "tailwind-merge": "3.4.0"
+    "tailwind-merge": "3.4.0",
+    "web-ifc": "^0.0.77"
   },
   "devDependencies": {
     "@tailwindcss/vite": "4.1.17",

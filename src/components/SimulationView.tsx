@@ -18,7 +18,6 @@ type Status = 'idle' | 'running' | 'done' | 'paused';
 const STEP_INTERVAL_MS = 60;
 
 export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack }) => {
-  // ✅ THE FIX: Convert algorithm prop into local state so we can change it dynamically
   const [activeAlgorithm, setActiveAlgorithm] = useState<AlgorithmType>(algorithm);
   
   const sc = getScenario(scenario);
@@ -57,8 +56,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
     }
   }, []);
 
-  // Notice how activeAlgorithm is now in the dependency array. 
-  // When it changes, this re-runs with the SAME seed!
   useEffect(() => {
     let isMounted = true;
 
@@ -230,8 +227,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
             ← Back
           </button>
           <div className="h-5 w-px bg-gray-700 hidden sm:block" />
-          
-          {/* ✅ THE FIX: Algorithm Dropdown in Header */}
           <div className="text-sm flex items-center gap-2">
             <span className="text-xl">{sc.icon}</span>
             <span className="font-bold text-white">{sc.name}</span>
@@ -248,7 +243,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
               <option value="dfs" style={{ color: '#fff' }}>Depth-First Search (DFS)</option>
             </select>
           </div>
-
         </div>
         <div className="text-xs text-gray-500 hidden md:block">
           Real-World Graph Simulation — BFS / DFS / Hybrid Performance Evaluation
@@ -257,12 +251,11 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
 
       <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
         
-        {/* LEFT SIDEBAR */}
         <aside className="w-full lg:w-80 flex-shrink-0 border-b lg:border-b-0 lg:border-r border-gray-800 p-4 flex flex-col gap-4 overflow-y-auto">
           {simResult && !isComputing ? (
             <MetricsPanel
               metrics={status === 'done' ? simResult.metrics : null}
-              algorithm={activeAlgorithm} // Pass activeAlgorithm
+              algorithm={activeAlgorithm} 
               scenario={scenario}
               status={status}
               stepIndex={stepIndex}
@@ -281,7 +274,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
             </div>
           )}
           
-          <Legend algorithm={activeAlgorithm} scenario={scenario} /> {/* Pass activeAlgorithm */}
+          <Legend algorithm={activeAlgorithm} scenario={scenario} />
 
           <div className="bg-gray-900 border border-gray-700 rounded-xl p-4">
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
@@ -297,7 +290,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
           </div>
         </aside>
 
-        {/* MAIN CANVAS AREA */}
         <main className="flex-1 flex flex-col items-center justify-start p-4 overflow-y-auto w-full">
           <div className="mb-3 flex flex-col items-center gap-3 w-full shrink-0">
             <div className="flex items-center gap-3 flex-wrap justify-center text-center">
@@ -310,14 +302,15 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
                   onClick={handleRerollEvents}
                   disabled={isComputing}
                   className="ml-2 px-3 py-1 bg-gray-800 hover:bg-gray-700 border border-orange-500/50 rounded-md text-xs text-orange-400 font-bold transition-colors disabled:opacity-50 cursor-pointer shadow-[0_0_10px_rgba(249,115,22,0.2)]"
-                  title="Generate entirely new road closures"
+                  title="Generate entirely new dynamic events"
                 >
                   🔀 Re-roll Events
                 </button>
               </div>
             </div>
 
-            {scenario === 'traffic' && (
+            {/* ✅ THE FIX: Toggle for both Traffic and Evacuation */}
+            {(scenario === 'traffic' || scenario === 'evacuation') && (
               <div className="flex flex-col items-center gap-2 mt-2 w-full max-w-sm">
                 <label className={`flex justify-center items-center gap-2 cursor-pointer text-sm font-semibold bg-gray-800 px-4 py-2 rounded-lg border w-full ${isComputing ? 'border-gray-700 opacity-50 cursor-not-allowed' : 'border-gray-600 hover:bg-gray-700 transition-colors'}`}>
                   <input
@@ -327,7 +320,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
                     onChange={(e) => setUseRealWorld(e.target.checked)}
                     className="w-4 h-4 rounded border-gray-600 text-blue-500 bg-gray-900"
                   />
-                  🌍 Enable Real-World Map (Cabuyao City)
+                  {scenario === 'traffic' ? '🌍 Enable Real-World Map (Cabuyao City)' : '🏢 Enable Real-World Building SM City (Santa Rosa)'}
                 </label>
               </div>
             )}
@@ -340,7 +333,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
               frontier={frontierSet}
               path={pathSet}
               current={currentNode}
-              algorithm={activeAlgorithm} // Pass activeAlgorithm
+              algorithm={activeAlgorithm}
               scenario={scenario}
               blockedNodes={new Set()}
               stepIndex={stepIndex}
