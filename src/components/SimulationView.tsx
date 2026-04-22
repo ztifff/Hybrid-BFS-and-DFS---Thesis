@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { ScenarioType, AlgorithmType, AlgorithmStep, SimulationResult } from '../types';
+import { ScenarioType, AlgorithmType, AlgorithmStep, SimulationResult, DynamicEvent } from '../types';
 import { runSimulation } from '../utils/simulationRunner';
 import { getScenario, getAlgorithm } from '../config/scenarios';
 import { NetworkCanvas } from './NetworkCanvas';
@@ -22,7 +22,20 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
   const al = getAlgorithm(algorithm);
 
   const [useRealWorld, setUseRealWorld] = useState(false);
+  const [seed, setSeed] = useState(() => Date.now()); 
+  
   const currentGraph = useMemo(() => buildScenarioGraph(scenario, useRealWorld), [scenario, useRealWorld]);
+
+  const adjList = useMemo(() => {
+    const adj = new Map<string, string[]>();
+    currentGraph.edges.forEach(e => {
+      if (!adj.has(e.from)) adj.set(e.from, []);
+      if (!adj.has(e.to)) adj.set(e.to, []);
+      adj.get(e.from)!.push(e.to);
+      adj.get(e.to)!.push(e.from);
+    });
+    return adj;
+  }, [currentGraph]);
 
   const [simResult, setSimResult] = useState<SimulationResult | null>(null);
   const [bfsResult, setBfsResult] = useState<any>(null);
@@ -51,7 +64,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
       setLiveStep(null);
       stopAnimation();
 
-      const result = await runSimulation(scenario, algorithm, scenario.charCodeAt(0), useRealWorld, (step) => {
+      const result = await runSimulation(scenario, algorithm, seed, useRealWorld, (step) => {
         if (isMounted) setLiveStep(step);
       });
       if (!isMounted) return;
@@ -70,9 +83,73 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
       isMounted = false;
       stopAnimation();
     };
-  }, [scenario, algorithm, useRealWorld, stopAnimation]);
+  }, [scenario, algorithm, useRealWorld, seed, stopAnimation]);
 
   const totalSteps = simResult?.steps.length ?? 0;
+
+  const activityLogs = useMemo(() => {
+    if (!simResult) return [];
+    
+    const logs: { step: number; text: string; type: 'info' | 'warning' | 'success' | 'error' }[] = [];
+    const blockedAtStep = new Set<string>();
+    const eventsByStep = new Map<number, DynamicEvent[]>();
+    
+    simResult.dynamicEvents.forEach(e => {
+      if (!eventsByStep.has(e.stepIndex)) eventsByStep.set(e.stepIndex, []);
+      eventsByStep.get(e.stepIndex)!.push(e);
+    });
+
+    let previousPathLength = 0;
+    const reportedBlocks = new Set<string>();
+
+    simResult.steps.forEach((step, i) => {
+      if (eventsByStep.has(i)) {
+        eventsByStep.get(i)!.forEach(e => {
+          if (e.blocked) blockedAtStep.add(e.nodeId);
+          else blockedAtStep.delete(e.nodeId);
+        });
+      }
+
+      const currentNode = step.current ? currentGraph.nodes.find(n => n.id === step.current) : null;
+      const nodeName = currentNode ? currentNode.label.split('\n')[0] : (step.current || "Unknown Node");
+
+      if (step.done) {
+        if (step.foundDestination) {
+          const destNode = currentGraph.nodes.find(n => n.id === step.foundDestination);
+          logs.push({ step: i, text: `🎉 Reached Destination: ${destNode?.label.split('\n')[0] || step.foundDestination}`, type: 'success' });
+        } else {
+          logs.push({ step: i, text: `❌ Trapped! No valid route exists to the destination.`, type: 'error' });
+        }
+        return;
+      }
+
+      if (step.path.length < previousPathLength && previousPathLength > 0) {
+        logs.push({ step: i, text: `🔙 Dead end reached. Backtracking...`, type: 'info' });
+      }
+      previousPathLength = step.path.length;
+
+      if (i % 3 === 0 && step.current) { 
+        logs.push({ step: i, text: `📍 Exploring ${nodeName}...`, type: 'info' });
+      }
+
+      const neighbors = step.current ? (adjList.get(step.current) || []) : [];
+      neighbors.forEach(neighborId => {
+        if (blockedAtStep.has(neighborId) && !reportedBlocks.has(neighborId)) {
+          reportedBlocks.add(neighborId);
+          const blockedNode = currentGraph.nodes.find(n => n.id === neighborId);
+          const blockedName = blockedNode ? blockedNode.label.split('\n')[0] : neighborId;
+          logs.push({ step: i, text: `⚠️ Blockage detected ahead at ${blockedName}. Rerouting...`, type: 'warning' });
+        }
+      });
+    });
+
+    return logs;
+  }, [simResult, currentGraph, adjList]);
+
+  const visibleActivityLogs = activityLogs
+    .filter(log => log.step <= stepIndex - 1)
+    .slice(-100) 
+    .reverse();
 
   const startAnimation = useCallback(() => {
     stopAnimation();
@@ -136,9 +213,13 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
   const handleReset = () => { stopAnimation(); setStepIndex(0); setStatus('idle'); };
   const handleSkipEnd = () => { stopAnimation(); setStepIndex(totalSteps); setStatus('done'); };
 
+  const handleRerollEvents = () => {
+    setSeed(Date.now());
+  };
+
   return (
-    <div className="min-h-screen bg-[#0a0f1e] text-white flex flex-col">
-      <header className="border-b border-gray-800 px-4 md:px-6 py-3 flex items-center justify-between bg-[#0d1224] flex-wrap gap-2">
+    <div className="min-h-screen lg:h-screen w-full bg-[#0a0f1e] text-white flex flex-col lg:overflow-hidden">
+      <header className="border-b border-gray-800 px-4 md:px-6 py-3 flex items-center justify-between bg-[#0d1224] flex-wrap gap-2 shrink-0">
         <div className="flex items-center gap-4">
           <button onClick={onBack} className="text-gray-400 hover:text-white transition-colors text-sm flex items-center gap-1 cursor-pointer">
             ← Back
@@ -156,11 +237,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
         </div>
       </header>
 
-      {/* RESPONSIVE FIX: Change from hardcoded flex-row to flex-col on mobile, flex-row on lg screens */}
-      <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto lg:overflow-hidden">
+      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
         
-        {/* Left Sidebar - Full width on mobile, 320px on desktop */}
-        <aside className="w-full lg:w-80 flex-shrink-0 border-b lg:border-b-0 lg:border-r border-gray-800 p-4 flex flex-col gap-4 lg:overflow-y-auto">
+        {/* LEFT SIDEBAR */}
+        <aside className="w-full lg:w-80 flex-shrink-0 border-b lg:border-b-0 lg:border-r border-gray-800 p-4 flex flex-col gap-4 overflow-y-auto">
           {simResult && !isComputing ? (
             <MetricsPanel
               metrics={status === 'done' ? simResult.metrics : null}
@@ -199,15 +279,23 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
           </div>
         </aside>
 
-        {/* Main Canvas Area */}
-        <main className="flex-1 flex flex-col items-center justify-start p-4 lg:overflow-y-auto w-full">
-          <div className="mb-3 flex flex-col items-center gap-3 w-full">
+        {/* MAIN CANVAS AREA */}
+        <main className="flex-1 flex flex-col items-center justify-start p-4 overflow-y-auto w-full">
+          <div className="mb-3 flex flex-col items-center gap-3 w-full shrink-0">
             <div className="flex items-center gap-3 flex-wrap justify-center text-center">
               <div className="px-4 py-1.5 rounded-full text-sm font-bold" style={{ backgroundColor: al.color + '22', color: al.color, border: `1px solid ${al.color}55` }}>
                 {al.name} · {sc.name}
               </div>
-              <div className="text-sm text-gray-400">
-                Dynamic: <span className="text-orange-400">{sc.dynamicDescription}</span>
+              <div className="text-sm text-gray-400 flex items-center gap-2">
+                <span>Dynamic: <span className="text-orange-400">{sc.dynamicDescription}</span></span>
+                <button
+                  onClick={handleRerollEvents}
+                  disabled={isComputing}
+                  className="ml-2 px-3 py-1 bg-gray-800 hover:bg-gray-700 border border-orange-500/50 rounded-md text-xs text-orange-400 font-bold transition-colors disabled:opacity-50 cursor-pointer shadow-[0_0_10px_rgba(249,115,22,0.2)]"
+                  title="Generate entirely new road closures"
+                >
+                  🔀 Re-roll Events
+                </button>
               </div>
             </div>
 
@@ -227,8 +315,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
             )}
           </div>
 
-          {/* RESPONSIVE FIX: Added min-h-[400px] on mobile so the Canvas doesn't collapse */}
-          <div className="rounded-2xl overflow-hidden border border-gray-700 w-full relative flex-1 min-h-[400px] lg:min-h-[500px]" style={{ maxWidth: 1200, boxShadow: `0 0 48px ${al.color}22`, background: '#0a0f1e' }}>
+          <div className="rounded-2xl overflow-hidden border border-gray-700 w-full relative flex-1 min-h-[400px] shrink-0" style={{ maxWidth: 1200, boxShadow: `0 0 48px ${al.color}22`, background: '#0a0f1e' }}>
             <NetworkCanvas
               graph={currentGraph}
               explored={exploredSet}
@@ -244,7 +331,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
             />
           </div>
 
-          <div className="mt-4 flex items-center gap-2 flex-wrap justify-center w-full">
+          <div className="mt-4 flex items-center gap-2 flex-wrap justify-center w-full shrink-0">
             <button disabled={isComputing} onClick={handleReset} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none">↺ Reset</button>
             <button disabled={isComputing || stepIndex === 0} onClick={handleStepBackward} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none">◀ Back</button>
 
@@ -263,43 +350,135 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
             <button disabled={isComputing || stepIndex >= totalSteps} onClick={handleStepForward} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none">Fwd ▶</button>
             <button disabled={isComputing} onClick={handleSkipEnd} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none">⏭ Skip</button>
           </div>
+        </main>
 
-          {simResult && simResult.dynamicEvents.length > 0 && (
-            <div className="mt-4 w-full max-w-4xl">
-              <h3 className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2 text-center lg:text-left">Dynamic Events Log</h3>
-              <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
-                {simResult.dynamicEvents.map((ev, i) => (
-                  <div key={i} className={`text-xs px-2 py-1 rounded border transition-all ${stepIndex >= ev.stepIndex ? ev.blocked ? 'border-orange-500 bg-orange-900/30 text-orange-300' : 'border-green-600 bg-green-900/30 text-green-300' : 'border-gray-700 bg-gray-800 text-gray-500'}`}>
-                    {ev.blocked ? '⚡' : '✅'} Step {ev.stepIndex}: {ev.label}
-                  </div>
-                ))}
+        {/* RIGHT SIDEBAR */}
+        <aside className="w-full lg:w-[350px] flex-shrink-0 border-t lg:border-t-0 lg:border-l border-gray-800 p-4 flex flex-col gap-4 bg-[#0a0f1e] overflow-hidden">
+          
+          {/* ✅ THE FIX: Restored & Upgraded Thesis Final Report */}
+          {simResult && !isComputing && status === 'done' && (
+            <div className="bg-gray-900/80 border border-blue-900/50 rounded-xl p-5 shadow-[0_0_20px_rgba(30,58,138,0.15)] shrink-0 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: al.color }}></div>
+              <h3 className="font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wide text-sm">
+                📑 Final Report
+              </h3>
+              <div className="space-y-3">
+                <ReportRow 
+                  label="Execution Time" 
+                  value={`${simResult.metrics.timeElapsed.toFixed(3)} ms`} 
+                  subValue="Total time to compute the path"
+                />
+                <ReportRow 
+                  label="Nodes Visited" 
+                  value={simResult.metrics.nodesExplored.toLocaleString()} 
+                  subValue={`Out of ${currentGraph.nodes.length} total map nodes`}
+                />
+                <ReportRow 
+                  label="Path Optimality" 
+                  value={simResult.metrics.exitFound ? `${((bfsResult?.pathLength || 1) / Math.max(simResult.metrics.pathLength, 1) * 100).toFixed(1)}%` : '0.0%'} 
+                  subValue={simResult.metrics.exitFound ? `Algorithm: ${simResult.metrics.pathLength} hops | Optimal: ${bfsResult?.pathLength} hops` : 'No valid path found'}
+                />
+                <ReportRow 
+                  label="Memory Consumption" 
+                  value={`${(simResult.metrics.memoryUsed / 1024).toFixed(4)} MB`} 
+                  subValue="Estimated data structure size"
+                />
+                <ReportRow 
+                  label="Completion Rate" 
+                  value={simResult.metrics.exitFound ? '100%' : '0%'} 
+                  subValue={simResult.metrics.exitFound ? 'Successfully reached target' : 'Failed to reach target'}
+                />
+                <ReportRow 
+                  label="Adaptability Score" 
+                  value={simResult.metrics.exitFound ? '100 / 100' : '0 / 100'} 
+                  subValue={simResult.metrics.exitFound ? 'Overcame all topological changes' : 'Trapped by environmental disruptions'}
+                />
               </div>
             </div>
           )}
-        </main>
 
-        {/* Right Sidebar - Full width on mobile, stacks neatly. Fixed 288px width on Desktop. */}
-        {simResult && !isComputing && status === 'done' && (
-          <aside className="w-full lg:w-72 flex-shrink-0 border-t lg:border-t-0 lg:border-l border-gray-800 p-4 flex flex-col gap-4 lg:overflow-y-auto">
-            <div className="bg-gray-900 border border-gray-700 rounded-xl p-5 shadow-lg">
-              <h3 className="font-bold text-white mb-4 flex items-center gap-2">📊 Final Report</h3>
-              <div className="space-y-3">
-                <StatRow label="Nodes Explored" value={simResult.metrics.nodesExplored.toLocaleString()} color={al.color} />
-                <StatRow label="Exec Time" value={`${simResult.metrics.timeElapsed.toFixed(3)}ms`} color={al.color} />
-                <StatRow label="Memory Used" value={`${simResult.metrics.memoryUsed.toFixed(2)} KB`} color={al.color} />
+          <div className="flex flex-col gap-4 flex-1 overflow-hidden">
+            {/* LIVE ACTIVITY LOG */}
+            <div className="bg-[#0d1224] border border-gray-700 rounded-xl p-4 flex flex-col shadow-inner flex-1 min-h-[200px] overflow-hidden">
+              <div className="flex justify-between items-center mb-3 border-b border-gray-800 pb-2 shrink-0">
+                <h3 className="text-xs text-gray-400 font-bold uppercase tracking-wider flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                  Live Activity Log
+                </h3>
+              </div>
+              
+              <div 
+                className="flex-1 overflow-y-auto pr-2 space-y-2 flex flex-col" 
+                style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}
+              >
+                {visibleActivityLogs.length > 0 ? (
+                  visibleActivityLogs.map((log, i) => (
+                    <div key={`${log.step}-${i}`} className={`text-[11px] p-2 rounded border transition-all ${
+                      log.type === 'success' ? 'border-green-500/30 bg-green-900/20 text-green-300' :
+                      log.type === 'error' ? 'border-red-500/30 bg-red-900/20 text-red-400 font-bold' :
+                      log.type === 'warning' ? 'border-orange-500/30 bg-orange-900/20 text-orange-300 font-semibold' :
+                      'border-gray-700 bg-gray-800/50 text-gray-300'
+                    }`}>
+                      <span className="opacity-50 mr-1 font-mono">[{log.step}]</span> {log.text}
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-xs text-gray-500 text-center mt-6 italic">
+                    Awaiting algorithm initiation...
+                  </div>
+                )}
               </div>
             </div>
-          </aside>
-        )}
+
+            {/* SCHEDULED MAP EVENTS */}
+            {simResult && simResult.dynamicEvents.length > 0 && (
+              <div className="bg-[#0d1224] border border-gray-700 rounded-xl p-4 flex flex-col shadow-inner flex-1 min-h-[200px] overflow-hidden">
+                <div className="flex justify-between items-center mb-3 border-b border-gray-800 pb-2 shrink-0">
+                  <h3 className="text-xs text-gray-400 font-bold uppercase tracking-wider flex items-center gap-2">
+                    📅 Scheduled Map Events
+                  </h3>
+                  <span className="text-[10px] font-mono text-gray-500">
+                    {simResult.dynamicEvents.length}
+                  </span>
+                </div>
+                
+                <div 
+                  className="flex-1 overflow-y-auto pr-2 flex flex-col gap-1.5"
+                  style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}
+                >
+                  {simResult.dynamicEvents.map((ev, i) => {
+                    const hasHappened = stepIndex >= ev.stepIndex;
+                    return (
+                      <div key={i} className={`text-[11px] p-2 rounded border transition-all ${
+                        hasHappened 
+                          ? ev.blocked 
+                            ? 'border-orange-500/50 bg-orange-900/20 text-orange-300' 
+                            : 'border-green-500/50 bg-green-900/20 text-green-300' 
+                          : 'border-gray-700 bg-gray-800/30 text-gray-500'
+                      }`}>
+                        <span className="font-mono opacity-60 mr-1">[{ev.stepIndex}]</span>
+                        {ev.blocked ? '⚡' : '✅'} {ev.label} {!hasHappened && '(Future)'}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+        </aside>
       </div>
     </div>
   );
 };
 
-interface StatRowProps { label: string; value: string; color: string; }
-const StatRow: React.FC<StatRowProps> = ({ label, value, color }) => (
-  <div className="flex justify-between items-center border-b border-gray-800 pb-2 last:border-0 last:pb-0">
-    <span className="text-xs text-gray-400">{label}</span>
-    <span className="text-sm font-bold" style={{ color }}>{value}</span>
+// ✅ Helper component for cleanly formatting the Final Report data
+const ReportRow: React.FC<{ label: string; value: string; subValue?: string }> = ({ label, value, subValue }) => (
+  <div className="flex flex-col border-b border-gray-800/60 pb-2 last:border-0 last:pb-0">
+    <div className="flex justify-between items-start">
+      <span className="text-xs text-gray-400 font-medium">{label}</span>
+      <span className="text-sm font-bold text-white text-right">{value}</span>
+    </div>
+    {subValue && <span className="text-[10px] text-gray-500 text-right mt-0.5">{subValue}</span>}
   </div>
 );

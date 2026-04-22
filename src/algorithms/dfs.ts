@@ -35,43 +35,33 @@ export async function runGraphDFS(
   let foundDestination: string | null = null;
   let nodesExplored = 0;
   let iteration = 0;
-
   let lastYieldTime = performance.now();
-  const isMassive = nodes.length > 200;
 
   const syncUI = async (current: string) => {
     iteration++;
     const now = performance.now();
 
-    const shouldRender = onStepProgress && (
-      iteration < 100 || (now - lastYieldTime > 10)
-    );
+    const step: AlgorithmStep = {
+      stepIndex: iteration,
+      explored: Array.from(visited),
+      frontier: [...stack],
+      path: reconstructPath(parentMap, current),
+      current,
+      done: false,
+      foundDestination: null,
+      phaseLabel: '🎯 DFS — Deep Dive (Tunnel Vision)'
+    };
 
-    const shouldStore =
-      iteration < 50 ||
-      !isMassive ||
-      iteration % 25 === 0;
+    steps.push(step);
 
-    if (shouldRender || shouldStore) {
-      const step: AlgorithmStep = {
-        stepIndex: iteration,
-        explored: Array.from(visited),
-        frontier: [...stack],
-        path: reconstructPath(parentMap, current),
-        current,
-        done: false,
-        foundDestination: null,
-        phaseLabel: '🎯 DFS — Deep Dive (Tunnel Vision)'
-      };
+    // ✅ FIX 1: Send events immediately to simulationRunner
+    if (onStepProgress) {
+      onStepProgress(step);
+    }
 
-      if (shouldStore) steps.push(step);
-
-      if (shouldRender) {
-        onStepProgress?.(step);
-        await new Promise(r => setTimeout(r, 15));
-        await yieldToMain();
-        lastYieldTime = performance.now();
-      }
+    if (now - lastYieldTime > 15) {
+      await yieldToMain();
+      lastYieldTime = performance.now();
     }
   };
 
@@ -79,12 +69,15 @@ export async function runGraphDFS(
     const current = stack.pop()!;
 
     if (visited.has(current)) continue;
+    
+    // ✅ FIX 2: Look before leaping!
+    if (blockedNodes.has(current)) continue;
+    
     visited.add(current);
     nodesExplored++;
 
     await syncUI(current);
 
-    // EARLY EXIT: Break the loop the moment we find the destination
     if (destSet.has(current)) {
       foundDestination = current;
       await syncUI(current);
@@ -116,21 +109,10 @@ export async function runGraphDFS(
     });
   } else {
     const last = steps[steps.length - 1];
-    steps[steps.length - 1] = {
-      ...last,
-      done: true,
-      foundDestination,
-      path: finalPath
-    };
+    steps[steps.length - 1] = { ...last, done: true, foundDestination, path: finalPath };
   }
 
-  return { 
-    steps, 
-    nodesExplored, 
-    pathLength: foundDestination ? finalPath.length - 1 : -1, 
-    totalLatency, 
-    foundDestination 
-  };
+  return { steps, nodesExplored, pathLength: foundDestination ? finalPath.length - 1 : -1, totalLatency, foundDestination };
 }
 
 function reconstructPath(parentMap: Map<string, string | null>, nodeId: string): string[] {
@@ -138,7 +120,7 @@ function reconstructPath(parentMap: Map<string, string | null>, nodeId: string):
   let cur: string | null = nodeId;
   const seen = new Set<string>();
   while (cur !== null) { 
-    if (seen.has(cur)) break; // Cycle protection
+    if (seen.has(cur)) break; 
     seen.add(cur); 
     path.unshift(cur); 
     cur = parentMap.get(cur) ?? null; 

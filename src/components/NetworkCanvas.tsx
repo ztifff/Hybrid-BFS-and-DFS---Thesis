@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { ScenarioGraph, GraphNode, AlgorithmType, ScenarioType, DynamicEvent } from '../types';
 import { getAlgorithm } from '../config/scenarios';
 
@@ -67,13 +67,63 @@ export const NetworkCanvas: React.FC<Props> = ({
 }) => {
   const al = getAlgorithm(algorithm);
 
-  // --- ZOOM & PAN STATE ---
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  const { nodes, edges, width, height } = graph;
+  const isMassive = nodes.length > 200;
+
+  const SVG_W = 960;
+  const SVG_H = 680;
+  const scaleX = SVG_W / width;
+  const scaleY = SVG_H / height;
+
+  const sx = (x: number) => x * scaleX;
+  const sy = (y: number) => y * scaleY;
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      containerRef.current?.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  useEffect(() => {
+    if (!isFollowing || !current || !svgRef.current) return;
+
+    const currentNode = nodes.find(n => n.id === current);
+    if (!currentNode) return;
+
+    const rect = svgRef.current.getBoundingClientRect();
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    const targetPanX = centerX - (sx(currentNode.x) * zoom);
+    const targetPanY = centerY - (sy(currentNode.y) * zoom);
+
+    setPan({ x: targetPanX, y: targetPanY });
+  }, [current, isFollowing, zoom, nodes]);
+
 
   const handleWheel = (e: React.WheelEvent<SVGSVGElement>) => {
+    if (isFollowing) setIsFollowing(false);
+
     const scaleAdjust = e.deltaY > 0 ? 0.9 : 1.1;
     const newZoom = Math.max(0.2, Math.min(zoom * scaleAdjust, 30)); 
     
@@ -89,6 +139,8 @@ export const NetworkCanvas: React.FC<Props> = ({
   };
 
   const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (isFollowing) setIsFollowing(false);
+
     setIsDragging(true);
     setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
   };
@@ -101,7 +153,12 @@ export const NetworkCanvas: React.FC<Props> = ({
   const handleMouseUp = () => setIsDragging(false);
   const handleMouseLeave = () => setIsDragging(false);
 
-  const resetZoom = () => { setZoom(1); setPan({ x: 0, y: 0 }); };
+  const resetZoom = () => { 
+    setIsFollowing(false);
+    setZoom(1); 
+    setPan({ x: 0, y: 0 }); 
+  };
+
 
   const activeBlocked = useMemo(() => {
     const blocked = new Set<string>(blockedNodes);
@@ -113,19 +170,6 @@ export const NetworkCanvas: React.FC<Props> = ({
     });
     return blocked;
   }, [blockedNodes, dynamicEvents, stepIndex]);
-
-  const { nodes, edges, width, height } = graph;
-
-  // MODIFIED: Lowered threshold to 200 so it triggers for your 396-node Cabuyao graph
-  const isMassive = nodes.length > 200;
-
-  const SVG_W = 960;
-  const SVG_H = 680;
-  const scaleX = SVG_W / width;
-  const scaleY = SVG_H / height;
-
-  const sx = (x: number) => x * scaleX;
-  const sy = (y: number) => y * scaleY;
 
   function getNodeStyle(node: GraphNode) {
     const cfg = NODE_CONFIG[node.type] ?? { icon: '⬤', radius: 16, baseColor: '#374151', shape: 'circle' };
@@ -139,8 +183,8 @@ export const NetworkCanvas: React.FC<Props> = ({
 
     let fillColor = cfg.baseColor;
     let strokeColor = '#374151';
-    let strokeWidth = isMassive ? 0.4 : 1.5; // Modified
-    let opacity = isMassive ? 0.9 : 1; // Modified
+    let strokeWidth = isMassive ? 0.4 : 1.5;
+    let opacity = isMassive ? 0.9 : 1;
     let glowColor = 'none';
 
     if (isBlocked) {
@@ -150,7 +194,7 @@ export const NetworkCanvas: React.FC<Props> = ({
     } else if (isCurrent) {
       fillColor = '#fff';
       strokeColor = al.color;
-      strokeWidth = isMassive ? 1 : 3; // Modified
+      strokeWidth = isMassive ? 1 : 3;
       glowColor = al.color;
     } else if (isPath) {
       fillColor = al.color;
@@ -190,7 +234,7 @@ export const NetworkCanvas: React.FC<Props> = ({
     if (isExplored) {
       return { color: al.color + '88', width: isMassive ? 0.8 : 2, dash: cfg.dash, opacity: isMassive ? 0.8 : 0.9 };
     }
-    return { color: cfg.color, width: isMassive ? 0.4 : cfg.width, dash: cfg.dash, opacity: isMassive ? 0.25 : 0.35 }; // Modified width
+    return { color: cfg.color, width: isMassive ? 0.4 : cfg.width, dash: cfg.dash, opacity: isMassive ? 0.25 : 0.35 }; 
   }
 
   const buildingGroups = useMemo(() => {
@@ -204,15 +248,35 @@ export const NetworkCanvas: React.FC<Props> = ({
   }, [nodes]);
 
   return (
-    <div className="relative w-full h-full overflow-hidden" style={{ background: '#0a0f1e' }}>
+    <div ref={containerRef} className="relative w-full h-full overflow-hidden" style={{ background: '#0a0f1e' }}>
       
       <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-20">
-        <button onClick={() => setZoom(z => Math.min(z * 1.5, 30))} className="w-8 h-8 bg-gray-800 border border-gray-600 rounded text-white flex items-center justify-center hover:bg-gray-700 cursor-pointer text-xl font-bold transition-colors">+</button>
-        <button onClick={() => setZoom(z => Math.max(z / 1.5, 0.2))} className="w-8 h-8 bg-gray-800 border border-gray-600 rounded text-white flex items-center justify-center hover:bg-gray-700 cursor-pointer text-xl font-bold transition-colors">-</button>
+        <button 
+          onClick={toggleFullscreen} 
+          className="w-8 h-8 bg-gray-800 border border-gray-600 rounded text-white flex items-center justify-center hover:bg-gray-700 cursor-pointer text-lg transition-colors"
+          title="Toggle Fullscreen"
+        >
+          {isFullscreen ? '✖' : '⛶'}
+        </button>
+
+        <button 
+          onClick={() => setIsFollowing(!isFollowing)} 
+          className={`w-8 h-8 border rounded flex items-center justify-center cursor-pointer text-lg transition-colors ${
+            isFollowing 
+              ? 'bg-blue-600 border-blue-400 text-white shadow-[0_0_10px_rgba(37,99,235,0.5)]' 
+              : 'bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700 hover:text-white'
+          }`}
+          title="Follow Algorithm"
+        >
+          🎯
+        </button>
+
+        <button onClick={() => { setIsFollowing(false); setZoom(z => Math.min(z * 1.5, 30)); }} className="w-8 h-8 bg-gray-800 border border-gray-600 rounded text-white flex items-center justify-center hover:bg-gray-700 cursor-pointer text-xl font-bold transition-colors">+</button>
+        <button onClick={() => { setIsFollowing(false); setZoom(z => Math.max(z / 1.5, 0.2)); }} className="w-8 h-8 bg-gray-800 border border-gray-600 rounded text-white flex items-center justify-center hover:bg-gray-700 cursor-pointer text-xl font-bold transition-colors">-</button>
         <button onClick={resetZoom} className="px-2 py-1 bg-gray-800 border border-gray-600 rounded text-xs font-bold text-gray-300 hover:bg-gray-700 cursor-pointer transition-colors">Reset</button>
       </div>
 
-      {phaseLabel && (
+      {phaseLabel && !isFullscreen && (
         <div
           className="absolute top-2 left-1/2 -translate-x-1/2 text-xs font-bold px-3 py-1 rounded-full z-10 pointer-events-none"
           style={{ backgroundColor: al.color + '33', color: al.color, border: `1px solid ${al.color}66` }}
@@ -221,14 +285,24 @@ export const NetworkCanvas: React.FC<Props> = ({
         </div>
       )}
 
+      {isFullscreen && (
+        <div className="absolute top-4 left-4 bg-gray-900/80 backdrop-blur border border-gray-700 px-4 py-2 rounded-lg z-10 pointer-events-none flex flex-col gap-1">
+          <div className="text-sm font-bold" style={{ color: al.color }}>{al.name} · Step {stepIndex}</div>
+          {phaseLabel && <div className="text-xs text-gray-300">{phaseLabel}</div>}
+        </div>
+      )}
+
       <svg
+        ref={svgRef}
         viewBox={`0 0 ${SVG_W} ${SVG_H}`}
         width="100%"
         height="100%"
+        // ✅ FIX: Added userSelect: 'none' to the main SVG to prevent dragging text highlights globally
         style={{ 
             display: 'block', 
             cursor: isDragging ? 'grabbing' : 'grab', 
-            touchAction: 'none' 
+            touchAction: 'none',
+            userSelect: 'none'
         }}
         onWheel={handleWheel}
         onMouseDown={handleMouseDown}
@@ -277,6 +351,7 @@ export const NetworkCanvas: React.FC<Props> = ({
                 fill="#ffffff08"
                 stroke="#ffffff11"
                 strokeWidth={1}
+                style={{ pointerEvents: 'none' }}
                 />
             );
             })}
@@ -297,7 +372,7 @@ export const NetworkCanvas: React.FC<Props> = ({
             const isOnPath = path.has(edge.from) && path.has(edge.to);
 
             return (
-                <g key={edge.id}>
+                <g key={edge.id} style={{ pointerEvents: 'none' }}>
                 <line
                     x1={x1} y1={y1} x2={x2} y2={y2}
                     stroke={style.color}
@@ -314,6 +389,7 @@ export const NetworkCanvas: React.FC<Props> = ({
                     fontSize="9"
                     fill={isOnPath ? al.color : '#94a3b8'}
                     fontWeight={isOnPath ? 'bold' : 'normal'}
+                    style={{ userSelect: 'none', pointerEvents: 'none' }}
                     >
                     {edge.label}
                     </text>
@@ -329,12 +405,12 @@ export const NetworkCanvas: React.FC<Props> = ({
             const cy = sy(node.y);
             
             const isImportant = isSource || isDest || isCurrent;
-            // MODIFIED: Slightly larger dots for better visibility at 400 nodes
             const r = isMassive ? (isImportant ? 5 : 2.2) : cfg.radius;
             const showLabels = !isMassive || isImportant;
 
             return (
-                <g key={node.id} opacity={opacity} style={{ pointerEvents: 'none' }}>
+                // ✅ FIX: Added pointerEvents: 'none' and userSelect: 'none' to ensure text is completely ignored by clicks/drags
+                <g key={node.id} opacity={opacity} style={{ pointerEvents: 'none', userSelect: 'none' }}>
                 {isCurrent && (
                     <circle cx={cx} cy={cy} r={r + (isMassive ? 4 : 10)} fill={glowColor + '33'} filter="url(#glow-strong)" />
                 )}
@@ -361,16 +437,17 @@ export const NetworkCanvas: React.FC<Props> = ({
                         textAnchor="middle"
                         dominantBaseline="middle"
                         fontSize={r * 0.9}
-                        style={{ userSelect: 'none' }}
+                        style={{ userSelect: 'none', pointerEvents: 'none' }}
                     >
                         {isBlocked ? '💀' : cfg.icon}
                     </text>
                     <text
                         x={cx} y={cy + r + 11}
                         textAnchor="middle"
-                        fontSize={r > 15 ? '10' : '7'} // Modified
+                        fontSize={r > 15 ? '10' : '7'} 
                         fill="#cbd5e1"
                         fontWeight={isCurrent ? 'bold' : 'normal'}
+                        style={{ userSelect: 'none', pointerEvents: 'none' }}
                     >
                         {node.label.split('\n')[0]}
                     </text>
@@ -380,6 +457,7 @@ export const NetworkCanvas: React.FC<Props> = ({
                         textAnchor="middle"
                         fontSize="8"
                         fill="#64748b"
+                        style={{ userSelect: 'none', pointerEvents: 'none' }}
                         >
                         {node.label.split('\n')[1]}
                         </text>

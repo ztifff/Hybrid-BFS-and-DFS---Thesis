@@ -190,6 +190,9 @@ async function main() {
               else if (id === eId) label = "East Exit (Lake Road)";
             } else if ((nodeUsageCount.get(id) || 0) > 1) {
               type = "intersection";
+              label = `Intersection #${finalNodes.size + 1}`; // Clean naming
+            } else {
+              label = `Street #${finalNodes.size + 1}`; // Clean naming
             }
 
             finalNodes.set(id, {

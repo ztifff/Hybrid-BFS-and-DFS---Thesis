@@ -21,7 +21,7 @@ function makeRng(seed: number) {
   };
 }
 
-// 🔥 EXTREME Chaos Dynamic Events
+// 🔥 APOCALYPTIC TRAFFIC EDITION: Scaled Durations & Massive AoE
 function generateDynamicEvents(
   graph: ScenarioGraph,
   scenario: ScenarioType,
@@ -37,65 +37,111 @@ function generateDynamicEvents(
   const events: DynamicEvent[] = [];
   const usedNodes = new Set<string>();
 
+  // Build Adjacency List for AoE disasters
+  const adj = new Map<string, string[]>();
+  graph.edges.forEach(e => {
+    if (!adj.has(e.from)) adj.set(e.from, []);
+    if (!adj.has(e.to)) adj.set(e.to, []);
+    adj.get(e.from)!.push(e.to);
+    adj.get(e.to)!.push(e.from); 
+  });
+
   const isMassive = graph.nodes.length > 200;
   
-  // 💥 Cranked up to 80 maximum events for real-world maps
-  const maxEvents = isMassive ? 80 : 12; 
-  const eventCount = Math.min(maxEvents, Math.floor(candidates.length * 0.4));
+  const maxIncidents = isMassive ? 55 : 8; 
+  const incidentCount = Math.min(maxIncidents, Math.floor(candidates.length * 0.5));
 
-  const realWorldLabels = [
-    { block: '💥 Major Collision', clear: '🚓 Accident Cleared' },
+  const standardLabels = [
+    { block: '💥 Minor Collision', clear: '🚓 Accident Cleared' },
     { block: '🚧 Roadwork', clear: '✅ Roadwork Finished' },
-    { block: '🌊 Flash Flood', clear: '🌤️ Flood Subsided' },
-    { block: '🚦 Severe Gridlock', clear: '🟢 Traffic Flowing' },
-    { block: '🔥 Vehicle Fire', clear: '🚒 Fire Extinguished' },
-    { block: '🛑 Police Checkpoint', clear: '✅ Checkpoint Removed' }
+    { block: '🛑 Police Checkpoint', clear: '✅ Checkpoint Removed' },
+    { block: '🚗 Stalled Vehicle', clear: 'Tow Truck Arrived' }
   ];
 
-  for (let i = 0; i < eventCount; i++) {
-    const nodeId = candidates[Math.floor(rng() * candidates.length)];
-    if (usedNodes.has(nodeId)) continue;
-    usedNodes.add(nodeId);
+  const aoeLabels = [
+    { block: '💥 Multi-Vehicle Pileup', clear: '🚓 Pileup Cleared' },
+    { block: '🚌 Major Bus Collision', clear: '🏗️ Bus Towed Away' },
+    { block: '🏗️ Bridge/Road Collapse', clear: '🚧 Temporary Bypass Opened' },
+    { block: '🚛 Overturned Semi-Truck', clear: '🏗️ Truck Removed' },
+    { block: '🚦 Total Gridlock', clear: '🟢 Traffic Flowing' }
+  ];
 
-    const node = graph.nodes.find(n => n.id === nodeId);
-    const nodeName = node?.label?.split('\n')[0] ?? nodeId;
-
-    // 20% chance it's already closed before we start (Step 0)
-    // 80% chance it spawns randomly while driving (spread across the first 80% of the trip)
-    let stepIndex = 0;
-    if (rng() > 0.20) {
-      stepIndex = Math.floor(rng() * (totalSteps * 0.8)) + 1; 
-    }
-
-    let blockLabel = `🚧 ${nodeName} closed`;
-    let clearLabel = `✅ ${nodeName} reopened`;
+  for (let i = 0; i < incidentCount; i++) {
+    const epicenterId = candidates[Math.floor(rng() * candidates.length)];
+    if (usedNodes.has(epicenterId)) continue;
     
-    if (isMassive) {
-      const flavor = realWorldLabels[Math.floor(rng() * realWorldLabels.length)];
-      blockLabel = `${flavor.block} at ${nodeName}`;
-      clearLabel = `${flavor.clear} at ${nodeName}`;
+    let stepIndex = 0;
+    // 20% chance for Step 0 (Pre-existing). 
+    // 80% chance to spawn randomly during the first half of the simulation.
+    if (rng() > 0.20) {
+      stepIndex = Math.floor(rng() * (totalSteps * 0.5)) + 1; 
     }
 
-    events.push({
-      stepIndex,
-      nodeId,
-      blocked: true,
-      label: blockLabel,
-    });
+    // ✅ THE FIX: Scaled Duration!
+    // Disasters now last between 30% and 80% of the entire simulation timeline.
+    // They will not prematurely vanish anymore.
+    const minDuration = Math.floor(totalSteps * 0.3);
+    const maxDuration = Math.floor(totalSteps * 0.8);
+    const blockDuration = Math.floor(rng() * (maxDuration - minDuration)) + minDuration;
+    
+    const reopenStep = stepIndex + blockDuration;
 
-    // 🌪️ High Volatility: 75% chance the road clears up later in the simulation
-    if (rng() > 0.25) {
-      // Reopens rapidly (between 5 and 30 steps later) to create a "breathing" map
-      const reopenStep = stepIndex + Math.floor(rng() * 25) + 5; 
-      if (reopenStep < totalSteps * 1.5) { 
-        events.push({
-          stepIndex: reopenStep,
-          nodeId,
-          blocked: false,
-          label: clearLabel,
-        });
+    const isAoE = isMassive && rng() > 0.55;
+    
+    let affectedNodes = [epicenterId];
+    let flavor = standardLabels[Math.floor(rng() * standardLabels.length)];
+
+    if (isAoE) {
+      flavor = aoeLabels[Math.floor(rng() * aoeLabels.length)];
+      
+      // DEPTH-3 CASCADE: Creates a massive infected zone
+      const expandedSet = new Set<string>();
+      let currentFrontier = [epicenterId];
+
+      for (let depth = 0; depth < 3; depth++) {
+        const nextFrontier: string[] = [];
+        for (const current of currentFrontier) {
+          const neighbors = adj.get(current) || [];
+          for (const neighbor of neighbors) {
+            if (!expandedSet.has(neighbor) && neighbor !== epicenterId) {
+              expandedSet.add(neighbor);
+              nextFrontier.push(neighbor);
+            }
+          }
+        }
+        currentFrontier = nextFrontier;
       }
+
+      // Shuffle and pick up to 25 surrounding nodes to create an absolute wall
+      const collateral = Array.from(expandedSet).sort(() => rng() - 0.5).slice(0, 25);
+      affectedNodes.push(...collateral);
     }
+
+    affectedNodes.forEach(nodeId => {
+      if (usedNodes.has(nodeId)) return;
+      usedNodes.add(nodeId);
+
+      const node = graph.nodes.find(n => n.id === nodeId);
+      const nodeName = node?.label?.split('\n')[0] ?? nodeId;
+
+      const blockLabel = isAoE ? `[AoE] ${flavor.block} at ${nodeName}` : `${flavor.block} at ${nodeName}`;
+      const clearLabel = isAoE ? `[AoE] ${flavor.clear} at ${nodeName}` : `${flavor.clear} at ${nodeName}`;
+
+      events.push({
+        stepIndex,
+        nodeId,
+        blocked: true,
+        label: blockLabel,
+      });
+
+      // Even massive blockages will eventually clear, but it takes a LONG time now.
+      events.push({
+        stepIndex: reopenStep,
+        nodeId,
+        blocked: false,
+        label: clearLabel,
+      });
+    });
   }
 
   return events.sort((a, b) => a.stepIndex - b.stepIndex);
@@ -122,10 +168,9 @@ export async function runSimulation(
 
   const blockedNodes = new Set<string>();
 
-  const estimatedSteps = Math.max(20, Math.floor(graph.nodes.length / 1.5));
+  const estimatedSteps = Math.max(50, Math.floor(graph.nodes.length * 1.5));
   const dynamicEvents = generateDynamicEvents(graph, scenario, estimatedSteps, dynamicSeed);
 
-  // Apply "Step 0" Pre-existing closures immediately
   dynamicEvents.forEach(event => {
     if (event.stepIndex === 0 && event.blocked) {
       blockedNodes.add(event.nodeId);

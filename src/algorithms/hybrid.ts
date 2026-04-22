@@ -18,7 +18,6 @@ export async function runGraphHybrid(
 
   const { nodes, edges, sourceId, destinationIds } = graph;
 
-  // ── Precompute ─────────────────────────────────────
   const nodeMap = new Map(nodes.map(n => [n.id, n]));
   const destSet = new Set(destinationIds);
 
@@ -28,11 +27,8 @@ export async function runGraphHybrid(
   edges.forEach(e => {
     if (!adj.has(e.from)) adj.set(e.from, []);
     adj.get(e.from)!.push({ to: e.to, latency: e.latency });
-    // ✅ FIX 2: Removed the undirected hack. Reverting this forces the algorithm 
-    // to obey one-way streets, which fixes the line "falling short" visually.
   });
 
-  // ── State ──────────────────────────────────────────
   const visited = new Set<string>();
   const parentMap = new Map<string, string | null>();
 
@@ -48,13 +44,10 @@ export async function runGraphHybrid(
   const steps: AlgorithmStep[] = [];
   let iteration = 0;
   let lastYieldTime = performance.now();
-  const isMassive = nodes.length > 200;
 
-  // ── Adaptive Decision Function ─────────────────────
   function chooseStrategy(current: string): 'BFS' | 'DFS' {
     const node = nodeMap.get(current);
     const neighbors = adj.get(current) ?? [];
-
     const branchingFactor = neighbors.length;
     const isHub = node?.level === 1;
 
@@ -63,48 +56,36 @@ export async function runGraphHybrid(
     return 'DFS';
   }
 
-  // ── UI Sync (FIXED FOR ANIMATION) ──────────────────
   const syncUI = async (current: string, strategy: string) => {
     iteration++;
     const now = performance.now();
 
-    const shouldRender = onStepProgress && (
-      iteration < 100 || (now - lastYieldTime > 10)
-    );
+    const step: AlgorithmStep = {
+      stepIndex: iteration,
+      explored: Array.from(visited),
+      frontier: [...frontier],
+      path: reconstructPath(parentMap, current),
+      current,
+      done: false,
+      foundDestination: null,
+      phaseLabel: `⚡ Adaptive ${strategy}`
+    };
 
-    const shouldStore =
-      iteration < 50 ||
-      !isMassive ||
-      iteration % 25 === 0;
+    steps.push(step);
 
-    if (shouldRender || shouldStore) {
-      const step: AlgorithmStep = {
-        stepIndex: iteration,
-        explored: Array.from(visited),
-        frontier: [...frontier],
-        path: reconstructPath(parentMap, current),
-        current,
-        done: false,
-        foundDestination: null,
-        phaseLabel: `⚡ Adaptive ${strategy}`
-      };
+    // ✅ FIX 1: ALWAYS fire onStepProgress so the simulationRunner catches EVERY disaster event instantly!
+    if (onStepProgress) {
+      onStepProgress(step);
+    }
 
-      if (shouldStore) steps.push(step);
-
-      if (shouldRender) {
-        onStepProgress?.(step);
-        await new Promise(r => setTimeout(r, 15));
-        await yieldToMain();
-        lastYieldTime = performance.now();
-      }
+    // ONLY yield the browser thread to update the visuals every 15ms
+    if (now - lastYieldTime > 15) {
+      await yieldToMain();
+      lastYieldTime = performance.now();
     }
   };
 
-  // ── Main Loop ──────────────────────────────────────
   while (frontier.length > 0 && !foundDestination) {
-
-    // ✅ FIX 3: Evaluate the node we are ACTUALLY about to pull.
-    // If we are functioning like a stack, check the last element.
     const peek = frontier[frontier.length - 1]; 
     const strategy = chooseStrategy(peek);
 
@@ -114,6 +95,9 @@ export async function runGraphHybrid(
         : frontier.pop()!;
 
     if (!current) continue;
+
+    // ✅ FIX 2: If the node was added to the queue earlier, but got hit by an AoE disaster while we were waiting... ABORT!
+    if (blockedNodes.has(current)) continue;
 
     nodesExplored++;
 
@@ -129,7 +113,6 @@ export async function runGraphHybrid(
     const orderedNeighbors = strategy === 'DFS' ? [...neighbors].reverse() : neighbors;
 
     for (const { to } of orderedNeighbors) {
-      // ✅ Dynamic Blocked Nodes will now work perfectly!
       if (!visited.has(to) && !blockedNodes.has(to)) {
         visited.add(to);
         parentMap.set(to, current);
@@ -138,11 +121,7 @@ export async function runGraphHybrid(
     }
   }
 
-  // ── Finalization ───────────────────────────────────
-  const finalPath = foundDestination
-    ? reconstructPath(parentMap, foundDestination)
-    : [];
-
+  const finalPath = foundDestination ? reconstructPath(parentMap, foundDestination) : [];
   const totalLatency = calcPathLatency(finalPath, edges);
 
   if (steps.length === 0) {
@@ -158,24 +137,12 @@ export async function runGraphHybrid(
     });
   } else {
     const last = steps[steps.length - 1];
-    steps[steps.length - 1] = {
-      ...last,
-      done: true,
-      foundDestination,
-      path: finalPath
-    };
+    steps[steps.length - 1] = { ...last, done: true, foundDestination, path: finalPath };
   }
 
-  return {
-    steps,
-    nodesExplored,
-    pathLength: foundDestination ? finalPath.length - 1 : -1,
-    totalLatency,
-    foundDestination
-  };
+  return { steps, nodesExplored, pathLength: foundDestination ? finalPath.length - 1 : -1, totalLatency, foundDestination };
 }
 
-// ── Helpers ─────────────────────────────────────────
 function reconstructPath(parentMap: Map<string, string | null>, nodeId: string): string[] {
   const path: string[] = [];
   let cur: string | null = nodeId;
