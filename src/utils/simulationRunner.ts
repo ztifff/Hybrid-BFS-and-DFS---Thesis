@@ -21,7 +21,7 @@ function makeRng(seed: number) {
   };
 }
 
-// 🔥 APOCALYPTIC TRAFFIC EDITION: Scaled Durations & Massive AoE
+// 🔥 APOCALYPTIC EDITION: Scaled Durations, Massive AoE, & Scenario-Aware Events
 function generateDynamicEvents(
   graph: ScenarioGraph,
   scenario: ScenarioType,
@@ -47,24 +47,73 @@ function generateDynamicEvents(
   });
 
   const isMassive = graph.nodes.length > 200;
-  
   const maxIncidents = isMassive ? 55 : 8; 
   const incidentCount = Math.min(maxIncidents, Math.floor(candidates.length * 0.5));
 
-  const standardLabels = [
-    { block: '💥 Minor Collision', clear: '🚓 Accident Cleared' },
-    { block: '🚧 Roadwork', clear: '✅ Roadwork Finished' },
-    { block: '🛑 Police Checkpoint', clear: '✅ Checkpoint Removed' },
-    { block: '🚗 Stalled Vehicle', clear: 'Tow Truck Arrived' }
-  ];
+  // ✅ THE FIX: Scenario-Specific Event Labels
+  let standardLabels: { block: string, clear: string }[] = [];
+  let aoeLabels: { block: string, clear: string }[] = [];
 
-  const aoeLabels = [
-    { block: '💥 Multi-Vehicle Pileup', clear: '🚓 Pileup Cleared' },
-    { block: '🚌 Major Bus Collision', clear: '🏗️ Bus Towed Away' },
-    { block: '🏗️ Bridge/Road Collapse', clear: '🚧 Temporary Bypass Opened' },
-    { block: '🚛 Overturned Semi-Truck', clear: '🏗️ Truck Removed' },
-    { block: '🚦 Total Gridlock', clear: '🟢 Traffic Flowing' }
-  ];
+  switch (scenario) {
+    case 'robotics':
+      standardLabels = [
+        { block: '📦 Pallet Spill', clear: '🧹 Aisle Cleared' },
+        { block: '🛑 Forklift Maintenance', clear: '✅ Maintenance Complete' },
+        { block: '🤖 Robot Malfunction', clear: '🔧 Robot Repaired' },
+        { block: '🚧 Shelf Restocking', clear: '✅ Restocking Finished' }
+      ];
+      aoeLabels = [
+        { block: '⚠️ Massive Rack Collapse', clear: '🏗️ Rack Rebuilt' },
+        { block: '🛑 Zone-wide Power Outage', clear: '⚡ Power Restored' },
+        { block: '⚠️ Hazardous Material Spill', clear: '🧹 Hazmat Cleared' },
+        { block: '🚧 Major Conveyor Jam', clear: '🟢 Conveyor Running' }
+      ];
+      break;
+    case 'evacuation':
+      standardLabels = [
+        { block: '🔥 Localized Fire', clear: '🧯 Fire Extinguished' },
+        { block: '🧱 Falling Debris', clear: '🧹 Debris Cleared' },
+        { block: '💨 Heavy Smoke', clear: '💨 Smoke Cleared' },
+        { block: '🚪 Door Jammed', clear: '🚪 Door Forced Open' }
+      ];
+      aoeLabels = [
+        { block: '🔥 Massive Fire Outbreak', clear: '🧯 Outbreak Contained' },
+        { block: '💥 Structural Collapse', clear: '🚧 Alternate Route Secured' },
+        { block: '⚠️ Floor Caved In', clear: '🌉 Temporary Bridge Set' },
+        { block: '💨 Toxic Gas Leak', clear: '💨 Ventilation Restored' }
+      ];
+      break;
+    case 'network':
+      standardLabels = [
+        { block: '🔌 Cable Unplugged', clear: '🔌 Cable Reconnected' },
+        { block: '🔥 Overheating Switch', clear: '❄️ Cooling Restored' },
+        { block: '🛑 BGP Route Flap', clear: '✅ Route Stabilized' },
+        { block: '💾 Drive Failure', clear: '🔄 Array Rebuilt' }
+      ];
+      aoeLabels = [
+        { block: '⚡ Rack Power Loss', clear: '⚡ Power Restored' },
+        { block: '🌐 Massive DDoS Attack', clear: '🛡️ Attack Mitigated' },
+        { block: '💥 Main Core Switch Failure', clear: '🔄 Core Rerouted' },
+        { block: '🌊 Cooling System Leak', clear: '🛠️ Leak Patched' }
+      ];
+      break;
+    case 'traffic':
+    default:
+      standardLabels = [
+        { block: '💥 Minor Collision', clear: '🚓 Accident Cleared' },
+        { block: '🚧 Roadwork', clear: '✅ Roadwork Finished' },
+        { block: '🛑 Police Checkpoint', clear: '✅ Checkpoint Removed' },
+        { block: '🚗 Stalled Vehicle', clear: 'Tow Truck Arrived' }
+      ];
+      aoeLabels = [
+        { block: '💥 Multi-Vehicle Pileup', clear: '🚓 Pileup Cleared' },
+        { block: '🚌 Major Bus Collision', clear: '🏗️ Bus Towed Away' },
+        { block: '🏗️ Bridge/Road Collapse', clear: '🚧 Temporary Bypass Opened' },
+        { block: '🚛 Overturned Semi-Truck', clear: '🏗️ Truck Removed' },
+        { block: '🚦 Total Gridlock', clear: '🟢 Traffic Flowing' }
+      ];
+      break;
+  }
 
   for (let i = 0; i < incidentCount; i++) {
     const epicenterId = candidates[Math.floor(rng() * candidates.length)];
@@ -77,9 +126,7 @@ function generateDynamicEvents(
       stepIndex = Math.floor(rng() * (totalSteps * 0.5)) + 1; 
     }
 
-    // ✅ THE FIX: Scaled Duration!
-    // Disasters now last between 30% and 80% of the entire simulation timeline.
-    // They will not prematurely vanish anymore.
+    // Scaled Duration
     const minDuration = Math.floor(totalSteps * 0.3);
     const maxDuration = Math.floor(totalSteps * 0.8);
     const blockDuration = Math.floor(rng() * (maxDuration - minDuration)) + minDuration;
@@ -134,7 +181,7 @@ function generateDynamicEvents(
         label: blockLabel,
       });
 
-      // Even massive blockages will eventually clear, but it takes a LONG time now.
+      // Even massive blockages will eventually clear
       events.push({
         stepIndex: reopenStep,
         nodeId,

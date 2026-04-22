@@ -18,8 +18,11 @@ type Status = 'idle' | 'running' | 'done' | 'paused';
 const STEP_INTERVAL_MS = 60;
 
 export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack }) => {
+  // ✅ THE FIX: Convert algorithm prop into local state so we can change it dynamically
+  const [activeAlgorithm, setActiveAlgorithm] = useState<AlgorithmType>(algorithm);
+  
   const sc = getScenario(scenario);
-  const al = getAlgorithm(algorithm);
+  const al = getAlgorithm(activeAlgorithm);
 
   const [useRealWorld, setUseRealWorld] = useState(false);
   const [seed, setSeed] = useState(() => Date.now()); 
@@ -54,6 +57,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
     }
   }, []);
 
+  // Notice how activeAlgorithm is now in the dependency array. 
+  // When it changes, this re-runs with the SAME seed!
   useEffect(() => {
     let isMounted = true;
 
@@ -64,7 +69,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
       setLiveStep(null);
       stopAnimation();
 
-      const result = await runSimulation(scenario, algorithm, seed, useRealWorld, (step) => {
+      const result = await runSimulation(scenario, activeAlgorithm, seed, useRealWorld, (step) => {
         if (isMounted) setLiveStep(step);
       });
       if (!isMounted) return;
@@ -83,7 +88,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
       isMounted = false;
       stopAnimation();
     };
-  }, [scenario, algorithm, useRealWorld, seed, stopAnimation]);
+  }, [scenario, activeAlgorithm, useRealWorld, seed, stopAnimation]);
 
   const totalSteps = simResult?.steps.length ?? 0;
 
@@ -225,12 +230,25 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
             ← Back
           </button>
           <div className="h-5 w-px bg-gray-700 hidden sm:block" />
+          
+          {/* ✅ THE FIX: Algorithm Dropdown in Header */}
           <div className="text-sm flex items-center gap-2">
             <span className="text-xl">{sc.icon}</span>
             <span className="font-bold text-white">{sc.name}</span>
             <span className="text-gray-500">·</span>
-            <span style={{ color: al.color }} className="font-semibold truncate max-w-[150px] sm:max-w-none">{al.name}</span>
+            <select
+              value={activeAlgorithm}
+              onChange={(e) => setActiveAlgorithm(e.target.value as AlgorithmType)}
+              disabled={isComputing}
+              className="bg-[#111827] border border-gray-700 rounded-md px-2 py-1 text-sm font-bold outline-none cursor-pointer hover:border-gray-500 focus:border-gray-400 transition-colors disabled:opacity-50"
+              style={{ color: al.color }}
+            >
+              <option value="hybrid" style={{ color: '#fff' }}>Hybrid BFS-DFS</option>
+              <option value="bfs" style={{ color: '#fff' }}>Breadth-First Search (BFS)</option>
+              <option value="dfs" style={{ color: '#fff' }}>Depth-First Search (DFS)</option>
+            </select>
           </div>
+
         </div>
         <div className="text-xs text-gray-500 hidden md:block">
           Real-World Graph Simulation — BFS / DFS / Hybrid Performance Evaluation
@@ -244,7 +262,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
           {simResult && !isComputing ? (
             <MetricsPanel
               metrics={status === 'done' ? simResult.metrics : null}
-              algorithm={algorithm}
+              algorithm={activeAlgorithm} // Pass activeAlgorithm
               scenario={scenario}
               status={status}
               stepIndex={stepIndex}
@@ -263,14 +281,14 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
             </div>
           )}
           
-          <Legend algorithm={algorithm} scenario={scenario} />
+          <Legend algorithm={activeAlgorithm} scenario={scenario} /> {/* Pass activeAlgorithm */}
 
           <div className="bg-gray-900 border border-gray-700 rounded-xl p-4">
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
               Algorithm Behavior
             </h3>
             <p className="text-xs text-gray-400 leading-relaxed">{al.description}</p>
-            {algorithm === 'hybrid' && (
+            {activeAlgorithm === 'hybrid' && (
               <div className="mt-2 text-xs p-2 rounded border" style={{ borderColor: al.color + '44', color: al.color }}>
                 🔀 Phase 1: BFS → Hub nodes<br />
                 🎯 Phase 2: DFS → Within each hub
@@ -322,7 +340,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
               frontier={frontierSet}
               path={pathSet}
               current={currentNode}
-              algorithm={algorithm}
+              algorithm={activeAlgorithm} // Pass activeAlgorithm
               scenario={scenario}
               blockedNodes={new Set()}
               stepIndex={stepIndex}
@@ -355,7 +373,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
         {/* RIGHT SIDEBAR */}
         <aside className="w-full lg:w-[350px] flex-shrink-0 border-t lg:border-t-0 lg:border-l border-gray-800 p-4 flex flex-col gap-4 bg-[#0a0f1e] overflow-hidden">
           
-          {/* ✅ THE FIX: Restored & Upgraded Thesis Final Report */}
           {simResult && !isComputing && status === 'done' && (
             <div className="bg-gray-900/80 border border-blue-900/50 rounded-xl p-5 shadow-[0_0_20px_rgba(30,58,138,0.15)] shrink-0 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: al.color }}></div>
@@ -435,10 +452,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
               <div className="bg-[#0d1224] border border-gray-700 rounded-xl p-4 flex flex-col shadow-inner flex-1 min-h-[200px] overflow-hidden">
                 <div className="flex justify-between items-center mb-3 border-b border-gray-800 pb-2 shrink-0">
                   <h3 className="text-xs text-gray-400 font-bold uppercase tracking-wider flex items-center gap-2">
-                    📅 Scheduled Map Events
+                    📅 Dynamic Map Events
                   </h3>
                   <span className="text-[10px] font-mono text-gray-500">
-                    {simResult.dynamicEvents.length}
+                    {simResult.dynamicEvents.filter(ev => ev.stepIndex <= stepIndex).length} / {simResult.dynamicEvents.length}
                   </span>
                 </div>
                 
@@ -446,21 +463,24 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
                   className="flex-1 overflow-y-auto pr-2 flex flex-col gap-1.5"
                   style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}
                 >
-                  {simResult.dynamicEvents.map((ev, i) => {
-                    const hasHappened = stepIndex >= ev.stepIndex;
-                    return (
-                      <div key={i} className={`text-[11px] p-2 rounded border transition-all ${
-                        hasHappened 
-                          ? ev.blocked 
-                            ? 'border-orange-500/50 bg-orange-900/20 text-orange-300' 
-                            : 'border-green-500/50 bg-green-900/20 text-green-300' 
-                          : 'border-gray-700 bg-gray-800/30 text-gray-500'
+                  {simResult.dynamicEvents
+                    .filter(ev => ev.stepIndex <= stepIndex)
+                    .reverse()
+                    .map((ev, i) => (
+                      <div key={`${ev.stepIndex}-${i}`} className={`text-[11px] p-2 rounded border transition-all ${
+                        ev.blocked 
+                          ? 'border-orange-500/50 bg-orange-900/20 text-orange-300' 
+                          : 'border-green-500/50 bg-green-900/20 text-green-300' 
                       }`}>
                         <span className="font-mono opacity-60 mr-1">[{ev.stepIndex}]</span>
-                        {ev.blocked ? '⚡' : '✅'} {ev.label} {!hasHappened && '(Future)'}
+                        {ev.blocked ? '⚡' : '✅'} {ev.label}
                       </div>
-                    );
-                  })}
+                    ))}
+                  {simResult.dynamicEvents.filter(ev => ev.stepIndex <= stepIndex).length === 0 && (
+                    <div className="text-xs text-gray-500 text-center mt-6 italic">
+                      No map events triggered yet...
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -472,7 +492,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
   );
 };
 
-// ✅ Helper component for cleanly formatting the Final Report data
 const ReportRow: React.FC<{ label: string; value: string; subValue?: string }> = ({ label, value, subValue }) => (
   <div className="flex flex-col border-b border-gray-800/60 pb-2 last:border-0 last:pb-0">
     <div className="flex justify-between items-start">

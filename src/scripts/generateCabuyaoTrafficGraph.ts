@@ -37,7 +37,12 @@ interface ScenarioGraph {
 const BBOX = { south: 14.20, west: 121.08, north: 14.32, east: 121.18 };
 const W = 1000;
 const H = 760;
+
+// ✅ REVERTED: Strictly main arteries to keep the node count optimized for buttery smooth 60 FPS animation.
 const HIGHWAY_REGEX = "motorway|trunk|primary|secondary|tertiary";
+
+// ✅ OPTIMIZED: 45m radius aggressively cleans up double-intersections on highways
+const MERGE_RADIUS_METERS = 45; 
 
 function haversineMeters(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371000;
@@ -123,31 +128,76 @@ async function main() {
   });
 
   const nodeUsageCount = new Map<number, number>();
-  ways.forEach(w => w.nodes.forEach(id => nodeUsageCount.set(id, (nodeUsageCount.get(id) || 0) + 1)));
+  const majorRoadNodes = new Set<number>(); 
 
-  // Find Center (Start Node)
+  ways.forEach(w => {
+    w.nodes.forEach(id => nodeUsageCount.set(id, (nodeUsageCount.get(id) || 0) + 1));
+    
+    if (w.tags && /motorway|trunk|primary|secondary|tertiary/.test(w.tags.highway || '')) {
+      w.nodes.forEach(id => majorRoadNodes.add(id));
+    }
+  });
+
   const centerLat = (BBOX.south + BBOX.north) / 2;
   const centerLon = (BBOX.west + BBOX.east) / 2;
   let sourceOsm = Array.from(osmNodes.keys())[0];
   let minD = Infinity;
   osmNodes.forEach((p, id) => {
-    const d = haversineMeters(centerLat, centerLon, p.lat, p.lon);
-    if (d < minD) { minD = d; sourceOsm = id; }
+    if (majorRoadNodes.has(id)) {
+      const d = haversineMeters(centerLat, centerLon, p.lat, p.lon);
+      if (d < minD) { minD = d; sourceOsm = id; }
+    }
   });
 
-  // EXACT BORDER EXITS (No middle map nodes)
   let nId = sourceOsm, sId = sourceOsm, eId = sourceOsm, wId = sourceOsm;
   let maxLat = -Infinity, minLat = Infinity, maxLon = -Infinity, minLon = Infinity;
   osmNodes.forEach((p, id) => {
+    if (!majorRoadNodes.has(id)) return; 
+
     if (p.lat > maxLat) { maxLat = p.lat; nId = id; }
     if (p.lat < minLat) { minLat = p.lat; sId = id; }
     if (p.lon > maxLon) { maxLon = p.lon; eId = id; }
     if (p.lon < minLon) { minLon = p.lon; wId = id; }
   });
 
-  // Only the extreme edges of the city are marked as destinations
   const specialDestinations = new Set([nId, sId, eId, wId]);
-  const isJunction = (id: number) => (nodeUsageCount.get(id) || 0) > 1 || specialDestinations.has(id) || id === sourceOsm;
+
+  const junctionCandidates = new Set<number>();
+  ways.forEach(w => {
+    junctionCandidates.add(w.nodes[0]);
+    junctionCandidates.add(w.nodes[w.nodes.length - 1]);
+    w.nodes.forEach(id => {
+      if ((nodeUsageCount.get(id) || 0) > 1 || specialDestinations.has(id) || id === sourceOsm) {
+        junctionCandidates.add(id);
+      }
+    });
+  });
+
+  const nodeAliases = new Map<number, number>();
+  
+  const sortedJunctions = Array.from(junctionCandidates).sort((a, b) => {
+    const aWeight = (specialDestinations.has(a) || a === sourceOsm) ? 1 : 0;
+    const bWeight = (specialDestinations.has(b) || b === sourceOsm) ? 1 : 0;
+    return bWeight - aWeight; 
+  });
+
+  for (let i = 0; i < sortedJunctions.length; i++) {
+    const id1 = sortedJunctions[i];
+    if (nodeAliases.has(id1)) continue;
+    const p1 = osmNodes.get(id1)!;
+
+    for (let j = i + 1; j < sortedJunctions.length; j++) {
+      const id2 = sortedJunctions[j];
+      if (nodeAliases.has(id2)) continue;
+      const p2 = osmNodes.get(id2)!;
+
+      if (haversineMeters(p1.lat, p1.lon, p2.lat, p2.lon) < MERGE_RADIUS_METERS) {
+        nodeAliases.set(id2, id1); 
+      }
+    }
+  }
+
+  const getAlias = (id: number) => nodeAliases.get(id) || id;
 
   const finalNodes = new Map<number, GraphNode>();
   const finalEdges: GraphEdge[] = [];
@@ -159,9 +209,12 @@ async function main() {
     let lastJunctionIdx = 0;
 
     for (let i = 1; i < w.nodes.length; i++) {
-      if (isJunction(w.nodes[i]) || i === w.nodes.length - 1) {
-        const uId = w.nodes[lastJunctionIdx];
-        const vId = w.nodes[i];
+      if (junctionCandidates.has(w.nodes[i])) {
+        const rawU = w.nodes[lastJunctionIdx];
+        const rawV = w.nodes[i];
+        
+        const uId = getAlias(rawU);
+        const vId = getAlias(rawV);
         
         let distMeters = 0;
         for (let j = lastJunctionIdx; j < i; j++) {
@@ -171,52 +224,53 @@ async function main() {
         }
         const latency = (distMeters / ((speed * 1000) / 60));
 
-        [uId, vId].forEach(id => {
-          if (!finalNodes.has(id)) {
-            const p = osmNodes.get(id)!;
-            const { x, y } = projector(p.lat, p.lon);
-            let type: ScenarioNodeType = "street";
-            let label = `Node ${id}`;
-            
-            if (id === sourceOsm) {
-              type = "origin";
-              label = "Cabuyao Center (Start)";
-            } else if (specialDestinations.has(id)) {
-              type = "highway";
-              // Nicely formatted border exits
-              if (id === nId) label = "North Exit (Santa Rosa)";
-              else if (id === sId) label = "South Exit (Calamba)";
-              else if (id === wId) label = "West Exit (Silang)";
-              else if (id === eId) label = "East Exit (Lake Road)";
-            } else if ((nodeUsageCount.get(id) || 0) > 1) {
-              type = "intersection";
-              label = `Intersection #${finalNodes.size + 1}`; // Clean naming
-            } else {
-              label = `Street #${finalNodes.size + 1}`; // Clean naming
+        if (uId !== vId) {
+          [uId, vId].forEach(id => {
+            if (!finalNodes.has(id)) {
+              const p = osmNodes.get(id)!;
+              const { x, y } = projector(p.lat, p.lon);
+              let type: ScenarioNodeType = "street";
+              let label = `Node ${id}`;
+              
+              if (id === sourceOsm) {
+                type = "origin";
+                label = "Cabuyao Center (Start)";
+              } else if (specialDestinations.has(id)) {
+                type = "highway";
+                if (id === nId) label = "North Exit (Santa Rosa)";
+                else if (id === sId) label = "South Exit (Calamba)";
+                else if (id === wId) label = "West Exit (Silang)";
+                else if (id === eId) label = "East Exit (Lake Road)";
+              } else if ((nodeUsageCount.get(id) || 0) > 1) {
+                type = "intersection";
+                label = `Intersection #${finalNodes.size + 1}`;
+              } else {
+                label = `Street #${finalNodes.size + 1}`;
+              }
+
+              finalNodes.set(id, {
+                id: `osm_n_${id}`,
+                label,
+                type, x, y, level: (type === "street" ? 2 : 1),
+              });
             }
+          });
 
-            finalNodes.set(id, {
-              id: `osm_n_${id}`,
-              label,
-              type, x, y, level: (type === "street" ? 2 : 1),
-            });
+          finalEdges.push({
+            id: `e_${wayIdx}_${i}`,
+            from: `osm_n_${uId}`, to: `osm_n_${vId}`,
+            latency: Math.max(0.1, latency),
+            type: "road"
+          });
+
+          if (w.tags?.oneway !== "yes") {
+              finalEdges.push({
+                  id: `e_rev_${wayIdx}_${i}`,
+                  from: `osm_n_${vId}`, to: `osm_n_${uId}`,
+                  latency: Math.max(0.1, latency),
+                  type: "road"
+              });
           }
-        });
-
-        finalEdges.push({
-          id: `e_${wayIdx}_${i}`,
-          from: `osm_n_${uId}`, to: `osm_n_${vId}`,
-          latency: Math.max(0.1, latency),
-          type: "road"
-        });
-
-        if (w.tags?.oneway !== "yes") {
-            finalEdges.push({
-                id: `e_rev_${wayIdx}_${i}`,
-                from: `osm_n_${vId}`, to: `osm_n_${uId}`,
-                latency: Math.max(0.1, latency),
-                type: "road"
-            });
         }
         lastJunctionIdx = i;
       }
@@ -233,7 +287,7 @@ async function main() {
 
   const outFile = path.join(process.cwd(), "src", "data", "traffic.cabuyao.ts");
   fs.writeFileSync(outFile, `import type { ScenarioGraph } from "../types";\nexport const cabuyaoTrafficGraph: ScenarioGraph = ${JSON.stringify(graph, null, 2)} as ScenarioGraph;\n`);
-  console.log(`Wrote simplified graph. Nodes: ${graph.nodes.length}, Edges: ${graph.edges.length}`);
+  console.log(`Wrote simplified clustered graph. Reduced map to ${graph.nodes.length} nodes and ${graph.edges.length} edges.`);
 }
 
 main().catch(console.error);
