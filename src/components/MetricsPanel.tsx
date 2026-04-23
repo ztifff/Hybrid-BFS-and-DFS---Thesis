@@ -49,7 +49,7 @@ const METRIC_CONFIG: Record<ScenarioType, {
   traffic: {
     exploredLabel: 'Roads Checked',   exploredIcon: '🚦',
     pathLabel: 'Route Segments',      pathIcon: '🛣️',
-    latencyLabel: 'Travel Time',      latencyUnit: 'min', latencyIcon: '⏱️',
+    latencyLabel: 'Travel Time',      latencyUnit: 'Min', latencyIcon: '⏱️',
   },
   evacuation: {
     exploredLabel: 'Areas Searched',  exploredIcon: '🚶',
@@ -63,15 +63,16 @@ const METRIC_CONFIG: Record<ScenarioType, {
   },
 };
 
-function getPathOptimality(
-  actualPath: number,
-  optimalPath?: number
+// ✅ EXPORTED and FIXED to cap at 100%
+export function getPathOptimality(
+  actualHops: number,
+  optimalHops?: number
 ): { ratio: number; label: string; color: string } {
-  if (!optimalPath || optimalPath === 0) {
+  if (!optimalHops || optimalHops === 0 || actualHops === 0) {
     return { ratio: 0, label: 'N/A', color: '#64748b' };
   }
   
-  const ratio = optimalPath / actualPath; 
+  const ratio = Math.min(1, optimalHops / actualHops); 
   const percentage = (ratio * 100).toFixed(1);
   
   if (ratio >= 0.95) {
@@ -85,7 +86,8 @@ function getPathOptimality(
   }
 }
 
-function getCompletionRate(
+// ✅ EXPORTED
+export function getCompletionRate(
   explored: number,
   totalNodes?: number
 ): { percentage: number; label: string } {
@@ -97,14 +99,16 @@ function getCompletionRate(
   return { percentage, label: `${percentage.toFixed(1)}%` };
 }
 
-function getMemoryInMB(memoryKB: number): string {
+// ✅ EXPORTED
+export function getMemoryInMB(memoryKB: number): string {
   const memoryMB = memoryKB / 1024;
   return memoryMB >= 1 
     ? `${memoryMB.toFixed(2)} MB` 
     : `${memoryKB.toFixed(1)} KB`;
 }
 
-function getAdaptabilityScore(
+// ✅ EXPORTED
+export function getAdaptabilityScore(
   status: 'idle' | 'running' | 'done' | 'paused',
   metrics: PerformanceMetrics | null,
   algorithm: AlgorithmType,
@@ -169,8 +173,13 @@ export const MetricsPanel: React.FC<Props> = ({
   const mc = METRIC_CONFIG[scenario];
   const progress = totalSteps > 0 ? (stepIndex / totalSteps) * 100 : 0;
 
+  // ✅ THE FIX: Convert live Nodes to Hops. If done, use the official metrics.pathLength!
+  const actualHops = status === 'done' && metrics 
+    ? metrics.pathLength 
+    : Math.max(0, currentPath - 1);
+
   const completionRate = getCompletionRate(currentExplored, totalNodes);
-  const pathOptimality = getPathOptimality(currentPath, optimalPathLength);
+  const pathOptimality = getPathOptimality(actualHops, optimalPathLength);
   const adaptability = getAdaptabilityScore(status, metrics, algorithm, dynamicEvents);
 
   return (
@@ -231,7 +240,7 @@ export const MetricsPanel: React.FC<Props> = ({
         />
         <MetricCard
           label="Path Length"
-          value={currentPath > 0 ? currentPath.toString() : '—'}
+          value={actualHops > 0 ? actualHops.toString() : '—'}
           icon="📍"
           color={algo.color}
         />
@@ -272,7 +281,7 @@ export const MetricsPanel: React.FC<Props> = ({
         )}
       </div>
 
-      {/* Path Optimality - FIXED LAYOUT */}
+      {/* Path Optimality */}
       {metrics && metrics.pathLength > 0 && (
         <div className="bg-gray-800 rounded-lg p-3 flex flex-col gap-1">
           <div className="flex justify-between items-start">
@@ -283,13 +292,13 @@ export const MetricsPanel: React.FC<Props> = ({
           </div>
           {optimalPathLength && (
             <span className="text-[10px] text-gray-500 pt-1">
-              {currentPath} hops vs {optimalPathLength} optimal
+              {actualHops} hops vs {optimalPathLength} optimal
             </span>
           )}
         </div>
       )}
 
-      {/* Latency metric - FIXED DECIMAL AND LAYOUT */}
+      {/* Latency metric */}
       {metrics && (
         <div className="bg-gray-800 rounded-lg p-3 flex items-center justify-between gap-2">
           <span className="text-xs text-gray-400 whitespace-nowrap">{mc.latencyIcon} {mc.latencyLabel}</span>
@@ -341,7 +350,7 @@ export const MetricsPanel: React.FC<Props> = ({
         >
           {metrics.exitFound ? (
             <span className="text-green-400">
-              ✅ {sc.destinationLabel} #{(metrics.exitIndex ?? 0) + 1} reached in {currentPath} hops
+              ✅ {sc.destinationLabel} #{(metrics.exitIndex ?? 0) + 1} reached in {actualHops} hops
             </span>
           ) : (
             <span className="text-red-400">❌ No destination reachable — all paths blocked</span>
