@@ -24,8 +24,13 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
   
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
-  const [isCurrentSaved, setIsCurrentSaved] = useState(false); // ✅ Track if current run is saved
-  const runCounter = useRef(0);
+  const [isCurrentSaved, setIsCurrentSaved] = useState(false); 
+  
+  const runCounters = useRef<Record<AlgorithmType, number>>({ bfs: 0, dfs: 0, hybrid: 0 });
+  
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [saveNameInput, setSaveNameInput] = useState('');
+  const [saveDefaultName, setSaveDefaultName] = useState('');
   
   const sc = getScenario(scenario);
   const al = getAlgorithm(activeAlgorithm);
@@ -84,7 +89,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
       setSimResult(result);
       setBfsResult(optimalBfsResult);
       setIsComputing(false);
-      setIsCurrentSaved(false); // ✅ Reset save status on new run
+      setIsCurrentSaved(false); 
     };
 
     computeGraphData();
@@ -95,21 +100,39 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
     };
   }, [scenario, activeAlgorithm, useRealWorld, seed, stopAnimation]);
 
-  // ✅ MANUAL SAVE HANDLER
-  const handleSaveResult = useCallback(() => {
+  const openSaveModal = useCallback(() => {
     if (!simResult || isCurrentSaved) return;
-    runCounter.current += 1;
+    
+    const algoName = getAlgorithm(activeAlgorithm).name;
+    const nextRunNumber = runCounters.current[activeAlgorithm] + 1;
+    const defaultName = `${algoName} Trial #${nextRunNumber}`;
+    
+    setSaveDefaultName(defaultName);
+    setSaveNameInput(defaultName); 
+    setIsSaveModalOpen(true);
+  }, [simResult, isCurrentSaved, activeAlgorithm]);
+
+  const confirmSaveResult = useCallback(() => {
+    if (!simResult) return;
+    
+    runCounters.current[activeAlgorithm] += 1;
+    const finalName = saveNameInput.trim() === '' ? saveDefaultName : saveNameInput.trim();
+
     setHistory(prev => [...prev, {
       id: Date.now().toString(),
-      runNumber: runCounter.current,
+      runNumber: runCounters.current[activeAlgorithm],
+      name: finalName,
       algorithm: activeAlgorithm,
+      scenario: scenario, 
       simResult: simResult,
       optimalPathLength: bfsResult?.pathLength || 1,
       totalNodes: currentGraph.nodes.length,
       timestamp: new Date()
     }]);
+    
     setIsCurrentSaved(true);
-  }, [simResult, isCurrentSaved, activeAlgorithm, bfsResult, currentGraph.nodes.length]);
+    setIsSaveModalOpen(false);
+  }, [simResult, activeAlgorithm, bfsResult, currentGraph.nodes.length, saveNameInput, saveDefaultName, scenario]);
 
   const totalSteps = simResult?.steps.length ?? 0;
 
@@ -246,16 +269,17 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
   return (
     <>
       <div className="min-h-screen lg:h-screen w-full bg-[#0a0f1e] text-white flex flex-col lg:overflow-hidden relative z-0">
-        <header className="border-b border-gray-800 px-4 md:px-6 py-3 flex items-center justify-between bg-[#0d1224] flex-wrap gap-2 shrink-0">
-          <div className="flex items-center gap-4">
+        
+        <header className="border-b border-gray-800 px-4 md:px-6 py-3 flex items-center justify-between bg-[#0d1224] shrink-0 relative">
+          <div className="flex items-center gap-4 relative z-10">
             <button onClick={onBack} className="text-gray-400 hover:text-white transition-colors text-sm flex items-center gap-1 cursor-pointer">
               ← Back
             </button>
             <div className="h-5 w-px bg-gray-700 hidden sm:block" />
             <div className="text-sm flex items-center gap-2">
-              <span className="text-xl">{sc.icon}</span>
-              <span className="font-bold text-white">{sc.name}</span>
-              <span className="text-gray-500">·</span>
+              <span className="text-xl hidden sm:inline">{sc.icon}</span>
+              <span className="font-bold text-white hidden sm:inline">{sc.name}</span>
+              <span className="text-gray-500 hidden sm:inline">·</span>
               <select
                 value={activeAlgorithm}
                 onChange={(e) => setActiveAlgorithm(e.target.value as AlgorithmType)}
@@ -269,14 +293,25 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
               </select>
             </div>
           </div>
-          <div className="text-xs text-gray-500 hidden md:block">
+
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 hidden md:block">
+            <button 
+              onClick={() => setIsHistoryModalOpen(true)}
+              className="px-5 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-full text-xs font-bold text-white shadow-md transition-all flex items-center gap-2 cursor-pointer"
+            >
+              🗄️ Result History 
+              <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">{history.length}</span>
+            </button>
+          </div>
+
+          <div className="text-xs text-gray-500 hidden lg:block relative z-10">
             Real-World Graph Simulation — BFS / DFS / Hybrid Performance Evaluation
           </div>
         </header>
 
         <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
           
-          <aside className="w-full lg:w-80 flex-shrink-0 border-b lg:border-b-0 lg:border-r border-gray-800 p-4 flex flex-col gap-4 overflow-y-auto">
+          <aside className="w-full lg:w-80 flex-shrink-0 border-b lg:border-b-0 lg:border-r border-gray-800 p-4 flex flex-col gap-4 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}>
             {simResult && !isComputing ? (
               <MetricsPanel
                 metrics={status === 'done' ? simResult.metrics : null}
@@ -317,17 +352,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
 
           <main className="flex-1 flex flex-col items-center justify-start p-4 overflow-y-auto w-full relative">
             
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 mt-2 z-10">
-              <button 
-                onClick={() => setIsHistoryModalOpen(true)}
-                className="px-6 py-2 bg-gray-900/90 hover:bg-gray-800 border border-gray-600 rounded-full text-sm font-bold text-white shadow-[0_4px_15px_rgba(0,0,0,0.5)] backdrop-blur transition-all flex items-center gap-2 cursor-pointer"
-              >
-                🗄️ Result History 
-                <span className="bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded-full">{history.length}</span>
-              </button>
-            </div>
-
-            <div className="mb-3 mt-12 flex flex-col items-center gap-3 w-full shrink-0">
+            <div className="mb-3 flex flex-col items-center gap-3 w-full shrink-0">
               <div className="flex items-center gap-3 flex-wrap justify-center text-center">
                 <div className="px-4 py-1.5 rounded-full text-sm font-bold" style={{ backgroundColor: al.color + '22', color: al.color, border: `1px solid ${al.color}55` }}>
                   {al.name} · {sc.name}
@@ -400,92 +425,96 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
             </div>
           </main>
 
-          <aside className="w-full lg:w-[350px] flex-shrink-0 border-t lg:border-t-0 lg:border-l border-gray-800 p-4 flex flex-col gap-4 bg-[#0a0f1e] overflow-hidden">
-            
-            {/* ✅ Passes the handleSaveResult and isCurrentSaved state down */}
+          {/* ✅ RIGHT ASIDE - Completely scrollable externally, with internal blocks mapped to fixed shapes to prevent squashing! */}
+          <aside 
+            className="w-full lg:w-[350px] flex-shrink-0 border-t lg:border-t-0 lg:border-l border-gray-800 p-4 flex flex-col gap-4 bg-[#0a0f1e] overflow-y-auto lg:h-full"
+            style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}
+          >
+            {/* Kept as shrink-0 so the final report never shrinks */}
             {simResult && !isComputing && status === 'done' && (
-              <SimulationReport 
-                simResult={simResult} 
-                bfsResult={bfsResult} 
-                alColor={al.color}
-                currentExplored={activeStep?.explored.length ?? 0}
-                totalNodes={currentGraph.nodes.length}
-                algorithm={activeAlgorithm}
-                dynamicEvents={simResult.dynamicEvents}
-                onSaveResult={handleSaveResult}
-                isSaved={isCurrentSaved}
-              />
+              <div className="shrink-0">
+                <SimulationReport 
+                  simResult={simResult} 
+                  bfsResult={bfsResult} 
+                  alColor={al.color}
+                  currentExplored={activeStep?.explored.length ?? 0}
+                  totalNodes={currentGraph.nodes.length}
+                  algorithm={activeAlgorithm}
+                  dynamicEvents={simResult.dynamicEvents}
+                  onSaveResult={openSaveModal}
+                  isSaved={isCurrentSaved}
+                />
+              </div>
             )}
 
-            <div className="flex flex-col gap-4 flex-1 overflow-hidden">
-              <div className="bg-[#0d1224] border border-gray-700 rounded-xl p-4 flex flex-col shadow-inner flex-1 min-h-[200px] overflow-hidden">
-                <div className="flex justify-between items-center mb-3 border-b border-gray-800 pb-2 shrink-0">
+            {/* ✅ FIXED THE TRAP: Replaced flex-1 wrapper with fixed height boxes (h-[220px] shrink-0) */}
+            <div className="bg-[#0d1224] border border-gray-700 rounded-xl p-3 flex flex-col shadow-inner shrink-0 h-[220px]">
+              <div className="flex justify-between items-center mb-2 shrink-0 border-b border-gray-800 pb-2">
+                <h3 className="text-xs text-gray-400 font-bold uppercase tracking-wider flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                  Live Activity Log
+                </h3>
+              </div>
+              
+              <div 
+                className="flex-1 overflow-y-auto pr-1 space-y-2 flex flex-col" 
+                style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}
+              >
+                {visibleActivityLogs.length > 0 ? (
+                  visibleActivityLogs.map((log, i) => (
+                    <div key={`${log.step}-${i}`} className={`text-[11px] p-2 rounded border transition-all ${
+                      log.type === 'success' ? 'border-green-500/30 bg-green-900/20 text-green-300' :
+                      log.type === 'error' ? 'border-red-500/30 bg-red-900/20 text-red-400 font-bold' :
+                      log.type === 'warning' ? 'border-orange-500/30 bg-orange-900/20 text-orange-300 font-semibold' :
+                      'border-gray-700 bg-gray-800/50 text-gray-300'
+                    }`}>
+                      <span className="opacity-50 mr-1 font-mono">[{log.step}]</span> {log.text}
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-xs text-gray-500 text-center mt-6 italic">
+                    Awaiting algorithm initiation...
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {simResult && simResult.dynamicEvents.length > 0 && (
+              <div className="bg-[#0d1224] border border-gray-700 rounded-xl p-3 flex flex-col shadow-inner shrink-0 h-[220px]">
+                <div className="flex justify-between items-center mb-2 shrink-0 border-b border-gray-800 pb-2">
                   <h3 className="text-xs text-gray-400 font-bold uppercase tracking-wider flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    Live Activity Log
+                    📅 Dynamic Map Events
                   </h3>
+                  <span className="text-[10px] font-mono text-gray-500">
+                    {simResult.dynamicEvents.filter(ev => ev.stepIndex <= stepIndex).length} / {simResult.dynamicEvents.length}
+                  </span>
                 </div>
                 
                 <div 
-                  className="flex-1 overflow-y-auto pr-2 space-y-2 flex flex-col" 
+                  className="flex-1 overflow-y-auto pr-1 flex flex-col gap-1.5"
                   style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}
                 >
-                  {visibleActivityLogs.length > 0 ? (
-                    visibleActivityLogs.map((log, i) => (
-                      <div key={`${log.step}-${i}`} className={`text-[11px] p-2 rounded border transition-all ${
-                        log.type === 'success' ? 'border-green-500/30 bg-green-900/20 text-green-300' :
-                        log.type === 'error' ? 'border-red-500/30 bg-red-900/20 text-red-400 font-bold' :
-                        log.type === 'warning' ? 'border-orange-500/30 bg-orange-900/20 text-orange-300 font-semibold' :
-                        'border-gray-700 bg-gray-800/50 text-gray-300'
+                  {simResult.dynamicEvents
+                    .filter(ev => ev.stepIndex <= stepIndex)
+                    .reverse()
+                    .map((ev, i) => (
+                      <div key={`${ev.stepIndex}-${i}`} className={`text-[11px] p-2 rounded border transition-all ${
+                        ev.blocked 
+                          ? 'border-orange-500/50 bg-orange-900/20 text-orange-300' 
+                          : 'border-green-500/50 bg-green-900/20 text-green-300' 
                       }`}>
-                        <span className="opacity-50 mr-1 font-mono">[{log.step}]</span> {log.text}
+                        <span className="font-mono opacity-60 mr-1">[{ev.stepIndex}]</span>
+                        {ev.blocked ? '⚡' : '✅'} {ev.label}
                       </div>
-                    ))
-                  ) : (
+                    ))}
+                  {simResult.dynamicEvents.filter(ev => ev.stepIndex <= stepIndex).length === 0 && (
                     <div className="text-xs text-gray-500 text-center mt-6 italic">
-                      Awaiting algorithm initiation...
+                      No map events triggered yet...
                     </div>
                   )}
                 </div>
               </div>
-
-              {simResult && simResult.dynamicEvents.length > 0 && (
-                <div className="bg-[#0d1224] border border-gray-700 rounded-xl p-4 flex flex-col shadow-inner flex-1 min-h-[200px] overflow-hidden">
-                  <div className="flex justify-between items-center mb-3 border-b border-gray-800 pb-2 shrink-0">
-                    <h3 className="text-xs text-gray-400 font-bold uppercase tracking-wider flex items-center gap-2">
-                      📅 Dynamic Map Events
-                    </h3>
-                    <span className="text-[10px] font-mono text-gray-500">
-                      {simResult.dynamicEvents.filter(ev => ev.stepIndex <= stepIndex).length} / {simResult.dynamicEvents.length}
-                    </span>
-                  </div>
-                  
-                  <div 
-                    className="flex-1 overflow-y-auto pr-2 flex flex-col gap-1.5"
-                    style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}
-                  >
-                    {simResult.dynamicEvents
-                      .filter(ev => ev.stepIndex <= stepIndex)
-                      .reverse()
-                      .map((ev, i) => (
-                        <div key={`${ev.stepIndex}-${i}`} className={`text-[11px] p-2 rounded border transition-all ${
-                          ev.blocked 
-                            ? 'border-orange-500/50 bg-orange-900/20 text-orange-300' 
-                            : 'border-green-500/50 bg-green-900/20 text-green-300' 
-                        }`}>
-                          <span className="font-mono opacity-60 mr-1">[{ev.stepIndex}]</span>
-                          {ev.blocked ? '⚡' : '✅'} {ev.label}
-                        </div>
-                      ))}
-                    {simResult.dynamicEvents.filter(ev => ev.stepIndex <= stepIndex).length === 0 && (
-                      <div className="text-xs text-gray-500 text-center mt-6 italic">
-                        No map events triggered yet...
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+            )}
 
           </aside>
         </div>
@@ -496,6 +525,42 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
         onClose={() => setIsHistoryModalOpen(false)}
         history={history}
       />
+
+      {isSaveModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 transition-opacity">
+          <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-md flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden">
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-white mb-2">💾 Save Result to History</h3>
+              <p className="text-sm text-gray-400 mb-5">Enter a custom name for this simulation run to easily identify it later.</p>
+              
+              <input 
+                type="text" 
+                value={saveNameInput}
+                onChange={(e) => setSaveNameInput(e.target.value)}
+                placeholder={saveDefaultName}
+                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium"
+                autoFocus
+                onKeyDown={(e) => e.key === 'Enter' && confirmSaveResult()}
+              />
+            </div>
+            
+            <div className="bg-gray-950 border-t border-gray-800 p-4 flex justify-end gap-3">
+              <button 
+                onClick={() => setIsSaveModalOpen(false)}
+                className="px-5 py-2.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold text-sm transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmSaveResult}
+                className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)] cursor-pointer"
+              >
+                Save Result
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
