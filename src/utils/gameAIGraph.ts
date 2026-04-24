@@ -1,25 +1,23 @@
 /**
  * Dungeon Game AI Pathfinding Graph
- *
- * Topology:
- *   Spawn Room (source)
- *     ├── West Wing  → Rooms → Corridors → Boss Chamber → Portal W
- *     ├── Central    → Rooms → Secret Passages → Portal C
- *     └── East Wing  → Rooms → Corridors → Boss Chamber → Portal E
- *
- * Edge costs (movement cost):
- *   Spawn → Wing entry  : 1
- *   Room → Room         : 2
- *   Room → Corridor     : 1
- *   Corridor → Portal   : 3
  */
 
 import { ScenarioGraph, GraphNode, GraphEdge } from '../types';
+// ✅ Import the newly generated Elden Ring map
+import { gameAIEldenRingGraph } from '../data/gameai.eldenring';
 
 const W = 1000;
 const H = 760;
 
-export function buildGameAIGraph(): ScenarioGraph {
+// ✅ Added the useRealWorld parameter
+export function buildGameAIGraph(useRealWorld: boolean = false): ScenarioGraph {
+  
+  // ✅ If Real-World is checked, return the colossal Elden Ring Map!
+  if (useRealWorld) {
+    return gameAIEldenRingGraph as ScenarioGraph;
+  }
+
+  // 👇 Otherwise, return the standard small dungeon map
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
 
@@ -77,7 +75,6 @@ export function buildGameAIGraph(): ScenarioGraph {
   ];
 
   wings.forEach((wing) => {
-    // Wing entry room
     const firstRoom = wing.rooms[0];
     nodes.push({
       id: firstRoom.id,
@@ -97,7 +94,6 @@ export function buildGameAIGraph(): ScenarioGraph {
       type: 'corridor',
     });
 
-    // Chain rooms
     for (let ri = 1; ri < wing.rooms.length; ri++) {
       const room = wing.rooms[ri];
       nodes.push({
@@ -119,7 +115,6 @@ export function buildGameAIGraph(): ScenarioGraph {
       });
     }
 
-    // Corridors branch off last room
     const lastRoom = wing.rooms[wing.rooms.length - 1];
     wing.corridors.forEach((corr) => {
       nodes.push({
@@ -140,7 +135,6 @@ export function buildGameAIGraph(): ScenarioGraph {
         type: 'corridor',
       });
 
-      // Each corridor connects to portal
       edges.push({
         id: `${corr.id}-${wing.portal.id}`,
         from: corr.id,
@@ -151,7 +145,6 @@ export function buildGameAIGraph(): ScenarioGraph {
       });
     });
 
-    // Portal (destination)
     nodes.push({
       id: wing.portal.id,
       label: wing.portal.label,

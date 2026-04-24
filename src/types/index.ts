@@ -13,7 +13,10 @@ export type NetworkNodeType =
   | 'building_router'
   | 'floor_router'
   | 'access_point' // destination
-  | 'failed';      // dynamic obstacle
+  | 'failed'       // dynamic obstacle
+  | 'router'       // ✅ Added for Cloud Datacenter
+  | 'switch'       // ✅ Added for Cloud Datacenter
+  | 'server';      // ✅ Added for Cloud Datacenter
 
 export type RoboticsNodeType =
   | 'depot'        // source
@@ -68,7 +71,8 @@ export interface GraphEdge {
   to: string;   // node id
   latency: number; // ms / cost
   label?: string;
-  type: 'fiber' | 'ethernet' | 'road' | 'corridor' | 'path' | 'wireless';
+  // ✅ Added 'copper' for the datacenter cabling
+  type: 'fiber' | 'ethernet' | 'road' | 'corridor' | 'path' | 'wireless' | 'copper';
 }
 
 export interface ScenarioGraph {
@@ -82,7 +86,7 @@ export interface ScenarioGraph {
 
 // ── Algorithm Step (graph-based) ───────────────────────────────────────────
 export interface AlgorithmStep {
-  stepIndex: number;        // ✅ ADDED (for dynamic event synchronization)
+  stepIndex: number;        // (for dynamic event synchronization)
   explored: string[];       
   frontier: string[];       
   path: string[];           

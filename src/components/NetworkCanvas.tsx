@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { ScenarioGraph, GraphNode, AlgorithmType, ScenarioType, DynamicEvent } from '../types';
+import { ScenarioGraph, GraphNode, AlgorithmType, ScenarioType, DynamicEvent, GraphEdge } from '../types';
 import { getAlgorithm } from '../config/scenarios';
 
 interface Props {
@@ -17,10 +17,13 @@ interface Props {
 }
 
 const NODE_CONFIG: Record<string, { icon: string; radius: number; baseColor: string; shape: 'circle' | 'rect' | 'diamond' }> = {
-  datacenter:      { icon: '🖥️',  radius: 28, baseColor: '#1e40af', shape: 'circle' },
+  datacenter:      { icon: '🖥️',  radius: 28, baseColor: '#16a34a', shape: 'circle' }, // ✅ Green (Source)
   building_router: { icon: '📡',  radius: 22, baseColor: '#1d4ed8', shape: 'circle' },
+  router:          { icon: '📡',  radius: 22, baseColor: '#1d4ed8', shape: 'circle' },
   floor_router:    { icon: '🔀',  radius: 17, baseColor: '#2563eb', shape: 'circle' },
-  access_point:    { icon: '📶',  radius: 14, baseColor: '#3b82f6', shape: 'circle' },
+  switch:          { icon: '🔀',  radius: 17, baseColor: '#2563eb', shape: 'circle' },
+  access_point:    { icon: '📶',  radius: 14, baseColor: '#dc2626', shape: 'circle' }, // ✅ Red (Actual Exit)
+  server:          { icon: '📶',  radius: 14, baseColor: '#475569', shape: 'circle' }, // ✅ Gray (Regular Node)
   failed:          { icon: '💀',  radius: 17, baseColor: '#7f1d1d', shape: 'circle' },
   depot:  { icon: '🏭', radius: 28, baseColor: '#92400e', shape: 'circle' },
   zone:   { icon: '📦', radius: 22, baseColor: '#b45309', shape: 'circle' },
@@ -46,6 +49,7 @@ const NODE_CONFIG: Record<string, { icon: string; radius: number; baseColor: str
 const EDGE_CONFIG: Record<string, { color: string; dash: string; width: number }> = {
   fiber:    { color: '#60a5fa', dash: 'none', width: 3 },
   ethernet: { color: '#94a3b8', dash: 'none', width: 2 },
+  copper:   { color: '#fdba74', dash: 'none', width: 2 }, // ✅ Added
   road:     { color: '#6ee7b7', dash: 'none', width: 2 },
   corridor: { color: '#fca5a5', dash: '4,3',  width: 2 },
   path:     { color: '#c4b5fd', dash: 'none', width: 2 },
@@ -59,6 +63,7 @@ export const NetworkCanvas: React.FC<Props> = ({
   path,
   current,
   algorithm,
+  scenario,
   blockedNodes,
   dynamicEvents,
   stepIndex,
@@ -79,7 +84,12 @@ export const NetworkCanvas: React.FC<Props> = ({
   const svgRef = useRef<SVGSVGElement>(null);
 
   const { nodes, edges, width, height } = graph;
+  
+  // ORIGINAL FLAG (Untouched)
   const isMassive = nodes.length > 200;
+  
+  // ✅ NEW ISOLATED FLAG: Strict check for the huge Real-World Datacenter
+  const isDatacenter = scenario === 'network' && width > 100000;
 
   const isLayeredMap = useMemo(() => {
     return nodes.some(n => n.buildingId === 'GL' || n.buildingId === 'L2');
@@ -88,16 +98,10 @@ export const NetworkCanvas: React.FC<Props> = ({
   const SVG_W = 960;
   const SVG_H = 680;
 
-  // 🚀 THE FIX: Uniform Scaling and Centering Math
-  // 1. Find the best scale to fit the entire graph without stretching
-  // 2. Multiply by 0.95 to add a nice 5% padding around the edges
   const scale = Math.min(SVG_W / width, SVG_H / height) * 0.95;
-
-  // 3. Calculate the leftover empty space and divide by 2 to perfectly center it
   const offsetX = (SVG_W - (width * scale)) / 2;
   const offsetY = (SVG_H - (height * scale)) / 2;
 
-  // 4. Apply scale and offset to all coordinates
   const sx = (x: number) => (x * scale) + offsetX;
   const sy = (y: number) => (y * scale) + offsetY;
 
@@ -138,7 +142,6 @@ export const NetworkCanvas: React.FC<Props> = ({
 
     setPan({ x: targetPanX, y: targetPanY });
   }, [current, isFollowing, zoom, nodes, activeFloor, isLayeredMap]);
-
 
   const handleWheel = (e: React.WheelEvent<SVGSVGElement>) => {
     if (isFollowing) setIsFollowing(false);
@@ -198,6 +201,8 @@ export const NetworkCanvas: React.FC<Props> = ({
     return edges.filter(e => visibleNodeIds.has(e.from) && visibleNodeIds.has(e.to));
   }, [edges, visibleNodeIds]);
 
+
+  // ── ORIGINAL STYLE METHODS (Untouched) ──────────────────────────────────
   function getNodeStyle(node: GraphNode) {
     const cfg = NODE_CONFIG[node.type] ?? { icon: '⬤', radius: 16, baseColor: '#374151', shape: 'circle' };
     const isBlocked = activeBlocked.has(node.id);
@@ -263,6 +268,154 @@ export const NetworkCanvas: React.FC<Props> = ({
     }
     return { color: cfg.color, width: isMassive ? 0.4 : cfg.width, dash: cfg.dash, opacity: isMassive ? 0.25 : 0.35 }; 
   }
+
+
+  // ── ISOLATED DATACENTER STYLES ──────────────────────────────────────────
+  function getDatacenterEdgeStyle(fromId: string, toId: string, edgeType: string) {
+    const isOnPath = path.has(fromId) && path.has(toId);
+    const isExplored = explored.has(fromId) && explored.has(toId);
+    const cfg = EDGE_CONFIG[edgeType] ?? EDGE_CONFIG.path;
+
+    if (isOnPath) return { color: al.color, width: 1.5, dash: 'none', opacity: 1 };
+    if (isExplored) return { color: al.color + '88', width: 0.8, dash: cfg.dash, opacity: 0.8 };
+    // Extremely thin un-explored lines to prevent visual clutter
+    return { color: cfg.color, width: 0.25, dash: cfg.dash, opacity: 0.2 }; 
+  }
+
+
+  // ── RENDER FUNCTIONS ─────────────────────────────────────────────────────
+
+  // 1. Standard Edge
+  const renderStandardEdge = (edge: GraphEdge) => {
+    const fromNode = visibleNodes.find((n) => n.id === edge.from);
+    const toNode = visibleNodes.find((n) => n.id === edge.to);
+    if (!fromNode || !toNode) return null;
+
+    const style = getEdgeStyle(edge.from, edge.to, edge.type);
+    const x1 = sx(fromNode.x);
+    const y1 = sy(fromNode.y);
+    const x2 = sx(toNode.x);
+    const y2 = sy(toNode.y);
+    const mx = (x1 + x2) / 2;
+    const my = (y1 + y2) / 2;
+    const isOnPath = path.has(edge.from) && path.has(edge.to);
+
+    return (
+        <g key={edge.id} style={{ pointerEvents: 'none' }}>
+            <line
+                x1={x1} y1={y1} x2={x2} y2={y2}
+                stroke={style.color} strokeWidth={style.width} strokeDasharray={style.dash === 'none' ? undefined : style.dash} opacity={style.opacity} strokeLinecap="round"
+                markerEnd={isOnPath && !isMassive ? 'url(#arrow-active)' : !isMassive ? 'url(#arrow)' : undefined}
+            />
+            {!isMassive && (isOnPath || (explored.has(edge.from) && explored.has(edge.to))) && edge.label && (
+                <text x={mx} y={my - 5} textAnchor="middle" fontSize="9" fill={isOnPath ? al.color : '#94a3b8'} fontWeight={isOnPath ? 'bold' : 'normal'} style={{ userSelect: 'none', pointerEvents: 'none' }}>
+                    {edge.label}
+                </text>
+            )}
+        </g>
+    );
+  };
+
+  // 2. Standard Node
+  const renderStandardNode = (node: GraphNode) => {
+    const { fillColor, strokeColor, strokeWidth, opacity, glowColor, cfg, isBlocked, isCurrent, isSource, isDest } = getNodeStyle(node);
+    const cx = sx(node.x);
+    const cy = sy(node.y);
+    const isImportant = isSource || isDest || isCurrent;
+    const r = isMassive ? (isImportant ? 5 : 2.2) : cfg.radius;
+    const showLabels = !isMassive || isImportant;
+
+    return (
+        <g key={node.id} opacity={opacity} style={{ pointerEvents: 'none', userSelect: 'none' }}>
+            {isCurrent && <circle cx={cx} cy={cy} r={r + (isMassive ? 4 : 10)} fill={glowColor + '33'} filter="url(#glow-strong)" />}
+            <circle cx={cx} cy={cy} r={r} fill={fillColor} stroke={strokeColor} strokeWidth={strokeWidth} filter={isCurrent ? 'url(#glow)' : undefined} />
+            
+            {isBlocked && (
+                <>
+                <line x1={cx - r * 0.6} y1={cy - r * 0.6} x2={cx + r * 0.6} y2={cy + r * 0.6} stroke="#ef4444" strokeWidth={isMassive ? 1 : 2} />
+                <line x1={cx + r * 0.6} y1={cy - r * 0.6} x2={cx - r * 0.6} y2={cy + r * 0.6} stroke="#ef4444" strokeWidth={isMassive ? 1 : 2} />
+                </>
+            )}
+            
+            {showLabels && (
+                <>
+                <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="middle" fontSize={r * 0.9} style={{ userSelect: 'none', pointerEvents: 'none' }}>
+                    {isBlocked ? '💀' : cfg.icon}
+                </text>
+                <text x={cx} y={cy + r + 11} textAnchor="middle" fontSize={r > 15 ? '10' : '7'} fill="#cbd5e1" fontWeight={isCurrent ? 'bold' : 'normal'} style={{ userSelect: 'none', pointerEvents: 'none' }}>
+                    {node.label.split('\n')[0]}
+                </text>
+                {node.label.includes('\n') && (
+                    <text x={cx} y={cy + r + 21} textAnchor="middle" fontSize="8" fill="#64748b" style={{ userSelect: 'none', pointerEvents: 'none' }}>
+                    {node.label.split('\n')[1]}
+                    </text>
+                )}
+                </>
+            )}
+        </g>
+    );
+  };
+
+  // 3. EXCLUSIVE Datacenter Edge
+  const renderDatacenterEdge = (edge: GraphEdge) => {
+    const fromNode = visibleNodes.find((n) => n.id === edge.from);
+    const toNode = visibleNodes.find((n) => n.id === edge.to);
+    if (!fromNode || !toNode) return null;
+
+    const style = getDatacenterEdgeStyle(edge.from, edge.to, edge.type);
+    return (
+        <line
+            key={edge.id}
+            x1={sx(fromNode.x)} y1={sy(fromNode.y)} x2={sx(toNode.x)} y2={sy(toNode.y)}
+            stroke={style.color} strokeWidth={style.width} strokeDasharray={style.dash === 'none' ? undefined : style.dash} opacity={style.opacity} strokeLinecap="round"
+            style={{ pointerEvents: 'none' }}
+        />
+    );
+  };
+
+  // 4. EXCLUSIVE Datacenter Node (Tiny Disks, Shrunken Text)
+  const renderDatacenterNode = (node: GraphNode) => {
+    const { fillColor, strokeColor, strokeWidth, opacity, glowColor, cfg, isBlocked, isCurrent, isSource, isDest } = getNodeStyle(node);
+    const cx = sx(node.x);
+    const cy = sy(node.y);
+    const isImportant = isSource || isDest || isCurrent;
+    
+    const r = isImportant ? 8 : 4.5; // Scales down heavily for the massive Trident map
+
+    return (
+        <g key={node.id} opacity={opacity} style={{ pointerEvents: 'none', userSelect: 'none' }}>
+            {isCurrent && <circle cx={cx} cy={cy} r={r + 10} fill={glowColor + '33'} filter="url(#glow-strong)" />}
+            <circle cx={cx} cy={cy} r={r} fill={fillColor} stroke={strokeColor} strokeWidth={strokeWidth} filter={isCurrent ? 'url(#glow)' : undefined} />
+            
+            {isBlocked && (
+                <>
+                <line x1={cx - r * 0.6} y1={cy - r * 0.6} x2={cx + r * 0.6} y2={cy + r * 0.6} stroke="#ef4444" strokeWidth={1} />
+                <line x1={cx + r * 0.6} y1={cy - r * 0.6} x2={cx - r * 0.6} y2={cy + r * 0.6} stroke="#ef4444" strokeWidth={1} />
+                </>
+            )}
+            
+            {/* Always show emojis, completely scaled perfectly for this map */}
+            <text x={cx} y={cy + 0.5} textAnchor="middle" dominantBaseline="middle" fontSize={r * 1.2} style={{ userSelect: 'none', pointerEvents: 'none' }}>
+                {isBlocked ? '💀' : cfg.icon}
+            </text>
+
+            <text 
+                x={cx} y={cy + r + 5} textAnchor="middle" fontSize={isImportant ? '3.5' : '3'} fill="#f8fafc" fontWeight={isCurrent ? 'bold' : 'normal'}
+                paintOrder="stroke" stroke="#0f172a" strokeWidth="0.6" strokeLinecap="round" strokeLinejoin="round"
+                style={{ userSelect: 'none', pointerEvents: 'none' }}
+            >
+                {node.label.split('\n')[0]}
+            </text>
+            
+            {node.label.includes('\n') && (
+                <text x={cx} y={cy + r + 9} textAnchor="middle" fontSize="2.5" fill="#94a3b8" paintOrder="stroke" stroke="#0f172a" strokeWidth="0.5" style={{ userSelect: 'none', pointerEvents: 'none' }}>
+                {node.label.split('\n')[1]}
+                </text>
+            )}
+        </g>
+    );
+  };
+
 
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-hidden" style={{ background: '#0a0f1e' }}>
@@ -376,116 +529,14 @@ export const NetworkCanvas: React.FC<Props> = ({
 
         <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
             
-            {visibleEdges.map((edge) => {
-            const fromNode = visibleNodes.find((n) => n.id === edge.from);
-            const toNode = visibleNodes.find((n) => n.id === edge.to);
-            if (!fromNode || !toNode) return null;
-
-            const style = getEdgeStyle(edge.from, edge.to, edge.type);
-            const x1 = sx(fromNode.x);
-            const y1 = sy(fromNode.y);
-            const x2 = sx(toNode.x);
-            const y2 = sy(toNode.y);
-
-            const mx = (x1 + x2) / 2;
-            const my = (y1 + y2) / 2;
-            const isOnPath = path.has(edge.from) && path.has(edge.to);
-
-            return (
-                <g key={edge.id} style={{ pointerEvents: 'none' }}>
-                <line
-                    x1={x1} y1={y1} x2={x2} y2={y2}
-                    stroke={style.color}
-                    strokeWidth={style.width}
-                    strokeDasharray={style.dash === 'none' ? undefined : style.dash}
-                    opacity={style.opacity}
-                    strokeLinecap="round"
-                    markerEnd={isOnPath && !isMassive ? 'url(#arrow-active)' : !isMassive ? 'url(#arrow)' : undefined}
-                />
-                {!isMassive && (isOnPath || (explored.has(edge.from) && explored.has(edge.to))) && edge.label && (
-                    <text
-                    x={mx} y={my - 5}
-                    textAnchor="middle"
-                    fontSize="9"
-                    fill={isOnPath ? al.color : '#94a3b8'}
-                    fontWeight={isOnPath ? 'bold' : 'normal'}
-                    style={{ userSelect: 'none', pointerEvents: 'none' }}
-                    >
-                    {edge.label}
-                    </text>
-                )}
-                </g>
-            );
-            })}
-
-            {visibleNodes.map((node) => {
-            const { fillColor, strokeColor, strokeWidth, opacity, glowColor, cfg, isBlocked, isCurrent, isSource, isDest } =
-                getNodeStyle(node);
-            const cx = sx(node.x);
-            const cy = sy(node.y);
+            {visibleEdges.map((edge) => 
+                isDatacenter ? renderDatacenterEdge(edge) : renderStandardEdge(edge)
+            )}
             
-            const isImportant = isSource || isDest || isCurrent;
-            const r = isMassive ? (isImportant ? 5 : 2.2) : cfg.radius;
-            const showLabels = !isMassive || isImportant;
+            {visibleNodes.map((node) => 
+                isDatacenter ? renderDatacenterNode(node) : renderStandardNode(node)
+            )}
 
-            return (
-                <g key={node.id} opacity={opacity} style={{ pointerEvents: 'none', userSelect: 'none' }}>
-                {isCurrent && (
-                    <circle cx={cx} cy={cy} r={r + (isMassive ? 4 : 10)} fill={glowColor + '33'} filter="url(#glow-strong)" />
-                )}
-                <circle
-                    cx={cx} cy={cy} r={r}
-                    fill={fillColor}
-                    stroke={strokeColor}
-                    strokeWidth={strokeWidth}
-                    filter={isCurrent ? 'url(#glow)' : undefined}
-                />
-                {isBlocked && (
-                    <>
-                    <line x1={cx - r * 0.6} y1={cy - r * 0.6} x2={cx + r * 0.6} y2={cy + r * 0.6}
-                        stroke="#ef4444" strokeWidth={isMassive ? 1 : 2} />
-                    <line x1={cx + r * 0.6} y1={cy - r * 0.6} x2={cx - r * 0.6} y2={cy + r * 0.6}
-                        stroke="#ef4444" strokeWidth={isMassive ? 1 : 2} />
-                    </>
-                )}
-                
-                {showLabels && (
-                    <>
-                    <text
-                        x={cx} y={cy + 1}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        fontSize={r * 0.9}
-                        style={{ userSelect: 'none', pointerEvents: 'none' }}
-                    >
-                        {isBlocked ? '💀' : cfg.icon}
-                    </text>
-                    <text
-                        x={cx} y={cy + r + 11}
-                        textAnchor="middle"
-                        fontSize={r > 15 ? '10' : '7'} 
-                        fill="#cbd5e1"
-                        fontWeight={isCurrent ? 'bold' : 'normal'}
-                        style={{ userSelect: 'none', pointerEvents: 'none' }}
-                    >
-                        {node.label.split('\n')[0]}
-                    </text>
-                    {node.label.includes('\n') && (
-                        <text
-                        x={cx} y={cy + r + 21}
-                        textAnchor="middle"
-                        fontSize="8"
-                        fill="#64748b"
-                        style={{ userSelect: 'none', pointerEvents: 'none' }}
-                        >
-                        {node.label.split('\n')[1]}
-                        </text>
-                    )}
-                    </>
-                )}
-                </g>
-            );
-            })}
         </g>
       </svg>
     </div>

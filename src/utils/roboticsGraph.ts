@@ -1,25 +1,23 @@
 /**
  * Amazon-style Fulfillment Warehouse Graph
- *
- * Topology:
- *   Central Depot (source)
- *     ├── Zone A (Electronics)  → Aisles A1-A3 → Shelves (Delivery Bays)
- *     ├── Zone B (Apparel)      → Aisles B1-B3 → Shelves
- *     ├── Zone C (Grocery)      → Aisles C1-C2 → Shelves
- *     └── Zone D (Heavy Goods)  → Aisles D1-D2 → Shelves
- *
- * Edge costs:
- *   Depot → Zone     : 2m travel
- *   Zone → Aisle     : 5m travel
- *   Aisle → Shelf    : 3m travel
  */
 
 import { ScenarioGraph, GraphNode, GraphEdge } from '../types';
+// ✅ Import the newly generated AWS Robomaker map
+import { awsWarehouseGraph } from '../data/robotics.aws';
 
 const W = 1000;
 const H = 760;
 
-export function buildRoboticsGraph(): ScenarioGraph {
+// ✅ Added the useRealWorld parameter
+export function buildRoboticsGraph(useRealWorld: boolean = false): ScenarioGraph {
+  
+  // ✅ Return the massive AWS map if toggled!
+  if (useRealWorld) {
+    return awsWarehouseGraph as ScenarioGraph;
+  }
+
+  // 👇 Otherwise, return the standard small mock map
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
 
@@ -123,6 +121,7 @@ export function buildRoboticsGraph(): ScenarioGraph {
   return { nodes, edges, sourceId: 'depot', destinationIds, width: W, height: H };
 }
 
+// ✅ Dynamic obstacle candidates pull from zones and aisles
 export function getRoboticsBlockCandidates(graph: ScenarioGraph): string[] {
-  return graph.nodes.filter((n) => n.type === 'aisle').map((n) => n.id);
+  return graph.nodes.filter((n) => n.type === 'aisle' || n.type === 'zone').map((n) => n.id);
 }

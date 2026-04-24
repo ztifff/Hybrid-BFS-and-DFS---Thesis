@@ -5,18 +5,16 @@ import { buildTrafficGraph, getTrafficClosureCandidates } from './trafficGraph';
 import { buildEvacuationGraph, getEvacuationFireCandidates } from './evacuationGraph';
 import { buildGameAIGraph, getGameAIEnemyCandidates } from './gameAIGraph';
 
-// Added useRealWorld parameter with a default of false
 export function buildScenarioGraph(scenario: ScenarioType, useRealWorld: boolean = false): ScenarioGraph {
   switch (scenario) {
-    case 'network':    return buildNetworkGraph();
-    case 'robotics':   return buildRoboticsGraph();
-    case 'traffic':    return buildTrafficGraph(useRealWorld); // Passed to traffic
+    case 'network':    return buildNetworkGraph(useRealWorld);
+    case 'robotics':   return buildRoboticsGraph(useRealWorld); 
+    case 'traffic':    return buildTrafficGraph(useRealWorld); 
     case 'evacuation': return buildEvacuationGraph(useRealWorld);
-    case 'gameai':     return buildGameAIGraph();
+    case 'gameai':     return buildGameAIGraph(useRealWorld); 
   }
 }
 
-// Kept your original dynamic candidates function untouched
 export function getDynamicCandidates(
   graph: ScenarioGraph,
   scenario: ScenarioType

@@ -29,12 +29,14 @@ interface ScenarioGraph {
 }
 
 function generateMassiveSMRosaMap() {
-  // Expanded canvas to fit the sprawling SM layout
-  const W = 1600;
-  const H = 900;
+  // ✅ GARGANTUAN CANVAS: 60000 x 35000
+  // Every node is spaced at least 4000-5000 units apart relative to this grid
+  // to absolutely guarantee labels will not overlap when zoomed out.
+  const W = 60000;
+  const H = 35000;
   const edges: GraphEdge[] = [];
 
-  function link(from: string, to: string, latency = 2, type: "corridor" | "stairwell" = "corridor") {
+  function link(from: string, to: string, latency = 10, type: "corridor" | "stairwell" = "corridor") {
     edges.push({ id: `e_${from}_${to}`, from, to, latency, type });
     edges.push({ id: `e_${to}_${from}`, from: to, to: from, latency, type });
   }
@@ -42,86 +44,107 @@ function generateMassiveSMRosaMap() {
   const GL = "GL";
   const L2 = "L2";
 
+  // Center Point: X = 25000, Y = 17500
+
   // ==========================================
   // 1️⃣ GROUND LEVEL (GL)
   // ==========================================
   const glNodes: GraphNode[] = [
-    // 🚪 EXITS
-    { id: "exit_main", label: "Main Atrium Exit", type: "emergency_exit", x: 800, y: 800, level: 1, buildingId: GL },
-    { id: "exit_supermarket", label: "Supermarket Exit", type: "emergency_exit", x: 100, y: 450, level: 1, buildingId: GL },
-    { id: "exit_east", label: "East Wing Exit", type: "emergency_exit", x: 1400, y: 800, level: 1, buildingId: GL },
-    { id: "exit_north", label: "North Parkway Exit", type: "emergency_exit", x: 800, y: 100, level: 1, buildingId: GL },
+    // 🚪 EXITS (Absolute Edges)
+    { id: "exit_front_main", label: "Main Entrance (South)", type: "emergency_exit", x: 25000, y: 33000, level: 1, buildingId: GL },
+    { id: "exit_back_north", label: "North Parking Exit", type: "emergency_exit", x: 25000, y: 2000, level: 1, buildingId: GL },
+    { id: "exit_supermarket", label: "West Supermarket Exit", type: "emergency_exit", x: 2000, y: 17500, level: 1, buildingId: GL },
+    { id: "exit_dept_store", label: "East Dept Store Exit", type: "emergency_exit", x: 55000, y: 17500, level: 1, buildingId: GL },
 
-    // 🚶 MAIN SPINE CORRIDORS (Y = 450)
-    { id: "c1_w3", label: "GL Far West Hall", type: "corridor", x: 250, y: 450, level: 1, buildingId: GL },
-    { id: "c1_w2", label: "GL Mid West Hall", type: "corridor", x: 450, y: 450, level: 1, buildingId: GL },
-    { id: "c1_w1", label: "GL West Atrium", type: "corridor", x: 600, y: 450, level: 1, buildingId: GL },
-    // Center Node for GL
-    { id: "c1_atrium", label: "GL Main Atrium", type: "corridor", x: 800, y: 450, level: 1, buildingId: GL },
-    { id: "c1_e1", label: "GL East Atrium", type: "corridor", x: 1000, y: 450, level: 1, buildingId: GL },
-    { id: "c1_e2", label: "GL Mid East Hall", type: "corridor", x: 1150, y: 450, level: 1, buildingId: GL },
-    { id: "c1_e3", label: "GL Far East Hall", type: "corridor", x: 1350, y: 450, level: 1, buildingId: GL },
+    // 🚶 MAIN HALLWAY (Spine Y = 17500)
+    { id: "gl_w_far", label: "GL Far West Hall", type: "corridor", x: 10000, y: 17500, level: 1, buildingId: GL },
+    { id: "gl_w_mid", label: "GL Mid West Hall", type: "corridor", x: 15000, y: 17500, level: 1, buildingId: GL },
+    { id: "gl_w_inner", label: "GL Inner West", type: "corridor", x: 20000, y: 17500, level: 1, buildingId: GL },
+    { id: "gl_center", label: "GL Grand Atrium", type: "corridor", x: 25000, y: 17500, level: 1, buildingId: GL },
+    { id: "gl_e_inner", label: "GL Inner East", type: "corridor", x: 30000, y: 17500, level: 1, buildingId: GL },
+    { id: "gl_e_mid", label: "GL Mid East Hall", type: "corridor", x: 35000, y: 17500, level: 1, buildingId: GL },
+    { id: "gl_e_far", label: "GL Far East Hall", type: "corridor", x: 40000, y: 17500, level: 1, buildingId: GL },
 
-    // 🚶 PARALLEL CORRIDORS (To create algorithm loops)
-    { id: "c1_north_loop", label: "GL North Annex", type: "corridor", x: 800, y: 250, level: 1, buildingId: GL },
-    { id: "c1_south_loop", label: "GL South Annex", type: "corridor", x: 800, y: 650, level: 1, buildingId: GL },
+    // 🚶 NORTH WING (Y = 8000)
+    { id: "gl_nw_wing", label: "GL North-West Wing", type: "corridor", x: 15000, y: 8000, level: 1, buildingId: GL },
+    { id: "gl_n_center", label: "GL North Annex", type: "corridor", x: 25000, y: 8000, level: 1, buildingId: GL },
+    { id: "gl_ne_wing", label: "GL North-East Wing", type: "corridor", x: 35000, y: 8000, level: 1, buildingId: GL },
 
-    // 🏬 ANCHOR STORES & RETAIL
-    { id: "sm_supermarket", label: "SM Supermarket", type: "room", x: 200, y: 300, level: 1, buildingId: GL },
-    { id: "hardware", label: "Ace Hardware", type: "room", x: 300, y: 650, level: 1, buildingId: GL },
-    { id: "watsons", label: "Watsons", type: "room", x: 450, y: 300, level: 1, buildingId: GL },
-    { id: "bdo", label: "BDO / Banking", type: "room", x: 600, y: 250, level: 1, buildingId: GL },
-    { id: "starbucks", label: "Starbucks", type: "room", x: 700, y: 650, level: 1, buildingId: GL },
-    { id: "jollibee", label: "Jollibee", type: "room", x: 900, y: 650, level: 1, buildingId: GL },
-    { id: "kfc", label: "KFC", type: "room", x: 1000, y: 650, level: 1, buildingId: GL },
-    { id: "uniqlo", label: "Uniqlo", type: "room", x: 1000, y: 250, level: 1, buildingId: GL },
-    { id: "sm_store_gl", label: "The SM Store (GL)", type: "room", x: 1450, y: 450, level: 1, buildingId: GL },
+    // 🚶 SOUTH WING (Y = 27000)
+    { id: "gl_sw_wing", label: "GL South-West Wing", type: "corridor", x: 15000, y: 27000, level: 1, buildingId: GL },
+    { id: "gl_s_center", label: "GL South Annex", type: "corridor", x: 25000, y: 27000, level: 1, buildingId: GL },
+    { id: "gl_se_wing", label: "GL South-East Wing", type: "corridor", x: 35000, y: 27000, level: 1, buildingId: GL },
 
-    // 🪜 ESCALATORS
-    { id: "esc_atrium_gl", label: "Main Escalator", type: "stairwell", x: 800, y: 550, level: 1, buildingId: GL },
-    { id: "esc_west_gl", label: "West Escalator", type: "stairwell", x: 500, y: 450, level: 1, buildingId: GL },
-    { id: "esc_east_gl", label: "East Escalator", type: "stairwell", x: 1100, y: 450, level: 1, buildingId: GL },
+    // 🏬 STORES (Pushed extremely far out into the quadrants)
+    { id: "gl_supermarket", label: "SM Supermarket", type: "room", x: 6000, y: 12000, level: 1, buildingId: GL },
+    { id: "gl_dermcare", label: "Dermcare", type: "room", x: 11000, y: 12000, level: 1, buildingId: GL },
+    { id: "gl_silverworks", label: "Silverworks", type: "room", x: 11000, y: 23000, level: 1, buildingId: GL },
+    { id: "gl_pierre_cardin", label: "Pierre Cardin", type: "room", x: 20000, y: 12000, level: 1, buildingId: GL },
+    { id: "gl_macao", label: "Macao Imperial Tea", type: "room", x: 20000, y: 23000, level: 1, buildingId: GL },
+    { id: "gl_ramen", label: "Ramen Kuroda", type: "room", x: 11000, y: 32000, level: 1, buildingId: GL },
+    { id: "gl_batchoi", label: "Oishi Batchoi", type: "room", x: 20000, y: 32000, level: 1, buildingId: GL },
+    { id: "gl_barrio", label: "Barrio Fiesta", type: "room", x: 30000, y: 32000, level: 1, buildingId: GL },
+    { id: "gl_razons", label: "Razon's of Guagua", type: "room", x: 39000, y: 32000, level: 1, buildingId: GL },
+    { id: "gl_faceshop", label: "The Face Shop", type: "room", x: 30000, y: 23000, level: 1, buildingId: GL },
+    { id: "gl_barbershop", label: "GQ Barbershop", type: "room", x: 39000, y: 12000, level: 1, buildingId: GL },
+    { id: "gl_guess", label: "Guess", type: "room", x: 39000, y: 23000, level: 1, buildingId: GL },
+    { id: "gl_sm_store", label: "The SM Store (GL)", type: "room", x: 45000, y: 12000, level: 1, buildingId: GL },
+
+    // 🪜 ESCALATORS (Severely offset from atriums to prevent text overlap)
+    { id: "esc_main_gl", label: "Grand Escalator", type: "stairwell", x: 28000, y: 21000, level: 1, buildingId: GL },
+    { id: "esc_west_gl", label: "West Escalator", type: "stairwell", x: 12000, y: 21000, level: 1, buildingId: GL },
+    { id: "esc_east_gl", label: "East Escalator", type: "stairwell", x: 38000, y: 21000, level: 1, buildingId: GL },
+    { id: "esc_north_gl", label: "North Escalator", type: "stairwell", x: 28000, y: 11000, level: 1, buildingId: GL },
   ];
 
   // ==========================================
   // 2️⃣ SECOND LEVEL (L2)
   // ==========================================
   const l2Nodes: GraphNode[] = [
-    // 🚨 FIRE EXITS (L2 Specific)
-    { id: "exit_fire_l2", label: "L2 Cinema Fire Exit", type: "emergency_exit", x: 200, y: 150, level: 2, buildingId: L2 },
-    { id: "exit_fire_east_l2", label: "L2 East Fire Exit", type: "emergency_exit", x: 1400, y: 150, level: 2, buildingId: L2 },
+    // 🚨 FIRE EXITS
+    { id: "exit_fire_nw", label: "L2 NW Fire Exit", type: "emergency_exit", x: 8000, y: 4000, level: 2, buildingId: L2 },
+    { id: "exit_fire_ne", label: "L2 NE Fire Exit", type: "emergency_exit", x: 42000, y: 4000, level: 2, buildingId: L2 },
+    { id: "exit_fire_s", label: "L2 South Fire Exit", type: "emergency_exit", x: 25000, y: 32000, level: 2, buildingId: L2 },
 
-    // 🚶 MAIN SPINE CORRIDORS (Y = 450, exactly above GL)
-    { id: "c2_w3", label: "L2 Far West Hall", type: "corridor", x: 250, y: 450, level: 2, buildingId: L2 },
-    { id: "c2_w2", label: "L2 Mid West Hall", type: "corridor", x: 450, y: 450, level: 2, buildingId: L2 },
-    { id: "c2_w1", label: "L2 West Atrium", type: "corridor", x: 600, y: 450, level: 2, buildingId: L2 },
+    // 🚶 MAIN HALLWAY
+    { id: "l2_w_far", label: "L2 Far West Hall", type: "corridor", x: 10000, y: 17500, level: 2, buildingId: L2 },
+    { id: "l2_w_mid", label: "L2 Mid West Hall", type: "corridor", x: 15000, y: 17500, level: 2, buildingId: L2 },
+    { id: "l2_w_inner", label: "L2 Inner West", type: "corridor", x: 20000, y: 17500, level: 2, buildingId: L2 },
     
-    // ✅ THE FIX: Center Node becomes the Starting Origin
-    { id: "c2_atrium", label: "L2 Main Atrium\n(Start Point)", type: "origin", x: 800, y: 450, level: 2, buildingId: L2 },
+    // ✅ ORIGIN NODE
+    { id: "l2_center", label: "L2 Grand Atrium\n(Start Point)", type: "origin", x: 25000, y: 17500, level: 2, buildingId: L2 },
     
-    { id: "c2_e1", label: "L2 East Atrium", type: "corridor", x: 1000, y: 450, level: 2, buildingId: L2 },
-    { id: "c2_e2", label: "L2 Mid East Hall", type: "corridor", x: 1150, y: 450, level: 2, buildingId: L2 },
-    { id: "c2_e3", label: "L2 Far East Hall", type: "corridor", x: 1350, y: 450, level: 2, buildingId: L2 },
+    { id: "l2_e_inner", label: "L2 Inner East", type: "corridor", x: 30000, y: 17500, level: 2, buildingId: L2 },
+    { id: "l2_e_mid", label: "L2 Mid East Hall", type: "corridor", x: 35000, y: 17500, level: 2, buildingId: L2 },
+    { id: "l2_e_far", label: "L2 Far East Hall", type: "corridor", x: 40000, y: 17500, level: 2, buildingId: L2 },
 
-    // 🚶 PARALLEL CORRIDORS
-    { id: "c2_north_loop", label: "L2 North Annex", type: "corridor", x: 800, y: 250, level: 2, buildingId: L2 },
-    { id: "c2_south_loop", label: "L2 South Annex", type: "corridor", x: 800, y: 650, level: 2, buildingId: L2 },
+    // 🚶 NORTH WING
+    { id: "l2_nw_wing", label: "L2 North-West Wing", type: "corridor", x: 15000, y: 8000, level: 2, buildingId: L2 },
+    { id: "l2_n_center", label: "L2 North Annex", type: "corridor", x: 25000, y: 8000, level: 2, buildingId: L2 },
+    { id: "l2_ne_wing", label: "L2 North-East Wing", type: "corridor", x: 35000, y: 8000, level: 2, buildingId: L2 },
 
-    // 🏬 ANCHOR STORES & RETAIL
-    { id: "cinema", label: "SM Cinema", type: "room", x: 250, y: 250, level: 2, buildingId: L2 },
-    { id: "arcade", label: "Timezone / Arcade", type: "room", x: 300, y: 650, level: 2, buildingId: L2 },
-    { id: "medical_city", label: "Medical City Clinic", type: "room", x: 450, y: 300, level: 2, buildingId: L2 },
-    { id: "foodcourt", label: "Foodcourt", type: "room", x: 600, y: 250, level: 2, buildingId: L2 },
-    { id: "surplus", label: "Surplus Shop", type: "room", x: 700, y: 650, level: 2, buildingId: L2 },
-    { id: "hm", label: "H&M", type: "room", x: 900, y: 650, level: 2, buildingId: L2 },
-    { id: "toys_r_us", label: "Toys R Us", type: "room", x: 1000, y: 650, level: 2, buildingId: L2 },
-    { id: "cyberzone", label: "Cyberzone", type: "room", x: 1150, y: 250, level: 2, buildingId: L2 },
-    { id: "sm_store_l2", label: "The SM Store (L2)", type: "room", x: 1450, y: 450, level: 2, buildingId: L2 },
+    // 🚶 SOUTH WING
+    { id: "l2_sw_wing", label: "L2 South-West Wing", type: "corridor", x: 15000, y: 27000, level: 2, buildingId: L2 },
+    { id: "l2_s_center", label: "L2 South Annex", type: "corridor", x: 25000, y: 27000, level: 2, buildingId: L2 },
+    { id: "l2_se_wing", label: "L2 South-East Wing", type: "corridor", x: 35000, y: 27000, level: 2, buildingId: L2 },
+
+    // 🏬 STORES
+    { id: "l2_cinema", label: "SM Cinema", type: "room", x: 6000, y: 12000, level: 2, buildingId: L2 },
+    { id: "l2_turks", label: "Turks Shawarma", type: "room", x: 11000, y: 23000, level: 2, buildingId: L2 },
+    { id: "l2_dental", label: "Precious Teeth Dental", type: "room", x: 20000, y: 23000, level: 2, buildingId: L2 },
+    { id: "l2_foodcourt", label: "SM Foodcourt", type: "room", x: 25000, y: 12000, level: 2, buildingId: L2 }, 
+    { id: "l2_cyberzone", label: "Cyberzone", type: "room", x: 35000, y: 12000, level: 2, buildingId: L2 },
+    { id: "l2_mac", label: "Power Mac Center", type: "room", x: 45000, y: 23000, level: 2, buildingId: L2 },
+    { id: "l2_vivo", label: "Vivo", type: "room", x: 35000, y: 23000, level: 2, buildingId: L2 },
+    { id: "l2_payless", label: "Payless Shoesource", type: "room", x: 30000, y: 23000, level: 2, buildingId: L2 },
+    { id: "l2_office_warehouse", label: "Office Warehouse", type: "room", x: 30000, y: 12000, level: 2, buildingId: L2 },
+    { id: "l2_sm_store", label: "The SM Store (L2)", type: "room", x: 45000, y: 12000, level: 2, buildingId: L2 },
 
     // 🪜 ESCALATORS
-    { id: "esc_atrium_l2", label: "Main Escalator", type: "stairwell", x: 800, y: 550, level: 2, buildingId: L2 },
-    { id: "esc_west_l2", label: "West Escalator", type: "stairwell", x: 500, y: 450, level: 2, buildingId: L2 },
-    { id: "esc_east_l2", label: "East Escalator", type: "stairwell", x: 1100, y: 450, level: 2, buildingId: L2 },
+    { id: "esc_main_l2", label: "Grand Escalator", type: "stairwell", x: 28000, y: 21000, level: 2, buildingId: L2 },
+    { id: "esc_west_l2", label: "West Escalator", type: "stairwell", x: 12000, y: 21000, level: 2, buildingId: L2 },
+    { id: "esc_east_l2", label: "East Escalator", type: "stairwell", x: 38000, y: 21000, level: 2, buildingId: L2 },
+    { id: "esc_north_l2", label: "North Escalator", type: "stairwell", x: 28000, y: 11000, level: 2, buildingId: L2 },
   ];
 
   const nodes = [...glNodes, ...l2Nodes];
@@ -129,118 +152,127 @@ function generateMassiveSMRosaMap() {
   // ==========================================
   // 3️⃣ LINK GROUND LEVEL (GL)
   // ==========================================
-  // The Spine
-  link("c1_w3", "c1_w2", 1);
-  link("c1_w2", "esc_west_gl", 1);
-  link("esc_west_gl", "c1_w1", 1);
-  link("c1_w1", "c1_atrium", 1);
-  link("c1_atrium", "c1_e1", 1);
-  link("c1_e1", "esc_east_gl", 1);
-  link("esc_east_gl", "c1_e2", 1);
-  link("c1_e2", "c1_e3", 1);
+  // Main Hallway (Spine)
+  link("gl_w_far", "gl_w_mid", 20);
+  link("gl_w_mid", "gl_w_inner", 20);
+  link("gl_w_inner", "gl_center", 20);
+  link("gl_center", "gl_e_inner", 20);
+  link("gl_e_inner", "gl_e_mid", 20);
+  link("gl_e_mid", "gl_e_far", 20);
+
+  // Vertical Connections
+  link("gl_w_mid", "gl_nw_wing", 25);
+  link("gl_w_mid", "gl_sw_wing", 25);
+  link("gl_center", "gl_n_center", 25);
+  link("gl_center", "gl_s_center", 25);
+  link("gl_e_mid", "gl_ne_wing", 25);
+  link("gl_e_mid", "gl_se_wing", 25);
+
+  // North/South Wing Connections
+  link("gl_nw_wing", "gl_n_center", 30);
+  link("gl_n_center", "gl_ne_wing", 30);
+  link("gl_sw_wing", "gl_s_center", 30);
+  link("gl_s_center", "gl_se_wing", 30);
 
   // Exits
-  link("exit_supermarket", "c1_w3", 1);
-  link("exit_supermarket", "sm_supermarket", 1); // Supermarket has its own door
-  link("exit_main", "c1_south_loop", 1);
-  link("exit_east", "c1_e3", 1);
-  link("exit_north", "c1_north_loop", 1);
-
-  // Loops & Complex Paths
-  link("c1_north_loop", "c1_w1", 2);
-  link("c1_north_loop", "c1_atrium", 1);
-  link("c1_north_loop", "c1_e1", 2);
-  link("c1_south_loop", "c1_w1", 2);
-  link("c1_south_loop", "c1_atrium", 1);
-  link("c1_south_loop", "c1_e1", 2);
-  link("c1_atrium", "esc_atrium_gl", 1);
-  link("c1_south_loop", "esc_atrium_gl", 1); // Escalator connects to main and south loop
+  link("exit_supermarket", "gl_w_far", 15);
+  link("exit_dept_store", "gl_e_far", 15);
+  link("exit_front_main", "gl_s_center", 15);
+  link("exit_back_north", "gl_n_center", 15);
 
   // Stores
-  link("sm_supermarket", "c1_w3", 2);
-  link("hardware", "c1_w3", 2);
-  link("watsons", "c1_w2", 2);
-  link("bdo", "c1_north_loop", 2);
-  link("bdo", "c1_w1", 3); // Corner store connects to two halls
-  link("starbucks", "c1_south_loop", 2);
-  link("jollibee", "c1_south_loop", 2);
-  link("kfc", "c1_e1", 2);
-  link("uniqlo", "c1_north_loop", 2);
-  link("sm_store_gl", "c1_e3", 2);
+  link("gl_supermarket", "gl_w_far", 10);
+  link("gl_dermcare", "gl_w_mid", 5);
+  link("gl_silverworks", "gl_w_mid", 5);
+  link("gl_pierre_cardin", "gl_w_inner", 5);
+  link("gl_macao", "gl_w_inner", 8);
+  link("gl_ramen", "gl_sw_wing", 10);
+  link("gl_batchoi", "gl_sw_wing", 12);
+  link("gl_barrio", "gl_s_center", 10);
+  link("gl_razons", "gl_se_wing", 10);
+  link("gl_faceshop", "gl_e_inner", 5);
+  link("gl_barbershop", "gl_ne_wing", 10);
+  link("gl_guess", "gl_e_mid", 8);
+  link("gl_sm_store", "gl_e_far", 15);
+
+  // Escalators
+  link("esc_main_gl", "gl_center", 5);
+  link("esc_west_gl", "gl_w_mid", 5);
+  link("esc_east_gl", "gl_e_mid", 5);
+  link("esc_north_gl", "gl_n_center", 5);
+
 
   // ==========================================
   // 4️⃣ LINK SECOND LEVEL (L2)
   // ==========================================
-  // The Spine
-  link("c2_w3", "c2_w2", 1);
-  link("c2_w2", "esc_west_l2", 1);
-  link("esc_west_l2", "c2_w1", 1);
-  link("c2_w1", "c2_atrium", 1);
-  link("c2_atrium", "c2_e1", 1);
-  link("c2_e1", "esc_east_l2", 1);
-  link("esc_east_l2", "c2_e2", 1);
-  link("c2_e2", "c2_e3", 1);
+  link("l2_w_far", "l2_w_mid", 20);
+  link("l2_w_mid", "l2_w_inner", 20);
+  link("l2_w_inner", "l2_center", 20);
+  link("l2_center", "l2_e_inner", 20);
+  link("l2_e_inner", "l2_e_mid", 20);
+  link("l2_e_mid", "l2_e_far", 20);
 
-  // Loops & Complex Paths
-  link("c2_north_loop", "c2_w1", 2);
-  link("c2_north_loop", "c2_atrium", 1);
-  link("c2_north_loop", "c2_e1", 2);
-  link("c2_south_loop", "c2_w1", 2);
-  link("c2_south_loop", "c2_atrium", 1);
-  link("c2_south_loop", "c2_e1", 2);
-  link("c2_atrium", "esc_atrium_l2", 1);
-  link("c2_south_loop", "esc_atrium_l2", 1);
+  link("l2_w_mid", "l2_nw_wing", 25);
+  link("l2_w_mid", "l2_sw_wing", 25);
+  link("l2_center", "l2_n_center", 25);
+  link("l2_center", "l2_s_center", 25);
+  link("l2_e_mid", "l2_ne_wing", 25);
+  link("l2_e_mid", "l2_se_wing", 25);
 
-  // 🚨 Fire Exits 
-  link("exit_fire_l2", "cinema", 1); // Dedicated Fire exit in cinema!
-  link("exit_fire_east_l2", "c2_e3", 1);
+  link("l2_nw_wing", "l2_n_center", 30);
+  link("l2_n_center", "l2_ne_wing", 30);
+  link("l2_sw_wing", "l2_s_center", 30);
+  link("l2_s_center", "l2_se_wing", 30);
 
-  // Stores
-  link("cinema", "c2_w3", 2);
-  link("arcade", "c2_w3", 2);
-  link("medical_city", "c2_w2", 2);
-  link("foodcourt", "c2_north_loop", 2);
-  link("foodcourt", "c2_atrium", 3); // Foodcourt spills into atrium
-  link("surplus", "c2_south_loop", 2);
-  link("hm", "c2_south_loop", 2);
-  link("toys_r_us", "c2_e1", 2);
-  link("cyberzone", "c2_e2", 2);
-  link("sm_store_l2", "c2_e3", 2);
+  link("exit_fire_nw", "l2_nw_wing", 10);
+  link("exit_fire_ne", "l2_ne_wing", 10);
+  link("exit_fire_s", "l2_s_center", 15);
 
-  // Sneaky connections (DFS loves to get lost here)
-  link("cyberzone", "c2_north_loop", 4);
-  link("medical_city", "cinema", 3);
+  link("l2_cinema", "l2_w_far", 10);
+  link("l2_turks", "l2_w_mid", 5);
+  link("l2_dental", "l2_w_inner", 8);
+  link("l2_foodcourt", "l2_center", 10); 
+  link("l2_cyberzone", "l2_n_center", 15); 
+  link("l2_office_warehouse", "l2_e_inner", 5);
+  link("l2_payless", "l2_e_inner", 8);
+  link("l2_vivo", "l2_e_mid", 8);
+  link("l2_mac", "l2_e_mid", 10);
+  link("l2_sm_store", "l2_e_far", 15);
+
+  link("esc_main_l2", "l2_center", 5);
+  link("esc_west_l2", "l2_w_mid", 5);
+  link("esc_east_l2", "l2_e_mid", 5);
+  link("esc_north_l2", "l2_n_center", 5);
 
   // ==========================================
-  // 5️⃣ LINK ESCALATORS (GL to L2)
+  // 5️⃣ VERTICAL ESCALATORS (GL to L2)
   // ==========================================
-  // High latency (5) to simulate stairs/escalator travel time
-  link("esc_atrium_gl", "esc_atrium_l2", 5, "stairwell");
-  link("esc_west_gl", "esc_west_l2", 5, "stairwell");
-  link("esc_east_gl", "esc_east_l2", 5, "stairwell");
+  link("esc_main_gl", "esc_main_l2", 40, "stairwell");
+  link("esc_west_gl", "esc_west_l2", 40, "stairwell");
+  link("esc_east_gl", "esc_east_l2", 40, "stairwell");
+  link("esc_north_gl", "esc_north_l2", 40, "stairwell");
 
-  // Inside the SM Store, there is always a private escalator!
-  link("sm_store_gl", "sm_store_l2", 4, "stairwell");
+  link("gl_sm_store", "l2_sm_store", 25, "stairwell");
 
   const graph: ScenarioGraph = {
     nodes,
     edges,
-    // ✅ THE FIX: The simulation now starts exactly in the center of the canvas!
-    sourceId: "c2_atrium",
+    sourceId: "l2_center", 
     destinationIds: [
-      "exit_main", 
+      "exit_front_main", 
+      "exit_back_north", 
       "exit_supermarket", 
-      "exit_east", 
-      "exit_north", 
-      "exit_fire_l2", 
-      "exit_fire_east_l2"
+      "exit_dept_store", 
+      "exit_fire_nw",
+      "exit_fire_ne",
+      "exit_fire_s"
     ],
     width: W, height: H
   };
 
   const outFile = path.join(process.cwd(), "src", "data", "evacuation.building.ts");
   fs.writeFileSync(outFile, `export const buildingEvacuationGraph = ${JSON.stringify(graph, null, 2)};`);
-  console.log("✅ MASSIVE SM Rosa Graph Generated! (Starting Point Centered)");
+  console.log("✅ WIDELY SPACED SM ROSA GRAPH GENERATED! (No Overlapping Text Labels)");
 }
 
 generateMassiveSMRosaMap();

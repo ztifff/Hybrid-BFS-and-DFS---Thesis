@@ -370,7 +370,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
                 </div>
               </div>
 
-              {(scenario === 'traffic' || scenario === 'evacuation' || scenario === 'gameai') && (
+              {/* ✅ ADDED ALL 5 SCENARIOS TO THE REAL-WORLD TOGGLE LIST */}
+              {(scenario === 'traffic' || scenario === 'evacuation' || scenario === 'gameai' || scenario === 'robotics' || scenario === 'network') && (
                 <div className="flex flex-col items-center gap-2 mt-2 w-full max-w-sm">
                   <label className={`flex justify-center items-center gap-2 cursor-pointer text-sm font-semibold bg-gray-800 px-4 py-2 rounded-lg border w-full ${isComputing ? 'border-gray-700 opacity-50 cursor-not-allowed' : 'border-gray-600 hover:bg-gray-700 transition-colors'}`}>
                     <input
@@ -381,7 +382,9 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
                       className="w-4 h-4 rounded border-gray-600 text-blue-500 bg-gray-900"
                     />
                     {scenario === 'traffic' ? '🌍 Enable Real-World Map (Cabuyao City)' : 
-                    scenario === 'gameai' ? '⚔️ Enable Real-World Map (Elden Ring)' :
+                     scenario === 'gameai' ? '⚔️ Enable Real-World Map (Elden Ring)' :
+                     scenario === 'robotics' ? '🤖 Enable Real-World Map (AWS Warehouse)' :
+                     scenario === 'network' ? '🌐 Enable Real-World Map (Cloud Datacenter)' :
                     '🏢 Enable Real-World Building (SM City Santa Rosa)'}
                   </label>
                 </div>
@@ -425,7 +428,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
             </div>
           </main>
 
-          {/* ✅ RIGHT ASIDE - Completely scrollable externally, with internal blocks mapped to fixed shapes to prevent squashing! */}
+          {/* ✅ RIGHT ASIDE - Preserving your EXACT box layout! */}
           <aside 
             className="w-full lg:w-[350px] flex-shrink-0 border-t lg:border-t-0 lg:border-l border-gray-800 p-4 flex flex-col gap-4 bg-[#0a0f1e] overflow-y-auto lg:h-full"
             style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}
@@ -447,7 +450,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
               </div>
             )}
 
-            {/* ✅ FIXED THE TRAP: Replaced flex-1 wrapper with fixed height boxes (h-[220px] shrink-0) */}
+            {/* ✅ EXACT MATCH: h-[220px] shrink-0 */}
             <div className="bg-[#0d1224] border border-gray-700 rounded-xl p-3 flex flex-col shadow-inner shrink-0 h-[220px]">
               <div className="flex justify-between items-center mb-2 shrink-0 border-b border-gray-800 pb-2">
                 <h3 className="text-xs text-gray-400 font-bold uppercase tracking-wider flex items-center gap-2">
@@ -479,6 +482,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
               </div>
             </div>
 
+            {/* ✅ EXACT MATCH: h-[220px] shrink-0 */}
             {simResult && simResult.dynamicEvents.length > 0 && (
               <div className="bg-[#0d1224] border border-gray-700 rounded-xl p-3 flex flex-col shadow-inner shrink-0 h-[220px]">
                 <div className="flex justify-between items-center mb-2 shrink-0 border-b border-gray-800 pb-2">

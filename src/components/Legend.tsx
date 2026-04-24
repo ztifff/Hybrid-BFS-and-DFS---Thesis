@@ -17,10 +17,10 @@ interface LegendItem {
 const SCENARIO_NODE_ITEMS: Record<ScenarioType, LegendItem[]> = {
   network: [
     { color: '#1e40af', label: 'Data Center (Source)',  icon: '🖥️' },
-    { color: '#1d4ed8', label: 'Building Router',       icon: '📡' },
-    { color: '#2563eb', label: 'Floor Router',          icon: '🔀' },
-    { color: '#3b82f6', label: 'Access Point (Target)', icon: '📶' },
-    { color: '#450a0a', label: 'Failed Router',         icon: '💀' },
+    { color: '#1d4ed8', label: 'Building / Core Router', icon: '📡' },
+    { color: '#2563eb', label: 'Floor / Edge Switch',    icon: '🔀' },
+    { color: '#3b82f6', label: 'Access Point / Server (Target)', icon: '📶' },
+    { color: '#450a0a', label: 'Failed Component',       icon: '💀' },
   ],
   robotics: [
     { color: '#92400e', label: 'Central Depot (Source)', icon: '🏭' },
@@ -53,8 +53,9 @@ const SCENARIO_NODE_ITEMS: Record<ScenarioType, LegendItem[]> = {
 
 const EDGE_ITEMS: Record<ScenarioType, LegendItem[]> = {
   network: [
-    { color: '#60a5fa', label: 'Fiber Optic (1ms)' },
+    { color: '#60a5fa', label: 'Fiber Optic (1-2ms)' },
     { color: '#94a3b8', label: 'Ethernet (5ms)', dashed: false },
+    { color: '#fdba74', label: 'Copper (1ms)', dashed: true },
   ],
   robotics: [
     { color: '#c4b5fd', label: 'Robot Path (2-5m)' },
