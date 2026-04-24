@@ -263,9 +263,11 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history }) => {
     };
 
     return (
-      <div className="flex flex-col lg:flex-row gap-5 items-start h-full">
+      <div className="flex flex-col lg:flex-row gap-5 items-start h-full min-h-0">
+        
+        {/* LEFT PANEL: Final Map State - flexes to fill */}
         <div 
-          className="w-full lg:flex-1 bg-[#0a0f1e] border rounded-2xl overflow-hidden relative shadow-lg h-[350px] lg:h-[480px]"
+          className="w-full lg:flex-1 bg-[#0a0f1e] border rounded-2xl overflow-hidden relative shadow-lg min-h-[350px] lg:min-h-0 lg:h-full"
           style={{ borderColor: cfg.color + '40', boxShadow: `0 0 40px ${cfg.color}15` }}
         >
           <div className="absolute top-4 left-4 z-10 bg-gray-900/90 border border-gray-700 px-4 py-2 rounded-lg shadow-xl backdrop-blur">
@@ -287,10 +289,12 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history }) => {
           />
         </div>
 
+        {/* ✅ RIGHT PANEL: Removed overflow-hidden, made the WHOLE right panel scrollable */}
         <div 
-          className="w-full lg:w-[400px] flex flex-col gap-4 h-auto lg:h-[480px] overflow-y-auto pr-2 shrink-0" 
+          className="w-full lg:w-[400px] flex flex-col gap-4 lg:h-full overflow-y-auto pr-2 pb-2 shrink-0" 
           style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}
         >
+          {/* Metrics - never shrinks */}
           <div className="bg-gray-800/50 border rounded-xl overflow-hidden relative shrink-0" style={{ borderColor: cfg.color + '40' }}>
             <div className="h-1.5 w-full" style={{ backgroundColor: cfg.color }}></div>
             <div className="p-4">
@@ -308,14 +312,16 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history }) => {
             </div>
           </div>
 
-          <div className="bg-gray-900/80 border border-gray-700/60 rounded-xl p-4 space-y-3 shrink-0 shadow-inner">
-            <h4 className="text-white font-bold text-sm border-b border-gray-700 pb-2 flex items-center gap-2">
+          {/* ✅ Analysis - no longer restricted by height, natural expansion */}
+          <div className="bg-gray-900/80 border border-gray-700/60 rounded-xl p-4 flex flex-col shadow-inner shrink-0">
+            <h4 className="text-white font-bold text-sm border-b border-gray-700 pb-2 flex items-center gap-2 mb-3">
               🧠 Algorithmic Analysis
             </h4>
             <div className="space-y-2.5 text-[11px] text-gray-400 leading-normal">
               {renderAnalysis()}
             </div>
           </div>
+
         </div>
       </div>
     );
@@ -489,7 +495,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history }) => {
           
           return (
             <div 
-              key={comp.id} 
+              key={comp.id}
               onClick={() => { setActiveCompId(comp.id); setView('savedCompDetail'); }}
               className="bg-gray-800/40 border border-gray-700/60 rounded-xl p-5 hover:border-gray-500 hover:bg-gray-800/80 transition-all cursor-pointer shadow-sm relative overflow-hidden"
             >
@@ -588,7 +594,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history }) => {
         </header>
 
         {/* ✅ DYNAMIC OVERFLOW FIX */}
-        <div className={`p-4 sm:p-5 flex-1 bg-[#0a0f1e] ${isSingleView ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+        <div className={`p-4 sm:p-5 flex-1 bg-[#0a0f1e] min-h-0 flex flex-col ${isSingleView ? 'lg:overflow-hidden overflow-y-auto' : 'overflow-y-auto'}`}>
           {view === 'list' && renderList()}
           {view === 'compare' && renderCompareContent(history.filter(h => selectedIds.has(h.id)))}
           {view === 'savedCompList' && renderSavedCompList()}
