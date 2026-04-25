@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   vite-app:
     build: .
@@ -11,3 +9,27 @@ services:
       - /app/node_modules
     stdin_open: true
     tty: true
+    networks:
+      - simulation_network
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend-container
+    ports:
+      - "3200:3200"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    networks:
+      - simulation_network
+    command: npm run dev   # 🚨 ADD THIS LINE 🚨
+
+networks:
+  simulation_network:
+    driver: bridge

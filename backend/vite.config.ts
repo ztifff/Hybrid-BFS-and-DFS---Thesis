@@ -16,14 +16,4 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"),
     },
   },
-  server: {
-    host: true,
-    port: 5173,
-    proxy: {
-      '/api': {
-        target: 'http://backend:3200', // Points to the backend container name in docker-compose
-        changeOrigin: true,
-      }
-    }
-  }
 });
