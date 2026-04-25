@@ -294,12 +294,15 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
             </div>
           </div>
 
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 hidden md:block">
+          {/* ✅ THE FIX: Made responsive! Sits right on mobile, centered absolutely on desktop. Shortens text on small screens */}
+          <div className="z-20 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 ml-auto md:ml-0">
             <button 
               onClick={() => setIsHistoryModalOpen(true)}
-              className="px-5 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-full text-xs font-bold text-white shadow-md transition-all flex items-center gap-2 cursor-pointer"
+              className="px-3 sm:px-5 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-full text-xs font-bold text-white shadow-md transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap"
             >
-              🗄️ Result History 
+              🗄️ 
+              <span className="hidden sm:inline">Result History</span>
+              <span className="sm:hidden">History</span>
               <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">{history.length}</span>
             </button>
           </div>
@@ -370,7 +373,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
                 </div>
               </div>
 
-              {/* ✅ ADDED ALL 5 SCENARIOS TO THE REAL-WORLD TOGGLE LIST */}
               {(scenario === 'traffic' || scenario === 'evacuation' || scenario === 'gameai' || scenario === 'robotics' || scenario === 'network') && (
                 <div className="flex flex-col items-center gap-2 mt-2 w-full max-w-sm">
                   <label className={`flex justify-center items-center gap-2 cursor-pointer text-sm font-semibold bg-gray-800 px-4 py-2 rounded-lg border w-full ${isComputing ? 'border-gray-700 opacity-50 cursor-not-allowed' : 'border-gray-600 hover:bg-gray-700 transition-colors'}`}>
@@ -428,12 +430,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
             </div>
           </main>
 
-          {/* ✅ RIGHT ASIDE - Preserving your EXACT box layout! */}
           <aside 
             className="w-full lg:w-[350px] flex-shrink-0 border-t lg:border-t-0 lg:border-l border-gray-800 p-4 flex flex-col gap-4 bg-[#0a0f1e] overflow-y-auto lg:h-full"
             style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}
           >
-            {/* Kept as shrink-0 so the final report never shrinks */}
             {simResult && !isComputing && status === 'done' && (
               <div className="shrink-0">
                 <SimulationReport 
@@ -450,7 +450,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
               </div>
             )}
 
-            {/* ✅ EXACT MATCH: h-[220px] shrink-0 */}
             <div className="bg-[#0d1224] border border-gray-700 rounded-xl p-3 flex flex-col shadow-inner shrink-0 h-[220px]">
               <div className="flex justify-between items-center mb-2 shrink-0 border-b border-gray-800 pb-2">
                 <h3 className="text-xs text-gray-400 font-bold uppercase tracking-wider flex items-center gap-2">
@@ -482,7 +481,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
               </div>
             </div>
 
-            {/* ✅ EXACT MATCH: h-[220px] shrink-0 */}
             {simResult && simResult.dynamicEvents.length > 0 && (
               <div className="bg-[#0d1224] border border-gray-700 rounded-xl p-3 flex flex-col shadow-inner shrink-0 h-[220px]">
                 <div className="flex justify-between items-center mb-2 shrink-0 border-b border-gray-800 pb-2">
