@@ -16,7 +16,6 @@ export interface HistoryEntry {
   timestamp: Date;
 }
 
-// ✅ NEW: Interface to store saved manual comparisons
 interface SavedComparison {
   id: string;
   name: string;
@@ -28,24 +27,65 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   history: HistoryEntry[];
+  scenario?: ScenarioType; 
+  onDeleteHistory: (ids: string[]) => void;
 }
 
-export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history }) => {
+export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenario, onDeleteHistory }) => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   
-  // ✅ NEW: Advanced View State to handle Custom Comparison History
   const [view, setView] = useState<'list' | 'compare' | 'savedCompList' | 'savedCompDetail'>('list');
   const [savedComparisons, setSavedComparisons] = useState<SavedComparison[]>([]);
   const [activeCompId, setActiveCompId] = useState<string | null>(null);
   const [isCompSaved, setIsCompSaved] = useState(false);
   const savedCompCounter = useRef(0);
 
-  // ✅ NEW: State for the custom inline naming prompt
   const [isNamingComp, setIsNamingComp] = useState(false);
   const [newCompName, setNewCompName] = useState('');
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const [deleteDialog, setDeleteDialog] = useState<{
+    isOpen: boolean;
+    type: 'runs' | 'comparison';
+    targetId?: string;
+  }>({ isOpen: false, type: 'runs' });
+
+  const currentScenario = scenario || (history.length > 0 ? history[0].scenario : null);
+
+  useEffect(() => {
+    if (!currentScenario) return;
+    
+    const storageKey = `custom_comparisons_${currentScenario}`;
+    const storedData = localStorage.getItem(storageKey);
+    
+    if (storedData) {
+      try {
+        const parsed = JSON.parse(storedData);
+        const hydratedData = parsed.map((comp: any) => ({
+          ...comp,
+          date: new Date(comp.date),
+          entries: comp.entries.map((entry: any) => ({
+            ...entry,
+            timestamp: new Date(entry.timestamp)
+          }))
+        }));
+        setSavedComparisons(hydratedData);
+        savedCompCounter.current = hydratedData.length;
+      } catch (error) {
+        console.error(`Failed to parse history for ${currentScenario}`, error);
+      }
+    } else {
+      setSavedComparisons([]);
+    }
+  }, [currentScenario, isOpen]);
+
+  useEffect(() => {
+    if (!currentScenario) return;
+    const storageKey = `custom_comparisons_${currentScenario}`;
+    localStorage.setItem(storageKey, JSON.stringify(savedComparisons));
+  }, [savedComparisons, currentScenario]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -57,7 +97,6 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // ✅ Reset save/naming state when selection changes
   useEffect(() => {
     setIsCompSaved(false);
     setIsNamingComp(false);
@@ -98,7 +137,35 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history }) => {
     setSelectedIds(new Set());
   };
 
-  // ✅ SAVE HANDLER - Phase 1: Trigger the inline naming UI
+  const handleDeleteSelectedRuns = () => {
+    setDeleteDialog({ isOpen: true, type: 'runs' });
+  };
+
+  const handleDeleteComparison = (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setDeleteDialog({ isOpen: true, type: 'comparison', targetId: id });
+  };
+
+  const executeDelete = () => {
+    if (deleteDialog.type === 'runs') {
+      onDeleteHistory(Array.from(selectedIds));
+      setSelectedIds(new Set());
+    } else if (deleteDialog.type === 'comparison' && deleteDialog.targetId) {
+      setSavedComparisons(prev => {
+        const updated = prev.filter(c => c.id !== deleteDialog.targetId);
+        localStorage.setItem(`custom_comparisons_${currentScenario}`, JSON.stringify(updated));
+        return updated;
+      });
+      if (activeCompId === deleteDialog.targetId) {
+        setView('savedCompList');
+        setActiveCompId(null);
+      }
+      // ✅ FIX: Reset the save button state so the user can save again after deleting
+      setIsCompSaved(false); 
+    }
+    setDeleteDialog({ isOpen: false, type: 'runs' });
+  };
+
   const handleSaveComparison = () => {
     const selectedEntries = history.filter(h => selectedIds.has(h.id));
     if (selectedEntries.length < 2) return;
@@ -107,7 +174,6 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history }) => {
     setIsNamingComp(true);
   };
 
-  // ✅ SAVE HANDLER - Phase 2: Finalize the save with the custom name
   const confirmSaveComparison = () => {
     const selectedEntries = history.filter(h => selectedIds.has(h.id));
     if (selectedEntries.length < 2) return;
@@ -265,7 +331,6 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history }) => {
     return (
       <div className="flex flex-col lg:flex-row gap-5 items-start h-full min-h-0">
         
-        {/* LEFT PANEL: Final Map State - flexes to fill */}
         <div 
           className="w-full lg:flex-1 bg-[#0a0f1e] border rounded-2xl overflow-hidden relative shadow-lg min-h-[350px] lg:min-h-0 lg:h-full"
           style={{ borderColor: cfg.color + '40', boxShadow: `0 0 40px ${cfg.color}15` }}
@@ -289,12 +354,10 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history }) => {
           />
         </div>
 
-        {/* ✅ RIGHT PANEL: Removed overflow-hidden, made the WHOLE right panel scrollable */}
         <div 
           className="w-full lg:w-[400px] flex flex-col gap-4 lg:h-full overflow-y-auto pr-2 pb-2 shrink-0" 
           style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}
         >
-          {/* Metrics - never shrinks */}
           <div className="bg-gray-800/50 border rounded-xl overflow-hidden relative shrink-0" style={{ borderColor: cfg.color + '40' }}>
             <div className="h-1.5 w-full" style={{ backgroundColor: cfg.color }}></div>
             <div className="p-4">
@@ -312,7 +375,6 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history }) => {
             </div>
           </div>
 
-          {/* ✅ Analysis - no longer restricted by height, natural expansion */}
           <div className="bg-gray-900/80 border border-gray-700/60 rounded-xl p-4 flex flex-col shadow-inner shrink-0">
             <h4 className="text-white font-bold text-sm border-b border-gray-700 pb-2 flex items-center gap-2 mb-3">
               🧠 Algorithmic Analysis
@@ -375,7 +437,6 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history }) => {
     );
   };
 
-  // ✅ UNIFIED RENDER LOGIC FOR GRIDS
   const renderCompareContent = (entriesToRender: HistoryEntry[]) => {
     const sortedEntries = [...entriesToRender].sort((a, b) => algos.indexOf(a.algorithm) - algos.indexOf(b.algorithm));
 
@@ -420,9 +481,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history }) => {
           })}
         </div>
         
-        {/* ✅ DYNAMIC SAVING & ANALYSIS BLOCK */}
         {isNamingComp ? (
-          // Custom Inline Naming Prompt
           <div className="bg-gray-900 border border-gray-700/60 rounded-xl p-5 shrink-0 shadow-inner mt-4">
             <h4 className="text-white font-bold text-sm border-b border-gray-700 pb-2 flex items-center gap-2 mb-4">
               💾 Save Custom Comparison
@@ -435,7 +494,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history }) => {
                 type="text"
                 value={newCompName}
                 onChange={(e) => setNewCompName(e.target.value)}
-                placeholder={`e.g., Benchmark #${savedCompCounter.current + 1}`}
+                placeholder="Enter comparison name"
                 className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
               />
               <button 
@@ -454,14 +513,12 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history }) => {
             </div>
           </div>
         ) : (
-          // Automated Analytical Conclusion Block
           renderCompareAnalysis(sortedEntries)
         )}
       </div>
     );
   };
 
-  // ✅ LIST VIEW FOR SAVED COMPARISONS
   const renderSavedCompList = () => {
     if (savedComparisons.length === 0) {
       return (
@@ -500,7 +557,16 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history }) => {
               className="bg-gray-800/40 border border-gray-700/60 rounded-xl p-5 hover:border-gray-500 hover:bg-gray-800/80 transition-all cursor-pointer shadow-sm relative overflow-hidden"
             >
               <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: winnerCfg.color }}></div>
-              <h3 className="text-white font-bold text-lg mb-1 ml-2">{comp.name}</h3>
+              
+              <button 
+                onClick={(e) => handleDeleteComparison(comp.id, e)}
+                className="absolute top-3 right-3 text-gray-500 hover:text-red-400 hover:bg-red-500/10 p-1.5 rounded-lg transition-colors cursor-pointer"
+                title="Delete Comparison"
+              >
+                🗑️
+              </button>
+
+              <h3 className="text-white font-bold text-lg mb-1 ml-2 pr-6">{comp.name}</h3>
               <p className="text-xs text-gray-500 mb-4 ml-2 font-medium">{comp.date.toLocaleString()}</p>
               
               <div className="ml-2 mb-4 flex flex-wrap gap-1.5">
@@ -531,155 +597,210 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history }) => {
   const isSingleView = (view === 'compare' && selectedIds.size === 1) || (view === 'savedCompDetail' && activeSavedComp?.entries.length === 1);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 sm:p-8 transition-opacity">
-      <div className="bg-[#0a0f1e] border border-gray-800 rounded-2xl w-full max-w-[1400px] flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden h-[90vh]">
-        
-        <header className="bg-[#0d1224] border-b border-gray-800 p-4 sm:p-6 flex justify-between items-center shrink-0">
-          <div>
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              {view === 'list' && '🗄️ Result History'}
-              {view === 'compare' && '📊 Comparing Selected Runs'}
-              {view === 'savedCompList' && '🗄️ Saved Custom Comparisons'}
-              {view === 'savedCompDetail' && `🔍 Viewing: ${activeSavedComp?.name}`}
-            </h2>
-            <p className="text-sm text-gray-400 mt-1">
-              {view === 'list' && 'Select previous simulation runs to compare their metrics side-by-side.'}
-              {view === 'compare' && 'Evaluating algorithm performance across selected historical benchmarks.'}
-              {view === 'savedCompList' && 'Review previously saved multi-algorithm comparisons.'}
-              {view === 'savedCompDetail' && `Saved on ${activeSavedComp?.date.toLocaleString()}`}
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            
-            {view === 'list' && history.length > 0 && (
-              <div className="relative" ref={dropdownRef}>
-                {selectedIds.size > 0 ? (
-                  <button 
-                    onClick={handleUnselectAll} 
-                    className="px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-600 text-xs font-bold text-gray-200 transition-colors cursor-pointer shadow-sm"
-                  >
-                    Unselect All
-                  </button>
-                ) : (
-                  <>
-                    <button 
-                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                      className="px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-600 text-xs font-bold text-gray-200 transition-colors cursor-pointer shadow-sm flex items-center gap-2"
-                    >
-                      Select Rows ▼
-                    </button>
-                    
-                    {isDropdownOpen && (
-                      <div className="absolute right-0 mt-2 w-36 bg-gray-900 border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden">
-                        {Array.from({ length: maxRows }).map((_, i) => (
-                          <button 
-                            key={i} 
-                            onClick={() => handleSelectRow(i)} 
-                            className="block w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-blue-600/20 hover:text-blue-400 border-b border-gray-800 last:border-0 transition-colors cursor-pointer font-semibold"
-                          >
-                            Compare Row {i + 1}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-
-            <button onClick={onClose} className="w-10 h-10 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-gray-300 font-bold transition-colors cursor-pointer">
-              ✕
-            </button>
-          </div>
-        </header>
-
-        {/* ✅ DYNAMIC OVERFLOW FIX */}
-        <div className={`p-4 sm:p-5 flex-1 bg-[#0a0f1e] min-h-0 flex flex-col ${isSingleView ? 'lg:overflow-hidden overflow-y-auto' : 'overflow-y-auto'}`}>
-          {view === 'list' && renderList()}
-          {view === 'compare' && renderCompareContent(history.filter(h => selectedIds.has(h.id)))}
-          {view === 'savedCompList' && renderSavedCompList()}
-          {view === 'savedCompDetail' && activeSavedComp && renderCompareContent(activeSavedComp.entries)}
-        </div>
-
-        {/* ✅ UNIFIED FOOTER LOGIC - All buttons match your requirement */}
-        <footer className="bg-[#0d1224] border-t border-gray-800 p-4 sm:p-5 flex justify-between items-center shrink-0 w-full">
-          {view === 'list' ? (
-            <div className="flex w-full justify-end gap-3">
-              <button 
-                onClick={() => setView('compare')}
-                disabled={selectedIds.size !== 1}
-                className="px-6 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-800 disabled:text-gray-600 disabled:border-transparent border border-indigo-500 text-white font-bold text-sm transition-all disabled:cursor-not-allowed cursor-pointer"
-              >
-                👁️ View Result
-              </button>
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 sm:p-8 transition-opacity">
+        <div className="bg-[#0a0f1e] border border-gray-800 rounded-2xl w-full max-w-[1400px] flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden h-[90vh]">
+          
+          <header className="bg-[#0d1224] border-b border-gray-800 p-4 sm:p-6 flex justify-between items-center shrink-0">
+            <div>
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                {view === 'list' && '🗄️ Result History'}
+                {view === 'compare' && '📊 Comparing Selected Runs'}
+                {view === 'savedCompList' && '🗄️ Saved Custom Comparisons'}
+                {view === 'savedCompDetail' && `🔍 Viewing: ${activeSavedComp?.name}`}
+              </h2>
+              <p className="text-sm text-gray-400 mt-1">
+                {view === 'list' && 'Select previous simulation runs to compare their metrics side-by-side.'}
+                {view === 'compare' && 'Evaluating algorithm performance across selected historical benchmarks.'}
+                {view === 'savedCompList' && 'Review previously saved multi-algorithm comparisons.'}
+                {view === 'savedCompDetail' && `Saved on ${activeSavedComp?.date?.toLocaleString()}`}
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
               
-              <button 
-                onClick={() => setView('compare')}
-                disabled={selectedIds.size < 2}
-                className="px-8 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-600 disabled:border-transparent border border-blue-500 text-white font-bold text-sm transition-all disabled:cursor-not-allowed shadow-[0_0_15px_rgba(37,99,235,0.3)] cursor-pointer"
-              >
-                📊 Compare Selected ({selectedIds.size})
+              {view === 'list' && history.length > 0 && (
+                <div className="relative" ref={dropdownRef}>
+                  {selectedIds.size > 0 ? (
+                    <button 
+                      onClick={handleUnselectAll} 
+                      className="px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-600 text-xs font-bold text-gray-200 transition-colors cursor-pointer shadow-sm"
+                    >
+                      Unselect All
+                    </button>
+                  ) : (
+                    <>
+                      <button 
+                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                        className="px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-600 text-xs font-bold text-gray-200 transition-colors cursor-pointer shadow-sm flex items-center gap-2"
+                      >
+                        Select Rows ▼
+                      </button>
+                      
+                      {isDropdownOpen && (
+                        <div className="absolute right-0 mt-2 w-36 bg-gray-900 border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden">
+                          {Array.from({ length: maxRows }).map((_, i) => (
+                            <button 
+                              key={i} 
+                              onClick={() => handleSelectRow(i)} 
+                              className="block w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-blue-600/20 hover:text-blue-400 border-b border-gray-800 last:border-0 transition-colors cursor-pointer font-semibold"
+                            >
+                              Compare Row {i + 1}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+
+              <button onClick={onClose} className="w-10 h-10 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-gray-300 font-bold transition-colors cursor-pointer">
+                ✕
               </button>
             </div>
-          ) : view === 'compare' ? (
-            <>
-              {/* Left Side: History List Button */}
-              {selectedIds.size >= 2 ? (
-                <button 
-                  onClick={() => setView('savedCompList')}
-                  className="px-5 py-2.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-white font-bold text-sm transition-all cursor-pointer border border-gray-600 flex items-center gap-2"
-                >
-                  🗄️ Comparison History
-                  <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">{savedComparisons.length}</span>
-                </button>
-              ) : <div />}
+          </header>
 
-              {/* Right Side: Action Buttons */}
-              <div className="flex gap-3">
-                {selectedIds.size >= 2 && (
-                   <button 
-                    onClick={handleSaveComparison}
-                    disabled={isCompSaved || isNamingComp}
-                    className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all ${
-                      isCompSaved 
-                        ? 'bg-green-600/20 border border-green-500/50 text-green-400 cursor-default shadow-none' 
-                        : 'bg-blue-600 hover:bg-blue-500 text-white cursor-pointer shadow-[0_0_15px_rgba(37,99,235,0.3)] disabled:opacity-50 disabled:cursor-not-allowed'
-                    }`}
+          <div className={`p-4 sm:p-5 flex-1 bg-[#0a0f1e] min-h-0 flex flex-col ${isSingleView ? 'lg:overflow-hidden overflow-y-auto' : 'overflow-y-auto'}`}>
+            {view === 'list' && renderList()}
+            {view === 'compare' && renderCompareContent(history.filter(h => selectedIds.has(h.id)))}
+            {view === 'savedCompList' && renderSavedCompList()}
+            {view === 'savedCompDetail' && activeSavedComp && renderCompareContent(activeSavedComp.entries)}
+          </div>
+
+          <footer className="bg-[#0d1224] border-t border-gray-800 p-4 sm:p-5 flex justify-between items-center shrink-0 w-full">
+            {view === 'list' ? (
+              <>
+                <div>
+                  {selectedIds.size > 0 && (
+                    <button 
+                      onClick={handleDeleteSelectedRuns}
+                      className="px-4 py-2.5 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 cursor-pointer border border-transparent hover:border-red-500/30"
+                    >
+                      🗑️ Delete Selected
+                    </button>
+                  )}
+                </div>
+                
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => setView('compare')}
+                    disabled={selectedIds.size !== 1}
+                    className="px-6 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-800 disabled:text-gray-600 disabled:border-transparent border border-indigo-500 text-white font-bold text-sm transition-all disabled:cursor-not-allowed cursor-pointer"
                   >
-                    {isCompSaved ? '✅ Saved' : '💾 Save Comparison'}
+                    👁️ View Result
                   </button>
-                )}
+                  
+                  <button 
+                    onClick={() => setView('compare')}
+                    disabled={selectedIds.size < 2}
+                    className="px-8 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-600 disabled:border-transparent border border-blue-500 text-white font-bold text-sm transition-all disabled:cursor-not-allowed shadow-[0_0_15px_rgba(37,99,235,0.3)] cursor-pointer"
+                  >
+                    📊 Compare Selected ({selectedIds.size})
+                  </button>
+                </div>
+              </>
+            ) : view === 'compare' ? (
+              <>
+                <div>
+                  {selectedIds.size >= 2 && (
+                    <button 
+                      onClick={() => setView('savedCompList')}
+                      className="px-5 py-2.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-white font-bold text-sm transition-all cursor-pointer border border-gray-600 flex items-center gap-2"
+                    >
+                      🗄️ Comparison History
+                      <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">{savedComparisons.length}</span>
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex gap-3">
+                  {selectedIds.size >= 2 && (
+                     <button 
+                      onClick={handleSaveComparison}
+                      disabled={isCompSaved || isNamingComp}
+                      className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all ${
+                        isCompSaved 
+                          ? 'bg-green-600/20 border border-green-500/50 text-green-400 cursor-default shadow-none' 
+                          : 'bg-blue-600 hover:bg-blue-500 text-white cursor-pointer shadow-[0_0_15px_rgba(37,99,235,0.3)] disabled:opacity-50 disabled:cursor-not-allowed'
+                      }`}
+                    >
+                      {isCompSaved ? '✅ Saved' : '💾 Save Comparison'}
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => setView('list')}
+                    className="px-6 py-2.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-white font-bold text-sm transition-all cursor-pointer border border-gray-600"
+                  >
+                    ← Back to Selection
+                  </button>
+                </div>
+              </>
+            ) : view === 'savedCompList' ? (
+              <>
+                <div />
                 <button 
                   onClick={() => setView('list')}
                   className="px-6 py-2.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-white font-bold text-sm transition-all cursor-pointer border border-gray-600"
                 >
-                  ← Back to Selection
+                  ← Back to Main History
                 </button>
-              </div>
-            </>
-          ) : view === 'savedCompList' ? (
-            <div className="flex w-full justify-end">
-              <button 
-                onClick={() => setView('list')}
-                className="px-6 py-2.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-white font-bold text-sm transition-all cursor-pointer border border-gray-600"
-              >
-                ← Back to Main History
-              </button>
-            </div>
-          ) : view === 'savedCompDetail' ? (
-            <div className="flex w-full justify-end">
-              <button 
-                onClick={() => setView('savedCompList')}
-                className="px-6 py-2.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-white font-bold text-sm transition-all cursor-pointer border border-gray-600"
-              >
-                ← Back to Comparison History
-              </button>
-            </div>
-          ) : null}
-        </footer>
+              </>
+            ) : view === 'savedCompDetail' ? (
+              <>
+                <div>
+                  <button 
+                    onClick={() => handleDeleteComparison(activeCompId!)}
+                    className="px-4 py-2.5 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 cursor-pointer border border-transparent hover:border-red-500/30"
+                  >
+                    🗑️ Delete Comparison
+                  </button>
+                </div>
+                <button 
+                  onClick={() => setView('savedCompList')}
+                  className="px-6 py-2.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-white font-bold text-sm transition-all cursor-pointer border border-gray-600"
+                >
+                  ← Back to Comparison History
+                </button>
+              </>
+            ) : null}
+          </footer>
 
+        </div>
       </div>
-    </div>
+
+      {/* ✅ CUSTOM DELETE CONFIRMATION MODAL */}
+      {deleteDialog.isOpen && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 transition-opacity">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden">
+            <div className="p-6">
+              <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center mb-4 border border-red-500/30 text-red-400 text-xl">
+                ⚠️
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Confirm Deletion</h3>
+              <p className="text-sm text-gray-400">
+                {deleteDialog.type === 'runs'
+                  ? `Are you sure you want to delete the ${selectedIds.size} selected run(s)? This action cannot be undone.`
+                  : `Are you sure you want to delete this saved comparison? This action cannot be undone.`}
+              </p>
+            </div>
+            <div className="bg-gray-950 border-t border-gray-800 p-4 flex justify-end gap-3">
+              <button 
+                onClick={() => setDeleteDialog({ isOpen: false, type: 'runs' })} 
+                className="px-5 py-2.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold text-sm transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={executeDelete} 
+                className="px-6 py-2.5 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold text-sm transition-all shadow-[0_0_15px_rgba(220,38,38,0.3)] cursor-pointer"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

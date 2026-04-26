@@ -24,9 +24,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
   
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
-  const [isCurrentSaved, setIsCurrentSaved] = useState(false); 
   
-  const runCounters = useRef<Record<AlgorithmType, number>>({ bfs: 0, dfs: 0, hybrid: 0 });
+  // ✅ NEW: Track the specific ID of the current run so we know if it gets deleted
+  const [isCurrentSaved, setIsCurrentSaved] = useState(false); 
+  const [currentSavedId, setCurrentSavedId] = useState<string | null>(null);
   
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [saveNameInput, setSaveNameInput] = useState('');
@@ -61,6 +62,26 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
   const [status, setStatus] = useState<Status>('idle');
   const animRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  useEffect(() => {
+    const storageKey = `simulation_history_${scenario}`;
+    const storedData = localStorage.getItem(storageKey);
+    
+    if (storedData) {
+      try {
+        const parsed = JSON.parse(storedData);
+        const hydratedData = parsed.map((entry: any) => ({
+          ...entry,
+          timestamp: new Date(entry.timestamp)
+        }));
+        setHistory(hydratedData);
+      } catch (error) {
+        console.error(`Failed to parse history for ${scenario}`, error);
+      }
+    } else {
+      setHistory([]);
+    }
+  }, [scenario]);
+
   const stopAnimation = useCallback(() => {
     if (animRef.current) {
       clearInterval(animRef.current);
@@ -89,7 +110,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
       setSimResult(result);
       setBfsResult(optimalBfsResult);
       setIsComputing(false);
+      
+      // ✅ Reset save state perfectly on new run
       setIsCurrentSaved(false); 
+      setCurrentSavedId(null);
     };
 
     computeGraphData();
@@ -104,35 +128,63 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
     if (!simResult || isCurrentSaved) return;
     
     const algoName = getAlgorithm(activeAlgorithm).name;
-    const nextRunNumber = runCounters.current[activeAlgorithm] + 1;
+    const maxRun = history
+      .filter(h => h.algorithm === activeAlgorithm)
+      .reduce((max, h) => Math.max(max, h.runNumber), 0);
+      
+    const nextRunNumber = maxRun + 1;
     const defaultName = `${algoName} Trial #${nextRunNumber}`;
     
     setSaveDefaultName(defaultName);
     setSaveNameInput(defaultName); 
     setIsSaveModalOpen(true);
-  }, [simResult, isCurrentSaved, activeAlgorithm]);
+  }, [simResult, isCurrentSaved, activeAlgorithm, history]);
 
   const confirmSaveResult = useCallback(() => {
     if (!simResult) return;
     
-    runCounters.current[activeAlgorithm] += 1;
+    const maxRun = history
+      .filter(h => h.algorithm === activeAlgorithm)
+      .reduce((max, h) => Math.max(max, h.runNumber), 0);
+    const thisRunNumber = maxRun + 1;
+    
     const finalName = saveNameInput.trim() === '' ? saveDefaultName : saveNameInput.trim();
 
-    setHistory(prev => [...prev, {
-      id: Date.now().toString(),
-      runNumber: runCounters.current[activeAlgorithm],
+    const compressedSimResult = {
+      ...simResult,
+      steps: simResult.steps.length > 0 ? [simResult.steps[simResult.steps.length - 1]] : []
+    };
+
+    const newEntryId = Date.now().toString(); // ✅ Capture the ID
+
+    const newEntry: HistoryEntry = {
+      id: newEntryId,
+      runNumber: thisRunNumber,
       name: finalName,
       algorithm: activeAlgorithm,
       scenario: scenario, 
-      simResult: simResult,
+      simResult: compressedSimResult,
       optimalPathLength: bfsResult?.pathLength || 1,
       totalNodes: currentGraph.nodes.length,
       timestamp: new Date()
-    }]);
+    };
+
+    setHistory(prev => {
+      const updatedHistory = [newEntry, ...prev];
+      try {
+        localStorage.setItem(`simulation_history_${scenario}`, JSON.stringify(updatedHistory));
+      } catch (err) {
+        console.error("Storage Full:", err);
+        alert("Browser storage limit reached! Cannot save more history.");
+      }
+      return updatedHistory;
+    });
     
+    // ✅ Lock the save button to this exact ID
     setIsCurrentSaved(true);
+    setCurrentSavedId(newEntryId);
     setIsSaveModalOpen(false);
-  }, [simResult, activeAlgorithm, bfsResult, currentGraph.nodes.length, saveNameInput, saveDefaultName, scenario]);
+  }, [simResult, activeAlgorithm, bfsResult, currentGraph.nodes.length, saveNameInput, saveDefaultName, scenario, history]);
 
   const totalSteps = simResult?.steps.length ?? 0;
 
@@ -268,23 +320,26 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
 
   return (
     <>
-      <div className="min-h-screen lg:h-screen w-full bg-[#0a0f1e] text-white flex flex-col lg:overflow-hidden relative z-0">
+      <div className="min-h-screen lg:h-screen w-full max-w-[100vw] overflow-x-hidden bg-[#0a0f1e] text-white flex flex-col lg:overflow-hidden relative z-0">
         
-        <header className="border-b border-gray-800 px-4 md:px-6 py-3 flex items-center justify-between bg-[#0d1224] shrink-0 relative">
-          <div className="flex items-center gap-4 relative z-10">
-            <button onClick={onBack} className="text-gray-400 hover:text-white transition-colors text-sm flex items-center gap-1 cursor-pointer">
-              ← Back
+        <header className="border-b border-gray-800 px-3 md:px-6 py-2.5 md:py-3 flex items-center justify-between bg-[#0d1224] shrink-0 relative gap-2 w-full max-w-full">
+          <div className="flex items-center gap-2 sm:gap-4 relative z-10 shrink-0">
+            <button onClick={onBack} className="text-gray-400 hover:text-white transition-colors text-sm flex items-center gap-1 cursor-pointer shrink-0">
+              ← <span className="hidden sm:inline">Back</span>
             </button>
+            
             <div className="h-5 w-px bg-gray-700 hidden sm:block" />
-            <div className="text-sm flex items-center gap-2">
-              <span className="text-xl hidden sm:inline">{sc.icon}</span>
-              <span className="font-bold text-white hidden sm:inline">{sc.name}</span>
-              <span className="text-gray-500 hidden sm:inline">·</span>
+            
+            <div className="text-sm flex items-center gap-2 shrink-0">
+              <span className="text-xl hidden lg:inline">{sc.icon}</span>
+              <span className="font-bold text-white hidden lg:inline">{sc.name}</span>
+              <span className="text-gray-500 hidden lg:inline">·</span>
+              
               <select
                 value={activeAlgorithm}
                 onChange={(e) => setActiveAlgorithm(e.target.value as AlgorithmType)}
                 disabled={isComputing}
-                className="bg-[#111827] border border-gray-700 rounded-md px-2 py-1 text-sm font-bold outline-none cursor-pointer hover:border-gray-500 focus:border-gray-400 transition-colors disabled:opacity-50"
+                className="bg-[#111827] border border-gray-700 rounded-md px-1.5 sm:px-2 py-1 text-xs sm:text-sm font-bold outline-none cursor-pointer hover:border-gray-500 focus:border-gray-400 transition-colors disabled:opacity-50 max-w-[150px] sm:max-w-xs text-ellipsis overflow-hidden shrink-0"
                 style={{ color: al.color }}
               >
                 <option value="hybrid" style={{ color: '#fff' }}>Hybrid BFS-DFS</option>
@@ -294,21 +349,15 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
             </div>
           </div>
 
-          {/* ✅ THE FIX: Made responsive! Sits right on mobile, centered absolutely on desktop. Shortens text on small screens */}
-          <div className="z-20 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 ml-auto md:ml-0">
+          <div className="z-20 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 shrink-0 ml-auto">
             <button 
               onClick={() => setIsHistoryModalOpen(true)}
-              className="px-3 sm:px-5 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-full text-xs font-bold text-white shadow-md transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap"
+              className="px-2.5 sm:px-5 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-full text-xs font-bold text-white shadow-md transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer"
             >
               🗄️ 
               <span className="hidden sm:inline">Result History</span>
-              <span className="sm:hidden">History</span>
-              <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">{history.length}</span>
+              <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full leading-none">{history.length}</span>
             </button>
-          </div>
-
-          <div className="text-xs text-gray-500 hidden lg:block relative z-10">
-            Real-World Graph Simulation — BFS / DFS / Hybrid Performance Evaluation
           </div>
         </header>
 
@@ -526,6 +575,19 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
         isOpen={isHistoryModalOpen}
         onClose={() => setIsHistoryModalOpen(false)}
         history={history}
+        scenario={scenario} 
+        onDeleteHistory={(ids) => {
+          setHistory(prev => {
+            const updated = prev.filter(h => !ids.includes(h.id));
+            localStorage.setItem(`simulation_history_${scenario}`, JSON.stringify(updated));
+            return updated;
+          });
+          // ✅ NEW: Re-enable the save button if the currently displayed run was deleted
+          if (currentSavedId && ids.includes(currentSavedId)) {
+            setIsCurrentSaved(false);
+            setCurrentSavedId(null);
+          }
+        }}
       />
 
       {isSaveModalOpen && (
