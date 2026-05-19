@@ -64,8 +64,33 @@ export async function runGraphDFS(
     return { steps, nodesExplored: 0, pathLength: -1, totalLatency: 0, foundDestination: null };
   }
 
-  const stack: string[] = [sourceId];
-  parentMap.set(sourceId, null);
+  const blockedHistory = new Set<string>(blockedNodes);
+  const stack: string[] = [];
+
+  function resetSearchState() {
+    stack.splice(0, stack.length);
+    visited.clear();
+    parentMap.clear();
+    if (!blockedNodes.has(sourceId)) {
+      stack.push(sourceId);
+      parentMap.set(sourceId, null);
+    }
+  }
+
+  function blockedSetChanged(): boolean {
+    if (blockedHistory.size !== blockedNodes.size) return true;
+    for (const nodeId of blockedNodes) {
+      if (!blockedHistory.has(nodeId)) return true;
+    }
+    return false;
+  }
+
+  function syncBlockedHistory() {
+    blockedHistory.clear();
+    for (const nodeId of blockedNodes) blockedHistory.add(nodeId);
+  }
+
+  resetSearchState();
 
   function pruneStack(): boolean {
     const valid: string[] = [];
@@ -89,6 +114,12 @@ export async function runGraphDFS(
   let lastYieldTime = performance.now();
 
   while (stack.length > 0 && !foundDestination) {
+    if (blockedSetChanged()) {
+      if (!hasUnblockedDestination()) break;
+      resetSearchState();
+      syncBlockedHistory();
+    }
+
     if (!pruneStack()) break;
     const current = stack.pop()!;
     lastCurrent = current;

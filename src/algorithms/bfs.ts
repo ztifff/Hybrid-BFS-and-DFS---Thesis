@@ -64,9 +64,34 @@ export async function runGraphBFS(
     return { steps, nodesExplored: 0, pathLength: -1, totalLatency: 0, foundDestination: null };
   }
 
-  const queue: string[] = [sourceId];
-  visited.add(sourceId);
-  parentMap.set(sourceId, null);
+  const blockedHistory = new Set<string>(blockedNodes);
+  const queue: string[] = [];
+
+  function resetSearchState() {
+    queue.splice(0, queue.length);
+    visited.clear();
+    parentMap.clear();
+    if (!blockedNodes.has(sourceId)) {
+      queue.push(sourceId);
+      visited.add(sourceId);
+      parentMap.set(sourceId, null);
+    }
+  }
+
+  function blockedSetChanged(): boolean {
+    if (blockedHistory.size !== blockedNodes.size) return true;
+    for (const nodeId of blockedNodes) {
+      if (!blockedHistory.has(nodeId)) return true;
+    }
+    return false;
+  }
+
+  function syncBlockedHistory() {
+    blockedHistory.clear();
+    for (const nodeId of blockedNodes) blockedHistory.add(nodeId);
+  }
+
+  resetSearchState();
 
   function pruneQueue(): boolean {
     const valid: string[] = [];
@@ -90,6 +115,12 @@ export async function runGraphBFS(
   let lastYieldTime = performance.now();
 
   while (queue.length > 0 && !foundDestination) {
+    if (blockedSetChanged()) {
+      if (!hasUnblockedDestination()) break;
+      resetSearchState();
+      syncBlockedHistory();
+    }
+
     if (!pruneQueue()) break;
     const current = queue.shift()!;
     lastCurrent = current;
