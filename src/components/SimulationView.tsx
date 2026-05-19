@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { ScenarioType, SimulationResult, DynamicEvent } from '../types';
-import { runSimulation } from '../utils/simulationRunner';
+import { ScenarioType, AlgorithmStep, SimulationResult } from '../types';
 import { getScenario } from '../config/scenarios';
 import { NetworkCanvas } from './NetworkCanvas';
 import { MetricsPanel } from './MetricsPanel';
 import { Legend } from './Legend';
 import { SimulationReport } from './SimulationReport';
 import { HistoryModal, HistoryEntry } from './HistoryModal';
-import { runGraphBFS } from '../algorithms/bfs';
 import { buildScenarioGraph } from '../utils/graphBuilder';
 
 interface Props {
@@ -34,6 +32,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const [useRealWorld, setUseRealWorld] = useState(false);
   const [seed, setSeed] = useState(() => Date.now()); 
   
+  // Keep local builder temporarily just to render the empty map instantly while API fetches
   const currentGraph = useMemo(() => buildScenarioGraph(scenario, useRealWorld), [scenario, useRealWorld]);
 
   const [simResults, setSimResults] = useState<{ bfs: SimulationResult, dfs: SimulationResult, hybrid: SimulationResult } | null>(null);
@@ -71,41 +70,38 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     }
   }, []);
 
+  // 🔥 FETCH DATA FROM BACKEND INSTEAD OF RUNNING LOCALLY
   useEffect(() => {
     let isMounted = true;
 
-    const computeGraphData = async () => {
+    const fetchGraphData = async () => {
       try {
         setIsComputing(true);
         setStatus('idle');
         setStepIndex(0);
-
         stopAnimation();
 
-        const [bfsRes, dfsRes, hybridRes] = await Promise.all([
-          runSimulation(scenario, 'bfs', seed, useRealWorld),
-          runSimulation(scenario, 'dfs', seed, useRealWorld),
-          runSimulation(scenario, 'hybrid', seed, useRealWorld)
-        ]);
-
-        if (!isMounted) return;
-
-        const optimalBfsResult = await runGraphBFS(hybridRes.graph);
-
-        if (!isMounted) return;
-
-        setSimResults({
-          bfs: bfsRes,
-          dfs: dfsRes,
-          hybrid: hybridRes
+        const response = await fetch(`/api/simulation/run`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ scenario, useRealWorld, seed })
         });
 
-        setBfsResult(optimalBfsResult);
+        if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+        
+        const json = await response.json();
+        
+        if (!isMounted) return;
+
+        const { results, optimalPathLength } = json.data;
+
+        setSimResults(results);
+        setBfsResult({ pathLength: optimalPathLength });
         setIsComputing(false);
         setIsCurrentSaved(false);
         setCurrentSavedId(null);
       } catch (err) {
-        console.error('Simulation failed:', err);
+        console.error('Simulation fetch failed:', err);
         if (isMounted) {
           setIsComputing(false);
           setStatus('idle');
@@ -113,7 +109,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
       }
     };
 
-    computeGraphData();
+    fetchGraphData();
 
     return () => {
       isMounted = false;
@@ -235,13 +231,12 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   }, [stepIndex, totalSteps, status, stopAnimation]);
 
   const activeSteps = useMemo(() => {
-    if (!simResults) return { bfs: null, dfs: null, hybrid: null };
+    if (isComputing || !simResults) return { bfs: null, dfs: null, hybrid: null };
 
     const bfsTotal = simResults.bfs.steps.length;
     const dfsTotal = simResults.dfs.steps.length;
     const hybridTotal = simResults.hybrid.steps.length;
 
-    // Direct indexing - all algorithms use same step, clamped to their max
     const step = Math.max(0, stepIndex - 1);
 
     return {
@@ -249,7 +244,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
       dfs: simResults.dfs.steps[Math.min(step, dfsTotal - 1)],
       hybrid: simResults.hybrid.steps[Math.min(step, hybridTotal - 1)]
     };
-  }, [simResults, stepIndex]);
+  }, [isComputing, simResults, stepIndex]);
 
   const handleRun = () => {
     if (!simResults) return;
@@ -364,7 +359,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             ) : (
               <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 flex flex-col items-center justify-center py-12 text-center text-gray-400 animate-pulse">
                 <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                <div>Computing Multi-Algorithm Metrics...</div>
+                <div>Fetching algorithms from backend...</div>
               </div>
             )}
             

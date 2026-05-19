@@ -1,4 +1,4 @@
-import { ScenarioGraph, AlgorithmStep } from '../types/index';
+import { ScenarioGraph, AlgorithmStep } from '../types';
 
 const yieldToMain = () => new Promise(resolve => setTimeout(resolve, 0));
 
@@ -56,10 +56,15 @@ export async function runGraphHybrid(
     return 'DFS';
   }
 
-  const syncUI = async (current: string, strategy: string) => {
+  while (frontier.length > 0 && !foundDestination) {
+    const peek = frontier[frontier.length - 1]; 
+    const strategy = chooseStrategy(peek);
+
+    const current = strategy === 'BFS' ? frontier.shift()! : frontier.pop()!;
+    if (!current) continue;
+
     iteration++;
     const now = performance.now();
-
     const step: AlgorithmStep = {
       stepIndex: iteration,
       explored: Array.from(visited),
@@ -72,40 +77,23 @@ export async function runGraphHybrid(
     };
 
     steps.push(step);
+    if (onStepProgress) onStepProgress(step);
 
-    // ✅ FIX 1: ALWAYS fire onStepProgress so the simulationRunner catches EVERY disaster event instantly!
-    if (onStepProgress) {
-      onStepProgress(step);
-    }
-
-    // ONLY yield the browser thread to update the visuals every 15ms
     if (now - lastYieldTime > 15) {
       await yieldToMain();
       lastYieldTime = performance.now();
     }
-  };
 
-  while (frontier.length > 0 && !foundDestination) {
-    const peek = frontier[frontier.length - 1]; 
-    const strategy = chooseStrategy(peek);
-
-    const current =
-      strategy === 'BFS'
-        ? frontier.shift()!
-        : frontier.pop()!;
-
-    if (!current) continue;
-
-    // ✅ FIX 2: If the node was added to the queue earlier, but got hit by an AoE disaster while we were waiting... ABORT!
-    if (blockedNodes.has(current)) continue;
+    // 🚨 SMART EVASION: Stop exploring if trail to source is cut
+    if (blockedNodes.has(current) || !isPathValid(parentMap, current, blockedNodes)) {
+      visited.delete(current); 
+      continue;
+    }
 
     nodesExplored++;
 
-    await syncUI(current, strategy);
-
     if (destSet.has(current)) {
       foundDestination = current;
-      await syncUI(current, strategy);
       break;
     }
 
@@ -121,26 +109,39 @@ export async function runGraphHybrid(
     }
   }
 
-  const finalPath = foundDestination ? reconstructPath(parentMap, foundDestination) : [];
-  const totalLatency = calcPathLatency(finalPath, edges);
-
-  if (steps.length === 0) {
-    steps.push({
-      stepIndex: iteration,
-      explored: Array.from(visited),
-      frontier: [],
-      path: finalPath,
-      current: foundDestination ?? sourceId,
-      done: true,
-      foundDestination,
-      phaseLabel: 'Final State'
-    });
-  } else {
-    const last = steps[steps.length - 1];
-    steps[steps.length - 1] = { ...last, done: true, foundDestination, path: finalPath };
+  let finalPath = foundDestination ? reconstructPath(parentMap, foundDestination) : [];
+  if (finalPath.some(nodeId => blockedNodes.has(nodeId))) {
+    foundDestination = null;
+    finalPath = [];
   }
 
+  const totalLatency = calcPathLatency(finalPath, edges);
+
+  steps.push({
+    stepIndex: iteration,
+    explored: Array.from(visited),
+    frontier: [],
+    path: finalPath,
+    current: foundDestination ?? sourceId,
+    done: true,
+    foundDestination,
+    phaseLabel: foundDestination ? 'Path Secured' : 'Path Severed'
+  });
+
   return { steps, nodesExplored, pathLength: foundDestination ? finalPath.length - 1 : -1, totalLatency, foundDestination };
+}
+
+// 🛡️ Ensure the supply line back to the source is clear
+function isPathValid(parentMap: Map<string, string | null>, nodeId: string, blockedNodes: Set<string>): boolean {
+  let cur: string | null = nodeId;
+  const seen = new Set<string>();
+  while (cur !== null) {
+    if (seen.has(cur)) break;
+    if (blockedNodes.has(cur)) return false;
+    seen.add(cur);
+    cur = parentMap.get(cur) ?? null;
+  }
+  return true;
 }
 
 function reconstructPath(parentMap: Map<string, string | null>, nodeId: string): string[] {

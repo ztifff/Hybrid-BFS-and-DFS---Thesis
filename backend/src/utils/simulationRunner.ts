@@ -1,4 +1,4 @@
-import { AlgorithmType, ScenarioType, AlgorithmStep, PerformanceMetrics, DynamicEvent, SimulationResult, ScenarioGraph } from '../types/index';
+import { AlgorithmType, ScenarioType, AlgorithmStep, PerformanceMetrics, DynamicEvent, SimulationResult, ScenarioGraph } from '../types';
 import { buildScenarioGraph, getDynamicCandidates } from './graphBuilder';
 import { runGraphBFS } from '../algorithms/bfs';
 import { runGraphDFS } from '../algorithms/dfs';
@@ -12,7 +12,6 @@ function estimateMemory(nodesExplored: number, algorithm: AlgorithmType): number
   return (nodesExplored * nodeBytes * multiplier) / 1024;
 }
 
-// ✅ Deterministic RNG seeded from the given seed only
 function makeRng(seed: number) {
   let s = seed >>> 0;
   return () => {
@@ -21,7 +20,6 @@ function makeRng(seed: number) {
   };
 }
 
-// 🔥 APOCALYPTIC EDITION: Scaled Durations, Massive AoE, & Scenario-Aware Events
 function generateDynamicEvents(
   graph: ScenarioGraph,
   scenario: ScenarioType,
@@ -29,7 +27,6 @@ function generateDynamicEvents(
   seed: number
 ): DynamicEvent[] {
   if (totalSteps < 5) return [];
-
   const candidates = getDynamicCandidates(graph, scenario);
   if (candidates.length === 0) return [];
 
@@ -37,7 +34,6 @@ function generateDynamicEvents(
   const events: DynamicEvent[] = [];
   const usedNodes = new Set<string>();
 
-  // Build Adjacency List for AoE disasters
   const adj = new Map<string, string[]>();
   graph.edges.forEach(e => {
     if (!adj.has(e.from)) adj.set(e.from, []);
@@ -46,11 +42,31 @@ function generateDynamicEvents(
     adj.get(e.to)!.push(e.from); 
   });
 
-  const isMassive = graph.nodes.length > 200;
-  const maxIncidents = isMassive ? 16 : 6;
-  const incidentCount = Math.min(maxIncidents, Math.max(2, Math.floor(candidates.length * 0.08)));
+  // 🛡️ NEW FIX: Establish a "Safe Zone" around the Start and Exits
+  const protectedNodes = new Set<string>();
+  protectedNodes.add(graph.sourceId);
+  graph.destinationIds.forEach(id => protectedNodes.add(id));
 
-  // ✅ THE FIX: Scenario-Specific Event Labels
+  // Expand the Safe Zone by 2 hops to ensure the algorithms have room to breathe
+  let currentProtected = Array.from(protectedNodes);
+  for (let depth = 0; depth < 2; depth++) {
+    const nextProtected: string[] = [];
+    for (const p of currentProtected) {
+      const neighbors = adj.get(p) || [];
+      for (const n of neighbors) {
+        if (!protectedNodes.has(n)) {
+          protectedNodes.add(n);
+          nextProtected.push(n);
+        }
+      }
+    }
+    currentProtected = nextProtected;
+  }
+
+  const isMassive = graph.nodes.length > 200;
+  const maxIncidents = isMassive ? 30 : 5; 
+  const incidentCount = Math.min(maxIncidents, Math.floor(candidates.length * 0.5));
+
   let standardLabels: { block: string, clear: string }[] = [];
   let aoeLabels: { block: string, clear: string }[] = [];
 
@@ -59,73 +75,56 @@ function generateDynamicEvents(
       standardLabels = [
         { block: '📦 Pallet Spill', clear: '🧹 Aisle Cleared' },
         { block: '🛑 Forklift Maintenance', clear: '✅ Maintenance Complete' },
-        { block: '🤖 Robot Malfunction', clear: '🔧 Robot Repaired' },
-        { block: '🚧 Shelf Restocking', clear: '✅ Restocking Finished' }
+        { block: '🤖 Robot Malfunction', clear: '🔧 Robot Repaired' }
       ];
       aoeLabels = [
         { block: '⚠️ Massive Rack Collapse', clear: '🏗️ Rack Rebuilt' },
-        { block: '🛑 Zone-wide Power Outage', clear: '⚡ Power Restored' },
-        { block: '⚠️ Hazardous Material Spill', clear: '🧹 Hazmat Cleared' },
-        { block: '🚧 Major Conveyor Jam', clear: '🟢 Conveyor Running' }
+        { block: '🛑 Zone-wide Power Outage', clear: '⚡ Power Restored' }
       ];
       break;
     case 'evacuation':
       standardLabels = [
         { block: '🔥 Localized Fire', clear: '🧯 Fire Extinguished' },
-        { block: '🧱 Falling Debris', clear: '🧹 Debris Cleared' },
-        { block: '💨 Heavy Smoke', clear: '💨 Smoke Cleared' },
-        { block: '🚪 Door Jammed', clear: '🚪 Door Forced Open' }
+        { block: '🧱 Falling Debris', clear: '🧹 Debris Cleared' }
       ];
       aoeLabels = [
         { block: '🔥 Massive Fire Outbreak', clear: '🧯 Outbreak Contained' },
-        { block: '💥 Structural Collapse', clear: '🚧 Alternate Route Secured' },
-        { block: '⚠️ Floor Caved In', clear: '🌉 Temporary Bridge Set' },
-        { block: '💨 Toxic Gas Leak', clear: '💨 Ventilation Restored' }
+        { block: '💥 Structural Collapse', clear: '🚧 Alternate Route Secured' }
       ];
       break;
     case 'network':
       standardLabels = [
         { block: '🔌 Cable Unplugged', clear: '🔌 Cable Reconnected' },
-        { block: '🔥 Overheating Switch', clear: '❄️ Cooling Restored' },
-        { block: '🛑 BGP Route Flap', clear: '✅ Route Stabilized' },
-        { block: '💾 Drive Failure', clear: '🔄 Array Rebuilt' }
+        { block: '🔥 Overheating Switch', clear: '❄️ Cooling Restored' }
       ];
       aoeLabels = [
         { block: '⚡ Rack Power Loss', clear: '⚡ Power Restored' },
-        { block: '🌐 Massive DDoS Attack', clear: '🛡️ Attack Mitigated' },
-        { block: '💥 Main Core Switch Failure', clear: '🔄 Core Rerouted' },
-        { block: '🌊 Cooling System Leak', clear: '🛠️ Leak Patched' }
+        { block: '🌐 Massive DDoS Attack', clear: '🛡️ Attack Mitigated' }
       ];
       break;
     case 'traffic':
     default:
       standardLabels = [
         { block: '💥 Minor Collision', clear: '🚓 Accident Cleared' },
-        { block: '🚧 Roadwork', clear: '✅ Roadwork Finished' },
-        { block: '🛑 Police Checkpoint', clear: '✅ Checkpoint Removed' },
-        { block: '🚗 Stalled Vehicle', clear: 'Tow Truck Arrived' }
+        { block: '🚧 Roadwork', clear: '✅ Roadwork Finished' }
       ];
       aoeLabels = [
         { block: '💥 Multi-Vehicle Pileup', clear: '🚓 Pileup Cleared' },
-        { block: '🚌 Major Bus Collision', clear: '🏗️ Bus Towed Away' },
-        { block: '🏗️ Bridge/Road Collapse', clear: '🚧 Temporary Bypass Opened' },
-        { block: '🚛 Overturned Semi-Truck', clear: '🏗️ Truck Removed' },
-        { block: '🚦 Total Gridlock', clear: '🟢 Traffic Flowing' }
+        { block: '🚧 Major Road Collapse', clear: '🚧 Temporary Bypass Opened' }
       ];
       break;
   }
 
-  const eventWindow = Math.max(5, Math.floor(totalSteps * 0.25));
-  const maxAoE = isMassive ? 10 : 4;
-
   for (let i = 0; i < incidentCount; i++) {
     const epicenterId = candidates[Math.floor(rng() * candidates.length)];
-    if (usedNodes.has(epicenterId)) continue;
+    
+    // 🚨 Prevent traps from spawning in the Safe Zone
+    if (usedNodes.has(epicenterId) || protectedNodes.has(epicenterId)) continue;
+    
+    const stepIndex = Math.floor(rng() * 4); 
+    const reopenStep = totalSteps * 10; 
 
-    const stepIndex = 1 + Math.floor(rng() * eventWindow);
-    const reopenStep = Math.min(totalSteps, stepIndex + Math.max(4, Math.floor(totalSteps * 0.18)));
-
-    const isAoE = isMassive && rng() > 0.7;
+    const isAoE = isMassive && rng() > 0.55;
     let affectedNodes = [epicenterId];
     let flavor = standardLabels[Math.floor(rng() * standardLabels.length)];
 
@@ -134,12 +133,13 @@ function generateDynamicEvents(
       const expandedSet = new Set<string>();
       let currentFrontier = [epicenterId];
 
-      for (let depth = 0; depth < 2; depth++) {
+      for (let depth = 0; depth < 3; depth++) {
         const nextFrontier: string[] = [];
         for (const current of currentFrontier) {
           const neighbors = adj.get(current) || [];
           for (const neighbor of neighbors) {
-            if (!expandedSet.has(neighbor) && neighbor !== epicenterId) {
+            // 🚨 Prevent AoE blast radius from bleeding into the Safe Zone
+            if (!expandedSet.has(neighbor) && neighbor !== epicenterId && !protectedNodes.has(neighbor)) {
               expandedSet.add(neighbor);
               nextFrontier.push(neighbor);
             }
@@ -147,8 +147,7 @@ function generateDynamicEvents(
         }
         currentFrontier = nextFrontier;
       }
-
-      const collateral = Array.from(expandedSet).sort(() => rng() - 0.5).slice(0, maxAoE);
+      const collateral = Array.from(expandedSet).sort(() => rng() - 0.5).slice(0, 25);
       affectedNodes.push(...collateral);
     }
 
@@ -159,22 +158,18 @@ function generateDynamicEvents(
       const node = graph.nodes.find(n => n.id === nodeId);
       const nodeName = node?.label?.split('\n')[0] ?? nodeId;
 
-      const blockLabel = isAoE ? `[AoE] ${flavor.block} at ${nodeName}` : `${flavor.block} at ${nodeName}`;
-      const clearLabel = isAoE ? `[AoE] ${flavor.clear} at ${nodeName}` : `${flavor.clear} at ${nodeName}`;
-
       events.push({
         stepIndex,
         nodeId,
         blocked: true,
-        label: blockLabel,
+        label: isAoE ? `[AoE] ${flavor.block} at ${nodeName}` : `${flavor.block} at ${nodeName}`,
       });
 
-      // Even massive blockages will eventually clear
       events.push({
         stepIndex: reopenStep,
         nodeId,
         blocked: false,
-        label: clearLabel,
+        label: isAoE ? `[AoE] ${flavor.clear} at ${nodeName}` : `${flavor.clear} at ${nodeName}`,
       });
     });
   }
@@ -202,7 +197,6 @@ export async function runSimulation(
   };
 
   const blockedNodes = new Set<string>();
-
   const estimatedSteps = Math.max(50, Math.floor(graph.nodes.length * 1.5));
   const dynamicEvents = generateDynamicEvents(graph, scenario, estimatedSteps, dynamicSeed);
 
@@ -219,7 +213,6 @@ export async function runSimulation(
         else blockedNodes.delete(event.nodeId);
       }
     });
-
     onStepProgress?.(step);
   };
 
@@ -235,9 +228,10 @@ export async function runSimulation(
   const timeElapsed = Math.max(endTime - startTime, 0.001);
   const memoryUsed = estimateMemory(result.nodesExplored, algorithm);
 
-  const exitIndex = result.foundDestination
-    ? graph.destinationIds.indexOf(result.foundDestination)
-    : null;
+  const exitIndex = result.foundDestination ? graph.destinationIds.indexOf(result.foundDestination) : null;
+  
+  const totalGraphNodes = graph.nodes.length || 1;
+  const completionRate = Math.min(100, (result.nodesExplored / totalGraphNodes) * 100);
 
   const metrics: PerformanceMetrics = {
     nodesExplored: result.nodesExplored,
@@ -247,6 +241,7 @@ export async function runSimulation(
     memoryUsed,
     exitFound: result.foundDestination !== null,
     exitIndex,
+    completionRate, 
   };
 
   return {

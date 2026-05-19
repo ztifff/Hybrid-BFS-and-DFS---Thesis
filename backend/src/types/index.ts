@@ -1,31 +1,11 @@
-export type AlgorithmType = 'bfs' | 'dfs' | 'hybrid' | 'BFS' | 'DFS' | 'Hybrid-BFS-DFS';
+export type AlgorithmType = 'bfs' | 'dfs' | 'hybrid';
 
 export type ScenarioType =
   | 'network'
   | 'robotics'
   | 'traffic'
   | 'evacuation'
-  | 'gameai'
-  | string; // Extended to allow datacenter, aws, mockoffice
-
-export type NetworkType = string;
-
-// ── API Response Types (Backend) ───────────────────────────────────────────
-export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  message?: string;
-}
-
-export interface PaginatedResponse<T> {
-  success: boolean;
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-  error?: string;
-}
+  | 'gameai';
 
 // ── Graph Node Types per scenario ──────────────────────────────────────────
 export type NetworkNodeType =
@@ -34,9 +14,9 @@ export type NetworkNodeType =
   | 'floor_router'
   | 'access_point' // destination
   | 'failed'       // dynamic obstacle
-  | 'router'       // Cloud Datacenter
-  | 'switch'       // Cloud Datacenter
-  | 'server';      // Cloud Datacenter
+  | 'router'       // ✅ Added for Cloud Datacenter
+  | 'switch'       // ✅ Added for Cloud Datacenter
+  | 'server';      // ✅ Added for Cloud Datacenter
 
 export type RoboticsNodeType =
   | 'depot'        // source
@@ -91,6 +71,7 @@ export interface GraphEdge {
   to: string;   // node id
   latency: number; // ms / cost
   label?: string;
+  // ✅ Added 'copper' for the datacenter cabling
   type: 'fiber' | 'ethernet' | 'road' | 'corridor' | 'path' | 'wireless' | 'copper';
 }
 
@@ -124,6 +105,7 @@ export interface PerformanceMetrics {
   memoryUsed: number;    // KB estimated
   exitFound: boolean;
   exitIndex: number | null;
+  completionRate: number; // ✅ ADDED: Formal metric tracking
 }
 
 // ── Dynamic Event ──────────────────────────────────────────────────────────
@@ -144,25 +126,20 @@ export interface SimulationResult {
 
 // ── Config Types ───────────────────────────────────────────────────────────
 export interface ScenarioConfig {
-  id: string;
+  id: ScenarioType;
   name: string;
+  icon: string;
   description: string;
-  networkType: string;
-  algorithm: string;
-  startNode: string;
-  targetNode: string;
-  
-  // Legacy / optional frontend fields
-  icon?: string;
-  dynamicDescription?: string;
-  sourceLabel?: string;
-  destinationLabel?: string;
-  obstacleLabel?: string;
-  color?: string;
-  rows?: number;
-  cols?: number;
-  startLabel?: string;
-  exitLabel?: string;
+  dynamicDescription: string;
+  sourceLabel: string;
+  destinationLabel: string;
+  obstacleLabel: string;
+  color: string;
+  rows: number;
+  cols: number;
+  // legacy compat
+  startLabel: string;
+  exitLabel: string;
 }
 
 export interface AlgorithmConfig {

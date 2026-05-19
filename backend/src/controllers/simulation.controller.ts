@@ -1,43 +1,48 @@
 import { Request, Response } from 'express';
-import { SimulationResult, AlgorithmType, ScenarioType as NetworkType } from '../types/index';
+import { SimulationResult, ScenarioType } from '../types/index';
 import { runSimulation } from '../utils/simulationRunner';
-import { buildNetworkGraph } from '../utils/networkGraph';
+import { runGraphBFS } from '../algorithms/bfs';
 
-// In-memory store
-const simulationHistory: Map<string, SimulationResult & { id: string, createdAt: Date }> = new Map();
+// In-memory store (Can be moved to a Database later)
+const simulationHistory: Map<string, any> = new Map();
 
 export class SimulationController {
   async runSimulation(req: Request, res: Response): Promise<void> {
     try {
-      const { algorithm, networkType, startNode, targetNode } = req.body as {
-        algorithm: AlgorithmType;
-        networkType: NetworkType;
-        startNode: string;
-        targetNode: string;
+      const { scenario, useRealWorld, seed } = req.body as {
+        scenario: ScenarioType;
+        useRealWorld: boolean;
+        seed: number;
       };
 
-      const validAlgorithms: AlgorithmType[] = ['bfs', 'dfs', 'hybrid', 'BFS', 'DFS', 'Hybrid-BFS-DFS'];
-      if (!validAlgorithms.includes(algorithm)) {
-        res.status(400).json({ success: false, error: `Invalid algorithm: ${algorithm}` });
+      if (!scenario) {
+        res.status(400).json({ success: false, error: 'Scenario is required' });
         return;
       }
 
-      // We still build the graph here JUST to validate the nodes exist before running
-      const graph = buildNetworkGraph(false, 123);
+      // 🔥 OFFLOAD HEAVY LIFTING TO BACKEND:
+      // Run all 3 algorithms concurrently on the server
+      const [bfsRes, dfsRes, hybridRes] = await Promise.all([
+        runSimulation(scenario, 'bfs', seed, useRealWorld),
+        runSimulation(scenario, 'dfs', seed, useRealWorld),
+        runSimulation(scenario, 'hybrid', seed, useRealWorld)
+      ]);
 
-      const nodeIds = new Set(graph.nodes.map((n) => n.id));
-      if (!nodeIds.has(startNode)) {
-        res.status(400).json({ success: false, error: `Start node not found: ${startNode}` });
-        return;
-      }
+      // Calculate the optimal path baseline using the generated graph
+      const optimalResult = await runGraphBFS(hybridRes.graph);
 
-      // 🔥 FIX: Pass the scenario string (networkType) instead of the graph object
-      // Note: Because your simulationRunner rebuilds the graph internally, 
-      // we need to wait for the result.
-      const result = await runSimulation(networkType, algorithm);
-      
       const recordId = Math.random().toString(36).substring(7);
-      const record = { ...result, id: recordId, createdAt: new Date() };
+      
+      const record = { 
+        id: recordId, 
+        createdAt: new Date(),
+        results: {
+          bfs: bfsRes,
+          dfs: dfsRes,
+          hybrid: hybridRes
+        },
+        optimalPathLength: optimalResult.pathLength
+      };
       
       simulationHistory.set(recordId, record);
 
