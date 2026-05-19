@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { ScenarioType, AlgorithmStep, SimulationResult, DynamicEvent } from '../types';
+import { ScenarioType, SimulationResult, DynamicEvent } from '../types';
 import { runSimulation } from '../utils/simulationRunner';
 import { getScenario } from '../config/scenarios';
 import { NetworkCanvas } from './NetworkCanvas';
@@ -37,7 +37,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const currentGraph = useMemo(() => buildScenarioGraph(scenario, useRealWorld), [scenario, useRealWorld]);
 
   const [simResults, setSimResults] = useState<{ bfs: SimulationResult, dfs: SimulationResult, hybrid: SimulationResult } | null>(null);
-  const [liveSteps, setLiveSteps] = useState<{ bfs: AlgorithmStep | null, dfs: AlgorithmStep | null, hybrid: AlgorithmStep | null }>({ bfs: null, dfs: null, hybrid: null });
   const [bfsResult, setBfsResult] = useState<any>(null);
   const [isComputing, setIsComputing] = useState(true);
 
@@ -80,12 +79,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         setIsComputing(true);
         setStatus('idle');
         setStepIndex(0);
-
-        setLiveSteps({
-          bfs: null,
-          dfs: null,
-          hybrid: null
-        });
 
         stopAnimation();
 
@@ -242,26 +235,21 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   }, [stepIndex, totalSteps, status, stopAnimation]);
 
   const activeSteps = useMemo(() => {
+    if (!simResults) return { bfs: null, dfs: null, hybrid: null };
+
+    const bfsTotal = simResults.bfs.steps.length;
+    const dfsTotal = simResults.dfs.steps.length;
+    const hybridTotal = simResults.hybrid.steps.length;
+
+    // Direct indexing - all algorithms use same step, clamped to their max
+    const step = Math.max(0, stepIndex - 1);
+
     return {
-      bfs: isComputing
-        ? liveSteps.bfs
-        : simResults
-        ? simResults.bfs.steps[Math.min(Math.max(stepIndex - 1, 0), simResults.bfs.steps.length - 1)]
-        : null,
-
-      dfs: isComputing
-        ? liveSteps.dfs
-        : simResults
-        ? simResults.dfs.steps[Math.min(Math.max(stepIndex - 1, 0), simResults.dfs.steps.length - 1)]
-        : null,
-
-      hybrid: isComputing
-        ? liveSteps.hybrid
-        : simResults
-        ? simResults.hybrid.steps[Math.min(Math.max(stepIndex - 1, 0), simResults.hybrid.steps.length - 1)]
-        : null
+      bfs: simResults.bfs.steps[Math.min(step, bfsTotal - 1)],
+      dfs: simResults.dfs.steps[Math.min(step, dfsTotal - 1)],
+      hybrid: simResults.hybrid.steps[Math.min(step, hybridTotal - 1)]
     };
-  }, [isComputing, liveSteps, simResults, stepIndex]);
+  }, [simResults, stepIndex]);
 
   const handleRun = () => {
     if (!simResults) return;
