@@ -13,7 +13,7 @@ function estimateMemory(nodesExplored: number, algorithm: AlgorithmType): number
 }
 
 function makeRng(seed: number) {
-  let s = seed ^ Date.now();
+  let s = seed >>> 0;
   return () => {
     s = Math.imul(1664525, s) + 1013904223;
     return ((s >>> 0) / 4294967296);
@@ -42,8 +42,29 @@ function generateDynamicEvents(
     adj.get(e.to)!.push(e.from); 
   });
 
+  // 🛡️ NEW FIX: Establish a "Safe Zone" around the Start and Exits
+  const protectedNodes = new Set<string>();
+  protectedNodes.add(graph.sourceId);
+  graph.destinationIds.forEach(id => protectedNodes.add(id));
+
+  // Expand the Safe Zone by 2 hops to ensure the algorithms have room to breathe
+  let currentProtected = Array.from(protectedNodes);
+  for (let depth = 0; depth < 2; depth++) {
+    const nextProtected: string[] = [];
+    for (const p of currentProtected) {
+      const neighbors = adj.get(p) || [];
+      for (const n of neighbors) {
+        if (!protectedNodes.has(n)) {
+          protectedNodes.add(n);
+          nextProtected.push(n);
+        }
+      }
+    }
+    currentProtected = nextProtected;
+  }
+
   const isMassive = graph.nodes.length > 200;
-  const maxIncidents = isMassive ? 55 : 8; 
+  const maxIncidents = isMassive ? 30 : 5; 
   const incidentCount = Math.min(maxIncidents, Math.floor(candidates.length * 0.5));
 
   let standardLabels: { block: string, clear: string }[] = [];
@@ -96,13 +117,11 @@ function generateDynamicEvents(
 
   for (let i = 0; i < incidentCount; i++) {
     const epicenterId = candidates[Math.floor(rng() * candidates.length)];
-    if (usedNodes.has(epicenterId)) continue;
     
-    // ✅ CRITICAL FIX: Spawn all traps at Step 0, 1, 2, or 3. 
-    // This forces them to act as physical walls that the algorithms MUST respect.
+    // 🚨 Prevent traps from spawning in the Safe Zone
+    if (usedNodes.has(epicenterId) || protectedNodes.has(epicenterId)) continue;
+    
     const stepIndex = Math.floor(rng() * 4); 
-
-    // ✅ CRITICAL FIX: Make the duration massive so traps don't vanish mid-traversal.
     const reopenStep = totalSteps * 10; 
 
     const isAoE = isMassive && rng() > 0.55;
@@ -119,7 +138,8 @@ function generateDynamicEvents(
         for (const current of currentFrontier) {
           const neighbors = adj.get(current) || [];
           for (const neighbor of neighbors) {
-            if (!expandedSet.has(neighbor) && neighbor !== epicenterId) {
+            // 🚨 Prevent AoE blast radius from bleeding into the Safe Zone
+            if (!expandedSet.has(neighbor) && neighbor !== epicenterId && !protectedNodes.has(neighbor)) {
               expandedSet.add(neighbor);
               nextFrontier.push(neighbor);
             }
@@ -210,7 +230,6 @@ export async function runSimulation(
 
   const exitIndex = result.foundDestination ? graph.destinationIds.indexOf(result.foundDestination) : null;
   
-  // ✅ ADDED: Calculate true completion rate to pass to metrics panel
   const totalGraphNodes = graph.nodes.length || 1;
   const completionRate = Math.min(100, (result.nodesExplored / totalGraphNodes) * 100);
 

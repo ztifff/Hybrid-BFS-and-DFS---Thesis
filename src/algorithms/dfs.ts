@@ -29,41 +29,6 @@ export async function runGraphDFS(
   const parentMap = new Map<string, string | null>();
   const steps: AlgorithmStep[] = [];
 
-  function hasUnblockedDestination(): boolean {
-    if (blockedNodes.has(sourceId)) return false;
-
-    const reachStack = [sourceId];
-    const reachVisited = new Set<string>([sourceId]);
-
-    while (reachStack.length > 0) {
-      const current = reachStack.pop()!;
-      if (destSet.has(current)) return true;
-      for (const { to } of adj.get(current) ?? []) {
-        if (!reachVisited.has(to) && !blockedNodes.has(to)) {
-          reachVisited.add(to);
-          reachStack.push(to);
-        }
-      }
-    }
-
-    return false;
-  }
-
-  if (!hasUnblockedDestination()) {
-    steps.push({
-      stepIndex: 1,
-      explored: blockedNodes.has(sourceId) ? [] : [sourceId],
-      frontier: [],
-      path: [],
-      current: sourceId,
-      done: true,
-      foundDestination: null,
-      phaseLabel: 'Path Severed'
-    });
-
-    return { steps, nodesExplored: 0, pathLength: -1, totalLatency: 0, foundDestination: null };
-  }
-
   const blockedHistory = new Set<string>(blockedNodes);
   const stack: string[] = [];
 
@@ -71,10 +36,8 @@ export async function runGraphDFS(
     stack.splice(0, stack.length);
     visited.clear();
     parentMap.clear();
-    if (!blockedNodes.has(sourceId)) {
-      stack.push(sourceId);
-      parentMap.set(sourceId, null);
-    }
+    stack.push(sourceId);
+    parentMap.set(sourceId, null);
   }
 
   function blockedSetChanged(): boolean {
@@ -115,7 +78,6 @@ export async function runGraphDFS(
 
   while (stack.length > 0 && !foundDestination) {
     if (blockedSetChanged()) {
-      if (!hasUnblockedDestination()) break;
       resetSearchState();
       syncBlockedHistory();
     }

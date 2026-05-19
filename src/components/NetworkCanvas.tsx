@@ -84,12 +84,10 @@ export const NetworkCanvas: React.FC<Props> = ({
   const sx = (x: number) => (x * scale) + offsetX;
   const sy = (y: number) => (y * scale) + offsetY;
 
-  // Extract Colors
   const cBFS = ALGORITHMS.find(a => a.id === 'bfs')?.color || '#4ade80';
   const cDFS = ALGORITHMS.find(a => a.id === 'dfs')?.color || '#c084fc';
   const cHYB = ALGORITHMS.find(a => a.id === 'hybrid')?.color || '#fb923c';
 
-  // Extract Sets for rendering
   const sets = useMemo(() => {
       const extract = (step: AlgorithmStep | null) => ({
           explored: new Set(step?.explored || []),
@@ -117,7 +115,6 @@ export const NetworkCanvas: React.FC<Props> = ({
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  // Multi-target Follow Cam (Averages the position of all active algorithm heads)
   useEffect(() => {
     if (!isFollowing || !svgRef.current) return;
 
@@ -190,7 +187,6 @@ export const NetworkCanvas: React.FC<Props> = ({
   const visibleNodeIds = useMemo(() => new Set(visibleNodes.map(n => n.id)), [visibleNodes]);
   const visibleEdges = useMemo(() => edges.filter(e => visibleNodeIds.has(e.from) && visibleNodeIds.has(e.to)), [edges, visibleNodeIds]);
 
-  // ── MULTI-ALGORITHM RENDER LOGIC ──────────────────────────────────
   const renderEdge = (edge: GraphEdge) => {
     const fromNode = visibleNodes.find((n) => n.id === edge.from);
     const toNode = visibleNodes.find((n) => n.id === edge.to);
@@ -211,13 +207,12 @@ export const NetworkCanvas: React.FC<Props> = ({
 
     return (
         <g key={edge.id} style={{ pointerEvents: 'none' }}>
-            {/* Base Edge */}
             <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={expAny ? '#94a3b8' : cfg.color} strokeWidth={baseWidth} strokeDasharray={cfg.dash !== 'none' ? cfg.dash : undefined} opacity={expAny ? 0.6 : baseOpacity} />
             
-            {/* Layered Paths (Thickest to Thinnest to create rainbow effect if overlapped) */}
-            {pBFS && <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={cBFS} strokeWidth={isMassive ? 2 : 6} opacity={0.9} strokeLinecap="round" />}
-            {pDFS && <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={cDFS} strokeWidth={isMassive ? 1.5 : 4} opacity={0.9} strokeLinecap="round" />}
-            {pHYB && <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={cHYB} strokeWidth={isMassive ? 1 : 2} opacity={1} strokeLinecap="round" />}
+            {/* THICKER MAIN PATH LINES */}
+            {pBFS && <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={cBFS} strokeWidth={isMassive ? 3.5 : 8} opacity={0.9} strokeLinecap="round" />}
+            {pDFS && <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={cDFS} strokeWidth={isMassive ? 2.5 : 5} opacity={0.95} strokeLinecap="round" />}
+            {pHYB && <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={cHYB} strokeWidth={isMassive ? 1.5 : 3} opacity={1} strokeLinecap="round" />}
 
             {!isMassive && edge.label && (pBFS || pDFS || pHYB || expAny) && (
                 <text x={mx} y={my - 5} textAnchor="middle" fontSize="9" fill={pHYB ? cHYB : pDFS ? cDFS : pBFS ? cBFS : '#94a3b8'} fontWeight={(pBFS || pDFS || pHYB) ? 'bold' : 'normal'} style={{ userSelect: 'none' }}>
@@ -240,28 +235,68 @@ export const NetworkCanvas: React.FC<Props> = ({
     const currHYB = sets.hyb.current === node.id;
     const isImportant = isSource || isDest || currBFS || currDFS || currHYB;
     
+    // Check exploration status
+    const expBFS = sets.bfs.explored.has(node.id);
+    const expDFS = sets.dfs.explored.has(node.id);
+    const expHYB = sets.hyb.explored.has(node.id);
+    
+    // ✅ NEW: Stack algorithms visually. Outermost ring is the first one in the list.
+    const activeExplorations = [
+      { id: 'bfs', active: expBFS, color: cBFS },
+      { id: 'dfs', active: expDFS, color: cDFS },
+      { id: 'hyb', active: expHYB, color: cHYB }
+    ].filter(e => e.active);
+
     let r = isMassive ? (isImportant ? 5 : 2.2) : cfg.radius;
     if (isDatacenter) r = isImportant ? 8 : 4.5;
     
     const showLabels = !isMassive || isImportant;
 
-    // Node Base Colors
+    // Define bead rendering scales
+    const radiiMassive = [3.5, 2.2, 1.0];
+    const radiiNormal = [r * 0.85, r * 0.55, r * 0.25];
+    const strokesMassive = [0.8, 0.5, 0.3];
+    const strokesNormal = [2, 1.5, 1];
+
+    const currentRadii = isMassive ? radiiMassive : radiiNormal;
+    const currentStrokes = isMassive ? strokesMassive : strokesNormal;
+
     let fillColor = cfg.baseColor;
     let opacity = (isMassive && !isImportant) ? 0.4 : 1;
 
-    if (isBlocked) { fillColor = '#450a0a'; opacity = 1; } 
-    else if (isSource) { fillColor = '#16a34a'; } 
-    else if (isDest) { fillColor = '#b91c1c'; }
+    if (isBlocked) { 
+      fillColor = '#450a0a'; 
+      opacity = 1; 
+    } else if (isSource) { 
+      fillColor = '#16a34a'; 
+    } else if (isDest) { 
+      fillColor = '#b91c1c'; 
+    }
 
     return (
         <g key={node.id} opacity={opacity} style={{ pointerEvents: 'none', userSelect: 'none' }}>
-            {/* Active Current Node Rings (Draws larger rings around active heads) */}
+            {/* Active Current Node Outer Halos */}
             {currBFS && <circle cx={cx} cy={cy} r={r + (isMassive?3:8)} fill="none" stroke={cBFS} strokeWidth={2} filter="url(#glow)" />}
             {currDFS && <circle cx={cx} cy={cy} r={r + (isMassive?5:12)} fill="none" stroke={cDFS} strokeWidth={2} filter="url(#glow)" />}
             {currHYB && <circle cx={cx} cy={cy} r={r + (isMassive?7:16)} fill="none" stroke={cHYB} strokeWidth={2} filter="url(#glow)" />}
 
-            {/* Base Circle */}
-            <circle cx={cx} cy={cy} r={r} fill={fillColor} stroke={isBlocked ? '#ef4444' : '#374151'} strokeWidth={isBlocked ? 2 : 1} />
+            {/* ✅ NEW: If Blocked or Important (Source/Dest) or NOT explored, draw base circle. 
+                      Otherwise, ONLY draw the solid colored "beads" with white strokes */}
+            {isBlocked || isSource || isDest || activeExplorations.length === 0 ? (
+               <circle cx={cx} cy={cy} r={r} fill={fillColor} stroke={isBlocked ? '#ef4444' : '#374151'} strokeWidth={isBlocked ? 2 : 1} />
+            ) : (
+               activeExplorations.map((exp, index) => (
+                 <circle 
+                    key={exp.id} 
+                    cx={cx} 
+                    cy={cy} 
+                    r={currentRadii[index]} 
+                    fill={exp.color} 
+                    stroke="#ffffff" 
+                    strokeWidth={currentStrokes[index]} 
+                 />
+               ))
+            )}
             
             {isBlocked && (
                 <>
@@ -279,7 +314,6 @@ export const NetworkCanvas: React.FC<Props> = ({
                 </>
             )}
 
-            {/* Datacenter Label Scaling */}
             {showLabels && isDatacenter && (
                 <>
                 <text x={cx} y={cy + 0.5} textAnchor="middle" dominantBaseline="middle" fontSize={r * 1.2}>{isBlocked ? '💀' : cfg.icon}</text>

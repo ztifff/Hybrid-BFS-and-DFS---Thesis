@@ -36,17 +36,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   
   const currentGraph = useMemo(() => buildScenarioGraph(scenario, useRealWorld), [scenario, useRealWorld]);
 
-  const adjList = useMemo(() => {
-    const adj = new Map<string, string[]>();
-    currentGraph.edges.forEach(e => {
-      if (!adj.has(e.from)) adj.set(e.from, []);
-      if (!adj.has(e.to)) adj.set(e.to, []);
-      adj.get(e.from)!.push(e.to);
-      adj.get(e.to)!.push(e.from);
-    });
-    return adj;
-  }, [currentGraph]);
-
   const [simResults, setSimResults] = useState<{ bfs: SimulationResult, dfs: SimulationResult, hybrid: SimulationResult } | null>(null);
   const [liveSteps, setLiveSteps] = useState<{ bfs: AlgorithmStep | null, dfs: AlgorithmStep | null, hybrid: AlgorithmStep | null }>({ bfs: null, dfs: null, hybrid: null });
   const [bfsResult, setBfsResult] = useState<any>(null);
@@ -101,15 +90,9 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         stopAnimation();
 
         const [bfsRes, dfsRes, hybridRes] = await Promise.all([
-          runSimulation(scenario, 'bfs', seed, useRealWorld, (step) => {
-            if (isMounted) setLiveSteps(p => ({ ...p, bfs: step }));
-          }),
-          runSimulation(scenario, 'dfs', seed, useRealWorld, (step) => {
-            if (isMounted) setLiveSteps(p => ({ ...p, dfs: step }));
-          }),
-          runSimulation(scenario, 'hybrid', seed, useRealWorld, (step) => {
-            if (isMounted) setLiveSteps(p => ({ ...p, hybrid: step }));
-          })
+          runSimulation(scenario, 'bfs', seed, useRealWorld),
+          runSimulation(scenario, 'dfs', seed, useRealWorld),
+          runSimulation(scenario, 'hybrid', seed, useRealWorld)
         ]);
 
         if (!isMounted) return;

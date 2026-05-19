@@ -12,9 +12,9 @@ function estimateMemory(nodesExplored: number, algorithm: AlgorithmType): number
   return (nodesExplored * nodeBytes * multiplier) / 1024;
 }
 
-// ✅ Improved RNG (true variability every run)
+// ✅ Deterministic RNG seeded from the given seed only
 function makeRng(seed: number) {
-  let s = seed ^ Date.now();
+  let s = seed >>> 0;
   return () => {
     s = Math.imul(1664525, s) + 1013904223;
     return ((s >>> 0) / 4294967296);
@@ -47,8 +47,8 @@ function generateDynamicEvents(
   });
 
   const isMassive = graph.nodes.length > 200;
-  const maxIncidents = isMassive ? 55 : 8; 
-  const incidentCount = Math.min(maxIncidents, Math.floor(candidates.length * 0.5));
+  const maxIncidents = isMassive ? 16 : 6;
+  const incidentCount = Math.min(maxIncidents, Math.max(2, Math.floor(candidates.length * 0.08)));
 
   // ✅ THE FIX: Scenario-Specific Event Labels
   let standardLabels: { block: string, clear: string }[] = [];
@@ -115,37 +115,26 @@ function generateDynamicEvents(
       break;
   }
 
+  const eventWindow = Math.max(5, Math.floor(totalSteps * 0.25));
+  const maxAoE = isMassive ? 10 : 4;
+
   for (let i = 0; i < incidentCount; i++) {
     const epicenterId = candidates[Math.floor(rng() * candidates.length)];
     if (usedNodes.has(epicenterId)) continue;
-    
-    let stepIndex = 0;
-    // 20% chance for Step 0 (Pre-existing). 
-    // 80% chance to spawn randomly during the first half of the simulation.
-    if (rng() > 0.20) {
-      stepIndex = Math.floor(rng() * (totalSteps * 0.5)) + 1; 
-    }
 
-    // Scaled Duration
-    const minDuration = Math.floor(totalSteps * 0.3);
-    const maxDuration = Math.floor(totalSteps * 0.8);
-    const blockDuration = Math.floor(rng() * (maxDuration - minDuration)) + minDuration;
-    
-    const reopenStep = stepIndex + blockDuration;
+    const stepIndex = 1 + Math.floor(rng() * eventWindow);
+    const reopenStep = Math.min(totalSteps, stepIndex + Math.max(4, Math.floor(totalSteps * 0.18)));
 
-    const isAoE = isMassive && rng() > 0.55;
-    
+    const isAoE = isMassive && rng() > 0.7;
     let affectedNodes = [epicenterId];
     let flavor = standardLabels[Math.floor(rng() * standardLabels.length)];
 
     if (isAoE) {
       flavor = aoeLabels[Math.floor(rng() * aoeLabels.length)];
-      
-      // DEPTH-3 CASCADE: Creates a massive infected zone
       const expandedSet = new Set<string>();
       let currentFrontier = [epicenterId];
 
-      for (let depth = 0; depth < 3; depth++) {
+      for (let depth = 0; depth < 2; depth++) {
         const nextFrontier: string[] = [];
         for (const current of currentFrontier) {
           const neighbors = adj.get(current) || [];
@@ -159,8 +148,7 @@ function generateDynamicEvents(
         currentFrontier = nextFrontier;
       }
 
-      // Shuffle and pick up to 25 surrounding nodes to create an absolute wall
-      const collateral = Array.from(expandedSet).sort(() => rng() - 0.5).slice(0, 25);
+      const collateral = Array.from(expandedSet).sort(() => rng() - 0.5).slice(0, maxAoE);
       affectedNodes.push(...collateral);
     }
 

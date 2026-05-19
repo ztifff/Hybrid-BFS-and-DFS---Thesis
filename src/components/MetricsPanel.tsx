@@ -14,7 +14,6 @@ interface Props {
 }
 
 export function getPathOptimality(actualHops: number, optimalHops?: number): { ratio: number; label: string; color: string } {
-  // ✅ FIX: Safely handle -1 hops (failed paths) so it doesn't output -1600%
   if (!optimalHops || optimalHops <= 0 || actualHops <= 0) return { ratio: 0, label: 'N/A', color: '#64748b' };
   
   const ratio = Math.min(1, optimalHops / actualHops); 
@@ -84,14 +83,28 @@ export const MetricsPanel: React.FC<Props> = ({
       const stepData = activeSteps[algoId];
       const resultData = multiResults?.[algoId];
 
-      const exploredCount = stepData?.explored.length || 0;
-      const actualHops = status === 'done' && resultData ? resultData.metrics.pathLength : Math.max(0, (stepData?.path.length || 1) - 1);
-      const optimality = getPathOptimality(actualHops, optimalPathLength);
-      const adaptability = getAdaptabilityScore(status, resultData?.metrics || null, algoId, multiResults?.hybrid.dynamicEvents);
+      // ✅ FIX: Guard against Step 0 to ensure a clean visual slate before running
+      const isStart = stepIndex === 0;
+
+      const exploredCount = (stepIndex === 0) ? 0 : (stepData?.explored.length || 0);
       
-      const completion = (status === 'done' && resultData && resultData.metrics.completionRate !== undefined) 
-        ? { percentage: resultData.metrics.completionRate, label: `${resultData.metrics.completionRate.toFixed(1)}%` }
-        : getCompletionRate(exploredCount, totalNodes);
+      const actualHops = (stepIndex === 0) ? 0 : (status === 'done' && resultData ? resultData.metrics.pathLength : Math.max(0, (stepData?.path.length || 1) - 1));
+      
+      const optimality = isStart ? { ratio: 0, label: 'N/A', color: '#64748b' } : getPathOptimality(actualHops, optimalPathLength);
+      
+      const adaptability = isStart 
+        ? { score: 0, label: '-', color: '#64748b' } 
+        : getAdaptabilityScore(status, resultData?.metrics || null, algoId, multiResults?.hybrid.dynamicEvents);
+      
+      const completion = isStart 
+        ? { percentage: 0, label: '0.0%' }
+        : (status === 'done' && resultData && resultData.metrics.completionRate !== undefined) 
+          ? { percentage: resultData.metrics.completionRate, label: `${resultData.metrics.completionRate.toFixed(1)}%` }
+          : getCompletionRate(exploredCount, totalNodes);
+
+      const displayMemory = isStart 
+        ? '0.0 KB' 
+        : (resultData ? getMemoryInMB(resultData.metrics.memoryUsed) : '-');
 
       return (
           <div className="flex flex-col gap-2 text-center border-r border-gray-700/50 last:border-0 px-1">
@@ -104,7 +117,6 @@ export const MetricsPanel: React.FC<Props> = ({
                   </div>
               </div>
 
-              {/* ✅ FIX: Separated Completion into its own dedicated row */}
               <div className="flex flex-col">
                   <div className="text-[9px] text-gray-500 uppercase tracking-wider">Completion</div>
                   <div className="text-sm font-bold text-blue-300">
@@ -124,7 +136,7 @@ export const MetricsPanel: React.FC<Props> = ({
 
               <div className="flex flex-col">
                   <div className="text-[9px] text-gray-500 uppercase tracking-wider">Memory</div>
-                  <div className="text-sm font-bold text-gray-200">{resultData ? getMemoryInMB(resultData.metrics.memoryUsed) : '-'}</div>
+                  <div className="text-sm font-bold text-gray-200">{displayMemory}</div>
               </div>
 
               <div className="flex flex-col">
