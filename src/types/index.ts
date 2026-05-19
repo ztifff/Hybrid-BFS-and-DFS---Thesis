@@ -105,6 +105,7 @@ export interface PerformanceMetrics {
   memoryUsed: number;    // KB estimated
   exitFound: boolean;
   exitIndex: number | null;
+  completionRate: number; // ✅ ADDED: Formal metric tracking
 }
 
 // ── Dynamic Event ──────────────────────────────────────────────────────────

@@ -1,55 +1,49 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { ScenarioGraph, GraphNode, AlgorithmType, ScenarioType, DynamicEvent, GraphEdge } from '../types';
-import { getAlgorithm } from '../config/scenarios';
+import { ScenarioGraph, GraphNode, ScenarioType, DynamicEvent, GraphEdge, AlgorithmStep } from '../types';
+import { ALGORITHMS } from '../config/scenarios';
 
 interface Props {
   graph: ScenarioGraph;
-  explored: Set<string>;
-  frontier: Set<string>;
-  path: Set<string>;
-  current: string | null;
-  algorithm: AlgorithmType;
+  activeSteps: { bfs: AlgorithmStep | null, dfs: AlgorithmStep | null, hybrid: AlgorithmStep | null };
   scenario: ScenarioType;
-  blockedNodes: Set<string>;
   stepIndex: number;
   dynamicEvents: DynamicEvent[];
-  phaseLabel?: string;
 }
 
-const NODE_CONFIG: Record<string, { icon: string; radius: number; baseColor: string; shape: 'circle' | 'rect' | 'diamond' }> = {
-  datacenter:      { icon: '🖥️',  radius: 28, baseColor: '#16a34a', shape: 'circle' }, // ✅ Green (Source)
-  building_router: { icon: '📡',  radius: 22, baseColor: '#1d4ed8', shape: 'circle' },
-  router:          { icon: '📡',  radius: 22, baseColor: '#1d4ed8', shape: 'circle' },
-  floor_router:    { icon: '🔀',  radius: 17, baseColor: '#2563eb', shape: 'circle' },
-  switch:          { icon: '🔀',  radius: 17, baseColor: '#2563eb', shape: 'circle' },
-  access_point:    { icon: '📶',  radius: 14, baseColor: '#dc2626', shape: 'circle' }, // ✅ Red (Actual Exit)
-  server:          { icon: '📶',  radius: 14, baseColor: '#475569', shape: 'circle' }, // ✅ Gray (Regular Node)
-  failed:          { icon: '💀',  radius: 17, baseColor: '#7f1d1d', shape: 'circle' },
-  depot:  { icon: '🏭', radius: 28, baseColor: '#92400e', shape: 'circle' },
-  zone:   { icon: '📦', radius: 22, baseColor: '#b45309', shape: 'circle' },
-  aisle:  { icon: '🔧', radius: 17, baseColor: '#d97706', shape: 'circle' },
-  shelf:  { icon: '📫', radius: 14, baseColor: '#f59e0b', shape: 'circle' },
-  blocked:{ icon: '🚧', radius: 17, baseColor: '#7f1d1d', shape: 'circle' },
-  origin:       { icon: '🏙️', radius: 28, baseColor: '#065f46', shape: 'circle' },
-  highway:      { icon: '🛣️', radius: 22, baseColor: '#047857', shape: 'circle' },
-  intersection: { icon: '🚦', radius: 17, baseColor: '#059669', shape: 'circle' },
-  street:       { icon: '🚗', radius: 14, baseColor: '#10b981', shape: 'circle' },
-  closed:       { icon: '🚫', radius: 17, baseColor: '#7f1d1d', shape: 'circle' },
-  start:          { icon: '🧑', radius: 24, baseColor: '#991b1b', shape: 'circle' },
-  emergency_exit: { icon: '🚪', radius: 22, baseColor: '#b91c1c', shape: 'circle' },
-  corridor:       { icon: '🚶', radius: 17, baseColor: '#dc2626', shape: 'circle' },
-  stairwell:      { icon: '🪜', radius: 17, baseColor: '#ef4444', shape: 'circle' },
-  fire:           { icon: '🔥', radius: 17, baseColor: '#7f1d1d', shape: 'circle' },
-  spawn:   { icon: '⚔️', radius: 28, baseColor: '#4c1d95', shape: 'circle' },
-  portal:  { icon: '🌀', radius: 22, baseColor: '#6d28d9', shape: 'circle' },
-  room:    { icon: '🏛️', radius: 17, baseColor: '#7c3aed', shape: 'circle' },
-  enemy:   { icon: '👹', radius: 17, baseColor: '#7f1d1d', shape: 'circle' },
+const NODE_CONFIG: Record<string, { icon: string; radius: number; baseColor: string }> = {
+  datacenter:      { icon: '🖥️',  radius: 28, baseColor: '#16a34a' }, 
+  building_router: { icon: '📡',  radius: 22, baseColor: '#1d4ed8' },
+  router:          { icon: '📡',  radius: 22, baseColor: '#1d4ed8' },
+  floor_router:    { icon: '🔀',  radius: 17, baseColor: '#2563eb' },
+  switch:          { icon: '🔀',  radius: 17, baseColor: '#2563eb' },
+  access_point:    { icon: '📶',  radius: 14, baseColor: '#dc2626' }, 
+  server:          { icon: '📶',  radius: 14, baseColor: '#475569' }, 
+  failed:          { icon: '💀',  radius: 17, baseColor: '#7f1d1d' },
+  depot:  { icon: '🏭', radius: 28, baseColor: '#92400e' },
+  zone:   { icon: '📦', radius: 22, baseColor: '#b45309' },
+  aisle:  { icon: '🔧', radius: 17, baseColor: '#d97706' },
+  shelf:  { icon: '📫', radius: 14, baseColor: '#f59e0b' },
+  blocked:{ icon: '🚧', radius: 17, baseColor: '#7f1d1d' },
+  origin:       { icon: '🏙️', radius: 28, baseColor: '#065f46' },
+  highway:      { icon: '🛣️', radius: 22, baseColor: '#047857' },
+  intersection: { icon: '🚦', radius: 17, baseColor: '#059669' },
+  street:       { icon: '🚗', radius: 14, baseColor: '#10b981' },
+  closed:       { icon: '🚫', radius: 17, baseColor: '#7f1d1d' },
+  start:          { icon: '🧑', radius: 24, baseColor: '#991b1b' },
+  emergency_exit: { icon: '🚪', radius: 22, baseColor: '#b91c1c' },
+  corridor:       { icon: '🚶', radius: 17, baseColor: '#dc2626' },
+  stairwell:      { icon: '🪜', radius: 17, baseColor: '#ef4444' },
+  fire:           { icon: '🔥', radius: 17, baseColor: '#7f1d1d' },
+  spawn:   { icon: '⚔️', radius: 28, baseColor: '#4c1d95' },
+  portal:  { icon: '🌀', radius: 22, baseColor: '#6d28d9' },
+  room:    { icon: '🏛️', radius: 17, baseColor: '#7c3aed' },
+  enemy:   { icon: '👹', radius: 17, baseColor: '#7f1d1d' },
 };
 
 const EDGE_CONFIG: Record<string, { color: string; dash: string; width: number }> = {
   fiber:    { color: '#60a5fa', dash: 'none', width: 3 },
   ethernet: { color: '#94a3b8', dash: 'none', width: 2 },
-  copper:   { color: '#fdba74', dash: 'none', width: 2 }, // ✅ Added
+  copper:   { color: '#fdba74', dash: 'none', width: 2 }, 
   road:     { color: '#6ee7b7', dash: 'none', width: 2 },
   corridor: { color: '#fca5a5', dash: '4,3',  width: 2 },
   path:     { color: '#c4b5fd', dash: 'none', width: 2 },
@@ -58,26 +52,17 @@ const EDGE_CONFIG: Record<string, { color: string; dash: string; width: number }
 
 export const NetworkCanvas: React.FC<Props> = ({
   graph,
-  explored,
-  frontier,
-  path,
-  current,
-  algorithm,
+  activeSteps,
   scenario,
-  blockedNodes,
   dynamicEvents,
   stepIndex,
-  phaseLabel,
 }) => {
-  const al = getAlgorithm(algorithm);
-
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  
   const [activeFloor, setActiveFloor] = useState<string>('L2');
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -85,15 +70,9 @@ export const NetworkCanvas: React.FC<Props> = ({
 
   const { nodes, edges, width, height } = graph;
   
-  // ORIGINAL FLAG (Untouched)
   const isMassive = nodes.length > 200;
-  
-  // ✅ NEW ISOLATED FLAG: Strict check for the huge Real-World Datacenter
   const isDatacenter = scenario === 'network' && width > 100000;
-
-  const isLayeredMap = useMemo(() => {
-    return nodes.some(n => n.buildingId === 'GL' || n.buildingId === 'L2');
-  }, [nodes]);
+  const isLayeredMap = useMemo(() => nodes.some(n => n.buildingId === 'GL' || n.buildingId === 'L2'), [nodes]);
 
   const SVG_W = 960;
   const SVG_H = 680;
@@ -105,11 +84,28 @@ export const NetworkCanvas: React.FC<Props> = ({
   const sx = (x: number) => (x * scale) + offsetX;
   const sy = (y: number) => (y * scale) + offsetY;
 
+  // Extract Colors
+  const cBFS = ALGORITHMS.find(a => a.id === 'bfs')?.color || '#4ade80';
+  const cDFS = ALGORITHMS.find(a => a.id === 'dfs')?.color || '#c084fc';
+  const cHYB = ALGORITHMS.find(a => a.id === 'hybrid')?.color || '#fb923c';
+
+  // Extract Sets for rendering
+  const sets = useMemo(() => {
+      const extract = (step: AlgorithmStep | null) => ({
+          explored: new Set(step?.explored || []),
+          path: new Set(step?.path || []),
+          current: step?.current || null
+      });
+      return {
+          bfs: extract(activeSteps.bfs),
+          dfs: extract(activeSteps.dfs),
+          hyb: extract(activeSteps.hybrid)
+      };
+  }, [activeSteps]);
+
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
-      containerRef.current?.requestFullscreen().catch(err => {
-        console.error(`Error attempting to enable fullscreen: ${err.message}`);
-      });
+      containerRef.current?.requestFullscreen().catch(() => {});
     } else {
       document.exitFullscreen();
     }
@@ -121,27 +117,32 @@ export const NetworkCanvas: React.FC<Props> = ({
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
+  // Multi-target Follow Cam (Averages the position of all active algorithm heads)
   useEffect(() => {
-    if (!isFollowing || !current || !svgRef.current) return;
+    if (!isFollowing || !svgRef.current) return;
 
-    const currentNode = nodes.find(n => n.id === current);
-    if (!currentNode) return;
+    let sumX = 0, sumY = 0, count = 0;
+    let targetFloor = activeFloor;
 
-    if (isLayeredMap && currentNode.buildingId && currentNode.buildingId !== activeFloor) {
-      if (currentNode.buildingId === 'GL' || currentNode.buildingId === 'L2') {
-        setActiveFloor(currentNode.buildingId);
-      }
-    }
+    [sets.bfs.current, sets.dfs.current, sets.hyb.current].forEach(curr => {
+        if (curr) {
+            const node = nodes.find(n => n.id === curr);
+            if (node) {
+                sumX += sx(node.x); sumY += sy(node.y); count++;
+                if (isLayeredMap && node.buildingId && node.buildingId !== targetFloor) {
+                    if (node.buildingId === 'GL' || node.buildingId === 'L2') targetFloor = node.buildingId;
+                }
+            }
+        }
+    });
 
-    const rect = svgRef.current.getBoundingClientRect();
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
+    if (count === 0) return;
+    if (targetFloor !== activeFloor) setActiveFloor(targetFloor);
 
-    const targetPanX = centerX - (sx(currentNode.x) * zoom);
-    const targetPanY = centerY - (sy(currentNode.y) * zoom);
-
-    setPan({ x: targetPanX, y: targetPanY });
-  }, [current, isFollowing, zoom, nodes, activeFloor, isLayeredMap]);
+    const centerX = svgRef.current.getBoundingClientRect().width / 2;
+    const centerY = svgRef.current.getBoundingClientRect().height / 2;
+    setPan({ x: centerX - ((sumX / count) * zoom), y: centerY - ((sumY / count) * zoom) });
+  }, [sets, isFollowing, zoom, nodes, activeFloor, isLayeredMap, scale, offsetX, offsetY]);
 
   const handleWheel = (e: React.WheelEvent<SVGSVGElement>) => {
     if (isFollowing) setIsFollowing(false);
@@ -162,23 +163,16 @@ export const NetworkCanvas: React.FC<Props> = ({
     setIsDragging(true);
     setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
   };
-
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (!isDragging) return;
     setPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
   };
-
   const handleMouseUp = () => setIsDragging(false);
   const handleMouseLeave = () => setIsDragging(false);
-
-  const resetZoom = () => { 
-    setIsFollowing(false);
-    setZoom(1); 
-    setPan({ x: 0, y: 0 }); 
-  };
+  const resetZoom = () => { setIsFollowing(false); setZoom(1); setPan({ x: 0, y: 0 }); };
 
   const activeBlocked = useMemo(() => {
-    const blocked = new Set<string>(blockedNodes);
+    const blocked = new Set<string>();
     dynamicEvents.forEach((ev) => {
       if (ev.stepIndex <= stepIndex) {
         if (ev.blocked) blocked.add(ev.nodeId);
@@ -186,129 +180,47 @@ export const NetworkCanvas: React.FC<Props> = ({
       }
     });
     return blocked;
-  }, [blockedNodes, dynamicEvents, stepIndex]);
+  }, [dynamicEvents, stepIndex]);
 
   const visibleNodes = useMemo(() => {
     if (!isLayeredMap) return nodes;
     return nodes.filter(n => !n.buildingId || n.buildingId === activeFloor);
   }, [nodes, activeFloor, isLayeredMap]);
 
-  const visibleNodeIds = useMemo(() => {
-    return new Set(visibleNodes.map(n => n.id));
-  }, [visibleNodes]);
+  const visibleNodeIds = useMemo(() => new Set(visibleNodes.map(n => n.id)), [visibleNodes]);
+  const visibleEdges = useMemo(() => edges.filter(e => visibleNodeIds.has(e.from) && visibleNodeIds.has(e.to)), [edges, visibleNodeIds]);
 
-  const visibleEdges = useMemo(() => {
-    return edges.filter(e => visibleNodeIds.has(e.from) && visibleNodeIds.has(e.to));
-  }, [edges, visibleNodeIds]);
-
-
-  // ── ORIGINAL STYLE METHODS (Untouched) ──────────────────────────────────
-  function getNodeStyle(node: GraphNode) {
-    const cfg = NODE_CONFIG[node.type] ?? { icon: '⬤', radius: 16, baseColor: '#374151', shape: 'circle' };
-    const isBlocked = activeBlocked.has(node.id);
-    const isCurrent = current === node.id;
-    const isPath = path.has(node.id);
-    const isExplored = explored.has(node.id);
-    const isFrontier = frontier.has(node.id);
-    const isSource = node.id === graph.sourceId;
-    const isDest = graph.destinationIds.includes(node.id);
-
-    let fillColor = cfg.baseColor;
-    let strokeColor = '#374151';
-    let strokeWidth = isMassive ? 0.4 : 1.5;
-    let opacity = isMassive ? 0.9 : 1;
-    let glowColor = 'none';
-
-    if (isBlocked) {
-      fillColor = '#450a0a';
-      strokeColor = '#ef4444';
-      strokeWidth = isMassive ? 1 : 2;
-    } else if (isCurrent) {
-      fillColor = '#fff';
-      strokeColor = al.color;
-      strokeWidth = isMassive ? 1 : 3;
-      glowColor = al.color;
-    } else if (isPath) {
-      fillColor = al.color;
-      strokeColor = '#fff';
-      strokeWidth = isMassive ? 1 : 2;
-    } else if (isExplored) {
-      fillColor = al.color + '88';
-      strokeColor = al.color;
-      strokeWidth = isMassive ? 0.4 : 1.5;
-    } else if (isFrontier) {
-      fillColor = al.color + '44';
-      strokeColor = al.color + 'aa';
-      strokeWidth = isMassive ? 0.4 : 1.5;
-    } else if (isSource) {
-      fillColor = '#16a34a';
-      strokeColor = '#4ade80';
-      strokeWidth = isMassive ? 1.5 : 2.5;
-    } else if (isDest) {
-      fillColor = '#b91c1c';
-      strokeColor = '#fca5a5';
-      strokeWidth = isMassive ? 1.5 : 2;
-    } else {
-      opacity = isMassive ? 0.4 : 0.7;
-    }
-
-    return { fillColor, strokeColor, strokeWidth, opacity, glowColor, cfg, isBlocked, isCurrent, isSource, isDest };
-  }
-
-  function getEdgeStyle(fromId: string, toId: string, edgeType: string) {
-    const isOnPath = path.has(fromId) && path.has(toId);
-    const isExplored = explored.has(fromId) && explored.has(toId);
-    const cfg = EDGE_CONFIG[edgeType] ?? EDGE_CONFIG.path;
-
-    if (isOnPath) {
-      return { color: al.color, width: isMassive ? 1.5 : 3.5, dash: 'none', opacity: 1 };
-    }
-    if (isExplored) {
-      return { color: al.color + '88', width: isMassive ? 0.8 : 2, dash: cfg.dash, opacity: isMassive ? 0.8 : 0.9 };
-    }
-    return { color: cfg.color, width: isMassive ? 0.4 : cfg.width, dash: cfg.dash, opacity: isMassive ? 0.25 : 0.35 }; 
-  }
-
-
-  // ── ISOLATED DATACENTER STYLES ──────────────────────────────────────────
-  function getDatacenterEdgeStyle(fromId: string, toId: string, edgeType: string) {
-    const isOnPath = path.has(fromId) && path.has(toId);
-    const isExplored = explored.has(fromId) && explored.has(toId);
-    const cfg = EDGE_CONFIG[edgeType] ?? EDGE_CONFIG.path;
-
-    if (isOnPath) return { color: al.color, width: 1.5, dash: 'none', opacity: 1 };
-    if (isExplored) return { color: al.color + '88', width: 0.8, dash: cfg.dash, opacity: 0.8 };
-    // Extremely thin un-explored lines to prevent visual clutter
-    return { color: cfg.color, width: 0.25, dash: cfg.dash, opacity: 0.2 }; 
-  }
-
-
-  // ── RENDER FUNCTIONS ─────────────────────────────────────────────────────
-
-  // 1. Standard Edge
-  const renderStandardEdge = (edge: GraphEdge) => {
+  // ── MULTI-ALGORITHM RENDER LOGIC ──────────────────────────────────
+  const renderEdge = (edge: GraphEdge) => {
     const fromNode = visibleNodes.find((n) => n.id === edge.from);
     const toNode = visibleNodes.find((n) => n.id === edge.to);
     if (!fromNode || !toNode) return null;
 
-    const style = getEdgeStyle(edge.from, edge.to, edge.type);
-    const x1 = sx(fromNode.x);
-    const y1 = sy(fromNode.y);
-    const x2 = sx(toNode.x);
-    const y2 = sy(toNode.y);
-    const mx = (x1 + x2) / 2;
-    const my = (y1 + y2) / 2;
-    const isOnPath = path.has(edge.from) && path.has(edge.to);
+    const x1 = sx(fromNode.x), y1 = sy(fromNode.y), x2 = sx(toNode.x), y2 = sy(toNode.y);
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+
+    const pBFS = sets.bfs.path.has(edge.from) && sets.bfs.path.has(edge.to);
+    const pDFS = sets.dfs.path.has(edge.from) && sets.dfs.path.has(edge.to);
+    const pHYB = sets.hyb.path.has(edge.from) && sets.hyb.path.has(edge.to);
+
+    const expAny = sets.bfs.explored.has(edge.from) || sets.dfs.explored.has(edge.from) || sets.hyb.explored.has(edge.from);
+    const cfg = EDGE_CONFIG[edge.type] ?? EDGE_CONFIG.path;
+
+    const baseOpacity = isDatacenter ? 0.2 : (isMassive ? 0.25 : 0.35);
+    const baseWidth = isDatacenter ? 0.25 : (isMassive ? 0.4 : cfg.width);
 
     return (
         <g key={edge.id} style={{ pointerEvents: 'none' }}>
-            <line
-                x1={x1} y1={y1} x2={x2} y2={y2}
-                stroke={style.color} strokeWidth={style.width} strokeDasharray={style.dash === 'none' ? undefined : style.dash} opacity={style.opacity} strokeLinecap="round"
-                markerEnd={isOnPath && !isMassive ? 'url(#arrow-active)' : !isMassive ? 'url(#arrow)' : undefined}
-            />
-            {!isMassive && (isOnPath || (explored.has(edge.from) && explored.has(edge.to))) && edge.label && (
-                <text x={mx} y={my - 5} textAnchor="middle" fontSize="9" fill={isOnPath ? al.color : '#94a3b8'} fontWeight={isOnPath ? 'bold' : 'normal'} style={{ userSelect: 'none', pointerEvents: 'none' }}>
+            {/* Base Edge */}
+            <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={expAny ? '#94a3b8' : cfg.color} strokeWidth={baseWidth} strokeDasharray={cfg.dash !== 'none' ? cfg.dash : undefined} opacity={expAny ? 0.6 : baseOpacity} />
+            
+            {/* Layered Paths (Thickest to Thinnest to create rainbow effect if overlapped) */}
+            {pBFS && <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={cBFS} strokeWidth={isMassive ? 2 : 6} opacity={0.9} strokeLinecap="round" />}
+            {pDFS && <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={cDFS} strokeWidth={isMassive ? 1.5 : 4} opacity={0.9} strokeLinecap="round" />}
+            {pHYB && <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={cHYB} strokeWidth={isMassive ? 1 : 2} opacity={1} strokeLinecap="round" />}
+
+            {!isMassive && edge.label && (pBFS || pDFS || pHYB || expAny) && (
+                <text x={mx} y={my - 5} textAnchor="middle" fontSize="9" fill={pHYB ? cHYB : pDFS ? cDFS : pBFS ? cBFS : '#94a3b8'} fontWeight={(pBFS || pDFS || pHYB) ? 'bold' : 'normal'} style={{ userSelect: 'none' }}>
                     {edge.label}
                 </text>
             )}
@@ -316,227 +228,103 @@ export const NetworkCanvas: React.FC<Props> = ({
     );
   };
 
-  // 2. Standard Node
-  const renderStandardNode = (node: GraphNode) => {
-    const { fillColor, strokeColor, strokeWidth, opacity, glowColor, cfg, isBlocked, isCurrent, isSource, isDest } = getNodeStyle(node);
-    const cx = sx(node.x);
-    const cy = sy(node.y);
-    const isImportant = isSource || isDest || isCurrent;
-    const r = isMassive ? (isImportant ? 5 : 2.2) : cfg.radius;
+  const renderNode = (node: GraphNode) => {
+    const cfg = NODE_CONFIG[node.type] ?? { icon: '⬤', radius: 16, baseColor: '#374151' };
+    const cx = sx(node.x), cy = sy(node.y);
+    const isBlocked = activeBlocked.has(node.id);
+    const isSource = node.id === graph.sourceId;
+    const isDest = graph.destinationIds.includes(node.id);
+
+    const currBFS = sets.bfs.current === node.id;
+    const currDFS = sets.dfs.current === node.id;
+    const currHYB = sets.hyb.current === node.id;
+    const isImportant = isSource || isDest || currBFS || currDFS || currHYB;
+    
+    let r = isMassive ? (isImportant ? 5 : 2.2) : cfg.radius;
+    if (isDatacenter) r = isImportant ? 8 : 4.5;
+    
     const showLabels = !isMassive || isImportant;
 
+    // Node Base Colors
+    let fillColor = cfg.baseColor;
+    let opacity = (isMassive && !isImportant) ? 0.4 : 1;
+
+    if (isBlocked) { fillColor = '#450a0a'; opacity = 1; } 
+    else if (isSource) { fillColor = '#16a34a'; } 
+    else if (isDest) { fillColor = '#b91c1c'; }
+
     return (
         <g key={node.id} opacity={opacity} style={{ pointerEvents: 'none', userSelect: 'none' }}>
-            {isCurrent && <circle cx={cx} cy={cy} r={r + (isMassive ? 4 : 10)} fill={glowColor + '33'} filter="url(#glow-strong)" />}
-            <circle cx={cx} cy={cy} r={r} fill={fillColor} stroke={strokeColor} strokeWidth={strokeWidth} filter={isCurrent ? 'url(#glow)' : undefined} />
+            {/* Active Current Node Rings (Draws larger rings around active heads) */}
+            {currBFS && <circle cx={cx} cy={cy} r={r + (isMassive?3:8)} fill="none" stroke={cBFS} strokeWidth={2} filter="url(#glow)" />}
+            {currDFS && <circle cx={cx} cy={cy} r={r + (isMassive?5:12)} fill="none" stroke={cDFS} strokeWidth={2} filter="url(#glow)" />}
+            {currHYB && <circle cx={cx} cy={cy} r={r + (isMassive?7:16)} fill="none" stroke={cHYB} strokeWidth={2} filter="url(#glow)" />}
+
+            {/* Base Circle */}
+            <circle cx={cx} cy={cy} r={r} fill={fillColor} stroke={isBlocked ? '#ef4444' : '#374151'} strokeWidth={isBlocked ? 2 : 1} />
             
             {isBlocked && (
                 <>
-                <line x1={cx - r * 0.6} y1={cy - r * 0.6} x2={cx + r * 0.6} y2={cy + r * 0.6} stroke="#ef4444" strokeWidth={isMassive ? 1 : 2} />
-                <line x1={cx + r * 0.6} y1={cy - r * 0.6} x2={cx - r * 0.6} y2={cy + r * 0.6} stroke="#ef4444" strokeWidth={isMassive ? 1 : 2} />
+                <line x1={cx - r*0.6} y1={cy - r*0.6} x2={cx + r*0.6} y2={cy + r*0.6} stroke="#ef4444" strokeWidth={isMassive ? 1 : 2} />
+                <line x1={cx + r*0.6} y1={cy - r*0.6} x2={cx - r*0.6} y2={cy + r*0.6} stroke="#ef4444" strokeWidth={isMassive ? 1 : 2} />
                 </>
             )}
             
-            {showLabels && (
+            {showLabels && !isDatacenter && (
                 <>
-                <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="middle" fontSize={r * 0.9} style={{ userSelect: 'none', pointerEvents: 'none' }}>
-                    {isBlocked ? '💀' : cfg.icon}
-                </text>
-                <text x={cx} y={cy + r + 11} textAnchor="middle" fontSize={r > 15 ? '10' : '7'} fill="#cbd5e1" fontWeight={isCurrent ? 'bold' : 'normal'} style={{ userSelect: 'none', pointerEvents: 'none' }}>
+                <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="middle" fontSize={r * 0.9}>{isBlocked ? '💀' : cfg.icon}</text>
+                <text x={cx} y={cy + r + 11} textAnchor="middle" fontSize={r > 15 ? '10' : '7'} fill="#cbd5e1" fontWeight={isImportant ? 'bold' : 'normal'}>
                     {node.label.split('\n')[0]}
                 </text>
-                {node.label.includes('\n') && (
-                    <text x={cx} y={cy + r + 21} textAnchor="middle" fontSize="8" fill="#64748b" style={{ userSelect: 'none', pointerEvents: 'none' }}>
-                    {node.label.split('\n')[1]}
-                    </text>
-                )}
                 </>
             )}
-        </g>
-    );
-  };
 
-  // 3. EXCLUSIVE Datacenter Edge
-  const renderDatacenterEdge = (edge: GraphEdge) => {
-    const fromNode = visibleNodes.find((n) => n.id === edge.from);
-    const toNode = visibleNodes.find((n) => n.id === edge.to);
-    if (!fromNode || !toNode) return null;
-
-    const style = getDatacenterEdgeStyle(edge.from, edge.to, edge.type);
-    return (
-        <line
-            key={edge.id}
-            x1={sx(fromNode.x)} y1={sy(fromNode.y)} x2={sx(toNode.x)} y2={sy(toNode.y)}
-            stroke={style.color} strokeWidth={style.width} strokeDasharray={style.dash === 'none' ? undefined : style.dash} opacity={style.opacity} strokeLinecap="round"
-            style={{ pointerEvents: 'none' }}
-        />
-    );
-  };
-
-  // 4. EXCLUSIVE Datacenter Node (Tiny Disks, Shrunken Text)
-  const renderDatacenterNode = (node: GraphNode) => {
-    const { fillColor, strokeColor, strokeWidth, opacity, glowColor, cfg, isBlocked, isCurrent, isSource, isDest } = getNodeStyle(node);
-    const cx = sx(node.x);
-    const cy = sy(node.y);
-    const isImportant = isSource || isDest || isCurrent;
-    
-    const r = isImportant ? 8 : 4.5; // Scales down heavily for the massive Trident map
-
-    return (
-        <g key={node.id} opacity={opacity} style={{ pointerEvents: 'none', userSelect: 'none' }}>
-            {isCurrent && <circle cx={cx} cy={cy} r={r + 10} fill={glowColor + '33'} filter="url(#glow-strong)" />}
-            <circle cx={cx} cy={cy} r={r} fill={fillColor} stroke={strokeColor} strokeWidth={strokeWidth} filter={isCurrent ? 'url(#glow)' : undefined} />
-            
-            {isBlocked && (
+            {/* Datacenter Label Scaling */}
+            {showLabels && isDatacenter && (
                 <>
-                <line x1={cx - r * 0.6} y1={cy - r * 0.6} x2={cx + r * 0.6} y2={cy + r * 0.6} stroke="#ef4444" strokeWidth={1} />
-                <line x1={cx + r * 0.6} y1={cy - r * 0.6} x2={cx - r * 0.6} y2={cy + r * 0.6} stroke="#ef4444" strokeWidth={1} />
-                </>
-            )}
-            
-            {/* Always show emojis, completely scaled perfectly for this map */}
-            <text x={cx} y={cy + 0.5} textAnchor="middle" dominantBaseline="middle" fontSize={r * 1.2} style={{ userSelect: 'none', pointerEvents: 'none' }}>
-                {isBlocked ? '💀' : cfg.icon}
-            </text>
-
-            <text 
-                x={cx} y={cy + r + 5} textAnchor="middle" fontSize={isImportant ? '3.5' : '3'} fill="#f8fafc" fontWeight={isCurrent ? 'bold' : 'normal'}
-                paintOrder="stroke" stroke="#0f172a" strokeWidth="0.6" strokeLinecap="round" strokeLinejoin="round"
-                style={{ userSelect: 'none', pointerEvents: 'none' }}
-            >
-                {node.label.split('\n')[0]}
-            </text>
-            
-            {node.label.includes('\n') && (
-                <text x={cx} y={cy + r + 9} textAnchor="middle" fontSize="2.5" fill="#94a3b8" paintOrder="stroke" stroke="#0f172a" strokeWidth="0.5" style={{ userSelect: 'none', pointerEvents: 'none' }}>
-                {node.label.split('\n')[1]}
+                <text x={cx} y={cy + 0.5} textAnchor="middle" dominantBaseline="middle" fontSize={r * 1.2}>{isBlocked ? '💀' : cfg.icon}</text>
+                <text x={cx} y={cy + r + 5} textAnchor="middle" fontSize={isImportant ? '3.5' : '3'} fill="#f8fafc" paintOrder="stroke" stroke="#0f172a" strokeWidth="0.6">
+                    {node.label.split('\n')[0]}
                 </text>
+                </>
             )}
         </g>
     );
   };
-
 
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-hidden" style={{ background: '#0a0f1e' }}>
       
       {isLayeredMap && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-gray-900/90 p-1.5 rounded-xl border border-gray-700 backdrop-blur-sm z-20 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.5)]">
-          <button
-            onClick={() => setActiveFloor('GL')}
-            className={`px-8 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer ${
-              activeFloor === 'GL' 
-                ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.5)]' 
-                : 'text-gray-400 hover:text-white hover:bg-gray-800'
-            }`}
-          >
-            GL (Ground Level)
-          </button>
-          <button
-            onClick={() => setActiveFloor('L2')}
-            className={`px-8 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer ${
-              activeFloor === 'L2' 
-                ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.5)]' 
-                : 'text-gray-400 hover:text-white hover:bg-gray-800'
-            }`}
-          >
-            L2 (Second Level)
-          </button>
+          <button onClick={() => setActiveFloor('GL')} className={`px-8 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer ${activeFloor === 'GL' ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.5)]' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>GL (Ground)</button>
+          <button onClick={() => setActiveFloor('L2')} className={`px-8 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer ${activeFloor === 'L2' ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.5)]' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>L2 (Second)</button>
         </div>
       )}
 
       <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-20">
-        <button 
-          onClick={toggleFullscreen} 
-          className="w-8 h-8 bg-gray-800 border border-gray-600 rounded text-white flex items-center justify-center hover:bg-gray-700 cursor-pointer text-lg transition-colors"
-          title="Toggle Fullscreen"
-        >
-          {isFullscreen ? '✖' : '⛶'}
-        </button>
-
-        <button 
-          onClick={() => setIsFollowing(!isFollowing)} 
-          className={`w-8 h-8 border rounded flex items-center justify-center cursor-pointer text-lg transition-colors ${
-            isFollowing 
-              ? 'bg-blue-600 border-blue-400 text-white shadow-[0_0_10px_rgba(37,99,235,0.5)]' 
-              : 'bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700 hover:text-white'
-          }`}
-          title="Follow Algorithm"
-        >
-          🎯
-        </button>
-
+        <button onClick={toggleFullscreen} className="w-8 h-8 bg-gray-800 border border-gray-600 rounded text-white flex items-center justify-center hover:bg-gray-700 cursor-pointer text-lg transition-colors" title="Toggle Fullscreen">{isFullscreen ? '✖' : '⛶'}</button>
+        <button onClick={() => setIsFollowing(!isFollowing)} className={`w-8 h-8 border rounded flex items-center justify-center cursor-pointer text-lg transition-colors ${isFollowing ? 'bg-blue-600 border-blue-400 text-white shadow-[0_0_10px_rgba(37,99,235,0.5)]' : 'bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700 hover:text-white'}`} title="Follow Algorithms">🎯</button>
         <button onClick={() => { setIsFollowing(false); setZoom(z => Math.min(z * 1.5, 30)); }} className="w-8 h-8 bg-gray-800 border border-gray-600 rounded text-white flex items-center justify-center hover:bg-gray-700 cursor-pointer text-xl font-bold transition-colors">+</button>
         <button onClick={() => { setIsFollowing(false); setZoom(z => Math.max(z / 1.5, 0.2)); }} className="w-8 h-8 bg-gray-800 border border-gray-600 rounded text-white flex items-center justify-center hover:bg-gray-700 cursor-pointer text-xl font-bold transition-colors">-</button>
         <button onClick={resetZoom} className="px-2 py-1 bg-gray-800 border border-gray-600 rounded text-xs font-bold text-gray-300 hover:bg-gray-700 cursor-pointer transition-colors">Reset</button>
       </div>
 
-      {phaseLabel && !isFullscreen && (
-        <div
-          className="absolute top-2 left-1/2 -translate-x-1/2 text-xs font-bold px-3 py-1 rounded-full z-10 pointer-events-none"
-          style={{ backgroundColor: al.color + '33', color: al.color, border: `1px solid ${al.color}66` }}
-        >
-          {phaseLabel}
-        </div>
-      )}
-
-      {isFullscreen && (
-        <div className="absolute top-4 left-4 bg-gray-900/80 backdrop-blur border border-gray-700 px-4 py-2 rounded-lg z-10 pointer-events-none flex flex-col gap-1">
-          <div className="text-sm font-bold" style={{ color: al.color }}>{al.name} · Step {stepIndex}</div>
-          {phaseLabel && <div className="text-xs text-gray-300">{phaseLabel}</div>}
-        </div>
-      )}
-
       <svg
-        ref={svgRef}
-        viewBox={`0 0 ${SVG_W} ${SVG_H}`}
-        width="100%"
-        height="100%"
-        style={{ 
-            display: 'block', 
-            cursor: isDragging ? 'grabbing' : 'grab', 
-            touchAction: 'none',
-            userSelect: 'none'
-        }}
-        onWheel={handleWheel}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
+        ref={svgRef} viewBox={`0 0 ${SVG_W} ${SVG_H}`} width="100%" height="100%"
+        style={{ display: 'block', cursor: isDragging ? 'grabbing' : 'grab', touchAction: 'none', userSelect: 'none' }}
+        onWheel={handleWheel} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseLeave}
       >
         <defs>
           <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="4" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
-          <filter id="glow-strong" x="-100%" y="-100%" width="300%" height="300%">
-            <feGaussianBlur stdDeviation="8" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-          <marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L6,3 z" fill="#475569" />
-          </marker>
-          <marker id="arrow-active" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L6,3 z" fill={al.color} />
-          </marker>
         </defs>
 
         <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
-            
-            {visibleEdges.map((edge) => 
-                isDatacenter ? renderDatacenterEdge(edge) : renderStandardEdge(edge)
-            )}
-            
-            {visibleNodes.map((node) => 
-                isDatacenter ? renderDatacenterNode(node) : renderStandardNode(node)
-            )}
-
+            {visibleEdges.map(renderEdge)}
+            {visibleNodes.map(renderNode)}
         </g>
       </svg>
     </div>

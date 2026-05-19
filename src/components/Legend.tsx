@@ -1,9 +1,8 @@
 import React from 'react';
-import { AlgorithmType, ScenarioType } from '../types';
-import { getAlgorithm } from '../config/scenarios';
+import { ScenarioType } from '../types';
+import { ALGORITHMS } from '../config/scenarios';
 
 interface Props {
-  algorithm: AlgorithmType;
   scenario: ScenarioType;
 }
 
@@ -74,24 +73,24 @@ const EDGE_ITEMS: Record<ScenarioType, LegendItem[]> = {
   ],
 };
 
-export const Legend: React.FC<Props> = ({ algorithm, scenario }) => {
-  const al = getAlgorithm(algorithm);
-
-  const exploredColor =
-    algorithm === 'bfs' ? '#166534' : algorithm === 'dfs' ? '#4c1d95' : '#7c2d12';
-
+export const Legend: React.FC<Props> = ({ scenario }) => {
   const nodeItems = SCENARIO_NODE_ITEMS[scenario] ?? [];
   const edgeItems = EDGE_ITEMS[scenario] ?? [];
 
+  // Extract algorithm colors directly
+  const cBFS = ALGORITHMS.find(a => a.id === 'bfs')?.color || '#4ade80';
+  const cDFS = ALGORITHMS.find(a => a.id === 'dfs')?.color || '#c084fc';
+  const cHYB = ALGORITHMS.find(a => a.id === 'hybrid')?.color || '#fb923c';
+
   return (
-    <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 space-y-4">
+    <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 space-y-4 shrink-0">
       <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider text-center">
         Legend
       </h3>
 
       {/* Node types */}
       <div>
-        <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Nodes</p>
+        <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Environment Nodes</p>
         <div className="space-y-1.5">
           {nodeItems.map((item) => (
             <div key={item.label} className="flex items-center gap-2">
@@ -101,7 +100,7 @@ export const Legend: React.FC<Props> = ({ algorithm, scenario }) => {
               >
                 {item.icon}
               </div>
-              <span className="text-xs text-gray-300">{item.label}</span>
+              <span className="text-xs text-gray-300 leading-tight">{item.label}</span>
             </div>
           ))}
         </div>
@@ -110,11 +109,11 @@ export const Legend: React.FC<Props> = ({ algorithm, scenario }) => {
       {/* Edge types */}
       {edgeItems.length > 0 && (
         <div>
-          <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Edges</p>
+          <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Environment Edges</p>
           <div className="space-y-1.5">
             {edgeItems.map((item) => (
               <div key={item.label} className="flex items-center gap-2">
-                <svg width="22" height="10">
+                <svg width="22" height="10" className="flex-shrink-0">
                   <line
                     x1="0" y1="5" x2="22" y2="5"
                     stroke={item.color}
@@ -122,34 +121,51 @@ export const Legend: React.FC<Props> = ({ algorithm, scenario }) => {
                     strokeDasharray={item.dashed ? '4,3' : undefined}
                   />
                 </svg>
-                <span className="text-xs text-gray-300">{item.label}</span>
+                <span className="text-xs text-gray-300 leading-tight">{item.label}</span>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Algorithm state colors */}
+      {/* Algorithm Multi-Layer Colors */}
       <div>
         <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">
-          {al.name} States
+          Algorithms
         </p>
-        <div className="space-y-1.5">
+        <div className="space-y-2">
+          {/* BFS Path */}
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full border-2" style={{ borderColor: al.color, backgroundColor: '#fff' }} />
-            <span className="text-xs text-gray-300">Current Node</span>
+            <svg width="22" height="10" className="flex-shrink-0">
+              <line x1="0" y1="5" x2="22" y2="5" stroke={cBFS} strokeWidth="6" strokeLinecap="round" />
+            </svg>
+            <span className="text-xs text-gray-300 leading-tight">BFS Path (Outer Layer)</span>
           </div>
+          
+          {/* DFS Path */}
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: al.color }} />
-            <span className="text-xs text-gray-300">On Optimal Path</span>
+            <svg width="22" height="10" className="flex-shrink-0">
+              <line x1="0" y1="5" x2="22" y2="5" stroke={cDFS} strokeWidth="4" strokeLinecap="round" />
+            </svg>
+            <span className="text-xs text-gray-300 leading-tight">DFS Path (Middle Layer)</span>
           </div>
+          
+          {/* Hybrid Path */}
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: exploredColor }} />
-            <span className="text-xs text-gray-300">Explored</span>
+            <svg width="22" height="10" className="flex-shrink-0">
+              <line x1="0" y1="5" x2="22" y2="5" stroke={cHYB} strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            <span className="text-xs text-gray-300 leading-tight">Hybrid Path (Inner Layer)</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full border" style={{ backgroundColor: al.color + '33', borderColor: al.color + '88' }} />
-            <span className="text-xs text-gray-300">Frontier</span>
+
+          {/* Active Heads */}
+          <div className="flex items-center gap-2 pt-1.5">
+            <div className="flex -space-x-2 flex-shrink-0">
+              <div className="w-4 h-4 rounded-full border-2 z-10" style={{ borderColor: cBFS, backgroundColor: '#111827' }} />
+              <div className="w-4 h-4 rounded-full border-2 z-20" style={{ borderColor: cDFS, backgroundColor: '#111827' }} />
+              <div className="w-4 h-4 rounded-full border-2 z-30" style={{ borderColor: cHYB, backgroundColor: '#111827' }} />
+            </div>
+            <span className="text-xs text-gray-300 ml-1 leading-tight">Active Search Heads</span>
           </div>
         </div>
       </div>

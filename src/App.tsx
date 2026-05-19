@@ -1,44 +1,28 @@
 import React, { useState } from 'react';
-import { ScenarioType, AlgorithmType } from './types';
+import { ScenarioType } from './types';
 import { ScenarioPicker } from './components/ScenarioPicker';
 import { SimulationView } from './components/SimulationView';
 
-type AppView = 'picker' | 'simulation';
+export default function App() {
+  const [scenario, setScenario] = useState<ScenarioType | null>(null);
+  const [isSimulating, setIsSimulating] = useState(false);
 
-const App: React.FC = () => {
-  const [view, setView] = useState<AppView>('picker');
-  const [selectedScenario, setSelectedScenario] = useState<ScenarioType | null>(null);
-  const [selectedAlgorithm, setSelectedAlgorithm] = useState<AlgorithmType | null>(null);
-
-  const handleStart = () => {
-    if (selectedScenario && selectedAlgorithm) {
-      setView('simulation');
-    }
-  };
-
-  const handleBack = () => {
-    setView('picker');
-  };
-
-  if (view === 'simulation' && selectedScenario && selectedAlgorithm) {
+  // If the user has picked a scenario AND clicked start, show the simulation
+  if (isSimulating && scenario) {
     return (
-      <SimulationView
-        scenario={selectedScenario}
-        algorithm={selectedAlgorithm}
-        onBack={handleBack}
+      <SimulationView 
+        scenario={scenario} 
+        onBack={() => setIsSimulating(false)} 
       />
     );
   }
 
+  // Otherwise, show the scenario picker
   return (
     <ScenarioPicker
-      selectedScenario={selectedScenario}
-      selectedAlgorithm={selectedAlgorithm}
-      onSelectScenario={setSelectedScenario}
-      onSelectAlgorithm={setSelectedAlgorithm}
-      onStart={handleStart}
+      selectedScenario={scenario}
+      onSelectScenario={setScenario}
+      onStart={() => setIsSimulating(true)}
     />
   );
-};
-
-export default App;
+}

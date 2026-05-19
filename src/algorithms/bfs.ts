@@ -29,19 +29,73 @@ export async function runGraphBFS(
   const parentMap = new Map<string, string | null>();
   const steps: AlgorithmStep[] = [];
 
+  function hasUnblockedDestination(): boolean {
+    if (blockedNodes.has(sourceId)) return false;
+
+    const reachQueue = [sourceId];
+    const reachVisited = new Set<string>([sourceId]);
+
+    while (reachQueue.length > 0) {
+      const current = reachQueue.shift()!;
+      if (destSet.has(current)) return true;
+      for (const { to } of adj.get(current) ?? []) {
+        if (!reachVisited.has(to) && !blockedNodes.has(to)) {
+          reachVisited.add(to);
+          reachQueue.push(to);
+        }
+      }
+    }
+
+    return false;
+  }
+
+  if (!hasUnblockedDestination()) {
+    steps.push({
+      stepIndex: 1,
+      explored: blockedNodes.has(sourceId) ? [] : [sourceId],
+      frontier: [],
+      path: [],
+      current: sourceId,
+      done: true,
+      foundDestination: null,
+      phaseLabel: 'Path Severed'
+    });
+
+    return { steps, nodesExplored: 0, pathLength: -1, totalLatency: 0, foundDestination: null };
+  }
+
   const queue: string[] = [sourceId];
   visited.add(sourceId);
   parentMap.set(sourceId, null);
 
+  function pruneQueue(): boolean {
+    const valid: string[] = [];
+    for (const nodeId of queue) {
+      if (blockedNodes.has(nodeId) || !isPathValid(parentMap, nodeId, blockedNodes)) {
+        visited.delete(nodeId);
+      } else {
+        valid.push(nodeId);
+      }
+    }
+    if (valid.length !== queue.length) {
+      queue.splice(0, queue.length, ...valid);
+    }
+    return queue.length > 0;
+  }
+
   let nodesExplored = 0;
   let foundDestination: string | null = null;
+  let lastCurrent: string | null = null;
   let iteration = 0;
   let lastYieldTime = performance.now();
 
-  const syncUI = async (current: string) => {
+  while (queue.length > 0 && !foundDestination) {
+    if (!pruneQueue()) break;
+    const current = queue.shift()!;
+    lastCurrent = current;
+
     iteration++;
     const now = performance.now();
-
     const step: AlgorithmStep = {
       stepIndex: iteration,
       explored: Array.from(visited),
@@ -54,31 +108,23 @@ export async function runGraphBFS(
     };
 
     steps.push(step);
-
-    // ✅ FIX 1: Send events immediately to simulationRunner
-    if (onStepProgress) {
-      onStepProgress(step);
-    }
+    if (onStepProgress) onStepProgress(step); 
 
     if (now - lastYieldTime > 15) {
       await yieldToMain();
       lastYieldTime = performance.now();
     }
-  };
 
-  while (queue.length > 0 && !foundDestination) {
-    const current = queue.shift()!;
-    
-    // ✅ FIX 2: Look before leaping!
-    if (blockedNodes.has(current)) continue;
+    // 🚨 SMART EVASION: Stop exploring if the node is blocked OR if its trail back to the Start is cut!
+    if (blockedNodes.has(current) || !isPathValid(parentMap, current, blockedNodes)) {
+      visited.delete(current);
+      continue;
+    }
 
     nodesExplored++;
 
-    await syncUI(current);
-
     if (destSet.has(current)) {
       foundDestination = current;
-      await syncUI(current);
       break;
     }
 
@@ -92,26 +138,39 @@ export async function runGraphBFS(
     }
   }
 
-  const finalPath = foundDestination ? reconstructPath(parentMap, foundDestination) : [];
-  const totalLatency = calcPathLatency(finalPath, edges);
-
-  if (steps.length === 0) {
-    steps.push({
-      stepIndex: iteration,
-      explored: Array.from(visited),
-      frontier: [],
-      path: finalPath,
-      current: foundDestination ?? sourceId,
-      done: true,
-      foundDestination,
-      phaseLabel: 'Final State'
-    });
-  } else {
-    const last = steps[steps.length - 1];
-    steps[steps.length - 1] = { ...last, done: true, foundDestination, path: finalPath };
+  let finalPath = foundDestination ? reconstructPath(parentMap, foundDestination) : [];
+  if (finalPath.some(nodeId => blockedNodes.has(nodeId))) {
+    foundDestination = null;
+    finalPath = [];
   }
 
+  const totalLatency = calcPathLatency(finalPath, edges);
+
+  steps.push({
+    stepIndex: iteration,
+    explored: Array.from(visited),
+    frontier: [],
+    path: finalPath,
+    current: foundDestination ?? lastCurrent ?? sourceId,
+    done: true,
+    foundDestination,
+    phaseLabel: foundDestination ? 'Path Secured' : 'Path Severed'
+  });
+
   return { steps, nodesExplored, pathLength: foundDestination ? finalPath.length - 1 : -1, totalLatency, foundDestination };
+}
+
+// 🛡️ Ensure the supply line back to the source is clear
+function isPathValid(parentMap: Map<string, string | null>, nodeId: string, blockedNodes: Set<string>): boolean {
+  let cur: string | null = nodeId;
+  const seen = new Set<string>();
+  while (cur !== null) { 
+    if (seen.has(cur)) break; 
+    if (blockedNodes.has(cur)) return false;
+    seen.add(cur);
+    cur = parentMap.get(cur) ?? null; 
+  }
+  return true;
 }
 
 function reconstructPath(parentMap: Map<string, string | null>, nodeId: string): string[] {

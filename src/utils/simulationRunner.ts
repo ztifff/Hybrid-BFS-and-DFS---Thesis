@@ -12,7 +12,6 @@ function estimateMemory(nodesExplored: number, algorithm: AlgorithmType): number
   return (nodesExplored * nodeBytes * multiplier) / 1024;
 }
 
-// ✅ Improved RNG (true variability every run)
 function makeRng(seed: number) {
   let s = seed ^ Date.now();
   return () => {
@@ -21,7 +20,6 @@ function makeRng(seed: number) {
   };
 }
 
-// 🔥 APOCALYPTIC EDITION: Scaled Durations, Massive AoE, & Scenario-Aware Events
 function generateDynamicEvents(
   graph: ScenarioGraph,
   scenario: ScenarioType,
@@ -29,7 +27,6 @@ function generateDynamicEvents(
   seed: number
 ): DynamicEvent[] {
   if (totalSteps < 5) return [];
-
   const candidates = getDynamicCandidates(graph, scenario);
   if (candidates.length === 0) return [];
 
@@ -37,7 +34,6 @@ function generateDynamicEvents(
   const events: DynamicEvent[] = [];
   const usedNodes = new Set<string>();
 
-  // Build Adjacency List for AoE disasters
   const adj = new Map<string, string[]>();
   graph.edges.forEach(e => {
     if (!adj.has(e.from)) adj.set(e.from, []);
@@ -50,7 +46,6 @@ function generateDynamicEvents(
   const maxIncidents = isMassive ? 55 : 8; 
   const incidentCount = Math.min(maxIncidents, Math.floor(candidates.length * 0.5));
 
-  // ✅ THE FIX: Scenario-Specific Event Labels
   let standardLabels: { block: string, clear: string }[] = [];
   let aoeLabels: { block: string, clear: string }[] = [];
 
@@ -59,58 +54,42 @@ function generateDynamicEvents(
       standardLabels = [
         { block: '📦 Pallet Spill', clear: '🧹 Aisle Cleared' },
         { block: '🛑 Forklift Maintenance', clear: '✅ Maintenance Complete' },
-        { block: '🤖 Robot Malfunction', clear: '🔧 Robot Repaired' },
-        { block: '🚧 Shelf Restocking', clear: '✅ Restocking Finished' }
+        { block: '🤖 Robot Malfunction', clear: '🔧 Robot Repaired' }
       ];
       aoeLabels = [
         { block: '⚠️ Massive Rack Collapse', clear: '🏗️ Rack Rebuilt' },
-        { block: '🛑 Zone-wide Power Outage', clear: '⚡ Power Restored' },
-        { block: '⚠️ Hazardous Material Spill', clear: '🧹 Hazmat Cleared' },
-        { block: '🚧 Major Conveyor Jam', clear: '🟢 Conveyor Running' }
+        { block: '🛑 Zone-wide Power Outage', clear: '⚡ Power Restored' }
       ];
       break;
     case 'evacuation':
       standardLabels = [
         { block: '🔥 Localized Fire', clear: '🧯 Fire Extinguished' },
-        { block: '🧱 Falling Debris', clear: '🧹 Debris Cleared' },
-        { block: '💨 Heavy Smoke', clear: '💨 Smoke Cleared' },
-        { block: '🚪 Door Jammed', clear: '🚪 Door Forced Open' }
+        { block: '🧱 Falling Debris', clear: '🧹 Debris Cleared' }
       ];
       aoeLabels = [
         { block: '🔥 Massive Fire Outbreak', clear: '🧯 Outbreak Contained' },
-        { block: '💥 Structural Collapse', clear: '🚧 Alternate Route Secured' },
-        { block: '⚠️ Floor Caved In', clear: '🌉 Temporary Bridge Set' },
-        { block: '💨 Toxic Gas Leak', clear: '💨 Ventilation Restored' }
+        { block: '💥 Structural Collapse', clear: '🚧 Alternate Route Secured' }
       ];
       break;
     case 'network':
       standardLabels = [
         { block: '🔌 Cable Unplugged', clear: '🔌 Cable Reconnected' },
-        { block: '🔥 Overheating Switch', clear: '❄️ Cooling Restored' },
-        { block: '🛑 BGP Route Flap', clear: '✅ Route Stabilized' },
-        { block: '💾 Drive Failure', clear: '🔄 Array Rebuilt' }
+        { block: '🔥 Overheating Switch', clear: '❄️ Cooling Restored' }
       ];
       aoeLabels = [
         { block: '⚡ Rack Power Loss', clear: '⚡ Power Restored' },
-        { block: '🌐 Massive DDoS Attack', clear: '🛡️ Attack Mitigated' },
-        { block: '💥 Main Core Switch Failure', clear: '🔄 Core Rerouted' },
-        { block: '🌊 Cooling System Leak', clear: '🛠️ Leak Patched' }
+        { block: '🌐 Massive DDoS Attack', clear: '🛡️ Attack Mitigated' }
       ];
       break;
     case 'traffic':
     default:
       standardLabels = [
         { block: '💥 Minor Collision', clear: '🚓 Accident Cleared' },
-        { block: '🚧 Roadwork', clear: '✅ Roadwork Finished' },
-        { block: '🛑 Police Checkpoint', clear: '✅ Checkpoint Removed' },
-        { block: '🚗 Stalled Vehicle', clear: 'Tow Truck Arrived' }
+        { block: '🚧 Roadwork', clear: '✅ Roadwork Finished' }
       ];
       aoeLabels = [
         { block: '💥 Multi-Vehicle Pileup', clear: '🚓 Pileup Cleared' },
-        { block: '🚌 Major Bus Collision', clear: '🏗️ Bus Towed Away' },
-        { block: '🏗️ Bridge/Road Collapse', clear: '🚧 Temporary Bypass Opened' },
-        { block: '🚛 Overturned Semi-Truck', clear: '🏗️ Truck Removed' },
-        { block: '🚦 Total Gridlock', clear: '🟢 Traffic Flowing' }
+        { block: '🚧 Major Road Collapse', clear: '🚧 Temporary Bypass Opened' }
       ];
       break;
   }
@@ -119,29 +98,19 @@ function generateDynamicEvents(
     const epicenterId = candidates[Math.floor(rng() * candidates.length)];
     if (usedNodes.has(epicenterId)) continue;
     
-    let stepIndex = 0;
-    // 20% chance for Step 0 (Pre-existing). 
-    // 80% chance to spawn randomly during the first half of the simulation.
-    if (rng() > 0.20) {
-      stepIndex = Math.floor(rng() * (totalSteps * 0.5)) + 1; 
-    }
+    // ✅ CRITICAL FIX: Spawn all traps at Step 0, 1, 2, or 3. 
+    // This forces them to act as physical walls that the algorithms MUST respect.
+    const stepIndex = Math.floor(rng() * 4); 
 
-    // Scaled Duration
-    const minDuration = Math.floor(totalSteps * 0.3);
-    const maxDuration = Math.floor(totalSteps * 0.8);
-    const blockDuration = Math.floor(rng() * (maxDuration - minDuration)) + minDuration;
-    
-    const reopenStep = stepIndex + blockDuration;
+    // ✅ CRITICAL FIX: Make the duration massive so traps don't vanish mid-traversal.
+    const reopenStep = totalSteps * 10; 
 
     const isAoE = isMassive && rng() > 0.55;
-    
     let affectedNodes = [epicenterId];
     let flavor = standardLabels[Math.floor(rng() * standardLabels.length)];
 
     if (isAoE) {
       flavor = aoeLabels[Math.floor(rng() * aoeLabels.length)];
-      
-      // DEPTH-3 CASCADE: Creates a massive infected zone
       const expandedSet = new Set<string>();
       let currentFrontier = [epicenterId];
 
@@ -158,8 +127,6 @@ function generateDynamicEvents(
         }
         currentFrontier = nextFrontier;
       }
-
-      // Shuffle and pick up to 25 surrounding nodes to create an absolute wall
       const collateral = Array.from(expandedSet).sort(() => rng() - 0.5).slice(0, 25);
       affectedNodes.push(...collateral);
     }
@@ -171,22 +138,18 @@ function generateDynamicEvents(
       const node = graph.nodes.find(n => n.id === nodeId);
       const nodeName = node?.label?.split('\n')[0] ?? nodeId;
 
-      const blockLabel = isAoE ? `[AoE] ${flavor.block} at ${nodeName}` : `${flavor.block} at ${nodeName}`;
-      const clearLabel = isAoE ? `[AoE] ${flavor.clear} at ${nodeName}` : `${flavor.clear} at ${nodeName}`;
-
       events.push({
         stepIndex,
         nodeId,
         blocked: true,
-        label: blockLabel,
+        label: isAoE ? `[AoE] ${flavor.block} at ${nodeName}` : `${flavor.block} at ${nodeName}`,
       });
 
-      // Even massive blockages will eventually clear
       events.push({
         stepIndex: reopenStep,
         nodeId,
         blocked: false,
-        label: clearLabel,
+        label: isAoE ? `[AoE] ${flavor.clear} at ${nodeName}` : `${flavor.clear} at ${nodeName}`,
       });
     });
   }
@@ -214,7 +177,6 @@ export async function runSimulation(
   };
 
   const blockedNodes = new Set<string>();
-
   const estimatedSteps = Math.max(50, Math.floor(graph.nodes.length * 1.5));
   const dynamicEvents = generateDynamicEvents(graph, scenario, estimatedSteps, dynamicSeed);
 
@@ -231,7 +193,6 @@ export async function runSimulation(
         else blockedNodes.delete(event.nodeId);
       }
     });
-
     onStepProgress?.(step);
   };
 
@@ -247,9 +208,11 @@ export async function runSimulation(
   const timeElapsed = Math.max(endTime - startTime, 0.001);
   const memoryUsed = estimateMemory(result.nodesExplored, algorithm);
 
-  const exitIndex = result.foundDestination
-    ? graph.destinationIds.indexOf(result.foundDestination)
-    : null;
+  const exitIndex = result.foundDestination ? graph.destinationIds.indexOf(result.foundDestination) : null;
+  
+  // ✅ ADDED: Calculate true completion rate to pass to metrics panel
+  const totalGraphNodes = graph.nodes.length || 1;
+  const completionRate = Math.min(100, (result.nodesExplored / totalGraphNodes) * 100);
 
   const metrics: PerformanceMetrics = {
     nodesExplored: result.nodesExplored,
@@ -259,6 +222,7 @@ export async function runSimulation(
     memoryUsed,
     exitFound: result.foundDestination !== null,
     exitIndex,
+    completionRate, 
   };
 
   return {

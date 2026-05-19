@@ -1,24 +1,20 @@
 import React from 'react';
-import { SCENARIOS, ALGORITHMS } from '../config/scenarios';
-import { ScenarioType, AlgorithmType } from '../types';
+import { SCENARIOS } from '../config/scenarios';
+import { ScenarioType } from '../types';
 import { ScenarioInfo } from './ScenarioInfo';
 
 interface Props {
   selectedScenario: ScenarioType | null;
-  selectedAlgorithm: AlgorithmType | null;
   onSelectScenario: (s: ScenarioType) => void;
-  onSelectAlgorithm: (a: AlgorithmType) => void;
   onStart: () => void;
 }
 
 export const ScenarioPicker: React.FC<Props> = ({
   selectedScenario,
-  selectedAlgorithm,
   onSelectScenario,
-  onSelectAlgorithm,
   onStart,
 }) => {
-  const canStart = selectedScenario !== null && selectedAlgorithm !== null;
+  const canStart = selectedScenario !== null;
 
   return (
     <div className="min-h-screen bg-[#0f1117] text-white flex flex-col">
@@ -55,7 +51,7 @@ export const ScenarioPicker: React.FC<Props> = ({
 
       <main className="flex-1 px-8 py-8 max-w-7xl mx-auto w-full">
         {/* Study intro */}
-        <div className="mb-8 p-5 rounded-xl border border-blue-900/50 bg-blue-950/20">
+        <div className="mb-8 p-5 rounded-xl border border-blue-900/50 bg-blue-950/20 shadow-inner">
           <div className="flex items-start gap-4">
             <div className="text-3xl">🔬</div>
             <div>
@@ -65,19 +61,19 @@ export const ScenarioPicker: React.FC<Props> = ({
               <p className="text-xs text-gray-400 leading-relaxed max-w-4xl">
                 This simulation evaluates the performance of <span className="text-green-400 font-semibold">Standard BFS</span>,{' '}
                 <span className="text-purple-400 font-semibold">Standard DFS</span>, and a proposed{' '}
-                <span className="text-orange-400 font-semibold">Hybrid BFS-DFS</span> algorithm across
+                <span className="text-orange-400 font-semibold">Hybrid BFS-DFS</span> algorithm simultaneously across
                 five real-world dynamic environments. Each scenario features <span className="text-yellow-400">multiple exit points</span> and{' '}
                 <span className="text-orange-400">dynamic obstacles</span> that change during traversal,
-                simulating real-world complexity. Metrics include nodes explored, execution time, path length, and memory usage.
+                simulating real-world complexity.
               </p>
             </div>
           </div>
         </div>
 
         {/* Step 1 - Scenario */}
-        <section className="mb-10">
+        <section className="mb-6">
           <div className="flex items-center gap-3 mb-5">
-            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold">
+            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold shadow-lg shadow-blue-500/20">
               1
             </div>
             <h2 className="text-xl font-semibold text-white">
@@ -129,7 +125,7 @@ export const ScenarioPicker: React.FC<Props> = ({
                     {scenario.description}
                   </p>
                   <div
-                    className="text-xs px-2 py-1 rounded-full inline-block"
+                    className="text-[10px] px-2 py-1 rounded-full inline-block font-semibold"
                     style={{
                       backgroundColor: scenario.color + '22',
                       color: scenario.color,
@@ -137,114 +133,19 @@ export const ScenarioPicker: React.FC<Props> = ({
                   >
                     ⚡ {scenario.dynamicDescription}
                   </div>
-                  <div className="mt-3 grid grid-cols-1 gap-1">
-                    <div className="text-xs text-gray-500">
-                      <span className="text-green-400">●</span>{' '}
-                      {scenario.startLabel}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      <span className="text-red-400">●</span>{' '}
-                      {scenario.exitLabel} (×3)
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      <span className="text-orange-400">●</span>{' '}
-                      {scenario.obstacleLabel}
-                    </div>
-                  </div>
                 </button>
               );
             })}
           </div>
         </section>
 
-        {/* Step 2 - Algorithm */}
-        <section className="mb-10">
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold">
-              2
-            </div>
-            <h2 className="text-xl font-semibold text-white">
-              Select Search Algorithm
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {ALGORITHMS.map((algo) => {
-              const isSelected = selectedAlgorithm === algo.id;
-              return (
-                <button
-                  key={algo.id}
-                  onClick={() => onSelectAlgorithm(algo.id)}
-                  className={`
-                    relative p-5 rounded-xl border-2 text-left transition-all duration-200 cursor-pointer
-                    hover:scale-[1.01] hover:shadow-lg
-                    ${
-                      isSelected
-                        ? 'bg-opacity-10 shadow-lg'
-                        : 'border-gray-700 bg-gray-900 hover:border-gray-500'
-                    }
-                  `}
-                  style={
-                    isSelected
-                      ? {
-                          borderColor: algo.color,
-                          backgroundColor: algo.color + '18',
-                          boxShadow: `0 0 20px ${algo.color}33`,
-                        }
-                      : {}
-                  }
-                >
-                  {isSelected && (
-                    <div
-                      className="absolute top-3 right-3 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
-                      style={{ backgroundColor: algo.color }}
-                    >
-                      ✓
-                    </div>
-                  )}
-                  <div className="flex items-center gap-3 mb-3">
-                    <div
-                      className="w-10 h-10 rounded-lg flex items-center justify-center text-lg font-black"
-                      style={{ backgroundColor: algo.color + '33', color: algo.color }}
-                    >
-                      {algo.id === 'bfs' ? 'B' : algo.id === 'dfs' ? 'D' : 'H'}
-                    </div>
-                    <h3
-                      className="font-bold text-base"
-                      style={{ color: isSelected ? algo.color : '#e2e8f0' }}
-                    >
-                      {algo.name}
-                    </h3>
-                  </div>
-                  <p className="text-xs text-gray-400 leading-relaxed">
-                    {algo.description}
-                  </p>
-                  {algo.id === 'hybrid' && (
-                    <div
-                      className="mt-3 text-xs px-3 py-2 rounded-lg border"
-                      style={{
-                        borderColor: algo.color + '44',
-                        backgroundColor: algo.color + '11',
-                        color: algo.color,
-                      }}
-                    >
-                      🔬 Proposed Algorithm — BFS + DFS with heuristic switching
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* Preview when both selected */}
-        {selectedScenario && selectedAlgorithm && (
-          <div className="mb-8 max-w-xl mx-auto">
-            <ScenarioInfo scenario={selectedScenario} algorithm={selectedAlgorithm} />
-          </div>
+        {/* Dynamic Scenario Info Injection */}
+        {selectedScenario && (
+          <ScenarioInfo scenario={selectedScenario} />
         )}
 
         {/* Start Button */}
-        <div className="flex justify-center">
+        <div className="flex justify-center mt-6 pb-12">
           <button
             onClick={onStart}
             disabled={!canStart}
@@ -258,8 +159,8 @@ export const ScenarioPicker: React.FC<Props> = ({
             `}
           >
             {canStart
-              ? `▶ Run Simulation — ${SCENARIOS.find((s) => s.id === selectedScenario)?.name} + ${ALGORITHMS.find((a) => a.id === selectedAlgorithm)?.name}`
-              : 'Select a Scenario and Algorithm to Continue'}
+              ? `▶ Run Multi-Algorithm Simulation`
+              : 'Select a Scenario to Continue'}
           </button>
         </div>
       </main>

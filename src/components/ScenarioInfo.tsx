@@ -1,67 +1,50 @@
 import React from 'react';
-import { ScenarioType, AlgorithmType } from '../types';
-import { getScenario, getAlgorithm, ALGORITHMS } from '../config/scenarios';
+import { ScenarioType } from '../types';
+import { getScenario } from '../config/scenarios';
 
 interface Props {
   scenario: ScenarioType;
-  algorithm: AlgorithmType;
 }
 
-export const ScenarioInfo: React.FC<Props> = ({ scenario, algorithm }) => {
+export const ScenarioInfo: React.FC<Props> = ({ scenario }) => {
   const sc = getScenario(scenario);
-  const al = getAlgorithm(algorithm);
 
   return (
     <div
-      className="rounded-xl border p-4 mt-4"
+      className="rounded-xl border p-5 mt-6 mb-8 max-w-3xl mx-auto shadow-lg backdrop-blur-sm"
       style={{
-        borderColor: sc.color + '44',
-        backgroundColor: sc.color + '0a',
+        borderColor: sc.color + '66',
+        backgroundColor: sc.color + '11',
       }}
     >
-      <div className="flex items-start gap-4">
-        <div className="text-4xl">{sc.icon}</div>
+      <div className="flex items-start gap-5">
+        <div className="text-5xl drop-shadow-md">{sc.icon}</div>
         <div className="flex-1">
-          <h3 className="font-bold text-white text-sm mb-1">{sc.name}</h3>
-          <p className="text-xs text-gray-400 leading-relaxed mb-2">
+          <h3 className="font-bold text-white text-lg mb-2 flex items-center gap-2">
+            {sc.name}
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-900/40 text-blue-300 font-mono border border-blue-500/30 uppercase tracking-wider">
+              Selected
+            </span>
+          </h3>
+          <p className="text-sm text-gray-300 leading-relaxed mb-4">
             {sc.description}
           </p>
-          <div className="flex flex-wrap gap-2">
-            <span
-              className="text-xs px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: al.color + '22', color: al.color }}
-            >
-              {al.name}
-            </span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-orange-900/40 text-orange-300">
-              ⚡ Dynamic
-            </span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-red-900/40 text-red-300">
-              🚪 Multi-Exit
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Algorithm comparison hint */}
-      <div className="mt-4 border-t border-gray-700 pt-3">
-        <p className="text-xs text-gray-500 mb-2">
-          Try all algorithms on this scenario to compare:
-        </p>
-        <div className="flex gap-2">
-          {ALGORITHMS.map((a) => (
-            <div
-              key={a.id}
-              className="text-xs px-2 py-1 rounded border"
-              style={{
-                borderColor: a.color + '55',
-                color: a.id === algorithm ? a.color : '#6b7280',
-                backgroundColor: a.id === algorithm ? a.color + '22' : 'transparent',
-              }}
-            >
-              {a.id === algorithm ? '▶ ' : ''}{a.name}
+          
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 border-t border-gray-700/50 pt-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Starting Point</span>
+              <span className="text-xs text-green-400 font-medium">● {sc.startLabel}</span>
             </div>
-          ))}
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Multiple Exits</span>
+              <span className="text-xs text-blue-400 font-medium">● {sc.exitLabel} (×3)</span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Dynamic Hazard</span>
+              <span className="text-xs text-orange-400 font-medium">⚠️ {sc.dynamicDescription}</span>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>

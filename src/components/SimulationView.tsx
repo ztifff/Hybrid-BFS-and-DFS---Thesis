@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { ScenarioType, AlgorithmType, AlgorithmStep, SimulationResult, DynamicEvent } from '../types';
+import { ScenarioType, AlgorithmStep, SimulationResult, DynamicEvent } from '../types';
 import { runSimulation } from '../utils/simulationRunner';
-import { getScenario, getAlgorithm } from '../config/scenarios';
+import { getScenario } from '../config/scenarios';
 import { NetworkCanvas } from './NetworkCanvas';
 import { MetricsPanel } from './MetricsPanel';
 import { Legend } from './Legend';
@@ -12,20 +12,16 @@ import { buildScenarioGraph } from '../utils/graphBuilder';
 
 interface Props {
   scenario: ScenarioType;
-  algorithm: AlgorithmType;
   onBack: () => void;
 }
 
 type Status = 'idle' | 'running' | 'done' | 'paused';
 const STEP_INTERVAL_MS = 60;
 
-export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack }) => {
-  const [activeAlgorithm, setActiveAlgorithm] = useState<AlgorithmType>(algorithm);
-  
+export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   
-  // ✅ NEW: Track the specific ID of the current run so we know if it gets deleted
   const [isCurrentSaved, setIsCurrentSaved] = useState(false); 
   const [currentSavedId, setCurrentSavedId] = useState<string | null>(null);
   
@@ -34,7 +30,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
   const [saveDefaultName, setSaveDefaultName] = useState('');
   
   const sc = getScenario(scenario);
-  const al = getAlgorithm(activeAlgorithm);
 
   const [useRealWorld, setUseRealWorld] = useState(false);
   const [seed, setSeed] = useState(() => Date.now()); 
@@ -52,11 +47,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
     return adj;
   }, [currentGraph]);
 
-  const [simResult, setSimResult] = useState<SimulationResult | null>(null);
+  const [simResults, setSimResults] = useState<{ bfs: SimulationResult, dfs: SimulationResult, hybrid: SimulationResult } | null>(null);
+  const [liveSteps, setLiveSteps] = useState<{ bfs: AlgorithmStep | null, dfs: AlgorithmStep | null, hybrid: AlgorithmStep | null }>({ bfs: null, dfs: null, hybrid: null });
   const [bfsResult, setBfsResult] = useState<any>(null);
   const [isComputing, setIsComputing] = useState(true);
-  
-  const [liveStep, setLiveStep] = useState<AlgorithmStep | null>(null);
 
   const [stepIndex, setStepIndex] = useState(0);
   const [status, setStatus] = useState<Status>('idle');
@@ -93,27 +87,54 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
     let isMounted = true;
 
     const computeGraphData = async () => {
-      setIsComputing(true);
-      setStatus('idle');
-      setStepIndex(0);
-      setLiveStep(null);
-      stopAnimation();
+      try {
+        setIsComputing(true);
+        setStatus('idle');
+        setStepIndex(0);
 
-      const result = await runSimulation(scenario, activeAlgorithm, seed, useRealWorld, (step) => {
-        if (isMounted) setLiveStep(step);
-      });
-      if (!isMounted) return;
+        setLiveSteps({
+          bfs: null,
+          dfs: null,
+          hybrid: null
+        });
 
-      const optimalBfsResult = await runGraphBFS(result.graph);
-      if (!isMounted) return;
+        stopAnimation();
 
-      setSimResult(result);
-      setBfsResult(optimalBfsResult);
-      setIsComputing(false);
-      
-      // ✅ Reset save state perfectly on new run
-      setIsCurrentSaved(false); 
-      setCurrentSavedId(null);
+        const [bfsRes, dfsRes, hybridRes] = await Promise.all([
+          runSimulation(scenario, 'bfs', seed, useRealWorld, (step) => {
+            if (isMounted) setLiveSteps(p => ({ ...p, bfs: step }));
+          }),
+          runSimulation(scenario, 'dfs', seed, useRealWorld, (step) => {
+            if (isMounted) setLiveSteps(p => ({ ...p, dfs: step }));
+          }),
+          runSimulation(scenario, 'hybrid', seed, useRealWorld, (step) => {
+            if (isMounted) setLiveSteps(p => ({ ...p, hybrid: step }));
+          })
+        ]);
+
+        if (!isMounted) return;
+
+        const optimalBfsResult = await runGraphBFS(hybridRes.graph);
+
+        if (!isMounted) return;
+
+        setSimResults({
+          bfs: bfsRes,
+          dfs: dfsRes,
+          hybrid: hybridRes
+        });
+
+        setBfsResult(optimalBfsResult);
+        setIsComputing(false);
+        setIsCurrentSaved(false);
+        setCurrentSavedId(null);
+      } catch (err) {
+        console.error('Simulation failed:', err);
+        if (isMounted) {
+          setIsComputing(false);
+          setStatus('idle');
+        }
+      }
     };
 
     computeGraphData();
@@ -122,46 +143,39 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
       isMounted = false;
       stopAnimation();
     };
-  }, [scenario, activeAlgorithm, useRealWorld, seed, stopAnimation]);
+  }, [scenario, useRealWorld, seed, stopAnimation]);
 
   const openSaveModal = useCallback(() => {
-    if (!simResult || isCurrentSaved) return;
+    if (!simResults || isCurrentSaved) return;
     
-    const algoName = getAlgorithm(activeAlgorithm).name;
-    const maxRun = history
-      .filter(h => h.algorithm === activeAlgorithm)
-      .reduce((max, h) => Math.max(max, h.runNumber), 0);
-      
+    const maxRun = history.reduce((max, h) => Math.max(max, h.runNumber), 0);
     const nextRunNumber = maxRun + 1;
-    const defaultName = `${algoName} Trial #${nextRunNumber}`;
+    const defaultName = `Multi-Alg Trial #${nextRunNumber}`;
     
     setSaveDefaultName(defaultName);
     setSaveNameInput(defaultName); 
     setIsSaveModalOpen(true);
-  }, [simResult, isCurrentSaved, activeAlgorithm, history]);
+  }, [simResults, isCurrentSaved, history]);
 
   const confirmSaveResult = useCallback(() => {
-    if (!simResult) return;
+    if (!simResults) return;
     
-    const maxRun = history
-      .filter(h => h.algorithm === activeAlgorithm)
-      .reduce((max, h) => Math.max(max, h.runNumber), 0);
+    const maxRun = history.reduce((max, h) => Math.max(max, h.runNumber), 0);
     const thisRunNumber = maxRun + 1;
-    
     const finalName = saveNameInput.trim() === '' ? saveDefaultName : saveNameInput.trim();
 
     const compressedSimResult = {
-      ...simResult,
-      steps: simResult.steps.length > 0 ? [simResult.steps[simResult.steps.length - 1]] : []
+      ...simResults.hybrid,
+      steps: simResults.hybrid.steps.length > 0 ? [simResults.hybrid.steps[simResults.hybrid.steps.length - 1]] : []
     };
 
-    const newEntryId = Date.now().toString(); // ✅ Capture the ID
+    const newEntryId = Date.now().toString(); 
 
     const newEntry: HistoryEntry = {
       id: newEntryId,
       runNumber: thisRunNumber,
       name: finalName,
-      algorithm: activeAlgorithm,
+      algorithm: 'hybrid',
       scenario: scenario, 
       simResult: compressedSimResult,
       optimalPathLength: bfsResult?.pathLength || 1,
@@ -174,78 +188,41 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
       try {
         localStorage.setItem(`simulation_history_${scenario}`, JSON.stringify(updatedHistory));
       } catch (err) {
-        console.error("Storage Full:", err);
         alert("Browser storage limit reached! Cannot save more history.");
       }
       return updatedHistory;
     });
     
-    // ✅ Lock the save button to this exact ID
     setIsCurrentSaved(true);
     setCurrentSavedId(newEntryId);
     setIsSaveModalOpen(false);
-  }, [simResult, activeAlgorithm, bfsResult, currentGraph.nodes.length, saveNameInput, saveDefaultName, scenario, history]);
+  }, [simResults, bfsResult, currentGraph.nodes.length, saveNameInput, saveDefaultName, scenario, history]);
 
-  const totalSteps = simResult?.steps.length ?? 0;
+  const totalSteps = useMemo(() => {
+    if (!simResults) return 0;
+    return Math.max(
+      simResults.bfs?.steps?.length ?? 0,
+      simResults.dfs?.steps?.length ?? 0,
+      simResults.hybrid?.steps?.length ?? 0
+    );
+  }, [simResults]);
 
   const activityLogs = useMemo(() => {
-    if (!simResult) return [];
-    
+    if (!simResults) return [];
     const logs: { step: number; text: string; type: 'info' | 'warning' | 'success' | 'error' }[] = [];
-    const blockedAtStep = new Set<string>();
-    const eventsByStep = new Map<number, DynamicEvent[]>();
-    
-    simResult.dynamicEvents.forEach(e => {
-      if (!eventsByStep.has(e.stepIndex)) eventsByStep.set(e.stepIndex, []);
-      eventsByStep.get(e.stepIndex)!.push(e);
-    });
-
-    let previousPathLength = 0;
     const reportedBlocks = new Set<string>();
 
-    simResult.steps.forEach((step, i) => {
-      if (eventsByStep.has(i)) {
-        eventsByStep.get(i)!.forEach(e => {
-          if (e.blocked) blockedAtStep.add(e.nodeId);
-          else blockedAtStep.delete(e.nodeId);
-        });
-      }
-
-      const currentNode = step.current ? currentGraph.nodes.find(n => n.id === step.current) : null;
-      const nodeName = currentNode ? currentNode.label.split('\n')[0] : (step.current || "Unknown Node");
-
-      if (step.done) {
-        if (step.foundDestination) {
-          const destNode = currentGraph.nodes.find(n => n.id === step.foundDestination);
-          logs.push({ step: i, text: `🎉 Reached Destination: ${destNode?.label.split('\n')[0] || step.foundDestination}`, type: 'success' });
-        } else {
-          logs.push({ step: i, text: `❌ Trapped! No valid route exists to the destination.`, type: 'error' });
+    simResults.hybrid.dynamicEvents.forEach(e => {
+        if (e.blocked && !reportedBlocks.has(e.nodeId)) {
+            reportedBlocks.add(e.nodeId);
+            logs.push({ step: e.stepIndex, text: `⚠️ Environmental Change: Hazard detected at ${e.label}`, type: 'warning' });
+        } else if (!e.blocked && reportedBlocks.has(e.nodeId)) {
+            reportedBlocks.delete(e.nodeId);
+            logs.push({ step: e.stepIndex, text: `✅ Environmental Change: Route restored at ${e.label}`, type: 'success' });
         }
-        return;
-      }
-
-      if (step.path.length < previousPathLength && previousPathLength > 0) {
-        logs.push({ step: i, text: `🔙 Dead end reached. Backtracking...`, type: 'info' });
-      }
-      previousPathLength = step.path.length;
-
-      if (i % 3 === 0 && step.current) { 
-        logs.push({ step: i, text: `📍 Exploring ${nodeName}...`, type: 'info' });
-      }
-
-      const neighbors = step.current ? (adjList.get(step.current) || []) : [];
-      neighbors.forEach(neighborId => {
-        if (blockedAtStep.has(neighborId) && !reportedBlocks.has(neighborId)) {
-          reportedBlocks.add(neighborId);
-          const blockedNode = currentGraph.nodes.find(n => n.id === neighborId);
-          const blockedName = blockedNode ? blockedNode.label.split('\n')[0] : neighborId;
-          logs.push({ step: i, text: `⚠️ Blockage detected ahead at ${blockedName}. Rerouting...`, type: 'warning' });
-        }
-      });
     });
-
     return logs;
-  }, [simResult, currentGraph, adjList]);
+  }, [simResults]);
 
   const visibleActivityLogs = activityLogs
     .filter(log => log.step <= stepIndex - 1)
@@ -253,8 +230,11 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
     .reverse();
 
   const startAnimation = useCallback(() => {
+    if (!simResults || totalSteps === 0) return;
+    
     stopAnimation();
     setStatus('running');
+    
     animRef.current = setInterval(() => {
       setStepIndex((prev) => {
         if (prev >= totalSteps) {
@@ -265,9 +245,11 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
         return prev + 1;
       });
     }, STEP_INTERVAL_MS);
-  }, [totalSteps, stopAnimation]);
+  }, [simResults, totalSteps, stopAnimation]);
 
-  useEffect(() => () => stopAnimation(), [stopAnimation]);
+  useEffect(() => {
+    return () => stopAnimation();
+  }, [stopAnimation]);
 
   useEffect(() => {
     if (stepIndex >= totalSteps && status === 'running') {
@@ -276,20 +258,39 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
     }
   }, [stepIndex, totalSteps, status, stopAnimation]);
 
-  const playbackStep: AlgorithmStep | null = (simResult && stepIndex > 0) 
-    ? simResult.steps[Math.min(stepIndex - 1, totalSteps - 1)] 
-    : null;
-    
-  const activeStep = isComputing ? liveStep : playbackStep;
+  const activeSteps = useMemo(() => {
+    return {
+      bfs: isComputing
+        ? liveSteps.bfs
+        : simResults
+        ? simResults.bfs.steps[Math.min(Math.max(stepIndex - 1, 0), simResults.bfs.steps.length - 1)]
+        : null,
 
-  const exploredSet = useMemo(() => new Set<string>(activeStep?.explored ?? []), [activeStep]);
-  const frontierSet = useMemo(() => new Set<string>(activeStep?.frontier ?? []), [activeStep]);
-  const pathSet = useMemo(() => new Set<string>(activeStep?.path ?? []), [activeStep]);
+      dfs: isComputing
+        ? liveSteps.dfs
+        : simResults
+        ? simResults.dfs.steps[Math.min(Math.max(stepIndex - 1, 0), simResults.dfs.steps.length - 1)]
+        : null,
 
-  const currentNode = activeStep?.current ?? null;
-  const phaseLabel = isComputing ? `⚡ COMPUTING: ${activeStep?.phaseLabel || 'Initializing...'}` : activeStep?.phaseLabel;
+      hybrid: isComputing
+        ? liveSteps.hybrid
+        : simResults
+        ? simResults.hybrid.steps[Math.min(Math.max(stepIndex - 1, 0), simResults.hybrid.steps.length - 1)]
+        : null
+    };
+  }, [isComputing, liveSteps, simResults, stepIndex]);
 
-  const handleRun = () => { setStepIndex(0); setTimeout(() => startAnimation(), 50); };
+  const handleRun = () => {
+    if (!simResults) return;
+    setStepIndex(0);
+    setStatus('idle');
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        startAnimation();
+      });
+    });
+  };
+
   const handleStepForward = () => {
     if (status === 'running') { stopAnimation(); setStatus('paused'); }
     setStepIndex((prev) => {
@@ -299,6 +300,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
       return next;
     });
   };
+
   const handleStepBackward = () => {
     if (status === 'running') { stopAnimation(); setStatus('paused'); }
     setStepIndex((prev) => {
@@ -309,10 +311,28 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
     });
   };
 
-  const handlePause = () => { stopAnimation(); setStatus('paused'); };
-  const handleResume = () => { if (stepIndex < totalSteps) startAnimation(); };
-  const handleReset = () => { stopAnimation(); setStepIndex(0); setStatus('idle'); };
-  const handleSkipEnd = () => { stopAnimation(); setStepIndex(totalSteps); setStatus('done'); };
+  const handlePause = () => {
+    stopAnimation();
+    setStatus('paused');
+  };
+
+  const handleResume = () => {
+    if (stepIndex < totalSteps) {
+      startAnimation();
+    }
+  };
+
+  const handleReset = () => {
+    stopAnimation();
+    setStepIndex(0);
+    setStatus('idle');
+  };
+
+  const handleSkipEnd = () => {
+    stopAnimation();
+    setStepIndex(totalSteps);
+    setStatus('done');
+  };
 
   const handleRerollEvents = () => {
     setSeed(Date.now());
@@ -330,22 +350,17 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
             
             <div className="h-5 w-px bg-gray-700 hidden sm:block" />
             
-            <div className="text-sm flex items-center gap-2 shrink-0">
+            <div className="text-sm flex items-center gap-3 shrink-0">
               <span className="text-xl hidden lg:inline">{sc.icon}</span>
               <span className="font-bold text-white hidden lg:inline">{sc.name}</span>
               <span className="text-gray-500 hidden lg:inline">·</span>
-              
-              <select
-                value={activeAlgorithm}
-                onChange={(e) => setActiveAlgorithm(e.target.value as AlgorithmType)}
-                disabled={isComputing}
-                className="bg-[#111827] border border-gray-700 rounded-md px-1.5 sm:px-2 py-1 text-xs sm:text-sm font-bold outline-none cursor-pointer hover:border-gray-500 focus:border-gray-400 transition-colors disabled:opacity-50 max-w-[150px] sm:max-w-xs text-ellipsis overflow-hidden shrink-0"
-                style={{ color: al.color }}
-              >
-                <option value="hybrid" style={{ color: '#fff' }}>Hybrid BFS-DFS</option>
-                <option value="bfs" style={{ color: '#fff' }}>Breadth-First Search (BFS)</option>
-                <option value="dfs" style={{ color: '#fff' }}>Depth-First Search (DFS)</option>
-              </select>
+              <div className="flex items-center gap-2 text-xs font-bold bg-[#111827] border border-gray-700 rounded-md px-3 py-1.5 shadow-inner">
+                <span className="text-green-400">BFS</span>
+                <span className="text-gray-600">|</span>
+                <span className="text-purple-400">DFS</span>
+                <span className="text-gray-600">|</span>
+                <span className="text-orange-400">Hybrid</span>
+              </div>
             </div>
           </div>
 
@@ -364,50 +379,33 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
         <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
           
           <aside className="w-full lg:w-80 flex-shrink-0 border-b lg:border-b-0 lg:border-r border-gray-800 p-4 flex flex-col gap-4 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}>
-            {simResult && !isComputing ? (
+            {simResults && !isComputing ? (
               <MetricsPanel
-                metrics={status === 'done' ? simResult.metrics : null}
-                algorithm={activeAlgorithm} 
+                multiResults={simResults}
+                activeSteps={activeSteps}
                 scenario={scenario}
                 status={status}
                 stepIndex={stepIndex}
                 totalSteps={totalSteps}
-                currentExplored={activeStep?.explored.length ?? 0}
-                currentPath={activeStep?.path.length ?? 0}
-                phaseLabel={phaseLabel}
                 totalNodes={currentGraph.nodes.length}
-                dynamicEvents={simResult.dynamicEvents}
                 optimalPathLength={bfsResult?.pathLength ?? 0}
               />
             ) : (
               <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 flex flex-col items-center justify-center py-12 text-center text-gray-400 animate-pulse">
                 <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                <div>Computing Metrics...</div>
+                <div>Computing Multi-Algorithm Metrics...</div>
               </div>
             )}
             
-            <Legend algorithm={activeAlgorithm} scenario={scenario} />
-
-            <div className="bg-gray-900 border border-gray-700 rounded-xl p-4">
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-                Algorithm Behavior
-              </h3>
-              <p className="text-xs text-gray-400 leading-relaxed">{al.description}</p>
-              {activeAlgorithm === 'hybrid' && (
-                <div className="mt-2 text-xs p-2 rounded border" style={{ borderColor: al.color + '44', color: al.color }}>
-                  🔀 Phase 1: BFS → Hub nodes<br />
-                  🎯 Phase 2: DFS → Within each hub
-                </div>
-              )}
-            </div>
+            <Legend scenario={scenario} />
           </aside>
 
           <main className="flex-1 flex flex-col items-center justify-start p-4 overflow-y-auto w-full relative">
             
             <div className="mb-3 flex flex-col items-center gap-3 w-full shrink-0">
               <div className="flex items-center gap-3 flex-wrap justify-center text-center">
-                <div className="px-4 py-1.5 rounded-full text-sm font-bold" style={{ backgroundColor: al.color + '22', color: al.color, border: `1px solid ${al.color}55` }}>
-                  {al.name} · {sc.name}
+                <div className="px-4 py-1.5 rounded-full text-sm font-bold bg-blue-900/20 text-blue-400 border border-blue-500/50">
+                  Simultaneous Multi-Algorithm Evaluation
                 </div>
                 <div className="text-sm text-gray-400 flex items-center gap-2">
                   <span>Dynamic: <span className="text-orange-400">{sc.dynamicDescription}</span></span>
@@ -415,7 +413,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
                     onClick={handleRerollEvents}
                     disabled={isComputing}
                     className="ml-2 px-3 py-1 bg-gray-800 hover:bg-gray-700 border border-orange-500/50 rounded-md text-xs text-orange-400 font-bold transition-colors disabled:opacity-50 cursor-pointer shadow-[0_0_10px_rgba(249,115,22,0.2)]"
-                    title="Generate entirely new dynamic events"
                   >
                     🔀 Re-roll Events
                   </button>
@@ -442,19 +439,13 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
               )}
             </div>
 
-            <div className="rounded-2xl overflow-hidden border border-gray-700 w-full relative flex-1 min-h-[400px] shrink-0" style={{ maxWidth: 1200, boxShadow: `0 0 48px ${al.color}22`, background: '#0a0f1e' }}>
+            <div className="rounded-2xl overflow-hidden border border-gray-700 w-full relative flex-1 min-h-[400px] shrink-0 shadow-[0_0_48px_rgba(37,99,235,0.1)] bg-[#0a0f1e]" style={{ maxWidth: 1200 }}>
               <NetworkCanvas
                 graph={currentGraph}
-                explored={exploredSet}
-                frontier={frontierSet}
-                path={pathSet}
-                current={currentNode}
-                algorithm={activeAlgorithm}
+                activeSteps={activeSteps}
                 scenario={scenario}
-                blockedNodes={new Set()}
                 stepIndex={stepIndex}
-                dynamicEvents={simResult?.dynamicEvents || []}
-                phaseLabel={phaseLabel}
+                dynamicEvents={simResults?.hybrid.dynamicEvents || []}
               />
             </div>
 
@@ -463,14 +454,14 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
               <button disabled={isComputing || stepIndex === 0} onClick={handleStepBackward} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none">◀ Back</button>
 
               {status === 'running' ? (
-                <button disabled={isComputing} onClick={handlePause} className="px-6 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer disabled:opacity-30 flex-1 sm:flex-none" style={{ backgroundColor: al.color, color: '#000' }}>⏸ Pause</button>
+                <button disabled={isComputing} onClick={handlePause} className="px-6 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer disabled:opacity-30 flex-1 sm:flex-none bg-blue-600 text-white">⏸ Pause</button>
               ) : status === 'paused' ? (
-                <button disabled={isComputing} onClick={handleResume} className="px-6 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer disabled:opacity-30 flex-1 sm:flex-none" style={{ backgroundColor: al.color, color: '#000' }}>▶ Resume</button>
+                <button disabled={isComputing} onClick={handleResume} className="px-6 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer disabled:opacity-30 flex-1 sm:flex-none bg-blue-600 text-white">▶ Resume</button>
               ) : status === 'done' ? (
-                <button disabled={isComputing} onClick={handleRun} className="px-6 py-2 rounded-lg font-bold text-sm cursor-pointer disabled:opacity-30 flex-1 sm:flex-none" style={{ backgroundColor: al.color, color: '#000' }}>↺ Replay</button>
+                <button disabled={isComputing} onClick={handleRun} className="px-6 py-2 rounded-lg font-bold text-sm cursor-pointer disabled:opacity-30 flex-1 sm:flex-none bg-blue-600 text-white">↺ Replay</button>
               ) : (
-                <button disabled={isComputing} onClick={handleRun} className="px-6 py-2 rounded-lg font-bold text-sm cursor-pointer hover:opacity-90 disabled:opacity-30 disabled:bg-gray-700 flex-1 sm:flex-none w-full sm:w-auto" style={!isComputing ? { backgroundColor: al.color, color: '#000' } : {}}>
-                  {isComputing ? 'Computing...' : '▶ Run Simulation'}
+                <button disabled={isComputing} onClick={handleRun} className="px-6 py-2 rounded-lg font-bold text-sm cursor-pointer hover:opacity-90 disabled:opacity-30 disabled:bg-gray-700 flex-1 sm:flex-none w-full sm:w-auto bg-blue-600 text-white">
+                  {isComputing ? 'Computing...' : '▶ Run Simulations'}
                 </button>
               )}
 
@@ -483,16 +474,13 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
             className="w-full lg:w-[350px] flex-shrink-0 border-t lg:border-t-0 lg:border-l border-gray-800 p-4 flex flex-col gap-4 bg-[#0a0f1e] overflow-y-auto lg:h-full"
             style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}
           >
-            {simResult && !isComputing && status === 'done' && (
+            {simResults && !isComputing && status === 'done' && (
               <div className="shrink-0">
                 <SimulationReport 
-                  simResult={simResult} 
+                  multiResults={simResults}
                   bfsResult={bfsResult} 
-                  alColor={al.color}
-                  currentExplored={activeStep?.explored.length ?? 0}
                   totalNodes={currentGraph.nodes.length}
-                  algorithm={activeAlgorithm}
-                  dynamicEvents={simResult.dynamicEvents}
+                  dynamicEvents={simResults.hybrid.dynamicEvents}
                   onSaveResult={openSaveModal}
                   isSaved={isCurrentSaved}
                 />
@@ -503,7 +491,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
               <div className="flex justify-between items-center mb-2 shrink-0 border-b border-gray-800 pb-2">
                 <h3 className="text-xs text-gray-400 font-bold uppercase tracking-wider flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                  Live Activity Log
+                  Global Environment Log
                 </h3>
               </div>
               
@@ -530,14 +518,14 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
               </div>
             </div>
 
-            {simResult && simResult.dynamicEvents.length > 0 && (
+            {simResults && simResults.hybrid.dynamicEvents.length > 0 && (
               <div className="bg-[#0d1224] border border-gray-700 rounded-xl p-3 flex flex-col shadow-inner shrink-0 h-[220px]">
                 <div className="flex justify-between items-center mb-2 shrink-0 border-b border-gray-800 pb-2">
                   <h3 className="text-xs text-gray-400 font-bold uppercase tracking-wider flex items-center gap-2">
                     📅 Dynamic Map Events
                   </h3>
                   <span className="text-[10px] font-mono text-gray-500">
-                    {simResult.dynamicEvents.filter(ev => ev.stepIndex <= stepIndex).length} / {simResult.dynamicEvents.length}
+                    {simResults.hybrid.dynamicEvents.filter(ev => ev.stepIndex <= stepIndex).length} / {simResults.hybrid.dynamicEvents.length}
                   </span>
                 </div>
                 
@@ -545,7 +533,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
                   className="flex-1 overflow-y-auto pr-1 flex flex-col gap-1.5"
                   style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}
                 >
-                  {simResult.dynamicEvents
+                  {simResults.hybrid.dynamicEvents
                     .filter(ev => ev.stepIndex <= stepIndex)
                     .reverse()
                     .map((ev, i) => (
@@ -558,7 +546,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
                         {ev.blocked ? '⚡' : '✅'} {ev.label}
                       </div>
                     ))}
-                  {simResult.dynamicEvents.filter(ev => ev.stepIndex <= stepIndex).length === 0 && (
+                  {simResults.hybrid.dynamicEvents.filter(ev => ev.stepIndex <= stepIndex).length === 0 && (
                     <div className="text-xs text-gray-500 text-center mt-6 italic">
                       No map events triggered yet...
                     </div>
@@ -582,7 +570,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, algorithm, onBack })
             localStorage.setItem(`simulation_history_${scenario}`, JSON.stringify(updated));
             return updated;
           });
-          // ✅ NEW: Re-enable the save button if the currently displayed run was deleted
           if (currentSavedId && ids.includes(currentSavedId)) {
             setIsCurrentSaved(false);
             setCurrentSavedId(null);
