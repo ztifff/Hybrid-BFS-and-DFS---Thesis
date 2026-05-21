@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ScenarioType } from './types';
 import { ScenarioPicker } from './components/ScenarioPicker';
 import { SimulationView } from './components/SimulationView';

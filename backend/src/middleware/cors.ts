@@ -5,21 +5,11 @@
 
 import cors from 'cors';
 
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-  'http://172.20.0.2:5173', // Docker network address (matches docker-compose)
-  'https://hybrid-bfs-and-dfs-thesis.vercel.app', // Your live Vercel frontend!
-];
-
 export const corsMiddleware = cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (curl, Postman)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    return callback(new Error(`CORS policy: origin ${origin} not allowed`));
+    // Dynamically allow whatever origin the request is coming from.
+    // If there is no origin (like Postman or cURL), fallback to '*'
+    callback(null, origin || '*');
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
