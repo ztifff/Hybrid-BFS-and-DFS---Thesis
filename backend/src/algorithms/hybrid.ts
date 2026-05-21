@@ -84,8 +84,8 @@ export async function runGraphHybrid(
       lastYieldTime = performance.now();
     }
 
-    // 🚨 SMART EVASION: Stop exploring if trail to source is cut
-    if (blockedNodes.has(current) || !isPathValid(parentMap, current, blockedNodes)) {
+    // Lazy Evaluation Check
+    if (blockedNodes.has(current)) {
       visited.delete(current); 
       continue;
     }
@@ -131,7 +131,7 @@ export async function runGraphHybrid(
   return { steps, nodesExplored, pathLength: foundDestination ? finalPath.length - 1 : -1, totalLatency, foundDestination };
 }
 
-// 🛡️ Ensure the supply line back to the source is clear
+// Kept for utility, but removed from the inner loop to save CPU
 function isPathValid(parentMap: Map<string, string | null>, nodeId: string, blockedNodes: Set<string>): boolean {
   let cur: string | null = nodeId;
   const seen = new Set<string>();

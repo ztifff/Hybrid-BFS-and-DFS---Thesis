@@ -55,21 +55,6 @@ export async function runGraphDFS(
 
   resetSearchState();
 
-  function pruneStack(): boolean {
-    const valid: string[] = [];
-    for (const nodeId of stack) {
-      if (blockedNodes.has(nodeId) || !isPathValid(parentMap, nodeId, blockedNodes)) {
-        visited.delete(nodeId);
-      } else {
-        valid.push(nodeId);
-      }
-    }
-    if (valid.length !== stack.length) {
-      stack.splice(0, stack.length, ...valid);
-    }
-    return stack.length > 0;
-  }
-
   let foundDestination: string | null = null;
   let lastCurrent: string | null = null;
   let nodesExplored = 0;
@@ -82,7 +67,6 @@ export async function runGraphDFS(
       syncBlockedHistory();
     }
 
-    if (!pruneStack()) break;
     const current = stack.pop()!;
     lastCurrent = current;
 
@@ -109,8 +93,8 @@ export async function runGraphDFS(
 
     if (visited.has(current)) continue;
     
-    // 🚨 SMART EVASION: Abandon branch if trail is compromised
-    if (blockedNodes.has(current) || !isPathValid(parentMap, current, blockedNodes)) continue;
+    // Lazy Evaluation: Abandon branch if blocked
+    if (blockedNodes.has(current)) continue;
     
     visited.add(current);
     nodesExplored++;
@@ -151,7 +135,7 @@ export async function runGraphDFS(
   return { steps, nodesExplored, pathLength: foundDestination ? finalPath.length - 1 : -1, totalLatency, foundDestination };
 }
 
-// 🛡️ Ensure the supply line back to the source is clear
+// Kept for utility, but removed from the inner loop to save CPU
 function isPathValid(parentMap: Map<string, string | null>, nodeId: string, blockedNodes: Set<string>): boolean {
   let cur: string | null = nodeId;
   const seen = new Set<string>();

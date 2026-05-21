@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { ScenarioGraph, GraphNode, ScenarioType, DynamicEvent, GraphEdge, AlgorithmStep } from '../types';
+import { ScenarioGraph, GraphNode, ScenarioType, DynamicEvent, AlgorithmStep } from '../types';
 import { ALGORITHMS } from '../config/scenarios';
 
 interface Props {
@@ -77,7 +77,7 @@ export const NetworkCanvas: React.FC<Props> = ({
   const SVG_W = 960;
   const SVG_H = 680;
 
-  const scale = Math.min(SVG_W / width, SVG_H / height) * 0.95;
+  const scale = Math.min(SVG_W / width, SVG_H / height) * 1.05;
   const offsetX = (SVG_W - (width * scale)) / 2;
   const offsetY = (SVG_H - (height * scale)) / 2;
 
@@ -324,23 +324,18 @@ export const NetworkCanvas: React.FC<Props> = ({
       ctx.textBaseline = 'middle';
 
       const displayLabel = node.label ? node.label.split('\n')[0].trim() : '';
-
-      // MODIFIED: Exclude auto-generated generic link descriptions and IDs
       const isGenericLink = displayLabel.toLowerCase().includes('local link section') || 
                             displayLabel.toLowerCase().includes('node/') || 
                             displayLabel.includes('#');
       const isKnownPlace = displayLabel && !isGenericLink;
 
-      // Filter text overlays based on importance and location visibility criteria
       const shouldShowStreetLabel = isMassive && isKnownPlace && zoom >= 1.5;
       const shouldShowNormalLabel = (!isMassive && isKnownPlace) || isImportant;
 
       if (shouldShowStreetLabel) {
-        // Calculate viewport coordinates to filter clustering text overlaps
         const screenX = (cx * zoom) + pan.x;
         const screenY = (cy * zoom) + pan.y;
 
-        // Adaptive packing density (accounts for smaller font scale)
         const separationThreshold = Math.max(50 / (zoom * 0.15), 35); 
 
         const isOverlapping = renderedTextPositions.some(pos => {
@@ -349,15 +344,16 @@ export const NetworkCanvas: React.FC<Props> = ({
         });
 
         if (!isOverlapping || isImportant) {
-          // Compute scale invariant font size dynamically based on zoom factors
-          const dynamicFontSize = Math.min(Math.max(9 / (zoom * 0.35), 2.2), 6.0);
+          // Standard inverse scaling keeps text size perfectly locked on your screen
+          const baseFontSize = isImportant ? 16 : 14; 
+          const dynamicFontSize = baseFontSize / zoom; 
           ctx.font = `${isImportant ? 'bold' : '600'} ${dynamicFontSize}px sans-serif`;
           
           ctx.lineJoin = 'round';
-          ctx.lineWidth = Math.min(Math.max(1.8 / (zoom * 0.3), 0.5), 1.5);
+          ctx.lineWidth = 3 / zoom;
           ctx.strokeStyle = '#0a0f1e'; 
           
-          const labelOffsetY = r + Math.max(5 / (zoom * 0.2), 2);
+          const labelOffsetY = r + (10 / zoom);
           ctx.strokeText(displayLabel, cx, cy - labelOffsetY);
           
           ctx.fillStyle = isImportant ? '#fb923c' : '#f1f5f9'; 
@@ -366,34 +362,46 @@ export const NetworkCanvas: React.FC<Props> = ({
           renderedTextPositions.push({ x: screenX, y: screenY, radius: separationThreshold });
         }
       } else if (shouldShowNormalLabel && displayLabel) {
-        // If it's a massive city map but the node is critical (e.g. source/destination), 
-        // draw its identifier cleanly above it regardless of the landmark filter rules.
         if (isMassive && isImportant) {
-          const dynamicFontSize = Math.min(Math.max(10 / (zoom * 0.35), 3.0), 7.0);
+          const dynamicFontSize = 16 / zoom;
           ctx.font = `bold ${dynamicFontSize}px sans-serif`;
           ctx.strokeStyle = '#0a0f1e';
-          ctx.lineWidth = 1.2;
-          const labelOffsetY = r + 4;
+          ctx.lineWidth = 3 / zoom;
+          
+          const labelOffsetY = r + (10 / zoom);
           ctx.strokeText(displayLabel, cx, cy - labelOffsetY);
+          
           ctx.fillStyle = isSource ? '#4ade80' : isDest ? '#f87171' : '#fb923c';
           ctx.fillText(displayLabel, cx, cy - labelOffsetY);
         } else if (!isMassive) {
           if (!isDatacenter) {
-            ctx.font = `${r * 0.8}px sans-serif`;
-            ctx.fillText(isBlocked ? '💀' : cfg.icon, cx, cy + 1);
+            // Inner icon size locked strictly to node radius (no zoom division math)
+            const iconSize = r * 1.1; 
+            ctx.font = `${iconSize}px sans-serif`;
+            ctx.fillText(isBlocked ? '💀' : cfg.icon, cx, cy);
             
-            ctx.font = `${isImportant ? 'bold ' : ''}${r > 15 ? 10 : 7}px sans-serif`;
+            // Labels stay a readable constant size on screen
+            const baseLabelSize = isImportant ? 14 : 12;
+            const labelSize = baseLabelSize / zoom;
+            ctx.font = `${isImportant ? 'bold ' : ''}${labelSize}px sans-serif`;
             ctx.fillStyle = '#cbd5e1';
-            ctx.fillText(displayLabel, cx, cy + r + 11);
-          } else {
-            ctx.font = `${r * 1.2}px sans-serif`;
-            ctx.fillText(isBlocked ? '💀' : cfg.icon, cx, cy + 0.5);
             
-            const labelY = cy + r + 5;
-            ctx.font = `${isImportant ? 3.5 : 3}px sans-serif`;
-            ctx.lineWidth = 0.6;
+            const labelOffsetY = r + (12 / zoom);
+            ctx.fillText(displayLabel, cx, cy + labelOffsetY);
+          } else {
+            const iconSize = r * 1.3;
+            ctx.font = `${iconSize}px sans-serif`;
+            ctx.fillText(isBlocked ? '💀' : cfg.icon, cx, cy);
+            
+            const baseLabelSize = isImportant ? 12 : 10;
+            const labelSize = baseLabelSize / zoom;
+            const labelY = cy + r + (8 / zoom);
+            
+            ctx.font = `${labelSize}px sans-serif`;
+            ctx.lineWidth = 2 / zoom;
             ctx.strokeStyle = '#0f172a';
             ctx.strokeText(displayLabel, cx, labelY);
+            
             ctx.fillStyle = '#f8fafc';
             ctx.fillText(displayLabel, cx, labelY);
           }
@@ -401,7 +409,7 @@ export const NetworkCanvas: React.FC<Props> = ({
       }
     });
 
-  }, [visibleNodes, visibleEdges, visibleNodeMap, pan, zoom, sets, activeBlocked, width, height, isMassive, isDatacenter, cBFS, cDFS, cHYB]);
+  }, [visibleNodes, visibleEdges, visibleNodeMap, pan, zoom, sets, activeBlocked, width, height, isMassive, isDatacenter, cBFS, cDFS, cHYB, scale, offsetX, offsetY]);
 
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     if (isFollowing) setIsFollowing(false);

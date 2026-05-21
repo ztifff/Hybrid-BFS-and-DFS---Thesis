@@ -56,21 +56,6 @@ export async function runGraphBFS(
 
   resetSearchState();
 
-  function pruneQueue(): boolean {
-    const valid: string[] = [];
-    for (const nodeId of queue) {
-      if (blockedNodes.has(nodeId) || !isPathValid(parentMap, nodeId, blockedNodes)) {
-        visited.delete(nodeId);
-      } else {
-        valid.push(nodeId);
-      }
-    }
-    if (valid.length !== queue.length) {
-      queue.splice(0, queue.length, ...valid);
-    }
-    return queue.length > 0;
-  }
-
   let nodesExplored = 0;
   let foundDestination: string | null = null;
   let lastCurrent: string | null = null;
@@ -83,7 +68,6 @@ export async function runGraphBFS(
       syncBlockedHistory();
     }
 
-    if (!pruneQueue()) break;
     const current = queue.shift()!;
     lastCurrent = current;
 
@@ -108,8 +92,8 @@ export async function runGraphBFS(
       lastYieldTime = performance.now();
     }
 
-    // 🚨 SMART EVASION: Stop exploring if the node is blocked OR if its trail back to the Start is cut!
-    if (blockedNodes.has(current) || !isPathValid(parentMap, current, blockedNodes)) {
+    // Lazy evaluation: Skip if it became blocked
+    if (blockedNodes.has(current)) {
       visited.delete(current);
       continue;
     }
@@ -153,7 +137,7 @@ export async function runGraphBFS(
   return { steps, nodesExplored, pathLength: foundDestination ? finalPath.length - 1 : -1, totalLatency, foundDestination };
 }
 
-// 🛡️ Ensure the supply line back to the source is clear
+// Kept for utility, but removed from the inner loop to save CPU
 function isPathValid(parentMap: Map<string, string | null>, nodeId: string, blockedNodes: Set<string>): boolean {
   let cur: string | null = nodeId;
   const seen = new Set<string>();
