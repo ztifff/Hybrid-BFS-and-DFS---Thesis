@@ -2,7 +2,7 @@
  * Dungeon Game AI Pathfinding Graph
  */
 
-import { ScenarioGraph, GraphNode, GraphEdge } from '../types';
+import { ScenarioGraph, GraphNode, GraphEdge } from '../types/index';
 // ✅ Import the newly generated Elden Ring map
 import { gameAIEldenRingGraph } from '../data/gameai.eldenring';
 

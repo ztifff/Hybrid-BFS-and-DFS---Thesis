@@ -2,7 +2,7 @@
  * Innovatech Corporate Campus Network Graph / Real-World Cloud Datacenter
  */
 
-import { ScenarioGraph, GraphNode, GraphEdge } from '../types';
+import { ScenarioGraph, GraphNode, GraphEdge } from '../types/index';
 import { datacenterNetworkGraph } from '../data/network.datacenter';
 
 // Simple deterministic pseudo-random generator to keep UI and Algorithm in sync
@@ -188,4 +188,26 @@ export function getNetworkFailureCandidates(graph: ScenarioGraph): string[] {
         n.type === 'switch'    
     )
     .map((n) => n.id);
+}
+
+// ============================================================
+// ADDED: Controller Helper Functions
+// ============================================================
+
+export function listNetworkTypes(): string[] {
+  return ['datacenter', 'aws', 'traffic', 'evacuation', 'gameai', 'robotics', 'mockoffice'];
+}
+
+export function getAllNetworkMeta() {
+  return listNetworkTypes().map(type => ({ 
+    type, 
+    name: `${type.charAt(0).toUpperCase() + type.slice(1)} Network` 
+  }));
+}
+
+// Wrapper so controllers requesting 'getNetworkGraph' don't fail
+export function getNetworkGraph(networkType: string): ScenarioGraph {
+  // If your buildNetworkGraph eventually takes the networkType, you can pass it here.
+  // For now, we return the base function to satisfy the controller.
+  return buildNetworkGraph(false, 123);
 }

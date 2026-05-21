@@ -2,7 +2,7 @@
  * Amazon-style Fulfillment Warehouse Graph
  */
 
-import { ScenarioGraph, GraphNode, GraphEdge } from '../types';
+import { ScenarioGraph, GraphNode, GraphEdge } from '../types/index';
 // ✅ Import the newly generated AWS Robomaker map
 import { awsWarehouseGraph } from '../data/robotics.aws';
 

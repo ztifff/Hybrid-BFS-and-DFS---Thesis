@@ -1,4 +1,4 @@
-import { ScenarioType, ScenarioGraph } from '../types';
+import { ScenarioType, ScenarioGraph } from '../types/index';
 import { buildNetworkGraph, getNetworkFailureCandidates } from './networkGraph';
 import { buildRoboticsGraph, getRoboticsBlockCandidates } from './roboticsGraph';
 import { buildTrafficGraph, getTrafficClosureCandidates } from './trafficGraph';

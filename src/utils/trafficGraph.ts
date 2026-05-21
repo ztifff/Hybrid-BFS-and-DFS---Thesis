@@ -1,4 +1,4 @@
-import { ScenarioGraph, GraphNode, GraphEdge } from '../types';
+import { ScenarioGraph, GraphNode, GraphEdge } from '../types/index';
 import { cabuyaoTrafficGraph } from '../data/traffic.cabuyao'; // <-- Import the real-world graph
 
 const W = 1000;

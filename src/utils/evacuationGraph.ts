@@ -18,7 +18,7 @@
  * Stairwell → Exit     : 5s
  */
 
-import { ScenarioGraph, GraphNode, GraphEdge } from '../types';
+import { ScenarioGraph, GraphNode, GraphEdge } from '../types/index';
 
 // ✅ Import the generated SM Santa Rosa map
 import { buildingEvacuationGraph } from '../data/evacuation.building';

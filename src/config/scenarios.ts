@@ -118,3 +118,6 @@ export const getScenario = (id: string) =>
 
 export const getAlgorithm = (id: string) =>
   ALGORITHMS.find((a) => a.id === id) ?? ALGORITHMS[0];
+
+export const getScenarioById = (id: string): ScenarioConfig | undefined =>
+  SCENARIOS.find((s) => s.id === id);
