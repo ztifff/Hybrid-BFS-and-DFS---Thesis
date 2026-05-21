@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ScenarioType } from '../types';
 import { ScenarioInfo } from './ScenarioInfo';
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 interface ScenarioConfig {
   id: ScenarioType;
@@ -32,7 +31,7 @@ export const ScenarioPicker: React.FC<Props> = ({
   useEffect(() => {
     const fetchScenarios = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/scenarios`);
+        const response = await fetch('/api/scenarios');
         
         // 1. Check if the response is actually OK
         if (!response.ok) {

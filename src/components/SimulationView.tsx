@@ -7,7 +7,6 @@ import { Legend } from './Legend';
 import { SimulationReport } from './SimulationReport';
 import { HistoryModal, HistoryEntry } from './HistoryModal';
 import { buildScenarioGraph } from '../utils/graphBuilder';
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 interface Props {
   scenario: ScenarioType;
@@ -82,7 +81,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         setStepIndex(0);
         stopAnimation();
 
-        const response = await fetch(`${API_BASE_URL}/api/simulation/run`, {
+        const response = await fetch(`/api/simulation/run`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ scenario, useRealWorld, seed })
