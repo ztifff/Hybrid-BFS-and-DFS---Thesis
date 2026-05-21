@@ -83,7 +83,7 @@ export const MetricsPanel: React.FC<Props> = ({
       const stepData = activeSteps[algoId];
       const resultData = multiResults?.[algoId];
 
-      // ✅ FIX: Guard against Step 0 to ensure a clean visual slate before running
+      // Guard against Step 0 to ensure a clean visual slate before running
       const isStart = stepIndex === 0;
 
       const exploredCount = (stepIndex === 0) ? 0 : (stepData?.explored.length || 0);

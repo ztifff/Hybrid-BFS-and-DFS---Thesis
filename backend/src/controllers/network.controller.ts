@@ -1,51 +1,24 @@
 import { Request, Response } from 'express';
-import { ScenarioType as NetworkType } from '../types/index';
-import { buildNetworkGraph } from '../utils/networkGraph';
+import { buildScenarioGraph } from '../utils/graphBuilder';
+import { ScenarioType } from '../types'; // Adjust this import path if needed
 
-// Stubs for missing functions in networkGraph.ts
-const listNetworkTypes = () => ['datacenter', 'aws', 'traffic', 'evacuation', 'gameai', 'robotics', 'mockoffice'];
-const getAllNetworkMeta = () => listNetworkTypes().map(type => ({ type, name: `${type} network` }));
+export const getGraphData = (req: Request, res: Response) => {
+  try {
+    const scenario = req.query.scenario as ScenarioType;
+    
+    // Query parameters come in as strings, so we parse the boolean
+    const useRealWorld = req.query.useRealWorld === 'true';
 
-export class NetworkController {
-  listNetworks(_req: Request, res: Response): void {
-    try {
-      const meta = getAllNetworkMeta();
-      res.status(200).json({ success: true, data: meta });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      res.status(500).json({ success: false, error: message });
+    if (!scenario) {
+      return res.status(400).json({ error: 'Scenario type is required.' });
     }
-  }
 
-  getNetwork(req: Request, res: Response): void {
-    try {
-      const networkType = req.params.type as NetworkType;
-      const validTypes = listNetworkTypes();
-      if (!validTypes.includes(networkType)) {
-        res.status(400).json({ success: false, error: `Unknown network type: ${networkType}` });
-        return;
-      }
-      const graph = buildNetworkGraph(false, 123); 
-      res.status(200).json({ success: true, data: graph });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      res.status(500).json({ success: false, error: message });
-    }
-  }
+    // Call the builder function you showed in your image
+    const graph = buildScenarioGraph(scenario, useRealWorld);
 
-  getNetworkMeta(req: Request, res: Response): void {
-    try {
-      const networkType = req.params.type as NetworkType;
-      const all = getAllNetworkMeta();
-      const meta = all.find((m) => m.type === networkType);
-      if (!meta) {
-        res.status(404).json({ success: false, error: `Network not found: ${networkType}` });
-        return;
-      }
-      res.status(200).json({ success: true, data: meta });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      res.status(500).json({ success: false, error: message });
-    }
+    return res.status(200).json({ data: graph });
+  } catch (error) {
+    console.error('Error fetching graph data:', error);
+    return res.status(500).json({ error: 'Failed to build the graph.' });
   }
-}
+};

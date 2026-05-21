@@ -1,18 +1,27 @@
-import { ScenarioGraph, GraphNode, GraphEdge } from '../types/index';
-import { cabuyaoTrafficGraph } from '../data/traffic.cabuyao'; // <-- Import the real-world graph
+import { ScenarioGraph } from '../types/index';
+import { cabuyaoTrafficGraph } from '../data/traffic.cabuyao'; 
 
-const W = 1000;
-const H = 760;
+// Set the baseline dimensions to match your Overpass projection matrix
+const W = 1200;
+const H = 900;
 
-export function buildTrafficGraph(useRealWorld: boolean = false): ScenarioGraph {
-  // Return the real-world API data if toggled
+/**
+ * Builds the traffic network topology model.
+ * Default shifted to TRUE to display the real-world Cabuyao infrastructure mesh automatically.
+ */
+export function buildTrafficGraph(useRealWorld: boolean = true): ScenarioGraph {
+  // Return the high-performance real-world OpenStreetMap parsed data
   if (useRealWorld) {
-    return cabuyaoTrafficGraph;
+    return {
+      ...cabuyaoTrafficGraph,
+      width: cabuyaoTrafficGraph.width || W,
+      height: cabuyaoTrafficGraph.height || H
+    };
   }
 
-  // --- Existing Mock Graph Logic Below ---
-  const nodes: GraphNode[] = [];
-  const edges: GraphEdge[] = [];
+  // --- Fallback Fictional Mock Graph Layout (Kept for Type/Pipeline Safety) ---
+  const nodes: any[] = [];
+  const edges: any[] = [];
 
   nodes.push({
     id: 'city_center',
@@ -152,6 +161,12 @@ export function buildTrafficGraph(useRealWorld: boolean = false): ScenarioGraph 
   };
 }
 
+/**
+ * Returns eligible intersection or street node IDs for random or dynamic traffic closures
+ */
 export function getTrafficClosureCandidates(graph: ScenarioGraph): string[] {
-  return graph.nodes.filter((n) => n.type === 'intersection' || n.type === 'street').map((n) => n.id);
+  // Works for both simulated maps and real-world Cabuyao graphs natively!
+  return graph.nodes
+    .filter((n) => n.type === 'intersection' || n.type === 'street')
+    .map((n) => n.id);
 }

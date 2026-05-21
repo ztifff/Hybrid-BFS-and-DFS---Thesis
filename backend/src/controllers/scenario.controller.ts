@@ -1,10 +1,8 @@
 import { Request, Response } from 'express';
 import { SCENARIOS, getScenarioById } from '../config/scenarios';
-import { SimulationResult, AlgorithmType, ScenarioType } from '../types/index';
+import { AlgorithmType, ScenarioType } from '../types/index';
 import { runSimulation } from '../utils/simulationRunner';
-
-// In-memory store
-const simulationHistory: Map<string, SimulationResult & { id: string, createdAt: Date }> = new Map();
+import { simulationHistory, HistoryEntry } from '../store/historyStore';
 
 export class ScenarioController {
   
@@ -42,10 +40,21 @@ export class ScenarioController {
       );
 
       const recordId = Math.random().toString(36).substring(7);
-      const record = { ...result, id: recordId, createdAt: new Date() };
-      simulationHistory.set(recordId, record);
+      const newEntry: HistoryEntry = {
+        id: recordId,
+        runNumber: simulationHistory.size + 1,
+        name: `Run ${simulationHistory.size + 1} - ${scenarioConfig.id}`,
+        algorithm: scenarioConfig.id as AlgorithmType,
+        scenario: scenarioConfig.id as ScenarioType,
+        simResult: result, 
+        optimalPathLength: result.metrics.pathLength, 
+        totalNodes: result.graph.nodes.length,
+        timestamp: new Date()
+      };
 
-      res.status(200).json({ success: true, data: record });
+      simulationHistory.set(recordId, newEntry);
+
+      res.status(200).json({ success: true, data: newEntry });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       res.status(500).json({ success: false, error: message });
@@ -79,38 +88,24 @@ export class ScenarioController {
       );
       
       const recordId = Math.random().toString(36).substring(7);
-      const record = { ...result, id: recordId, createdAt: new Date() };
-      simulationHistory.set(recordId, record);
+      const newEntry: HistoryEntry = {
+        id: recordId,
+        runNumber: simulationHistory.size + 1,
+        name: `Run ${simulationHistory.size + 1} - ${validScenario}`,
+        algorithm: validAlgorithm,
+        scenario: validScenario,
+        simResult: result,
+        optimalPathLength: result.metrics.pathLength, 
+        totalNodes: result.graph.nodes.length,
+        timestamp: new Date()
+      };
 
-      res.status(200).json({ success: true, data: record });
+      simulationHistory.set(recordId, newEntry);
+
+      res.status(200).json({ success: true, data: newEntry });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       res.status(500).json({ success: false, error: message });
     }
-  }
-
-  // 5. History and Cleanup methods
-  async getHistory(req: Request, res: Response): Promise<void> {
-    try {
-      const page = parseInt((req.query.page as string) ?? '1', 10);
-      const limit = parseInt((req.query.limit as string) ?? '10', 10);
-      const all = Array.from(simulationHistory.values()).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-      const start = (page - 1) * limit;
-      res.status(200).json({ success: true, data: all.slice(start, start + limit), total: all.length });
-    } catch (err: unknown) {
-      res.status(500).json({ success: false, error: err instanceof Error ? err.message : 'Error' });
-    }
-  }
-
-  async getById(req: Request, res: Response): Promise<void> {
-    const result = simulationHistory.get(req.params.id);
-    if (!result) res.status(404).json({ success: false, error: 'Simulation not found' });
-    else res.status(200).json({ success: true, data: result });
-  }
-
-  async deleteById(req: Request, res: Response): Promise<void> {
-    const existed = simulationHistory.delete(req.params.id);
-    if (!existed) res.status(404).json({ success: false, error: 'Simulation not found' });
-    else res.status(200).json({ success: true, message: 'Deleted successfully' });
   }
 }

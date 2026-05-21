@@ -14,8 +14,7 @@ interface Props {
 
 export const SimulationReport: React.FC<Props> = ({ 
   multiResults, 
-  bfsResult, 
-  totalNodes,
+  bfsResult,
   dynamicEvents,
   onSaveResult,
   isSaved

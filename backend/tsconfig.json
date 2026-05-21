@@ -1,13 +1,19 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "CommonJS",
-    "rootDir": "./src",
+    "module": "commonjs",
+    "lib": ["ES2022"],
     "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
     "esModuleInterop": true,
-    "strict": false,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    
+    // 💡 Set these to false so minor unused variable warnings 
+    // don't completely block your Docker build from finishing
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
   },
   "include": ["src/**/*"]
 }

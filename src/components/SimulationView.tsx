@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { ScenarioType, AlgorithmStep, SimulationResult } from '../types';
+import { ScenarioType, AlgorithmStep, SimulationResult, ScenarioGraph } from '../types';
 import { getScenario } from '../config/scenarios';
 import { NetworkCanvas } from './NetworkCanvas';
 import { MetricsPanel } from './MetricsPanel';
 import { Legend } from './Legend';
 import { SimulationReport } from './SimulationReport';
 import { HistoryModal, HistoryEntry } from './HistoryModal';
-import { buildScenarioGraph } from '../utils/graphBuilder';
 
 interface Props {
   scenario: ScenarioType;
@@ -32,8 +31,9 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const [useRealWorld, setUseRealWorld] = useState(false);
   const [seed, setSeed] = useState(() => Date.now()); 
   
-  // Keep local builder temporarily just to render the empty map instantly while API fetches
-  const currentGraph = useMemo(() => buildScenarioGraph(scenario, useRealWorld), [scenario, useRealWorld]);
+  // Base graph data state pulled directly from backend infrastructure
+  const [currentGraph, setCurrentGraph] = useState<ScenarioGraph | null>(null);
+  const [isGraphLoading, setIsGraphLoading] = useState(true);
 
   const [simResults, setSimResults] = useState<{ bfs: SimulationResult, dfs: SimulationResult, hybrid: SimulationResult } | null>(null);
   const [bfsResult, setBfsResult] = useState<any>(null);
@@ -70,7 +70,35 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     }
   }, []);
 
-  // 🔥 FETCH DATA FROM BACKEND INSTEAD OF RUNNING LOCALLY
+  // Fetch base graph structure geometry from the backend api
+  useEffect(() => {
+    let isMounted = true;
+    const fetchGraphStructure = async () => {
+      try {
+        setIsGraphLoading(true);
+        const response = await fetch(`/api/network/graph?scenario=${scenario}&useRealWorld=${useRealWorld}`);
+        if (!response.ok) throw new Error(`Graph API Error: ${response.statusText}`);
+        const json = await response.json();
+        
+        if (isMounted) {
+          setCurrentGraph(json.data);
+          setIsGraphLoading(false);
+        }
+      } catch (err) {
+        console.error('Failed to fetch graph layout from backend:', err);
+        if (isMounted) {
+          setIsGraphLoading(false);
+        }
+      }
+    };
+
+    fetchGraphStructure();
+    return () => {
+      isMounted = false;
+    };
+  }, [scenario, useRealWorld]);
+
+  // Fetch run metrics and evaluated paths from the computing engine
   useEffect(() => {
     let isMounted = true;
 
@@ -81,7 +109,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         setStepIndex(0);
         stopAnimation();
 
-        const response = await fetch('https://backend-1e4y.onrender.com/api/simulation/run', {
+        const response = await fetch(`/api/simulation/run`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ scenario, useRealWorld, seed })
@@ -130,7 +158,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   }, [simResults, isCurrentSaved, history]);
 
   const confirmSaveResult = useCallback(() => {
-    if (!simResults) return;
+    if (!simResults || !currentGraph) return;
     
     const maxRun = history.reduce((max, h) => Math.max(max, h.runNumber), 0);
     const thisRunNumber = maxRun + 1;
@@ -168,7 +196,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     setIsCurrentSaved(true);
     setCurrentSavedId(newEntryId);
     setIsSaveModalOpen(false);
-  }, [simResults, bfsResult, currentGraph.nodes.length, saveNameInput, saveDefaultName, scenario, history]);
+  }, [simResults, bfsResult, currentGraph, saveNameInput, saveDefaultName, scenario, history]);
 
   const totalSteps = useMemo(() => {
     if (!simResults) return 0;
@@ -345,7 +373,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
           
           <aside className="w-full lg:w-80 flex-shrink-0 border-b lg:border-b-0 lg:border-r border-gray-800 p-4 flex flex-col gap-4 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}>
-            {simResults && !isComputing ? (
+            {simResults && !isComputing && currentGraph ? (
               <MetricsPanel
                 multiResults={simResults}
                 activeSteps={activeSteps}
@@ -359,7 +387,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             ) : (
               <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 flex flex-col items-center justify-center py-12 text-center text-gray-400 animate-pulse">
                 <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                <div>Fetching algorithms from backend...</div>
+                <div>Fetching evaluation matrices from backend...</div>
               </div>
             )}
             
@@ -387,11 +415,11 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
               {(scenario === 'traffic' || scenario === 'evacuation' || scenario === 'gameai' || scenario === 'robotics' || scenario === 'network') && (
                 <div className="flex flex-col items-center gap-2 mt-2 w-full max-w-sm">
-                  <label className={`flex justify-center items-center gap-2 cursor-pointer text-sm font-semibold bg-gray-800 px-4 py-2 rounded-lg border w-full ${isComputing ? 'border-gray-700 opacity-50 cursor-not-allowed' : 'border-gray-600 hover:bg-gray-700 transition-colors'}`}>
+                  <label className={`flex justify-center items-center gap-2 cursor-pointer text-sm font-semibold bg-gray-800 px-4 py-2 rounded-lg border w-full ${isComputing || isGraphLoading ? 'border-gray-700 opacity-50 cursor-not-allowed' : 'border-gray-600 hover:bg-gray-700 transition-colors'}`}>
                     <input
                       type="checkbox"
                       checked={useRealWorld}
-                      disabled={isComputing}
+                      disabled={isComputing || isGraphLoading}
                       onChange={(e) => setUseRealWorld(e.target.checked)}
                       className="w-4 h-4 rounded border-gray-600 text-blue-500 bg-gray-900"
                     />
@@ -406,33 +434,40 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             </div>
 
             <div className="rounded-2xl overflow-hidden border border-gray-700 w-full relative flex-1 min-h-[400px] shrink-0 shadow-[0_0_48px_rgba(37,99,235,0.1)] bg-[#0a0f1e]" style={{ maxWidth: 1200 }}>
-              <NetworkCanvas
-                graph={currentGraph}
-                activeSteps={activeSteps}
-                scenario={scenario}
-                stepIndex={stepIndex}
-                dynamicEvents={simResults?.hybrid.dynamicEvents || []}
-              />
+              {!isGraphLoading && currentGraph ? (
+                <NetworkCanvas
+                  graph={currentGraph}
+                  activeSteps={activeSteps}
+                  scenario={scenario}
+                  stepIndex={stepIndex}
+                  dynamicEvents={simResults?.hybrid.dynamicEvents || []}
+                />
+              ) : (
+                <div className="absolute inset-0 bg-[#0a0f1e] flex flex-col items-center justify-center text-gray-500 gap-3">
+                  <div className="w-6 h-6 border-2 border-gray-600 border-t-blue-500 rounded-full animate-spin" />
+                  <span className="text-sm font-mono tracking-wider">Syncing Topology Data...</span>
+                </div>
+              )}
             </div>
 
             <div className="mt-4 flex items-center gap-2 flex-wrap justify-center w-full shrink-0">
-              <button disabled={isComputing} onClick={handleReset} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none">↺ Reset</button>
-              <button disabled={isComputing || stepIndex === 0} onClick={handleStepBackward} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none">◀ Back</button>
+              <button disabled={isComputing || isGraphLoading} onClick={handleReset} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none">↺ Reset</button>
+              <button disabled={isComputing || isGraphLoading || stepIndex === 0} onClick={handleStepBackward} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none">◀ Back</button>
 
               {status === 'running' ? (
-                <button disabled={isComputing} onClick={handlePause} className="px-6 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer disabled:opacity-30 flex-1 sm:flex-none bg-blue-600 text-white">⏸ Pause</button>
+                <button disabled={isComputing || isGraphLoading} onClick={handlePause} className="px-6 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer disabled:opacity-30 flex-1 sm:flex-none bg-blue-600 text-white">⏸ Pause</button>
               ) : status === 'paused' ? (
-                <button disabled={isComputing} onClick={handleResume} className="px-6 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer disabled:opacity-30 flex-1 sm:flex-none bg-blue-600 text-white">▶ Resume</button>
+                <button disabled={isComputing || isGraphLoading} onClick={handleResume} className="px-6 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer disabled:opacity-30 flex-1 sm:flex-none bg-blue-600 text-white">▶ Resume</button>
               ) : status === 'done' ? (
-                <button disabled={isComputing} onClick={handleRun} className="px-6 py-2 rounded-lg font-bold text-sm cursor-pointer disabled:opacity-30 flex-1 sm:flex-none bg-blue-600 text-white">↺ Replay</button>
+                <button disabled={isComputing || isGraphLoading} onClick={handleRun} className="px-6 py-2 rounded-lg font-bold text-sm cursor-pointer disabled:opacity-30 flex-1 sm:flex-none bg-blue-600 text-white">↺ Replay</button>
               ) : (
-                <button disabled={isComputing} onClick={handleRun} className="px-6 py-2 rounded-lg font-bold text-sm cursor-pointer hover:opacity-90 disabled:opacity-30 disabled:bg-gray-700 flex-1 sm:flex-none w-full sm:w-auto bg-blue-600 text-white">
+                <button disabled={isComputing || isGraphLoading} onClick={handleRun} className="px-6 py-2 rounded-lg font-bold text-sm cursor-pointer hover:opacity-90 disabled:opacity-30 disabled:bg-gray-700 flex-1 sm:flex-none w-full sm:w-auto bg-blue-600 text-white">
                   {isComputing ? 'Computing...' : '▶ Run Simulations'}
                 </button>
               )}
 
-              <button disabled={isComputing || stepIndex >= totalSteps} onClick={handleStepForward} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none">Fwd ▶</button>
-              <button disabled={isComputing} onClick={handleSkipEnd} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none">⏭ Skip</button>
+              <button disabled={isComputing || isGraphLoading || stepIndex >= totalSteps} onClick={handleStepForward} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none">Fwd ▶</button>
+              <button disabled={isComputing || isGraphLoading} onClick={handleSkipEnd} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none">⏭ Skip</button>
             </div>
           </main>
 
@@ -440,7 +475,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             className="w-full lg:w-[350px] flex-shrink-0 border-t lg:border-t-0 lg:border-l border-gray-800 p-4 flex flex-col gap-4 bg-[#0a0f1e] overflow-y-auto lg:h-full"
             style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}
           >
-            {simResults && !isComputing && status === 'done' && (
+            {simResults && !isComputing && status === 'done' && currentGraph && (
               <div className="shrink-0">
                 <SimulationReport 
                   multiResults={simResults}
