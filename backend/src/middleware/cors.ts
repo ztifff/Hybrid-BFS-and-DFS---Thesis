@@ -1,6 +1,6 @@
 // ============================================================
 // MIDDLEWARE: cors.ts
-// CORS configuration for Vite frontend (localhost:5173)
+// CORS configuration for local development and Vercel production
 // ============================================================
 
 import cors from 'cors';
@@ -9,6 +9,7 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
   'http://172.20.0.2:5173', // Docker network address (matches docker-compose)
+  'https://hybrid-bfs-and-dfs-thesis.vercel.app', // Your live Vercel frontend!
 ];
 
 export const corsMiddleware = cors({
