@@ -76,7 +76,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     const fetchGraphStructure = async () => {
       try {
         setIsGraphLoading(true);
-        const response = await fetch(`/api/network/graph?scenario=${scenario}&useRealWorld=${useRealWorld}`);
+        const response = await fetch(`https://backend-1e4y.onrender.com/api/network/graph?scenario=${scenario}&useRealWorld=${useRealWorld}`);
         if (!response.ok) throw new Error(`Graph API Error: ${response.statusText}`);
         const json = await response.json();
         
@@ -109,7 +109,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         setStepIndex(0);
         stopAnimation();
 
-        const response = await fetch(`/api/simulation/run`, {
+        const response = await fetch(`https://backend-1e4y.onrender.com/api/simulation/run`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ scenario, useRealWorld, seed })
