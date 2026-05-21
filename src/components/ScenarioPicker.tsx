@@ -31,7 +31,7 @@ export const ScenarioPicker: React.FC<Props> = ({
   useEffect(() => {
     const fetchScenarios = async () => {
       try {
-        const response = await fetch('/api/scenarios');
+        const response = await fetch('https://backend-1e4y.onrender.com/api/scenarios');
         
         // 1. Check if the response is actually OK
         if (!response.ok) {

@@ -81,7 +81,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         setStepIndex(0);
         stopAnimation();
 
-        const response = await fetch(`/api/simulation/run`, {
+        const response = await fetch('https://backend-1e4y.onrender.com/api/simulation/run', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ scenario, useRealWorld, seed })
