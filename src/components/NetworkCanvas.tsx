@@ -64,6 +64,9 @@ export const NetworkCanvas: React.FC<Props> = ({
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeFloor, setActiveFloor] = useState<string>('L2');
+  
+  // Force re-render on resize to prevent canvas stretching
+  const [windowDimensions, setWindowDimensions] = useState({ w: 0, h: 0 });
 
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -109,10 +112,21 @@ export const NetworkCanvas: React.FC<Props> = ({
     }
   };
 
+  // Setup Resize and Fullscreen Listeners
   useEffect(() => {
     const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+    const handleResize = () => setWindowDimensions({ w: window.innerWidth, h: window.innerHeight });
+
+    // Initialize dimensions
+    handleResize();
+
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+        document.removeEventListener('fullscreenchange', handleFullscreenChange);
+        window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   // Follow Algorithm Logic
@@ -409,8 +423,10 @@ export const NetworkCanvas: React.FC<Props> = ({
       }
     });
 
-  }, [visibleNodes, visibleEdges, visibleNodeMap, pan, zoom, sets, activeBlocked, width, height, isMassive, isDatacenter, cBFS, cDFS, cHYB, scale, offsetX, offsetY]);
+  // Adding windowDimensions to the dependency array ensures resizing updates the canvas visually
+  }, [visibleNodes, visibleEdges, visibleNodeMap, pan, zoom, sets, activeBlocked, width, height, isMassive, isDatacenter, cBFS, cDFS, cHYB, scale, offsetX, offsetY, windowDimensions]);
 
+  // Mouse Handlers
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     if (isFollowing) setIsFollowing(false);
     const scaleAdjust = e.deltaY > 0 ? 0.9 : 1.1;
@@ -436,6 +452,21 @@ export const NetworkCanvas: React.FC<Props> = ({
   };
   const handleMouseUp = () => setIsDragging(false);
   const handleMouseLeave = () => setIsDragging(false);
+  
+  // Touch Handlers for Mobile Support
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (isFollowing) setIsFollowing(false);
+    if (e.touches.length === 1) {
+      setIsDragging(true);
+      setDragStart({ x: e.touches[0].clientX - pan.x, y: e.touches[0].clientY - pan.y });
+    }
+  };
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!isDragging || e.touches.length !== 1) return;
+    setPan({ x: e.touches[0].clientX - dragStart.x, y: e.touches[0].clientY - dragStart.y });
+  };
+  const handleTouchEnd = () => setIsDragging(false);
+
   const resetZoom = () => { setIsFollowing(false); setZoom(1); setPan({ x: 0, y: 0 }); };
 
   return (
@@ -448,6 +479,10 @@ export const NetworkCanvas: React.FC<Props> = ({
       onMouseMove={handleMouseMove} 
       onMouseUp={handleMouseUp} 
       onMouseLeave={handleMouseLeave}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
     >
       
       {isLayeredMap && (

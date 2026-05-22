@@ -177,13 +177,16 @@ function generateDynamicEvents(
   return events.sort((a, b) => a.stepIndex - b.stepIndex);
 }
 
+// 🚨 UPDATED SIGNATURE: Added offset and limit parameters with defaults
 export async function runSimulation(
   scenario: ScenarioType,
   algorithm: AlgorithmType,
   dynamicSeed: number = Date.now(), 
   useRealWorld: boolean = false,
-  onStepProgress?: (step: AlgorithmStep) => void
-): Promise<SimulationResult> {
+  onStepProgress?: (step: AlgorithmStep) => void,
+  offset: number = 0,
+  limit: number = 0
+): Promise<SimulationResult & { meta?: { hasMore: boolean; totalSteps: number; currentOffset: number } }> {
 
   const graph = buildScenarioGraph(scenario, useRealWorld);
   const startTime = performance.now();
@@ -244,10 +247,32 @@ export async function runSimulation(
     completionRate, 
   };
 
+  // --------------------------------------------------------
+  // 🚀 CHUNKING & PAGINATION LOGIC
+  // --------------------------------------------------------
+  const totalStepsLength = result.steps.length;
+  let finalSteps = result.steps;
+  let hasMore = false;
+
+  // If a limit is provided, slice the array
+  if (limit > 0) {
+    const numericOffset = Number(offset);
+    const numericLimit = Number(limit);
+    finalSteps = result.steps.slice(numericOffset, numericOffset + numericLimit);
+    hasMore = (numericOffset + numericLimit) < totalStepsLength;
+  }
+
   return {
-    steps: result.steps,
+    steps: finalSteps,
     metrics,
     dynamicEvents,
-    graph,
+    // 🧠 MASSIVE OPTIMIZATION: Only send the huge Graph object on the very first chunk.
+    // For offset > 0, send an empty graph to save Vercel payload size limits.
+    graph: offset === 0 ? graph : { nodes: [], edges: [], sourceId: '', destinationIds: [] } as any,
+    meta: {
+      hasMore,
+      totalSteps: totalStepsLength,
+      currentOffset: Number(offset)
+    }
   };
 }

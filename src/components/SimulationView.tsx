@@ -98,7 +98,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     };
   }, [scenario, useRealWorld]);
 
-  // Fetch run metrics and evaluated paths from the computing engine
+  // Fetch run metrics and evaluated paths from the computing engine (Chunked)
   useEffect(() => {
     let isMounted = true;
 
@@ -109,25 +109,74 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         setStepIndex(0);
         stopAnimation();
 
-        const response = await fetch(`https://backend-1e4y.onrender.com/api/simulation/run`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ scenario, useRealWorld, seed })
-        });
+        let currentOffset = 0;
+        const limit = 1000; // Fetch 1000 steps per chunk
+        let keepFetching = true;
+        let mergedResults: any = null;
 
-        if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
-        
-        const json = await response.json();
-        
-        if (!isMounted) return;
+        while (keepFetching && isMounted) {
+          const response = await fetch(`https://backend-1e4y.onrender.com/api/simulation/run?offset=${currentOffset}&limit=${limit}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ scenario, useRealWorld, seed })
+          });
 
-        const { results, optimalPathLength } = json.data;
+          if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+          
+          const json = await response.json();
+          if (!isMounted) return;
 
-        setSimResults(results);
-        setBfsResult({ pathLength: optimalPathLength });
-        setIsComputing(false);
-        setIsCurrentSaved(false);
-        setCurrentSavedId(null);
+          const { results, optimalPathLength } = json.data;
+
+          if (currentOffset === 0) {
+            mergedResults = results;
+            setBfsResult({ pathLength: optimalPathLength });
+            setIsCurrentSaved(false);
+            setCurrentSavedId(null);
+          } else {
+            // Immutably merge subsequent chunks into the result state
+            mergedResults = {
+              bfs: {
+                ...mergedResults.bfs,
+                steps: [...mergedResults.bfs.steps, ...results.bfs.steps]
+              },
+              dfs: {
+                ...mergedResults.dfs,
+                steps: [...mergedResults.dfs.steps, ...results.dfs.steps]
+              },
+              hybrid: {
+                ...mergedResults.hybrid,
+                steps: [...mergedResults.hybrid.steps, ...results.hybrid.steps],
+                dynamicEvents: [...mergedResults.hybrid.dynamicEvents]
+              }
+            };
+            
+            // Filter and merge dynamic events uniquely by stepIndex and nodeId
+            const existingEventIds = new Set(mergedResults.hybrid.dynamicEvents.map((e: any) => `${e.stepIndex}-${e.nodeId}`));
+            results.hybrid.dynamicEvents.forEach((e: any) => {
+                if (!existingEventIds.has(`${e.stepIndex}-${e.nodeId}`)) {
+                    mergedResults.hybrid.dynamicEvents.push(e);
+                }
+            });
+          }
+
+          setSimResults(mergedResults);
+
+          // Evaluate if another chunk needs to be fetched
+          const maxStepsInChunk = Math.max(
+            results.bfs.steps.length,
+            results.dfs.steps.length,
+            results.hybrid.steps.length
+          );
+
+          if (maxStepsInChunk < limit) {
+            keepFetching = false;
+            setIsComputing(false); // Enable UI controls once streaming is fully complete
+          } else {
+            currentOffset += limit;
+          }
+        }
+
       } catch (err) {
         console.error('Simulation fetch failed:', err);
         if (isMounted) {

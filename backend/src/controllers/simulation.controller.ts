@@ -15,21 +15,31 @@ export class SimulationController {
         seed: number;
       };
 
+      // 🚀 EXTRACT CHUNKING PARAMETERS FROM QUERY STRING
+      const offset = Number(req.query.offset || 0);
+      const limit = Number(req.query.limit || 0);
+
       if (!scenario) {
         res.status(400).json({ success: false, error: 'Scenario is required' });
         return;
       }
 
       // 🔥 OFFLOAD HEAVY LIFTING TO BACKEND:
-      // Run all 3 algorithms concurrently on the server
+      // Pass the offset and limit down to the simulation runner
       const [bfsRes, dfsRes, hybridRes] = await Promise.all([
-        runSimulation(scenario, 'bfs', seed, useRealWorld),
-        runSimulation(scenario, 'dfs', seed, useRealWorld),
-        runSimulation(scenario, 'hybrid', seed, useRealWorld)
+        runSimulation(scenario, 'bfs', seed, useRealWorld, undefined, offset, limit),
+        runSimulation(scenario, 'dfs', seed, useRealWorld, undefined, offset, limit),
+        runSimulation(scenario, 'hybrid', seed, useRealWorld, undefined, offset, limit)
       ]);
 
-      // Calculate the optimal path baseline using the generated graph
-      const optimalResult = await runGraphBFS(hybridRes.graph);
+      let optimalPathLength = 0;
+      
+      // Only calculate the optimal path if this is the first chunk. 
+      // (Subsequent chunks have the graph data stripped to save payload size)
+      if (offset === 0) {
+        const optimalResult = await runGraphBFS(hybridRes.graph);
+        optimalPathLength = optimalResult.pathLength;
+      }
 
       const recordId = Math.random().toString(36).substring(7);
       
@@ -41,10 +51,14 @@ export class SimulationController {
           dfs: dfsRes,
           hybrid: hybridRes
         },
-        optimalPathLength: optimalResult.pathLength
+        optimalPathLength: optimalPathLength
       };
       
-      simulationHistory.set(recordId, record);
+      // Only save to history if it's the initial simulation run.
+      // This prevents spamming the history log with pagination chunks.
+      if (offset === 0) {
+        simulationHistory.set(recordId, record);
+      }
 
       res.status(200).json({ success: true, data: record });
     } catch (err: unknown) {
