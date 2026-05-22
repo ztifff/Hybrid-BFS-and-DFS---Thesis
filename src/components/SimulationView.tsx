@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { ScenarioType, AlgorithmStep, SimulationResult, ScenarioGraph } from '../types';
+import { ScenarioType, SimulationResult, ScenarioGraph } from '../types';
 import { getScenario } from '../config/scenarios';
 import { NetworkCanvas } from './NetworkCanvas';
 import { MetricsPanel } from './MetricsPanel';
 import { Legend } from './Legend';
 import { SimulationReport } from './SimulationReport';
 import { HistoryModal, HistoryEntry } from './HistoryModal';
+import { GlobalEnvironmentLog } from './GlobalEnvironmentLog';
+import { DynamicMapEvents } from './DynamicMapEvents';
 
 interface Props {
   scenario: ScenarioType;
@@ -256,27 +258,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     );
   }, [simResults]);
 
-  const activityLogs = useMemo(() => {
-    if (!simResults) return [];
-    const logs: { step: number; text: string; type: 'info' | 'warning' | 'success' | 'error' }[] = [];
-    const reportedBlocks = new Set<string>();
-
-    simResults.hybrid.dynamicEvents.forEach(e => {
-        if (e.blocked && !reportedBlocks.has(e.nodeId)) {
-            reportedBlocks.add(e.nodeId);
-            logs.push({ step: e.stepIndex, text: `⚠️ Environmental Change: Hazard detected at ${e.label}`, type: 'warning' });
-        } else if (!e.blocked && reportedBlocks.has(e.nodeId)) {
-            reportedBlocks.delete(e.nodeId);
-            logs.push({ step: e.stepIndex, text: `✅ Environmental Change: Route restored at ${e.label}`, type: 'success' });
-        }
-    });
-    return logs;
-  }, [simResults]);
-
-  const visibleActivityLogs = activityLogs
-    .filter(log => log.step <= stepIndex - 1)
-    .slice(-100) 
-    .reverse();
 
   const startAnimation = useCallback(() => {
     if (!simResults || totalSteps === 0) return;
@@ -537,72 +518,17 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               </div>
             )}
 
-            <div className="bg-[#0d1224] border border-gray-700 rounded-xl p-3 flex flex-col shadow-inner shrink-0 h-[220px]">
-              <div className="flex justify-between items-center mb-2 shrink-0 border-b border-gray-800 pb-2">
-                <h3 className="text-xs text-gray-400 font-bold uppercase tracking-wider flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                  Global Environment Log
-                </h3>
-              </div>
-              
-              <div 
-                className="flex-1 overflow-y-auto pr-1 space-y-2 flex flex-col" 
-                style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}
-              >
-                {visibleActivityLogs.length > 0 ? (
-                  visibleActivityLogs.map((log, i) => (
-                    <div key={`${log.step}-${i}`} className={`text-[11px] p-2 rounded border transition-all ${
-                      log.type === 'success' ? 'border-green-500/30 bg-green-900/20 text-green-300' :
-                      log.type === 'error' ? 'border-red-500/30 bg-red-900/20 text-red-400 font-bold' :
-                      log.type === 'warning' ? 'border-orange-500/30 bg-orange-900/20 text-orange-300 font-semibold' :
-                      'border-gray-700 bg-gray-800/50 text-gray-300'
-                    }`}>
-                      <span className="opacity-50 mr-1 font-mono">[{log.step}]</span> {log.text}
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-xs text-gray-500 text-center mt-6 italic">
-                    Awaiting algorithm initiation...
-                  </div>
-                )}
-              </div>
-            </div>
+            <GlobalEnvironmentLog
+              dynamicEvents={simResults?.hybrid.dynamicEvents || []}
+              stepIndex={stepIndex}
+              simResults={simResults}
+            />
 
-            {simResults && simResults.hybrid.dynamicEvents.length > 0 && (
-              <div className="bg-[#0d1224] border border-gray-700 rounded-xl p-3 flex flex-col shadow-inner shrink-0 h-[220px]">
-                <div className="flex justify-between items-center mb-2 shrink-0 border-b border-gray-800 pb-2">
-                  <h3 className="text-xs text-gray-400 font-bold uppercase tracking-wider flex items-center gap-2">
-                    📅 Dynamic Map Events
-                  </h3>
-                  <span className="text-[10px] font-mono text-gray-500">
-                    {simResults.hybrid.dynamicEvents.filter(ev => ev.stepIndex <= stepIndex).length} / {simResults.hybrid.dynamicEvents.length}
-                  </span>
-                </div>
-                
-                <div 
-                  className="flex-1 overflow-y-auto pr-1 flex flex-col gap-1.5"
-                  style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}
-                >
-                  {simResults.hybrid.dynamicEvents
-                    .filter(ev => ev.stepIndex <= stepIndex)
-                    .reverse()
-                    .map((ev, i) => (
-                      <div key={`${ev.stepIndex}-${i}`} className={`text-[11px] p-2 rounded border transition-all ${
-                        ev.blocked 
-                          ? 'border-orange-500/50 bg-orange-900/20 text-orange-300' 
-                          : 'border-green-500/50 bg-green-900/20 text-green-300' 
-                      }`}>
-                        <span className="font-mono opacity-60 mr-1">[{ev.stepIndex}]</span>
-                        {ev.blocked ? '⚡' : '✅'} {ev.label}
-                      </div>
-                    ))}
-                  {simResults.hybrid.dynamicEvents.filter(ev => ev.stepIndex <= stepIndex).length === 0 && (
-                    <div className="text-xs text-gray-500 text-center mt-6 italic">
-                      No map events triggered yet...
-                    </div>
-                  )}
-                </div>
-              </div>
+            {simResults && (
+              <DynamicMapEvents
+                dynamicEvents={simResults.hybrid.dynamicEvents}
+                stepIndex={stepIndex}
+              />
             )}
 
           </aside>
