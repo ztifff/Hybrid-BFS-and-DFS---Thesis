@@ -70,16 +70,16 @@ export const SCENARIOS: ScenarioConfig[] = [
     name: 'Game AI Pathfinding',
     icon: '🎮',
     description:
-      'A game AI agent navigates a dungeon complex from the Spawn Room to goal Portals. The dungeon has interconnected rooms, corridors, and secret passages. Enemy spawns and destructible terrain create dynamic environmental changes.',
-    dynamicDescription: 'Enemies spawn and terrain changes dynamically',
-    sourceLabel: 'Spawn Room',
-    destinationLabel: 'Goal Portal',
-    obstacleLabel: 'Enemy Blocked',
+      'A game AI agent evaluates board-game movement spaces across Chess, Checkers, and Snakes & Ladders. The agent starts from a strategy planner and searches for winning target squares while opponent pieces and rule locks can block tiles dynamically.',
+    dynamicDescription: 'Opponent pieces and rule locks block board squares dynamically',
+    sourceLabel: 'Strategy Planner',
+    destinationLabel: 'Winning Square',
+    obstacleLabel: 'Blocked Board Tile',
     color: '#8b5cf6',
     rows: 21,
     cols: 21,
-    startLabel: 'Spawn Room',
-    exitLabel: 'Goal Portal',
+    startLabel: 'Strategy Planner',
+    exitLabel: 'Winning Square',
   },
 ];
 

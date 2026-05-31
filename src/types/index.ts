@@ -40,11 +40,11 @@ export type EvacuationNodeType =
   | 'fire';
 
 export type GameAINodeType =
-  | 'spawn'        // source
-  | 'portal'       // destination
-  | 'room'
-  | 'corridor'
-  | 'enemy';
+  | 'spawn'        // strategy planner source
+  | 'portal'       // winning square destination
+  | 'room'         // board tile
+  | 'corridor'     // special board tile / penalty path
+  | 'enemy';       // blocked opponent tile
 
 export type ScenarioNodeType =
   | NetworkNodeType

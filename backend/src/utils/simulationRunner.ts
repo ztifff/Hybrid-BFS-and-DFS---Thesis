@@ -3,6 +3,7 @@ import { buildScenarioGraph, getDynamicCandidates } from './graphBuilder';
 import { runGraphBFS } from '../algorithms/bfs';
 import { runGraphDFS } from '../algorithms/dfs';
 import { runGraphHybrid } from '../algorithms/hybrid';
+import { GameAIBoard } from './gameAIGraph';
 
 export type { SimulationResult };
 
@@ -64,8 +65,9 @@ function generateDynamicEvents(
   }
 
   const isMassive = graph.nodes.length > 200;
-  const maxIncidents = isMassive ? 30 : 5; 
-  const incidentCount = Math.min(maxIncidents, Math.floor(candidates.length * 0.5));
+  const maxIncidents = scenario === 'gameai' ? 3 : (isMassive ? 30 : 5);
+  const incidentDensity = scenario === 'gameai' ? 0.04 : 0.5;
+  const incidentCount = Math.min(maxIncidents, Math.floor(candidates.length * incidentDensity));
 
   let standardLabels: { block: string, clear: string }[] = [];
   let aoeLabels: { block: string, clear: string }[] = [];
@@ -102,6 +104,17 @@ function generateDynamicEvents(
         { block: '🌐 Massive DDoS Attack', clear: '🛡️ Attack Mitigated' }
       ];
       break;
+    case 'gameai':
+      standardLabels = [
+        { block: '♟️ Opponent Piece Blocks', clear: '✅ Piece Captured' },
+        { block: '🎲 Rule Lock Freezes', clear: '🔓 Rule Lock Released' },
+        { block: '⏱️ Turn Timer Blocks', clear: '▶️ Turn Resumed' }
+      ];
+      aoeLabels = [
+        { block: '♜ Board Control Trap', clear: '♞ Tactical Escape Found' },
+        { block: '🎲 Forced Reroll Zone', clear: '✅ Board State Stabilized' }
+      ];
+      break;
     case 'traffic':
     default:
       standardLabels = [
@@ -122,11 +135,15 @@ function generateDynamicEvents(
     if (usedNodes.has(epicenterId) || protectedNodes.has(epicenterId)) continue;
     
     // 🧠 FIXED: Front-load spawns to the first 15% of total steps (min 3 steps for tiny maps)
-    const maxSpawnWindow = Math.max(3, Math.floor(totalSteps * 0.15));
+    const maxSpawnWindow = scenario === 'gameai'
+      ? Math.max(3, Math.floor(totalSteps * 0.10))
+      : Math.max(3, Math.floor(totalSteps * 0.15));
     const stepIndex = Math.floor(rng() * maxSpawnWindow); 
 
     // 🧠 FIXED: Clear hazards after a proportional duration (min 15 steps) so logs show closures and openings
-    const hazardDuration = Math.max(15, Math.floor(totalSteps * 0.30));
+    const hazardDuration = scenario === 'gameai'
+      ? Math.max(6, Math.floor(totalSteps * 0.08))
+      : Math.max(15, Math.floor(totalSteps * 0.30));
     const reopenStep = stepIndex + hazardDuration;
 
     const isAoE = isMassive && rng() > 0.55;
@@ -190,10 +207,11 @@ export async function runSimulation(
   useRealWorld: boolean = false,
   onStepProgress?: (step: AlgorithmStep) => void,
   offset: number = 0,
-  limit: number = 0
+  limit: number = 0,
+  gameBoard?: GameAIBoard
 ): Promise<SimulationResult & { meta?: { hasMore: boolean; totalSteps: number; currentOffset: number } }> {
 
-  const graph = buildScenarioGraph(scenario, useRealWorld);
+  const graph = buildScenarioGraph(scenario, useRealWorld, gameBoard);
   const startTime = performance.now();
 
   let result: {

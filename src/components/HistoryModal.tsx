@@ -39,6 +39,26 @@ const extractPrimitive = (val: any): string | number => {
   return val;
 };
 
+type AlgorithmKey = 'bfs' | 'dfs' | 'hybrid';
+type HistoryResults = Partial<Record<AlgorithmKey, SimulationResult>>;
+
+const isMultiAlgorithmResult = (value: unknown): value is HistoryResults => {
+  const result = value as HistoryResults | null;
+  return Boolean(result && typeof result === 'object' && (result.bfs || result.dfs || result.hybrid));
+};
+
+const getEntryResults = (entry: HistoryEntry): HistoryResults => {
+  if (entry.multiResults) return entry.multiResults;
+  if (isMultiAlgorithmResult(entry.simResult as unknown)) return entry.simResult as unknown as HistoryResults;
+
+  const algorithm = entry.algorithm?.toLowerCase() as AlgorithmKey;
+  if (algorithm === 'bfs' || algorithm === 'dfs' || algorithm === 'hybrid') {
+    return { [algorithm]: entry.simResult } as HistoryResults;
+  }
+
+  return { hybrid: entry.simResult };
+};
+
 export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenario, onDeleteHistory }) => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [view, setView] = useState<'list' | 'detail'>('list');
@@ -91,10 +111,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
   };
 
   const renderDetailView = (entry: HistoryEntry) => {
-    // FIX: Safely fallback for legacy data structures
-    const results = entry.multiResults || (
-      entry.algorithm ? { [entry.algorithm.toLowerCase()]: entry.simResult } : { hybrid: entry.simResult }
-    ) as any;
+    const results = getEntryResults(entry);
     
     const getData = (algo: 'bfs' | 'dfs' | 'hybrid') => {
       const res = results[algo];
@@ -108,13 +125,14 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
 
       const actualHops = Math.max(metrics.pathLength || 0, 0);
       const cRate = metrics.completionRate !== undefined ? `${metrics.completionRate.toFixed(1)}%` : '0%';
+      const optimality = getPathOptimality(actualHops, entry.optimalPathLength || 0);
       
       return {
         time: metrics.timeElapsed || 0,
         nodes: metrics.nodesExplored || 0,
         hops: actualHops,
         memory: getMemoryInMB(metrics.memoryUsed || 0),
-        optimality: extractPrimitive(getPathOptimality(actualHops, entry.optimalPathLength || 0)),
+        optimality: optimality.label,
         completion: cRate,
         adaptability: extractPrimitive(getAdaptabilityScore('done', metrics, algo, res.dynamicEvents || [])),
         success: metrics.exitFound || false
@@ -186,9 +204,9 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
                 </tr>
                 <tr>
                   <td className="py-3 text-xs text-gray-400">Path Optimality</td>
-                  {renderCell(bfs ? `${bfs.optimality}%` : 'N/A', '#4ade80', bfs !== null && !bfs.success)}
-                  {renderCell(dfs ? `${dfs.optimality}%` : 'N/A', '#ef4444', dfs !== null && !dfs.success)}
-                  {renderCell(hyb ? `${hyb.optimality}%` : 'N/A', '#fb923c', hyb !== null && !hyb.success)}
+                  {renderCell(bfs ? bfs.optimality : 'N/A', '#4ade80', bfs !== null && !bfs.success)}
+                  {renderCell(dfs ? dfs.optimality : 'N/A', '#ef4444', dfs !== null && !dfs.success)}
+                  {renderCell(hyb ? hyb.optimality : 'N/A', '#fb923c', hyb !== null && !hyb.success)}
                 </tr>
                 <tr>
                   <td className="py-3 text-xs text-gray-400">Dynamic Adaptation</td>

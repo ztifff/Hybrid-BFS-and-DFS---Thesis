@@ -34,10 +34,10 @@ const NODE_CONFIG: Record<string, { icon: string; radius: number; baseColor: str
   corridor:        { icon: '🚶', radius: 17, baseColor: '#dc2626' },
   stairwell:       { icon: '🪜', radius: 17, baseColor: '#ef4444' },
   fire:            { icon: '🔥', radius: 17, baseColor: '#7f1d1d' },
-  spawn:           { icon: '⚔️', radius: 28, baseColor: '#4c1d95' },
-  portal:          { icon: '🌀', radius: 22, baseColor: '#6d28d9' },
-  room:            { icon: '🏛️', radius: 17, baseColor: '#7c3aed' },
-  enemy:           { icon: '👹', radius: 17, baseColor: '#7f1d1d' },
+  spawn:           { icon: '♟️', radius: 28, baseColor: '#4c1d95' },
+  portal:          { icon: '🏁', radius: 22, baseColor: '#6d28d9' },
+  room:            { icon: '▣', radius: 17, baseColor: '#7c3aed' },
+  enemy:           { icon: '✖', radius: 17, baseColor: '#7f1d1d' },
 };
 
 const EDGE_CONFIG: Record<string, { color: string; dash: number[]; width: number }> = {
@@ -213,6 +213,72 @@ export const NetworkCanvas: React.FC<Props> = ({
     const baseOpacity = isDatacenter ? 0.2 : (isMassive ? 0.15 : 0.35);
     ctx.lineCap = 'round';
 
+    if (scenario === 'gameai') {
+      const boardNodes = visibleNodes.filter(node => typeof node.metadata?.board === 'string' && node.metadata.board !== 'arena');
+      const boards = Array.from(new Set(boardNodes.map(node => node.metadata?.board as string)));
+
+      boards.forEach(board => {
+        const group = boardNodes.filter(node => node.metadata?.board === board);
+        if (group.length === 0) return;
+
+        const xs = group.map(node => sx(node.x));
+        const ys = group.map(node => sy(node.y));
+        const minX = Math.min(...xs);
+        const maxX = Math.max(...xs);
+        const minY = Math.min(...ys);
+        const maxY = Math.max(...ys);
+        const uniqueX = Array.from(new Set(xs.map(value => Math.round(value)))).sort((a, b) => a - b);
+        const uniqueY = Array.from(new Set(ys.map(value => Math.round(value)))).sort((a, b) => a - b);
+        const dx = uniqueX.length > 1 ? uniqueX[1] - uniqueX[0] : 38;
+        const dy = uniqueY.length > 1 ? uniqueY[1] - uniqueY[0] : 38;
+        const tileSize = Math.min(dx, dy) * 0.92;
+
+        ctx.save();
+        ctx.globalAlpha = 0.78;
+        group.forEach(node => {
+          const row = Number(node.metadata?.row ?? 0);
+          const col = Number(node.metadata?.col ?? 0);
+          const cx = sx(node.x);
+          const cy = sy(node.y);
+
+          if (board === 'chess') {
+            ctx.fillStyle = (row + col) % 2 === 0 ? '#e5e7eb' : '#334155';
+          } else if (board === 'checkers') {
+            ctx.fillStyle = (row + col) % 2 === 0 ? '#111827' : '#991b1b';
+          } else {
+            const palette = ['#14532d', '#0f766e', '#1d4ed8', '#7c2d12'];
+            ctx.fillStyle = palette[(row + col) % palette.length];
+          }
+
+          ctx.fillRect(cx - tileSize / 2, cy - tileSize / 2, tileSize, tileSize);
+        });
+        ctx.restore();
+
+        ctx.save();
+        ctx.strokeStyle = board === 'checkers' ? '#f87171' : board === 'chess' ? '#cbd5e1' : '#fde68a';
+        ctx.lineWidth = 1.5 / zoom;
+        ctx.strokeRect(
+          minX - tileSize / 2,
+          minY - tileSize / 2,
+          (maxX - minX) + tileSize,
+          (maxY - minY) + tileSize
+        );
+
+        ctx.font = `bold ${14 / zoom}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.lineWidth = 3 / zoom;
+        ctx.strokeStyle = '#0a0f1e';
+        ctx.fillStyle = '#f8fafc';
+        const boardTitle = board === 'snakes' ? 'Snakes & Ladders' : board[0].toUpperCase() + board.slice(1);
+        const titleX = minX + ((maxX - minX) / 2);
+        const titleY = minY - (tileSize * 0.9);
+        ctx.strokeText(boardTitle, titleX, titleY);
+        ctx.fillText(boardTitle, titleX, titleY);
+        ctx.restore();
+      });
+    }
+
     // 1. Draw Edges
     visibleEdges.forEach(edge => {
       const fromNode = visibleNodeMap.get(edge.from);
@@ -339,6 +405,7 @@ export const NetworkCanvas: React.FC<Props> = ({
 
       let fillColor = cfg.baseColor;
       let opacity = (isMassive && !isImportant) ? 0.3 : 1;
+      const blockedIcon = scenario === 'gameai' ? '✖' : '💀';
 
       if (isBlocked) { fillColor = '#450a0a'; opacity = 1; } 
       else if (isSource) { fillColor = '#16a34a'; } 
@@ -436,7 +503,7 @@ export const NetworkCanvas: React.FC<Props> = ({
             // Inner icon size locked strictly to node radius (no zoom division math)
             const iconSize = r * 1.1; 
             ctx.font = `${iconSize}px sans-serif`;
-            ctx.fillText(isBlocked ? '💀' : cfg.icon, cx, cy);
+            ctx.fillText(isBlocked ? blockedIcon : cfg.icon, cx, cy);
             
             // Labels stay a readable constant size on screen
             const baseLabelSize = isImportant ? 14 : 12;
@@ -449,7 +516,7 @@ export const NetworkCanvas: React.FC<Props> = ({
           } else {
             const iconSize = r * 1.3;
             ctx.font = `${iconSize}px sans-serif`;
-            ctx.fillText(isBlocked ? '💀' : cfg.icon, cx, cy);
+            ctx.fillText(isBlocked ? blockedIcon : cfg.icon, cx, cy);
             
             const baseLabelSize = isImportant ? 12 : 10;
             const labelSize = baseLabelSize / zoom;
@@ -468,7 +535,7 @@ export const NetworkCanvas: React.FC<Props> = ({
     });
 
   // Adding windowDimensions to the dependency array ensures resizing updates the canvas visually
-  }, [visibleNodes, visibleEdges, visibleNodeMap, pan, zoom, sets, activeBlocked, width, height, isMassive, isDatacenter, cBFS, cDFS, cHYB, scale, offsetX, offsetY, windowDimensions]);
+  }, [visibleNodes, visibleEdges, visibleNodeMap, pan, zoom, sets, activeBlocked, width, height, scenario, isMassive, isDatacenter, cBFS, cDFS, cHYB, scale, offsetX, offsetY, windowDimensions]);
 
   // Mouse Handlers
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {

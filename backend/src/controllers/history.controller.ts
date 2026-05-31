@@ -4,7 +4,19 @@
 // ============================================================
 
 import { Request, Response } from 'express';
-import { simulationHistory } from '../store/historyStore';
+import { simulationHistory, HistoryEntry } from '../store/historyStore';
+
+type IncomingHistoryEntry = Partial<Omit<HistoryEntry, 'timestamp'>> & {
+  timestamp?: string | Date;
+};
+
+const createHistoryId = (): string =>
+  `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+const parseTimestamp = (timestamp?: string | Date): Date => {
+  const parsed = timestamp ? new Date(timestamp) : new Date();
+  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+};
 
 export class HistoryController {
   
@@ -21,7 +33,44 @@ export class HistoryController {
     }
   }
 
-  // 2. Get a single history entry by ID
+  // 2. Save a history entry from the frontend
+  async createHistory(req: Request, res: Response): Promise<void> {
+    try {
+      const body = req.body as IncomingHistoryEntry;
+      const simResult = body.simResult ?? body.multiResults?.hybrid;
+
+      if (!body.name || !body.scenario || !simResult) {
+        res.status(400).json({
+          success: false,
+          error: 'History entry requires name, scenario, and simResult or multiResults'
+        });
+        return;
+      }
+
+      const record: HistoryEntry = {
+        id: body.id || createHistoryId(),
+        runNumber: typeof body.runNumber === 'number' && Number.isFinite(body.runNumber)
+          ? body.runNumber
+          : simulationHistory.size + 1,
+        name: body.name,
+        algorithm: body.algorithm || 'hybrid',
+        scenario: body.scenario,
+        simResult,
+        multiResults: body.multiResults,
+        optimalPathLength: body.optimalPathLength ?? simResult.metrics?.pathLength ?? 0,
+        totalNodes: body.totalNodes ?? simResult.graph?.nodes?.length ?? 0,
+        timestamp: parseTimestamp(body.timestamp)
+      };
+
+      simulationHistory.set(record.id, record);
+      res.status(201).json({ success: true, data: record });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to save history';
+      res.status(500).json({ success: false, error: message });
+    }
+  }
+
+  // 3. Get a single history entry by ID
   async getById(req: Request, res: Response): Promise<void> {
     try {
       const result = simulationHistory.get(req.params.id);
@@ -35,7 +84,7 @@ export class HistoryController {
     }
   }
 
-  // 3. Delete one or multiple entries
+  // 4. Delete one or multiple entries
   async deleteHistory(req: Request, res: Response): Promise<void> {
     try {
       // Allow passing a single ID in URL or an array of IDs in the body

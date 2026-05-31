@@ -43,10 +43,10 @@ const SCENARIO_NODE_ITEMS: Record<ScenarioType, LegendItem[]> = {
     { color: '#450a0a', label: 'Fire Blocked',              icon: '🔥' },
   ],
   gameai: [
-    { color: '#4c1d95', label: 'Spawn Room (Source)', icon: '⚔️' },
-    { color: '#6d28d9', label: 'Goal Portal (Target)', icon: '🌀' },
-    { color: '#7c3aed', label: 'Room / Corridor',     icon: '🏛️' },
-    { color: '#450a0a', label: 'Enemy Blocked',       icon: '👹' },
+    { color: '#4c1d95', label: 'Strategy Planner (Source)', icon: '♟️' },
+    { color: '#6d28d9', label: 'Winning Square (Target)', icon: '🏁' },
+    { color: '#7c3aed', label: 'Board Tile / Legal Move', icon: '▣' },
+    { color: '#450a0a', label: 'Blocked Board Tile', icon: '✖' },
   ],
 };
 
@@ -66,8 +66,9 @@ const EDGE_ITEMS: Record<ScenarioType, LegendItem[]> = {
     { color: '#c4b5fd', label: 'Stairwell Descent' },
   ],
   gameai: [
-    { color: '#fca5a5', label: 'Corridor', dashed: true },
-    { color: '#fdba74', label: 'Secret Passage', dashed: true },
+    { color: '#c4b5fd', label: 'Legal Move' },
+    { color: '#fdba74', label: 'Jump / Ladder Shortcut', dashed: true },
+    { color: '#fca5a5', label: 'Snake Slide / Rule Penalty', dashed: true },
   ],
 };
 

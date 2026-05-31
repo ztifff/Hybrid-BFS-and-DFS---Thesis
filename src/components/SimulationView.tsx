@@ -15,6 +15,32 @@ interface Props {
 
 type Status = 'idle' | 'running' | 'done' | 'paused';
 const STEP_INTERVAL_MS = 60;
+const HISTORY_API = 'https://backend-1e4y.onrender.com/api/history';
+
+const getLocalHistoryKey = (scenario: ScenarioType) => `simulation_history_${scenario}`;
+
+const normalizeHistoryEntry = (entry: any): HistoryEntry => ({
+  ...entry,
+  simResult: entry.simResult ?? entry.multiResults?.hybrid,
+  timestamp: entry.timestamp ? new Date(entry.timestamp) : new Date()
+});
+
+const normalizeHistoryEntries = (entries: any[]): HistoryEntry[] =>
+  entries
+    .filter(entry => entry && (entry.simResult || entry.multiResults?.hybrid))
+    .map(normalizeHistoryEntry);
+
+const loadLocalHistory = (scenario: ScenarioType): HistoryEntry[] => {
+  const storedData = localStorage.getItem(getLocalHistoryKey(scenario));
+  if (!storedData) return [];
+
+  const parsed = JSON.parse(storedData);
+  return Array.isArray(parsed) ? normalizeHistoryEntries(parsed) : [];
+};
+
+const persistLocalHistory = (scenario: ScenarioType, entries: HistoryEntry[]) => {
+  localStorage.setItem(getLocalHistoryKey(scenario), JSON.stringify(entries));
+};
 
 export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -44,25 +70,41 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const [status, setStatus] = useState<Status>('idle');
   const animRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
-    const storageKey = `simulation_history_${scenario}`;
-    const storedData = localStorage.getItem(storageKey);
-    
-    if (storedData) {
+  const loadHistory = useCallback(async () => {
+    try {
+      const response = await fetch(HISTORY_API);
+      if (!response.ok) throw new Error(`History API Error: ${response.statusText}`);
+
+      const json = await response.json();
+      const backendEntries = Array.isArray(json.data) ? normalizeHistoryEntries(json.data) : [];
+
       try {
-        const parsed = JSON.parse(storedData);
-        const hydratedData = parsed.map((entry: any) => ({
-          ...entry,
-          timestamp: new Date(entry.timestamp)
-        }));
-        setHistory(hydratedData);
-      } catch (error) {
-        console.error(`Failed to parse history for ${scenario}`, error);
+        const localEntries = loadLocalHistory(scenario);
+        const mergedEntries = [...backendEntries];
+        localEntries.forEach(localEntry => {
+          if (!mergedEntries.some(entry => entry.id === localEntry.id)) {
+            mergedEntries.push(localEntry);
+          }
+        });
+        setHistory(mergedEntries);
+      } catch (localError) {
+        console.error(`Failed to parse local history for ${scenario}`, localError);
+        setHistory(backendEntries);
       }
-    } else {
-      setHistory([]);
+    } catch (error) {
+      console.error('Failed to fetch history from backend. Falling back to local history.', error);
+      try {
+        setHistory(loadLocalHistory(scenario));
+      } catch (localError) {
+        console.error(`Failed to parse local history for ${scenario}`, localError);
+        setHistory([]);
+      }
     }
   }, [scenario]);
+
+  useEffect(() => {
+    void loadHistory();
+  }, [loadHistory]);
 
   const stopAnimation = useCallback(() => {
     if (animRef.current) {
@@ -77,7 +119,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     const fetchGraphStructure = async () => {
       try {
         setIsGraphLoading(true);
-        const response = await fetch(`api/network/graph?scenario=${scenario}&useRealWorld=${useRealWorld}`);
+        const response = await fetch(`https://backend-1e4y.onrender.com/api/network/graph?scenario=${scenario}&useRealWorld=${useRealWorld}`);
         if (!response.ok) throw new Error(`Graph API Error: ${response.statusText}`);
         const json = await response.json();
         
@@ -116,7 +158,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         let mergedResults: any = null;
 
         while (keepFetching && isMounted) {
-          const response = await fetch(`api/simulation/run?offset=${currentOffset}&limit=${limit}`, {
+          const response = await fetch(`https://backend-1e4y.onrender.com/api/simulation/run?offset=${currentOffset}&limit=${limit}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ scenario, useRealWorld, seed })
@@ -198,19 +240,23 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const openSaveModal = useCallback(() => {
     if (!simResults || isCurrentSaved) return;
     
-    const maxRun = history.reduce((max, h) => Math.max(max, h.runNumber), 0);
+    const maxRun = history
+      .filter(h => h.scenario === scenario)
+      .reduce((max, h) => Math.max(max, h.runNumber), 0);
     const nextRunNumber = maxRun + 1;
     const defaultName = `Multi-Alg Trial #${nextRunNumber}`;
     
     setSaveDefaultName(defaultName);
     setSaveNameInput(defaultName); 
     setIsSaveModalOpen(true);
-  }, [simResults, isCurrentSaved, history]);
+  }, [simResults, isCurrentSaved, history, scenario]);
 
-  const confirmSaveResult = useCallback(() => {
+  const confirmSaveResult = useCallback(async () => {
     if (!simResults || !currentGraph) return;
     
-    const maxRun = history.reduce((max, h) => Math.max(max, h.runNumber), 0);
+    const maxRun = history
+      .filter(h => h.scenario === scenario)
+      .reduce((max, h) => Math.max(max, h.runNumber), 0);
     const thisRunNumber = maxRun + 1;
     const finalName = saveNameInput.trim() === '' ? saveDefaultName : saveNameInput.trim();
 
@@ -238,24 +284,48 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
       name: finalName,
       algorithm: 'hybrid', 
       scenario: scenario, 
-      simResult: compressedSimResult as any, // 🔧 FIXED: Bypasses strict TS error for multi-alg output
+      simResult: compressedSimResult.hybrid,
+      multiResults: compressedSimResult,
       optimalPathLength: bfsResult?.pathLength || 1,
       totalNodes: currentGraph.nodes.length,
       timestamp: new Date()
     };
 
+    let savedEntry = newEntry;
+    let savedToBackend = false;
+
+    try {
+      const response = await fetch(HISTORY_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newEntry)
+      });
+
+      if (!response.ok) throw new Error(`History API Error: ${response.statusText}`);
+
+      const json = await response.json();
+      savedEntry = normalizeHistoryEntry(json.data ?? newEntry);
+      savedToBackend = true;
+    } catch (error) {
+      console.error('Failed to save history to backend. Keeping a local copy instead.', error);
+    }
+
     setHistory(prev => {
-      const updatedHistory = [newEntry, ...prev];
+      const updatedHistory = [savedEntry, ...prev.filter(h => h.id !== savedEntry.id)];
       try {
-        localStorage.setItem(`simulation_history_${scenario}`, JSON.stringify(updatedHistory));
+        persistLocalHistory(scenario, updatedHistory.filter(h => h.scenario === scenario));
       } catch (err) {
-        alert("Browser storage limit reached! Cannot save more history.");
+        if (!savedToBackend) {
+          alert("Browser storage limit reached and backend save failed. This result may not persist after refresh.");
+        } else {
+          console.warn('History saved to backend, but local cache could not be updated:', err);
+        }
       }
       return updatedHistory;
     });
     
     setIsCurrentSaved(true);
-    setCurrentSavedId(newEntryId);
+    setCurrentSavedId(savedEntry.id);
     setIsSaveModalOpen(false);
   }, [simResults, bfsResult, currentGraph, saveNameInput, saveDefaultName, scenario, history]);
 
@@ -371,6 +441,49 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     setSeed(Date.now());
   };
 
+  const scenarioHistoryCount = useMemo(
+    () => history.filter(h => h.scenario === scenario).length,
+    [history, scenario]
+  );
+
+  const handleDeleteHistory = useCallback((ids: string[]) => {
+    if (ids.length === 0) return;
+
+    setHistory(prev => {
+      const updatedHistory = prev.filter(h => !ids.includes(h.id));
+      try {
+        persistLocalHistory(scenario, updatedHistory.filter(h => h.scenario === scenario));
+      } catch (err) {
+        console.error('Failed to update local history after delete:', err);
+      }
+      return updatedHistory;
+    });
+
+    if (currentSavedId && ids.includes(currentSavedId)) {
+      setIsCurrentSaved(false);
+      setCurrentSavedId(null);
+    }
+
+    void (async () => {
+      try {
+        const response = await fetch(
+          ids.length === 1 ? `${HISTORY_API}/${encodeURIComponent(ids[0])}` : HISTORY_API,
+          ids.length === 1
+            ? { method: 'DELETE' }
+            : {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids })
+              }
+        );
+
+        if (!response.ok) throw new Error(`History API Error: ${response.statusText}`);
+      } catch (error) {
+        console.error('Failed to delete history from backend:', error);
+      }
+    })();
+  }, [currentSavedId, scenario]);
+
   return (
     <>
       <div className="min-h-screen lg:h-screen w-full max-w-[100vw] overflow-x-hidden bg-[#0a0f1e] text-white flex flex-col lg:overflow-hidden relative z-0">
@@ -404,7 +517,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             >
               🗄️ 
               <span className="hidden sm:inline">Result History</span>
-              <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full leading-none">{history.length}</span>
+              <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full leading-none">{scenarioHistoryCount}</span>
             </button>
           </div>
         </header>
@@ -452,7 +565,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 </div>
               </div>
 
-              {(scenario === 'traffic' || scenario === 'evacuation' || scenario === 'gameai' || scenario === 'robotics' || scenario === 'network') && (
+              {(scenario === 'traffic' || scenario === 'evacuation' || scenario === 'robotics' || scenario === 'network') && (
                 <div className="flex flex-col items-center gap-2 mt-2 w-full max-w-sm">
                   <label className={`flex justify-center items-center gap-2 cursor-pointer text-sm font-semibold bg-gray-800 px-4 py-2 rounded-lg border w-full ${isComputing || isGraphLoading ? 'border-gray-700 opacity-50 cursor-not-allowed' : 'border-gray-600 hover:bg-gray-700 transition-colors'}`}>
                     <input
@@ -463,7 +576,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                       className="w-4 h-4 rounded border-gray-600 text-blue-500 bg-gray-900"
                     />
                     {scenario === 'traffic' ? '🌍 Enable Real-World Map (Cabuyao City)' : 
-                     scenario === 'gameai' ? '⚔️ Enable Real-World Map (Elden Ring)' :
                      scenario === 'robotics' ? '🤖 Enable Real-World Map (AWS Warehouse)' :
                      scenario === 'network' ? '🌐 Enable Real-World Map (Cloud Datacenter)' :
                     '🏢 Enable Real-World Building (SM City Santa Rosa)'}
@@ -543,17 +655,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         onClose={() => setIsHistoryModalOpen(false)}
         history={history}
         scenario={scenario} 
-        onDeleteHistory={(ids) => {
-          setHistory(prev => {
-            const updated = prev.filter(h => !ids.includes(h.id));
-            localStorage.setItem(`simulation_history_${scenario}`, JSON.stringify(updated));
-            return updated;
-          });
-          if (currentSavedId && ids.includes(currentSavedId)) {
-            setIsCurrentSaved(false);
-            setCurrentSavedId(null);
-          }
-        }}
+        onDeleteHistory={handleDeleteHistory}
       />
 
       {isSaveModalOpen && (
