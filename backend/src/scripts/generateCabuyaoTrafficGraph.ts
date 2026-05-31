@@ -37,16 +37,15 @@ interface ScenarioGraph {
   height: number;
 }
 
-// Bounding box covering full Cabuyao boundaries (from SLEX down to the Lake shorelines)
 const BBOX = { south: 14.20, west: 121.08, north: 14.32, east: 121.18 };
-const W = 1200; // Expanded viewport resolution slightly for clearer scannability
+const W = 1200; 
 const H = 900;
 
-// ✅ EXPANDED: Included residential, unclassified, and major arterial links for thorough coverage
-const HIGHWAY_REGEX = "motorway|trunk|primary|secondary|tertiary|residential|unclassified";
+// BALANCED DENSITY: Keep local roads to maintain the visual web
+const HIGHWAY_REGEX = "motorway|trunk|primary|secondary|tertiary|unclassified|residential";
 
-// ✅ ADJUSTED: 65m clustering radius keeps localized residential node blocks condensed and clean
-const MERGE_RADIUS_METERS = 65; 
+// AGGRESSIVE CLUSTERING: Absorb tight residential blocks into single nodes
+const MERGE_RADIUS_METERS = 150;
 
 function haversineMeters(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371000;
@@ -63,7 +62,7 @@ function estimateSpeedKph(highway: string | undefined) {
   if (highway === "primary") return 45;
   if (highway === "secondary") return 35;
   if (highway === "tertiary") return 30;
-  return 20; // Default slow speed limits for inner residential/barangay pathways
+  return 20;
 }
 
 async function fetchOverpassRoads(): Promise<OverpassResponse> {
@@ -124,7 +123,6 @@ async function main() {
     w.nodes.forEach(id => nodeUsageCount.set(id, (nodeUsageCount.get(id) || 0) + 1));
   });
 
-  // Pinpoint Central Center Anchor near Cabuyao City Hall
   const centerLat = 14.2766;
   const centerLon = 121.1232;
   let sourceOsm = Array.from(osmNodes.keys())[0];
@@ -138,7 +136,6 @@ async function main() {
     }
   });
 
-  // Calculate Extremities for Peripheral Escape Outlets
   let nId = sourceOsm, sId = sourceOsm, eId = sourceOsm, wId = sourceOsm;
   let maxLat = -Infinity, minLat = Infinity, maxLon = -Infinity, minLon = Infinity;
 
@@ -164,7 +161,6 @@ async function main() {
     });
   });
 
-  // Node Clustering Optimization System
   const nodeAliases = new Map<number, number>();
   const sortedJunctions = Array.from(junctionCandidates).sort((a, b) => {
     const aW = (specialDestinations.has(a) || a === sourceOsm) ? 1 : 0;
@@ -192,7 +188,6 @@ async function main() {
 
   const getAlias = (id: number) => nodeAliases.get(id) || id;
 
-  // Track human-readable street names intersecting at specific locations
   const nodeStreetNames = new Map<number, Set<string>>();
   ways.forEach(w => {
     const sName = w.tags?.name || w.tags?.alt_name;

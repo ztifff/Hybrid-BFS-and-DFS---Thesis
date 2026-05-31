@@ -13,7 +13,7 @@ export interface HistoryEntry {
   multiResults?: { bfs: SimulationResult, dfs: SimulationResult, hybrid: SimulationResult };
   optimalPathLength: number;
   totalNodes: number;
-  timestamp: Date | string; // Adjusted to handle backend date parsing strings
+  timestamp: Date | string; 
 }
 
 interface Props {
@@ -28,6 +28,15 @@ const SCENARIO_BADGES: Record<string, string> = {
   network: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
   warehouse: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
   traffic: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+};
+
+// Helper utility to safely extract primitive values from MetricsPanel object returns
+const extractPrimitive = (val: any): string | number => {
+  if (val === null || val === undefined) return 'N/A';
+  if (typeof val === 'object') {
+    return val.score ?? val.value ?? val.text ?? Object.values(val)[0] as string | number;
+  }
+  return val;
 };
 
 export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenario, onDeleteHistory }) => {
@@ -45,7 +54,6 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
     }
   }, [isOpen]);
 
-  // Filter history if a specific scenario filter is passed from the dashboard view
   const filteredHistory = useMemo(() => {
     if (!scenario) return history;
     return history.filter(h => h.scenario === scenario);
@@ -83,22 +91,33 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
   };
 
   const renderDetailView = (entry: HistoryEntry) => {
-    const results = entry.multiResults || { bfs: entry.simResult, dfs: entry.simResult, hybrid: entry.simResult };
+    // FIX: Safely fallback for legacy data structures
+    const results = entry.multiResults || (
+      entry.algorithm ? { [entry.algorithm.toLowerCase()]: entry.simResult } : { hybrid: entry.simResult }
+    ) as any;
     
     const getData = (algo: 'bfs' | 'dfs' | 'hybrid') => {
       const res = results[algo];
       if (!res) return null;
-      const actualHops = Math.max(res.metrics.pathLength, 0);
-      const cRate = res.metrics.completionRate !== undefined ? `${res.metrics.completionRate.toFixed(1)}%` : '0%';
+      
+      // FIX: Fallback to `res` itself if `metrics` is undefined (handles older saved histories)
+      const metrics = res.metrics || res;
+      
+      // If it's so corrupted that pathLength isn't even there, bail out safely
+      if (metrics.pathLength === undefined) return null;
+
+      const actualHops = Math.max(metrics.pathLength || 0, 0);
+      const cRate = metrics.completionRate !== undefined ? `${metrics.completionRate.toFixed(1)}%` : '0%';
+      
       return {
-        time: res.metrics.timeElapsed,
-        nodes: res.metrics.nodesExplored,
+        time: metrics.timeElapsed || 0,
+        nodes: metrics.nodesExplored || 0,
         hops: actualHops,
-        memory: getMemoryInMB(res.metrics.memoryUsed),
-        optimality: getPathOptimality(actualHops, entry.optimalPathLength),
+        memory: getMemoryInMB(metrics.memoryUsed || 0),
+        optimality: extractPrimitive(getPathOptimality(actualHops, entry.optimalPathLength || 0)),
         completion: cRate,
-        adaptability: getAdaptabilityScore('done', res.metrics, algo, res.dynamicEvents),
-        success: res.metrics.exitFound
+        adaptability: extractPrimitive(getAdaptabilityScore('done', metrics, algo, res.dynamicEvents || [])),
+        success: metrics.exitFound || false
       };
     };
 
@@ -112,6 +131,16 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
       </td>
     );
 
+    // Identify the best base graph and parameters to pass to the visualizer safely
+    const baseGraph = results.hybrid?.graph || results.bfs?.graph || results.dfs?.graph || entry.simResult?.graph;
+    const allEvents = results.hybrid?.dynamicEvents || results.bfs?.dynamicEvents || results.dfs?.dynamicEvents || entry.simResult?.dynamicEvents || [];
+    const maxSteps = Math.max(
+      results.bfs?.steps?.length || 0,
+      results.dfs?.steps?.length || 0,
+      results.hybrid?.steps?.length || 0,
+      entry.simResult?.steps?.length || 0
+    );
+
     return (
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 p-2 h-full overflow-hidden">
         {/* Left Side: Massive Comparison Metrics Dashboard */}
@@ -119,7 +148,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
           <div className="bg-gray-900/60 border border-gray-800 rounded-xl p-4 backdrop-blur-md shadow-2xl">
             <div className="flex justify-between items-center mb-4 border-b border-gray-800 pb-2">
               <h3 className="font-bold text-white text-xs uppercase tracking-widest text-blue-400">🏆 Execution Benchmarks</h3>
-              <span className="text-[10px] font-mono text-gray-500">RUN #{entry.runNumber}</span>
+              <span className="text-[10px] font-mono text-gray-500">RUN #{entry.runNumber || 'N/A'}</span>
             </div>
             <table className="w-full text-left border-collapse">
               <thead>
@@ -133,45 +162,45 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
               <tbody className="divide-y divide-gray-800/40">
                 <tr>
                   <td className="py-3 text-xs text-gray-400">Exec Time</td>
-                  {renderCell(bfs ? `${bfs.time.toFixed(2)} ms` : 'N/A', '#4ade80', !bfs?.success)}
-                  {renderCell(dfs ? `${dfs.time.toFixed(2)} ms` : 'N/A', '#c084fc', !dfs?.success)}
-                  {renderCell(hyb ? `${hyb.time.toFixed(2)} ms` : 'N/A', '#fb923c', !hyb?.success)}
+                  {renderCell(bfs ? `${bfs.time.toFixed(2)} ms` : 'N/A', '#4ade80', bfs !== null && !bfs.success)}
+                  {renderCell(dfs ? `${dfs.time.toFixed(2)} ms` : 'N/A', '#c084fc', dfs !== null && !dfs.success)}
+                  {renderCell(hyb ? `${hyb.time.toFixed(2)} ms` : 'N/A', '#fb923c', hyb !== null && !hyb.success)}
                 </tr>
                 <tr>
                   <td className="py-3 text-xs text-gray-400">Total Hops Length</td>
-                  {renderCell(bfs ? `${bfs.hops} nodes` : 'N/A', '#cbd5e1', !bfs?.success)}
-                  {renderCell(dfs ? `${dfs.hops} nodes` : 'N/A', '#cbd5e1', !dfs?.success)}
-                  {renderCell(hyb ? `${hyb.hops} nodes` : 'N/A', '#cbd5e1', !hyb?.success)}
+                  {renderCell(bfs ? `${bfs.hops} nodes` : 'N/A', '#cbd5e1', bfs !== null && !bfs.success)}
+                  {renderCell(dfs ? `${dfs.hops} nodes` : 'N/A', '#cbd5e1', dfs !== null && !dfs.success)}
+                  {renderCell(hyb ? `${hyb.hops} nodes` : 'N/A', '#cbd5e1', hyb !== null && !hyb.success)}
                 </tr>
                 <tr>
                   <td className="py-3 text-xs text-gray-400">Nodes Swept/Explored</td>
-                  {renderCell(bfs ? bfs.nodes : 'N/A', '#94a3b8', !bfs?.success)}
-                  {renderCell(dfs ? dfs.nodes : 'N/A', '#94a3b8', !dfs?.success)}
-                  {renderCell(hyb ? hyb.nodes : 'N/A', '#94a3b8', !hyb?.success)}
+                  {renderCell(bfs ? bfs.nodes : 'N/A', '#94a3b8', bfs !== null && !bfs.success)}
+                  {renderCell(dfs ? dfs.nodes : 'N/A', '#94a3b8', dfs !== null && !dfs.success)}
+                  {renderCell(hyb ? hyb.nodes : 'N/A', '#94a3b8', hyb !== null && !hyb.success)}
                 </tr>
                 <tr>
                   <td className="py-3 text-xs text-gray-400">Memory Allocation</td>
-                  {renderCell(bfs ? `${bfs.memory} MB` : 'N/A', '#cbd5e1', !bfs?.success)}
-                  {renderCell(dfs ? `${dfs.memory} MB` : 'N/A', '#cbd5e1', !dfs?.success)}
-                  {renderCell(hyb ? `${hyb.memory} MB` : 'N/A', '#cbd5e1', !hyb?.success)}
+                  {renderCell(bfs ? bfs.memory : 'N/A', '#cbd5e1', bfs !== null && !bfs.success)}
+                  {renderCell(dfs ? dfs.memory : 'N/A', '#cbd5e1', dfs !== null && !dfs.success)}
+                  {renderCell(hyb ? hyb.memory : 'N/A', '#cbd5e1', hyb !== null && !hyb.success)}
                 </tr>
                 <tr>
                   <td className="py-3 text-xs text-gray-400">Path Optimality</td>
-                  {renderCell(bfs ? `${bfs.optimality}%` : 'N/A', '#4ade80', !bfs?.success)}
-                  {renderCell(dfs ? `${dfs.optimality}%` : 'N/A', '#ef4444', !dfs?.success)}
-                  {renderCell(hyb ? `${hyb.optimality}%` : 'N/A', '#fb923c', !hyb?.success)}
+                  {renderCell(bfs ? `${bfs.optimality}%` : 'N/A', '#4ade80', bfs !== null && !bfs.success)}
+                  {renderCell(dfs ? `${dfs.optimality}%` : 'N/A', '#ef4444', dfs !== null && !dfs.success)}
+                  {renderCell(hyb ? `${hyb.optimality}%` : 'N/A', '#fb923c', hyb !== null && !hyb.success)}
                 </tr>
                 <tr>
                   <td className="py-3 text-xs text-gray-400">Dynamic Adaptation</td>
-                  {renderCell(bfs ? `${bfs.adaptability}/100` : 'N/A', '#cbd5e1', !bfs?.success)}
-                  {renderCell(dfs ? `${dfs.adaptability}/100` : 'N/A', '#cbd5e1', !dfs?.success)}
-                  {renderCell(hyb ? `${hyb.adaptability}/100` : 'N/A', '#fb923c', !hyb?.success)}
+                  {renderCell(bfs ? `${bfs.adaptability}/100` : 'N/A', '#cbd5e1', bfs !== null && !bfs.success)}
+                  {renderCell(dfs ? `${dfs.adaptability}/100` : 'N/A', '#cbd5e1', dfs !== null && !dfs.success)}
+                  {renderCell(hyb ? `${hyb.adaptability}/100` : 'N/A', '#fb923c', hyb !== null && !hyb.success)}
                 </tr>
                 <tr className="bg-gray-950/20">
                   <td className="py-3 text-xs text-gray-400 font-semibold">Task Complete Rate</td>
-                  {renderCell(bfs ? bfs.completion : 'N/A', '#4ade80', !bfs?.success)}
-                  {renderCell(dfs ? dfs.completion : 'N/A', '#c084fc', !dfs?.success)}
-                  {renderCell(hyb ? hyb.completion : 'N/A', '#fb923c', !hyb?.success)}
+                  {renderCell(bfs ? bfs.completion : 'N/A', '#4ade80', bfs !== null && !bfs.success)}
+                  {renderCell(dfs ? dfs.completion : 'N/A', '#c084fc', dfs !== null && !dfs.success)}
+                  {renderCell(hyb ? hyb.completion : 'N/A', '#fb923c', hyb !== null && !hyb.success)}
                 </tr>
               </tbody>
             </table>
@@ -179,23 +208,24 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
 
           <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 text-xs text-gray-400 space-y-2">
             <span className="font-bold text-gray-300 block uppercase text-[10px] tracking-wider text-orange-400">📌 Structural Metadata Summary</span>
-            <p>This entry documents an evaluated graph grid composed of <strong className="text-white">{entry.totalNodes} total nodes</strong> running across real-world topology presets. The baseline optimal path calculation requires a theoretical minimum index of <strong className="text-white">{entry.optimalPathLength} hops</strong>.</p>
+            <p>This entry documents an evaluated graph grid composed of <strong className="text-white">{entry.totalNodes || 0} total nodes</strong> running across real-world topology presets. The baseline optimal path calculation requires a theoretical minimum index of <strong className="text-white">{entry.optimalPathLength || 0} hops</strong>.</p>
           </div>
         </div>
 
         {/* Right Side: High-performance Network Canvas Topology Visualizer */}
         <div className="xl:col-span-3 h-[450px] xl:h-full min-h-[400px] w-full bg-[#0a0f1e] rounded-xl border border-gray-800 overflow-hidden shadow-inner relative">
-          {results.hybrid && (
+          {baseGraph && (
             <NetworkCanvas 
-              graph={results.hybrid.graph} 
+              graph={baseGraph} 
               activeSteps={{
-                bfs: null, 
-                dfs: null, 
-                hybrid: results.hybrid.steps[results.hybrid.steps.length - 1] || null
+                // FIX: Safely extract the last step without throwing undefined array read errors
+                bfs: results.bfs?.steps?.length ? results.bfs.steps[results.bfs.steps.length - 1] : null, 
+                dfs: results.dfs?.steps?.length ? results.dfs.steps[results.dfs.steps.length - 1] : null, 
+                hybrid: results.hybrid?.steps?.length ? results.hybrid.steps[results.hybrid.steps.length - 1] : null
               }} 
               scenario={entry.scenario} 
-              stepIndex={results.hybrid.steps.length} 
-              dynamicEvents={results.hybrid.dynamicEvents || []} 
+              stepIndex={maxSteps} 
+              dynamicEvents={allEvents} 
             />
           )}
         </div>
@@ -253,7 +283,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
                   const isSelected = selectedIds.has(entry.id);
                   const formattedDate = typeof entry.timestamp === 'string' 
                     ? new Date(entry.timestamp).toLocaleString() 
-                    : entry.timestamp.toLocaleString();
+                    : entry.timestamp?.toLocaleString() || 'Unknown Date';
 
                   return (
                     <div 

@@ -256,6 +256,50 @@ export const NetworkCanvas: React.FC<Props> = ({
       }
     });
 
+    // 2.5. Draw Visited Edges (Low Opacity - Algorithm Specific, Stacked)
+    ctx.setLineDash([]);
+    visibleEdges.forEach(edge => {
+      const fromNode = visibleNodeMap.get(edge.from);
+      const toNode = visibleNodeMap.get(edge.to);
+      if (!fromNode || !toNode) return;
+
+      const x1 = sx(fromNode.x), y1 = sy(fromNode.y), x2 = sx(toNode.x), y2 = sy(toNode.y);
+      const cfg = EDGE_CONFIG[edge.type] ?? EDGE_CONFIG.path;
+      const baseWidth = isDatacenter ? 0.25 : (isMassive ? 0.3 : cfg.width);
+
+      // Check if either endpoint is visited by each algorithm
+      const vBFS = (sets.bfs.explored.has(edge.from) || sets.bfs.explored.has(edge.to)) && !(sets.bfs.path.has(edge.from) && sets.bfs.path.has(edge.to));
+      const vDFS = (sets.dfs.explored.has(edge.from) || sets.dfs.explored.has(edge.to)) && !(sets.dfs.path.has(edge.from) && sets.dfs.path.has(edge.to));
+      const vHYB = (sets.hyb.explored.has(edge.from) || sets.hyb.explored.has(edge.to)) && !(sets.hyb.path.has(edge.from) && sets.hyb.path.has(edge.to));
+
+      if (vBFS || vDFS || vHYB) {
+        // Calculate perpendicular offset for stacking
+        const dx = x2 - x1, dy = y2 - y1;
+        const len = Math.hypot(dx, dy) || 1;
+        const perpX = -dy / len, perpY = dx / len;
+        const stackOffset = baseWidth * 1.5;
+        
+        const algoLines = [
+          { active: vBFS, color: cBFS, offset: -stackOffset },
+          { active: vDFS, color: cDFS, offset: 0 },
+          { active: vHYB, color: cHYB, offset: stackOffset }
+        ];
+
+        algoLines.forEach(algo => {
+          if (algo.active) {
+            const offsetX = perpX * algo.offset;
+            const offsetY = perpY * algo.offset;
+            ctx.beginPath();
+            ctx.moveTo(x1 + offsetX, y1 + offsetY);
+            ctx.lineTo(x2 + offsetX, y2 + offsetY);
+            ctx.strokeStyle = getRgba(algo.color, 0.3);
+            ctx.lineWidth = baseWidth * 1.2;
+            ctx.stroke();
+          }
+        });
+      }
+    });
+
     // Spatial tracker array to prevent text elements bumping into each other
     const renderedTextPositions: { x: number; y: number; radius: number }[] = [];
 

@@ -62,13 +62,39 @@ export async function runGraphDFS(
   let lastYieldTime = performance.now();
 
   while (stack.length > 0 && !foundDestination) {
+    // ⚠️ Dynamic Obstacle Detected: Fluidly Adapt without resetting
     if (blockedSetChanged()) {
-      resetSearchState();
       syncBlockedHistory();
+      iteration++;
+
+      const alertStep: AlgorithmStep = {
+        stepIndex: iteration,
+        explored: Array.from(visited),
+        frontier: [...stack],
+        path: reconstructPath(parentMap, lastCurrent ?? sourceId),
+        current: lastCurrent ?? sourceId,
+        done: false,
+        foundDestination: null,
+        phaseLabel: '⚠️ Map Updated — Adjusting On-the-Fly'
+      };
+      steps.push(alertStep);
+      if (onStepProgress) onStepProgress(alertStep);
+
+      // We DO NOT resetSearchState() here anymore.
+      continue;
     }
 
     const current = stack.pop()!;
     lastCurrent = current;
+    if (blockedNodes.has(current)) continue;
+
+    if (visited.has(current)) continue;
+   
+    // Lazy Evaluation: Abandon branch if blocked
+    if (blockedNodes.has(current)) continue;
+   
+    visited.add(current);
+    nodesExplored++;
 
     iteration++;
     const now = performance.now();
@@ -84,24 +110,16 @@ export async function runGraphDFS(
     };
 
     steps.push(step);
-    if (onStepProgress) onStepProgress(step); 
+    if (onStepProgress) onStepProgress(step);
 
     if (now - lastYieldTime > 15) {
       await yieldToMain();
       lastYieldTime = performance.now();
     }
 
-    if (visited.has(current)) continue;
-    
-    // Lazy Evaluation: Abandon branch if blocked
-    if (blockedNodes.has(current)) continue;
-    
-    visited.add(current);
-    nodesExplored++;
-
     if (destSet.has(current)) {
       foundDestination = current;
-      break; 
+      break;
     }
 
     const neighbors = (adj.get(current) ?? []).slice().reverse();
@@ -135,28 +153,15 @@ export async function runGraphDFS(
   return { steps, nodesExplored, pathLength: foundDestination ? finalPath.length - 1 : -1, totalLatency, foundDestination };
 }
 
-// Kept for utility, but removed from the inner loop to save CPU
-function isPathValid(parentMap: Map<string, string | null>, nodeId: string, blockedNodes: Set<string>): boolean {
-  let cur: string | null = nodeId;
-  const seen = new Set<string>();
-  while (cur !== null) { 
-    if (seen.has(cur)) break; 
-    if (blockedNodes.has(cur)) return false;
-    seen.add(cur); 
-    cur = parentMap.get(cur) ?? null; 
-  }
-  return true;
-}
-
 function reconstructPath(parentMap: Map<string, string | null>, nodeId: string): string[] {
   const path: string[] = [];
   let cur: string | null = nodeId;
   const seen = new Set<string>();
-  while (cur !== null) { 
-    if (seen.has(cur)) break; 
-    seen.add(cur); 
-    path.unshift(cur); 
-    cur = parentMap.get(cur) ?? null; 
+  while (cur !== null) {
+    if (seen.has(cur)) break;
+    seen.add(cur);
+    path.unshift(cur);
+    cur = parentMap.get(cur) ?? null;
   }
   return path;
 }

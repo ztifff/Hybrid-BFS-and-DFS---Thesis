@@ -121,8 +121,13 @@ function generateDynamicEvents(
     // 🚨 Prevent traps from spawning in the Safe Zone
     if (usedNodes.has(epicenterId) || protectedNodes.has(epicenterId)) continue;
     
-    const stepIndex = Math.floor(rng() * 4); 
-    const reopenStep = totalSteps * 10; 
+    // 🧠 FIXED: Front-load spawns to the first 15% of total steps (min 3 steps for tiny maps)
+    const maxSpawnWindow = Math.max(3, Math.floor(totalSteps * 0.15));
+    const stepIndex = Math.floor(rng() * maxSpawnWindow); 
+
+    // 🧠 FIXED: Clear hazards after a proportional duration (min 15 steps) so logs show closures and openings
+    const hazardDuration = Math.max(15, Math.floor(totalSteps * 0.30));
+    const reopenStep = stepIndex + hazardDuration;
 
     const isAoE = isMassive && rng() > 0.55;
     let affectedNodes = [epicenterId];

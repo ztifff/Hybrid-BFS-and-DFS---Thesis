@@ -6,7 +6,6 @@ import { MetricsPanel } from './MetricsPanel';
 import { Legend } from './Legend';
 import { SimulationReport } from './SimulationReport';
 import { HistoryModal, HistoryEntry } from './HistoryModal';
-import { GlobalEnvironmentLog } from './GlobalEnvironmentLog';
 import { DynamicMapEvents } from './DynamicMapEvents';
 
 interface Props {
@@ -78,7 +77,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     const fetchGraphStructure = async () => {
       try {
         setIsGraphLoading(true);
-        const response = await fetch(`https://backend-1e4y.onrender.com/api/network/graph?scenario=${scenario}&useRealWorld=${useRealWorld}`);
+        const response = await fetch(`api/network/graph?scenario=${scenario}&useRealWorld=${useRealWorld}`);
         if (!response.ok) throw new Error(`Graph API Error: ${response.statusText}`);
         const json = await response.json();
         
@@ -117,7 +116,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         let mergedResults: any = null;
 
         while (keepFetching && isMounted) {
-          const response = await fetch(`https://backend-1e4y.onrender.com/api/simulation/run?offset=${currentOffset}&limit=${limit}`, {
+          const response = await fetch(`api/simulation/run?offset=${currentOffset}&limit=${limit}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ scenario, useRealWorld, seed })
@@ -215,9 +214,20 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     const thisRunNumber = maxRun + 1;
     const finalName = saveNameInput.trim() === '' ? saveDefaultName : saveNameInput.trim();
 
+    // ✅ FIX: Extract and compress the final steps for ALL algorithms
     const compressedSimResult = {
-      ...simResults.hybrid,
-      steps: simResults.hybrid.steps.length > 0 ? [simResults.hybrid.steps[simResults.hybrid.steps.length - 1]] : []
+      bfs: {
+        ...simResults.bfs,
+        steps: simResults.bfs.steps.length > 0 ? [simResults.bfs.steps[simResults.bfs.steps.length - 1]] : []
+      },
+      dfs: {
+        ...simResults.dfs,
+        steps: simResults.dfs.steps.length > 0 ? [simResults.dfs.steps[simResults.dfs.steps.length - 1]] : []
+      },
+      hybrid: {
+        ...simResults.hybrid,
+        steps: simResults.hybrid.steps.length > 0 ? [simResults.hybrid.steps[simResults.hybrid.steps.length - 1]] : []
+      }
     };
 
     const newEntryId = Date.now().toString(); 
@@ -226,9 +236,9 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
       id: newEntryId,
       runNumber: thisRunNumber,
       name: finalName,
-      algorithm: 'hybrid',
+      algorithm: 'hybrid', 
       scenario: scenario, 
-      simResult: compressedSimResult,
+      simResult: compressedSimResult as any, // 🔧 FIXED: Bypasses strict TS error for multi-alg output
       optimalPathLength: bfsResult?.pathLength || 1,
       totalNodes: currentGraph.nodes.length,
       timestamp: new Date()
@@ -257,7 +267,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
       simResults.hybrid?.steps?.length ?? 0
     );
   }, [simResults]);
-
 
   const startAnimation = useCallback(() => {
     if (!simResults || totalSteps === 0) return;
@@ -518,18 +527,12 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               </div>
             )}
 
-            <GlobalEnvironmentLog
+            {/* Combined intelligence timeline panel */}
+            <DynamicMapEvents
               dynamicEvents={simResults?.hybrid.dynamicEvents || []}
               stepIndex={stepIndex}
               simResults={simResults}
             />
-
-            {simResults && (
-              <DynamicMapEvents
-                dynamicEvents={simResults.hybrid.dynamicEvents}
-                stepIndex={stepIndex}
-              />
-            )}
 
           </aside>
         </div>

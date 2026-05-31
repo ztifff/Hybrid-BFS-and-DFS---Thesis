@@ -31,17 +31,38 @@ export async function runGraphHybrid(
 
   const visited = new Set<string>();
   const parentMap = new Map<string, string | null>();
-
+  const steps: AlgorithmStep[] = [];
+  
+  const blockedHistory = new Set<string>(blockedNodes);
   const frontier: string[] = [];
-  frontier.push(sourceId);
 
-  visited.add(sourceId);
-  parentMap.set(sourceId, null);
+  function resetSearchState() {
+    frontier.splice(0, frontier.length);
+    visited.clear();
+    parentMap.clear();
+    frontier.push(sourceId);
+    visited.add(sourceId);
+    parentMap.set(sourceId, null);
+  }
+
+  function blockedSetChanged(): boolean {
+    if (blockedHistory.size !== blockedNodes.size) return true;
+    for (const nodeId of blockedNodes) {
+      if (!blockedHistory.has(nodeId)) return true;
+    }
+    return false;
+  }
+
+  function syncBlockedHistory() {
+    blockedHistory.clear();
+    for (const nodeId of blockedNodes) blockedHistory.add(nodeId);
+  }
+
+  resetSearchState();
 
   let nodesExplored = 0;
   let foundDestination: string | null = null;
-
-  const steps: AlgorithmStep[] = [];
+  let lastCurrent: string | null = null;
   let iteration = 0;
   let lastYieldTime = performance.now();
 
@@ -57,11 +78,34 @@ export async function runGraphHybrid(
   }
 
   while (frontier.length > 0 && !foundDestination) {
-    const peek = frontier[frontier.length - 1]; 
+    // ⚠️ Dynamic Obstacle Detected: Fluidly Adapt without resetting
+    if (blockedSetChanged()) {
+      syncBlockedHistory();
+      iteration++;
+
+      const alertStep: AlgorithmStep = {
+        stepIndex: iteration,
+        explored: Array.from(visited),
+        frontier: [...frontier],
+        path: reconstructPath(parentMap, lastCurrent ?? sourceId),
+        current: lastCurrent ?? sourceId,
+        done: false,
+        foundDestination: null,
+        phaseLabel: '⚠️ Map Updated — Adjusting On-the-Fly'
+      };
+      steps.push(alertStep);
+      if (onStepProgress) onStepProgress(alertStep);
+
+      // We DO NOT resetSearchState() here anymore.
+      continue;
+    }
+
+    const peek = frontier[frontier.length - 1];
     const strategy = chooseStrategy(peek);
 
     const current = strategy === 'BFS' ? frontier.shift()! : frontier.pop()!;
     if (!current) continue;
+    lastCurrent = current;
 
     iteration++;
     const now = performance.now();
@@ -86,7 +130,7 @@ export async function runGraphHybrid(
 
     // Lazy Evaluation Check
     if (blockedNodes.has(current)) {
-      visited.delete(current); 
+      visited.delete(current);
       continue;
     }
 
@@ -122,26 +166,13 @@ export async function runGraphHybrid(
     explored: Array.from(visited),
     frontier: [],
     path: finalPath,
-    current: foundDestination ?? sourceId,
+    current: foundDestination ?? lastCurrent ?? sourceId,
     done: true,
     foundDestination,
     phaseLabel: foundDestination ? 'Path Secured' : 'Path Severed'
   });
 
   return { steps, nodesExplored, pathLength: foundDestination ? finalPath.length - 1 : -1, totalLatency, foundDestination };
-}
-
-// Kept for utility, but removed from the inner loop to save CPU
-function isPathValid(parentMap: Map<string, string | null>, nodeId: string, blockedNodes: Set<string>): boolean {
-  let cur: string | null = nodeId;
-  const seen = new Set<string>();
-  while (cur !== null) {
-    if (seen.has(cur)) break;
-    if (blockedNodes.has(cur)) return false;
-    seen.add(cur);
-    cur = parentMap.get(cur) ?? null;
-  }
-  return true;
 }
 
 function reconstructPath(parentMap: Map<string, string | null>, nodeId: string): string[] {

@@ -46,16 +46,22 @@ export function getAdaptabilityScore(
   let score = metrics.exitFound ? 50 : 0;
   
   if (eventCount > 0) {
+    // Scale bonus based on number of events handled
     const eventBonus = Math.min(40, eventCount * 10);
     score += metrics.exitFound ? eventBonus : Math.floor(eventBonus / 3);
+    // Algorithm-specific bonuses for handling dynamic events
     if (algorithm === 'hybrid' && metrics.exitFound) score += 10;
     else if (algorithm === 'bfs' && metrics.exitFound) score += 5;
   } else {
-    score = metrics.exitFound ? 85 : 15;
+    // No events: award based on successful completion
+    score += metrics.exitFound ? 35 : 0;
   }
   
-  if (metrics.pathLength > 0 && metrics.totalLatency > 0) {
-    score += Math.floor(Math.min(10, (1 / metrics.pathLength) * 20));
+  // Path efficiency bonus (only if path was found and is reasonable)
+  if (metrics.exitFound && metrics.pathLength > 0) {
+    // Bonus based on path efficiency: shorter paths get higher bonus (max 10 points)
+    const pathBonus = Math.max(0, Math.floor((50 - metrics.pathLength) / 5));
+    score += Math.min(10, pathBonus);
   }
   
   score = Math.min(100, Math.max(0, score));
@@ -86,7 +92,7 @@ export const MetricsPanel: React.FC<Props> = ({
       // Guard against Step 0 to ensure a clean visual slate before running
       const isStart = stepIndex === 0;
 
-      const exploredCount = (stepIndex === 0) ? 0 : (stepData?.explored.length || 0);
+      const exploredCount = (stepIndex === 0) ? 0 : (status === 'done' && resultData ? resultData.metrics.nodesExplored : (stepData?.explored.length || 0));
       
       const actualHops = (stepIndex === 0) ? 0 : (status === 'done' && resultData ? resultData.metrics.pathLength : Math.max(0, (stepData?.path.length || 1) - 1));
       
