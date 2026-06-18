@@ -29,9 +29,9 @@ export class SimulationController {
       // 🔥 OFFLOAD HEAVY LIFTING TO BACKEND:
       // Pass the offset and limit down to the simulation runner
       const [bfsRes, dfsRes, hybridRes] = await Promise.all([
-        runSimulation(scenario, 'bfs', seed, useRealWorld, undefined, offset, limit, gameBoard, customGraphId),
-        runSimulation(scenario, 'dfs', seed, useRealWorld, undefined, offset, limit, gameBoard, customGraphId),
-        runSimulation(scenario, 'hybrid', seed, useRealWorld, undefined, offset, limit, gameBoard, customGraphId)
+        runSimulation(scenario, 'bfs', seed, useRealWorld, undefined, offset, limit, gameBoard, ),
+        runSimulation(scenario, 'dfs', seed, useRealWorld, undefined, offset, limit, gameBoard, ),
+        runSimulation(scenario, 'hybrid', seed, useRealWorld, undefined, offset, limit, gameBoard, )
       ]);
 
       let optimalPathLength = 0;
