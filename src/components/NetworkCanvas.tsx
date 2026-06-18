@@ -36,8 +36,12 @@ const NODE_CONFIG: Record<string, { icon: string; radius: number; baseColor: str
   fire:            { icon: '🔥', radius: 17, baseColor: '#7f1d1d' },
   spawn:           { icon: '♟️', radius: 28, baseColor: '#4c1d95' },
   portal:          { icon: '🏁', radius: 22, baseColor: '#6d28d9' },
-  room:            { icon: '▣', radius: 17, baseColor: '#7c3aed' },
+  room:            { icon: '⬡', radius: 17, baseColor: '#7c3aed' },
   enemy:           { icon: '✖', radius: 17, baseColor: '#7f1d1d' },
+  place:           { icon: '🏬', radius: 20, baseColor: '#0e7490' },
+  shop:            { icon: '🏬', radius: 20, baseColor: '#0e7490' },
+  restaurant:      { icon: '🍽️', radius: 18, baseColor: '#0e7490' },
+  amenity:         { icon: '🏬', radius: 18, baseColor: '#0e7490' },
 };
 
 const EDGE_CONFIG: Record<string, { color: string; dash: number[]; width: number }> = {
@@ -73,9 +77,10 @@ export const NetworkCanvas: React.FC<Props> = ({
 
   const { nodes, edges, width, height } = graph;
   
-  const isMassive = nodes.length > 200;
   const isDatacenter = scenario === 'network' && width > 100000;
   const isLayeredMap = useMemo(() => nodes.some(n => n.buildingId === 'GL' || n.buildingId === 'L2'), [nodes]);
+  const isDenseProcedural = nodes.length > 90 && width <= 100000 && !isLayeredMap && scenario !== 'gameai';
+  const isMassive = nodes.length > 200 || isDenseProcedural;
 
   const SVG_W = 960;
   const SVG_H = 680;
@@ -235,23 +240,38 @@ export const NetworkCanvas: React.FC<Props> = ({
 
         ctx.save();
         ctx.globalAlpha = 0.78;
-        group.forEach(node => {
-          const row = Number(node.metadata?.row ?? 0);
-          const col = Number(node.metadata?.col ?? 0);
-          const cx = sx(node.x);
-          const cy = sy(node.y);
 
-          if (board === 'chess') {
-            ctx.fillStyle = (row + col) % 2 === 0 ? '#e5e7eb' : '#334155';
-          } else if (board === 'checkers') {
-            ctx.fillStyle = (row + col) % 2 === 0 ? '#111827' : '#991b1b';
-          } else {
-            const palette = ['#14532d', '#0f766e', '#1d4ed8', '#7c2d12'];
-            ctx.fillStyle = palette[(row + col) % palette.length];
+        if (board === 'checkers') {
+          const stepX = uniqueX.length > 1 ? uniqueX[1] - uniqueX[0] : tileSize;
+          const stepY = uniqueY.length > 1 ? uniqueY[1] - uniqueY[0] : tileSize;
+          const startX = minX - tileSize / 2;
+          const startY = minY - tileSize / 2;
+
+          const boardSize = Math.max(uniqueX.length, uniqueY.length, 1);
+
+          for (let row = 0; row < boardSize; row++) {
+            for (let col = 0; col < boardSize; col++) {
+              ctx.fillStyle = (row + col) % 2 === 0 ? '#111827' : '#991b1b';
+              ctx.fillRect(startX + col * stepX, startY + row * stepY, tileSize, tileSize);
+            }
           }
+        } else {
+          group.forEach(node => {
+            const row = Number(node.metadata?.row ?? 0);
+            const col = Number(node.metadata?.col ?? 0);
+            const cx = sx(node.x);
+            const cy = sy(node.y);
 
-          ctx.fillRect(cx - tileSize / 2, cy - tileSize / 2, tileSize, tileSize);
-        });
+            if (board === 'chess') {
+              ctx.fillStyle = (row + col) % 2 === 0 ? '#e5e7eb' : '#334155';
+            } else {
+              const palette = ['#14532d', '#0f766e', '#1d4ed8', '#7c2d12'];
+              ctx.fillStyle = palette[(row + col) % palette.length];
+            }
+
+            ctx.fillRect(cx - tileSize / 2, cy - tileSize / 2, tileSize, tileSize);
+          });
+        }
         ctx.restore();
 
         ctx.save();
@@ -286,7 +306,8 @@ export const NetworkCanvas: React.FC<Props> = ({
       if (!fromNode || !toNode) return;
 
       const x1 = sx(fromNode.x), y1 = sy(fromNode.y), x2 = sx(toNode.x), y2 = sy(toNode.y);
-      const expAny = sets.bfs.explored.has(edge.from) || sets.dfs.explored.has(edge.from) || sets.hyb.explored.has(edge.from);
+      const isExplored = (id: string) => sets.bfs.explored.has(id) || sets.dfs.explored.has(id) || sets.hyb.explored.has(id);
+      const expAny = isExplored(edge.from) && isExplored(edge.to);
       const cfg = EDGE_CONFIG[edge.type] ?? EDGE_CONFIG.path;
       const baseWidth = isDatacenter ? 0.25 : (isMassive ? 0.3 : cfg.width);
 
@@ -323,6 +344,7 @@ export const NetworkCanvas: React.FC<Props> = ({
     });
 
     // 2.5. Draw Visited Edges (Low Opacity - Algorithm Specific, Stacked)
+    // 2.5. Draw Visited Edges (Low Opacity - Algorithm Specific, Stacked)
     ctx.setLineDash([]);
     visibleEdges.forEach(edge => {
       const fromNode = visibleNodeMap.get(edge.from);
@@ -333,45 +355,65 @@ export const NetworkCanvas: React.FC<Props> = ({
       const cfg = EDGE_CONFIG[edge.type] ?? EDGE_CONFIG.path;
       const baseWidth = isDatacenter ? 0.25 : (isMassive ? 0.3 : cfg.width);
 
-      // Check if either endpoint is visited by each algorithm
+      // Using the || logic from the repo to properly show the search frontier
       const vBFS = (sets.bfs.explored.has(edge.from) || sets.bfs.explored.has(edge.to)) && !(sets.bfs.path.has(edge.from) && sets.bfs.path.has(edge.to));
       const vDFS = (sets.dfs.explored.has(edge.from) || sets.dfs.explored.has(edge.to)) && !(sets.dfs.path.has(edge.from) && sets.dfs.path.has(edge.to));
       const vHYB = (sets.hyb.explored.has(edge.from) || sets.hyb.explored.has(edge.to)) && !(sets.hyb.path.has(edge.from) && sets.hyb.path.has(edge.to));
 
       if (vBFS || vDFS || vHYB) {
-        // Calculate perpendicular offset for stacking
-        const dx = x2 - x1, dy = y2 - y1;
-        const len = Math.hypot(dx, dy) || 1;
-        const perpX = -dy / len, perpY = dx / len;
-        const stackOffset = baseWidth * 1.5;
-        
-        const algoLines = [
-          { active: vBFS, color: cBFS, offset: -stackOffset },
-          { active: vDFS, color: cDFS, offset: 0 },
-          { active: vHYB, color: cHYB, offset: stackOffset }
-        ];
-
-        algoLines.forEach(algo => {
-          if (algo.active) {
-            const offsetX = perpX * algo.offset;
-            const offsetY = perpY * algo.offset;
-            ctx.beginPath();
-            ctx.moveTo(x1 + offsetX, y1 + offsetY);
-            ctx.lineTo(x2 + offsetX, y2 + offsetY);
-            ctx.strokeStyle = getRgba(algo.color, 0.3);
-            ctx.lineWidth = baseWidth * 1.2;
-            ctx.stroke();
+        if (isMassive || isDatacenter) {
+          // Concentric stacking for dense networks (Thicker sizes retained)
+          const opacity = 0.55;
+          
+          if (vBFS) { 
+            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); 
+            ctx.strokeStyle = getRgba(cBFS, opacity); ctx.lineWidth = baseWidth * 8.0; ctx.stroke(); 
           }
-        });
+          if (vDFS) { 
+            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); 
+            ctx.strokeStyle = getRgba(cDFS, opacity + 0.1); ctx.lineWidth = baseWidth * 5.0; ctx.stroke(); 
+          }
+          if (vHYB) { 
+            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); 
+            ctx.strokeStyle = getRgba(cHYB, opacity + 0.2); ctx.lineWidth = baseWidth * 2.0; ctx.stroke(); 
+          }
+        } else {
+          // Parallel offsetting for standard/warehouse grids (Repo structure + thicker sizes)
+          const dx = x2 - x1, dy = y2 - y1;
+          const len = Math.hypot(dx, dy) || 1;
+          const perpX = -dy / len, perpY = dx / len;
+          
+          const stackOffset = baseWidth * 1.5; 
+          
+          const algoLines = [
+            { active: vBFS, color: cBFS, offset: -stackOffset },
+            { active: vDFS, color: cDFS, offset: 0 },
+            { active: vHYB, color: cHYB, offset: stackOffset }
+          ];
+
+          algoLines.forEach(algo => {
+            if (algo.active) {
+              const offsetX = perpX * algo.offset;
+              const offsetY = perpY * algo.offset;
+              ctx.beginPath();
+              ctx.moveTo(x1 + offsetX, y1 + offsetY);
+              ctx.lineTo(x2 + offsetX, y2 + offsetY);
+              ctx.strokeStyle = getRgba(algo.color, 0.35); 
+              ctx.lineWidth = baseWidth * 1.2; 
+              ctx.stroke();
+            }
+          });
+        }
       }
     });
-
+    
     // Spatial tracker array to prevent text elements bumping into each other
     const renderedTextPositions: { x: number; y: number; radius: number }[] = [];
 
     // 3. Draw Nodes & Non-Overlapping Text
     visibleNodes.forEach(node => {
-      const cfg = NODE_CONFIG[node.type] ?? { icon: '⬤', radius: 16, baseColor: '#374151' };
+      const isRealWorldPlace = scenario === 'evacuation' && !['start', 'emergency_exit', 'corridor', 'stairwell', 'fire'].includes(node.type);
+      const cfg = NODE_CONFIG[node.type] ?? { icon: '🏪', radius: 18, baseColor: '#0e7490' };
       const cx = sx(node.x), cy = sy(node.y);
       const isBlocked = activeBlocked.has(node.id);
       const isSource = node.id === graph.sourceId;
@@ -386,10 +428,11 @@ export const NetworkCanvas: React.FC<Props> = ({
       const expDFS = sets.dfs.explored.has(node.id);
       const expHYB = sets.hyb.explored.has(node.id);
       
+      const ringTint = isRealWorldPlace ? cfg.baseColor : null;
       const activeExplorations = [
-        { id: 'bfs', active: expBFS, color: cBFS },
-        { id: 'dfs', active: expDFS, color: cDFS },
-        { id: 'hyb', active: expHYB, color: cHYB }
+        { id: 'bfs', active: expBFS, color: ringTint ?? cBFS },
+        { id: 'dfs', active: expDFS, color: ringTint ?? cDFS },
+        { id: 'hyb', active: expHYB, color: ringTint ?? cHYB }
       ].filter(e => e.active);
 
       let r = isMassive ? (isImportant ? 4.5 : 1.2) : cfg.radius;
@@ -413,11 +456,14 @@ export const NetworkCanvas: React.FC<Props> = ({
 
       // Outer active search rings
       if (currBFS || currDFS || currHYB) {
+        const rBFS = ringTint ?? cBFS;
+        const rDFS = ringTint ?? cDFS;
+        const rHYB = ringTint ?? cHYB;
         ctx.shadowBlur = 6;
         ctx.lineWidth = 1.5;
-        if (currBFS) { ctx.beginPath(); ctx.arc(cx, cy, r + (isMassive ? 2 : 8), 0, Math.PI * 2); ctx.strokeStyle = cBFS; ctx.shadowColor = cBFS; ctx.stroke(); }
-        if (currDFS) { ctx.beginPath(); ctx.arc(cx, cy, r + (isMassive ? 4 : 12), 0, Math.PI * 2); ctx.strokeStyle = cDFS; ctx.shadowColor = cDFS; ctx.stroke(); }
-        if (currHYB) { ctx.beginPath(); ctx.arc(cx, cy, r + (isMassive ? 6 : 16), 0, Math.PI * 2); ctx.strokeStyle = cHYB; ctx.shadowColor = cHYB; ctx.stroke(); }
+        if (currBFS) { ctx.beginPath(); ctx.arc(cx, cy, r + (isMassive ? 2 : 8), 0, Math.PI * 2); ctx.strokeStyle = rBFS; ctx.shadowColor = rBFS; ctx.stroke(); }
+        if (currDFS) { ctx.beginPath(); ctx.arc(cx, cy, r + (isMassive ? 4 : 12), 0, Math.PI * 2); ctx.strokeStyle = rDFS; ctx.shadowColor = rDFS; ctx.stroke(); }
+        if (currHYB) { ctx.beginPath(); ctx.arc(cx, cy, r + (isMassive ? 6 : 16), 0, Math.PI * 2); ctx.strokeStyle = rHYB; ctx.shadowColor = rHYB; ctx.stroke(); }
         ctx.shadowBlur = 0; 
       }
 
@@ -432,6 +478,7 @@ export const NetworkCanvas: React.FC<Props> = ({
           ctx.strokeStyle = isBlocked ? '#ef4444' : '#374151';
           ctx.stroke();
         }
+
       } else {
         activeExplorations.forEach((exp, index) => {
           ctx.beginPath();
@@ -500,10 +547,6 @@ export const NetworkCanvas: React.FC<Props> = ({
           ctx.fillText(displayLabel, cx, cy - labelOffsetY);
         } else if (!isMassive) {
           if (!isDatacenter) {
-            // Inner icon size locked strictly to node radius (no zoom division math)
-            const iconSize = r * 1.1; 
-            ctx.font = `${iconSize}px sans-serif`;
-            ctx.fillText(isBlocked ? blockedIcon : cfg.icon, cx, cy);
             
             // Labels stay a readable constant size on screen
             const baseLabelSize = isImportant ? 14 : 12;
@@ -514,9 +557,6 @@ export const NetworkCanvas: React.FC<Props> = ({
             const labelOffsetY = r + (12 / zoom);
             ctx.fillText(displayLabel, cx, cy + labelOffsetY);
           } else {
-            const iconSize = r * 1.3;
-            ctx.font = `${iconSize}px sans-serif`;
-            ctx.fillText(isBlocked ? blockedIcon : cfg.icon, cx, cy);
             
             const baseLabelSize = isImportant ? 12 : 10;
             const labelSize = baseLabelSize / zoom;
@@ -532,7 +572,41 @@ export const NetworkCanvas: React.FC<Props> = ({
           }
         }
       }
+      // Draw icon last — on top of rings, fills, and labels — so nothing overwrites it
+      if (!isMassive) {
+        const iconSize = r * 1.1;
+        ctx.font = `${iconSize}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(isBlocked ? blockedIcon : cfg.icon, cx, cy);
+      }
+
     });
+
+    // 4. Draw Edge Labels (Distance/Weight Values)
+    if (!isMassive && zoom >= 1) {
+      ctx.font = `${Math.max(8, 12 / zoom)}px sans-serif`;
+      ctx.fillStyle = '#e2e8f0';
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2 / zoom;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      visibleEdges.forEach(edge => {
+        const fromNode = visibleNodeMap.get(edge.from);
+        const toNode = visibleNodeMap.get(edge.to);
+        if (!fromNode || !toNode) return;
+
+        const x1 = sx(fromNode.x), y1 = sy(fromNode.y);
+        const x2 = sx(toNode.x), y2 = sy(toNode.y);
+        const midX = (x1 + x2) / 2;
+        const midY = (y1 + y2) / 2;
+
+        const label = edge.label || `${edge.latency}`;
+        ctx.strokeText(label, midX, midY);
+        ctx.fillText(label, midX, midY);
+      });
+    }
 
   // Adding windowDimensions to the dependency array ensures resizing updates the canvas visually
   }, [visibleNodes, visibleEdges, visibleNodeMap, pan, zoom, sets, activeBlocked, width, height, scenario, isMassive, isDatacenter, cBFS, cDFS, cHYB, scale, offsetX, offsetY, windowDimensions]);

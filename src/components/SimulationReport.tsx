@@ -19,21 +19,21 @@ export const SimulationReport: React.FC<Props> = ({
   onSaveResult,
   isSaved
 }) => {
-  const optimalHops = bfsResult?.pathLength || 1;
+  const optimalDistance = bfsResult?.totalLatency || 1;
 
   const getData = (algo: 'bfs' | 'dfs' | 'hybrid') => {
       const res = multiResults[algo];
-      const actualHops = Math.max(res.metrics.pathLength, 1);
+      const actualDistance = Math.max(res.metrics.totalLatency, 1);
       // Grab official completion rate injected from simulationRunner
       const cRate = res.metrics.completionRate ? res.metrics.completionRate.toFixed(1) + '%' : '0%';
       
       return {
           time: res.metrics.timeElapsed,
           nodes: res.metrics.nodesExplored,
-          hops: actualHops,
+          distance: actualDistance,
           memory: res.metrics.memoryUsed,
           memoryLabel: getMemoryInMB(res.metrics.memoryUsed),
-          optimality: getPathOptimality(actualHops, optimalHops),
+          optimality: getPathOptimality(actualDistance, optimalDistance),
           completion: cRate, 
           adaptability: getAdaptabilityScore('done', res.metrics, algo, dynamicEvents),
           success: res.metrics.exitFound

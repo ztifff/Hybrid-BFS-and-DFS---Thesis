@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { ScenarioType, SimulationResult, ScenarioGraph } from '../types';
+import { ScenarioType, SimulationResult, ScenarioGraph, GameAIBoard } from '../types';
 import { getScenario } from '../config/scenarios';
 import { NetworkCanvas } from './NetworkCanvas';
 import { MetricsPanel } from './MetricsPanel';
@@ -16,6 +16,12 @@ interface Props {
 type Status = 'idle' | 'running' | 'done' | 'paused';
 const STEP_INTERVAL_MS = 60;
 const HISTORY_API = 'https://backend-1e4y.onrender.com/api/history';
+
+const GAME_AI_BOARDS: { id: GameAIBoard; label: string; icon: string }[] = [
+  { id: 'chess', label: 'Chess', icon: '♟️' },
+  { id: 'checkers', label: 'Checkers', icon: '⚫' },
+  { id: 'snakes', label: 'Snakes & Ladders', icon: '🐍' },
+];
 
 const getLocalHistoryKey = (scenario: ScenarioType) => `simulation_history_${scenario}`;
 
@@ -55,8 +61,9 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   
   const sc = getScenario(scenario);
 
-  const [useRealWorld, setUseRealWorld] = useState(false);
-  const [seed, setSeed] = useState(() => Date.now()); 
+  const [gameBoard, setGameBoard] = useState<GameAIBoard>('chess');
+  const [seed, setSeed] = useState(() => Date.now());
+  const [mapMode, setMapMode] = useState<'synthetic' | 'realworld'>('synthetic');
   
   // Base graph data state pulled directly from backend infrastructure
   const [currentGraph, setCurrentGraph] = useState<ScenarioGraph | null>(null);
@@ -119,7 +126,14 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     const fetchGraphStructure = async () => {
       try {
         setIsGraphLoading(true);
-        const response = await fetch(`https://backend-1e4y.onrender.com/api/network/graph?scenario=${scenario}&useRealWorld=${useRealWorld}`);
+        const graphParams = new URLSearchParams({
+          scenario,
+          useRealWorld: String(mapMode === 'realworld'),
+        });
+        if (scenario === 'gameai') {
+          graphParams.set('gameBoard', gameBoard);
+        }
+        const response = await fetch(`https://backend-1e4y.onrender.com/api/network/graph?${graphParams}`);
         if (!response.ok) throw new Error(`Graph API Error: ${response.statusText}`);
         const json = await response.json();
         
@@ -139,7 +153,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     return () => {
       isMounted = false;
     };
-  }, [scenario, useRealWorld]);
+  }, [scenario, mapMode, gameBoard]);
 
   // Fetch run metrics and evaluated paths from the computing engine (Chunked)
   useEffect(() => {
@@ -158,10 +172,15 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         let mergedResults: any = null;
 
         while (keepFetching && isMounted) {
-          const response = await fetch(`https://backend-1e4y.onrender.com/api/simulation/run?offset=${currentOffset}&limit=${limit}`, {
+          const response = await fetch(`api/simulation/run?offset=${currentOffset}&limit=${limit}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ scenario, useRealWorld, seed })
+            body: JSON.stringify({
+              scenario,
+              useRealWorld: mapMode === 'realworld',
+              seed,
+              ...(scenario === 'gameai' ? { gameBoard } : {}),
+            })
           });
 
           if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
@@ -235,7 +254,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
       isMounted = false;
       stopAnimation();
     };
-  }, [scenario, useRealWorld, seed, stopAnimation]);
+  }, [scenario, mapMode, seed, gameBoard, stopAnimation]);
 
   const openSaveModal = useCallback(() => {
     if (!simResults || isCurrentSaved) return;
@@ -486,7 +505,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
   return (
     <>
-      <div className="min-h-screen lg:h-screen w-full max-w-[100vw] overflow-x-hidden bg-[#0a0f1e] text-white flex flex-col lg:overflow-hidden relative z-0">
+      <div className="min-h-screen w-full max-w-[100vw] bg-[#0a0f1e] text-white flex flex-col relative z-0">
         
         <header className="border-b border-gray-800 px-3 md:px-6 py-2.5 md:py-3 flex items-center justify-between bg-[#0d1224] shrink-0 relative gap-2 w-full max-w-full">
           <div className="flex items-center gap-2 sm:gap-4 relative z-10 shrink-0">
@@ -522,9 +541,9 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
           </div>
         </header>
 
-        <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+        <div className="flex flex-col lg:flex-row flex-1">
           
-          <aside className="w-full lg:w-80 flex-shrink-0 border-b lg:border-b-0 lg:border-r border-gray-800 p-4 flex flex-col gap-4 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}>
+          <aside className="w-full lg:w-80 flex-shrink-0 border-b lg:border-b-0 lg:border-r border-gray-800 p-4 flex flex-col gap-4 overflow-y-auto lg:max-h-[calc(100vh-theme(spacing.20))]" style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}>
             {simResults && !isComputing && currentGraph ? (
               <MetricsPanel
                 multiResults={simResults}
@@ -546,7 +565,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             <Legend scenario={scenario} />
           </aside>
 
-          <main className="flex-1 flex flex-col items-center justify-start p-4 overflow-y-auto w-full relative">
+          <main className="flex-1 flex flex-col items-center justify-start p-4 w-full relative overflow-hidden">
             
             <div className="mb-3 flex flex-col items-center gap-3 w-full shrink-0">
               <div className="flex items-center gap-3 flex-wrap justify-center text-center">
@@ -565,21 +584,57 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 </div>
               </div>
 
-              {(scenario === 'traffic' || scenario === 'evacuation' || scenario === 'robotics' || scenario === 'network') && (
-                <div className="flex flex-col items-center gap-2 mt-2 w-full max-w-sm">
-                  <label className={`flex justify-center items-center gap-2 cursor-pointer text-sm font-semibold bg-gray-800 px-4 py-2 rounded-lg border w-full ${isComputing || isGraphLoading ? 'border-gray-700 opacity-50 cursor-not-allowed' : 'border-gray-600 hover:bg-gray-700 transition-colors'}`}>
-                    <input
-                      type="checkbox"
-                      checked={useRealWorld}
+              {scenario === 'gameai' && (
+                <div className="flex items-center gap-2 flex-wrap justify-center">
+                  {GAME_AI_BOARDS.map(({ id, label, icon }) => (
+                    <button
+                      key={id}
+                      onClick={() => { setGameBoard(id); setMapMode('synthetic'); }}
                       disabled={isComputing || isGraphLoading}
-                      onChange={(e) => setUseRealWorld(e.target.checked)}
-                      className="w-4 h-4 rounded border-gray-600 text-blue-500 bg-gray-900"
-                    />
-                    {scenario === 'traffic' ? '🌍 Enable Real-World Map (Cabuyao City)' : 
-                     scenario === 'robotics' ? '🤖 Enable Real-World Map (AWS Warehouse)' :
-                     scenario === 'network' ? '🌐 Enable Real-World Map (Cloud Datacenter)' :
-                    '🏢 Enable Real-World Building (SM City Santa Rosa)'}
-                  </label>
+                      className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
+                        gameBoard === id
+                          ? 'bg-purple-900/40 text-purple-300 border border-purple-500/60 shadow-[0_0_10px_rgba(139,92,246,0.25)]'
+                          : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
+                      }`}
+                    >
+                      <span>{icon}</span>
+                      {label}
+                    </button>
+))}
+                </div>
+              )}
+
+              {(scenario === 'traffic' || scenario === 'evacuation' || scenario === 'robotics' || scenario === 'network') && (
+                <div className="flex items-center gap-2 flex-wrap justify-center">
+                  <button
+                    onClick={() => setMapMode('synthetic')}
+                    disabled={isComputing || isGraphLoading}
+                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
+                      mapMode === 'synthetic'
+                        ? 'bg-purple-900/40 text-purple-300 border border-purple-500/60 shadow-[0_0_10px_rgba(139,92,246,0.25)]'
+                        : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
+                    }`}
+                  >
+                    <span>🗺️</span>
+                    Synthetic Map
+                  </button>
+                  <button
+                    onClick={() => setMapMode('realworld')}
+                    disabled={isComputing || isGraphLoading}
+                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
+                      mapMode === 'realworld'
+                        ? 'bg-purple-900/40 text-purple-300 border border-purple-500/60 shadow-[0_0_10px_rgba(139,92,246,0.25)]'
+                        : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
+                    }`}
+                  >
+                    <span>
+                      {scenario === 'traffic' ? '🌍' : scenario === 'robotics' ? '🤖' : scenario === 'network' ? '🌐' : '🏢'}
+                    </span>
+                    {scenario === 'traffic' ? 'Real-World (Cabuyao City)' :
+                     scenario === 'robotics' ? 'Real-World (AWS Warehouse)' :
+                     scenario === 'network' ? 'Real-World (Cloud Datacenter)' :
+                     'Real-World (SM City Santa Rosa)'}
+                  </button>
                 </div>
               )}
             </div>
@@ -623,7 +678,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
           </main>
 
           <aside 
-            className="w-full lg:w-[350px] flex-shrink-0 border-t lg:border-t-0 lg:border-l border-gray-800 p-4 flex flex-col gap-4 bg-[#0a0f1e] overflow-y-auto lg:h-full"
+            className="w-full lg:w-80 flex-shrink-0 border-t lg:border-t-0 lg:border-l border-gray-800 p-4 flex flex-col gap-4 bg-[#0a0f1e] overflow-y-auto lg:max-h-[calc(100vh-theme(spacing.20))]"
             style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}
           >
             {simResults && !isComputing && status === 'done' && currentGraph && (
@@ -640,11 +695,15 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             )}
 
             {/* Combined intelligence timeline panel */}
-            <DynamicMapEvents
-              dynamicEvents={simResults?.hybrid.dynamicEvents || []}
-              stepIndex={stepIndex}
-              simResults={simResults}
-            />
+            <div className="shrink-0">
+              <DynamicMapEvents
+                dynamicEvents={simResults?.hybrid.dynamicEvents || []}
+                stepIndex={stepIndex}
+                simResults={simResults}
+              />
+            </div>
+
+
 
           </aside>
         </div>

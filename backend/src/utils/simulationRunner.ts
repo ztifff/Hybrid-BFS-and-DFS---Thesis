@@ -65,9 +65,14 @@ function generateDynamicEvents(
   }
 
   const isMassive = graph.nodes.length > 200;
-  const maxIncidents = scenario === 'gameai' ? 3 : (isMassive ? 30 : 5);
-  const incidentDensity = scenario === 'gameai' ? 0.04 : 0.5;
-  const incidentCount = Math.min(maxIncidents, Math.floor(candidates.length * incidentDensity));
+  const isGameAI = scenario === 'gameai';
+  const maxIncidents = isGameAI ? 6 : (isMassive ? 30 : 5);
+  const incidentDensity = isGameAI ? 0.10 : 0.5;
+  const minIncidents = isGameAI ? 3 : 1;
+  const incidentCount = Math.min(
+    maxIncidents,
+    Math.max(minIncidents, Math.floor(candidates.length * incidentDensity))
+  );
 
   let standardLabels: { block: string, clear: string }[] = [];
   let aoeLabels: { block: string, clear: string }[] = [];
@@ -208,9 +213,10 @@ export async function runSimulation(
   onStepProgress?: (step: AlgorithmStep) => void,
   offset: number = 0,
   limit: number = 0,
-  gameBoard?: GameAIBoard
+  gameBoard?: GameAIBoard,
 ): Promise<SimulationResult & { meta?: { hasMore: boolean; totalSteps: number; currentOffset: number } }> {
 
+  // Build the scenario graph
   const graph = buildScenarioGraph(scenario, useRealWorld, gameBoard);
   const startTime = performance.now();
 

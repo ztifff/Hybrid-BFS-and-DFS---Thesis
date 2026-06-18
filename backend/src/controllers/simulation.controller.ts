@@ -9,10 +9,12 @@ const simulationHistory: Map<string, any> = new Map();
 export class SimulationController {
   async runSimulation(req: Request, res: Response): Promise<void> {
     try {
-      const { scenario, useRealWorld, seed } = req.body as {
+      const { scenario, useRealWorld, seed, gameBoard, customGraphId } = req.body as {
         scenario: ScenarioType;
         useRealWorld: boolean;
         seed: number;
+        gameBoard?: 'chess' | 'checkers' | 'snakes';
+        customGraphId?: string;
       };
 
       // 🚀 EXTRACT CHUNKING PARAMETERS FROM QUERY STRING
@@ -27,9 +29,9 @@ export class SimulationController {
       // 🔥 OFFLOAD HEAVY LIFTING TO BACKEND:
       // Pass the offset and limit down to the simulation runner
       const [bfsRes, dfsRes, hybridRes] = await Promise.all([
-        runSimulation(scenario, 'bfs', seed, useRealWorld, undefined, offset, limit),
-        runSimulation(scenario, 'dfs', seed, useRealWorld, undefined, offset, limit),
-        runSimulation(scenario, 'hybrid', seed, useRealWorld, undefined, offset, limit)
+        runSimulation(scenario, 'bfs', seed, useRealWorld, undefined, offset, limit, gameBoard, customGraphId),
+        runSimulation(scenario, 'dfs', seed, useRealWorld, undefined, offset, limit, gameBoard, customGraphId),
+        runSimulation(scenario, 'hybrid', seed, useRealWorld, undefined, offset, limit, gameBoard, customGraphId)
       ]);
 
       let optimalPathLength = 0;

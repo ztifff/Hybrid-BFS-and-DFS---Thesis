@@ -156,7 +156,7 @@ export const buildingEvacuationGraph = {
     {
       "id": "gl_supermarket",
       "label": "SM Supermarket",
-      "type": "room",
+      "type": "place",
       "x": 6000,
       "y": 12000,
       "level": 1,
@@ -165,7 +165,7 @@ export const buildingEvacuationGraph = {
     {
       "id": "gl_dermcare",
       "label": "Dermcare",
-      "type": "room",
+      "type": "place",
       "x": 11000,
       "y": 12000,
       "level": 1,
@@ -174,7 +174,7 @@ export const buildingEvacuationGraph = {
     {
       "id": "gl_silverworks",
       "label": "Silverworks",
-      "type": "room",
+      "type": "place",
       "x": 11000,
       "y": 23000,
       "level": 1,
@@ -183,7 +183,7 @@ export const buildingEvacuationGraph = {
     {
       "id": "gl_pierre_cardin",
       "label": "Pierre Cardin",
-      "type": "room",
+      "type": "place",
       "x": 20000,
       "y": 12000,
       "level": 1,
@@ -192,7 +192,7 @@ export const buildingEvacuationGraph = {
     {
       "id": "gl_macao",
       "label": "Macao Imperial Tea",
-      "type": "room",
+      "type": "place",
       "x": 20000,
       "y": 23000,
       "level": 1,
@@ -201,7 +201,7 @@ export const buildingEvacuationGraph = {
     {
       "id": "gl_ramen",
       "label": "Ramen Kuroda",
-      "type": "room",
+      "type": "place",
       "x": 11000,
       "y": 32000,
       "level": 1,
@@ -210,7 +210,7 @@ export const buildingEvacuationGraph = {
     {
       "id": "gl_batchoi",
       "label": "Oishi Batchoi",
-      "type": "room",
+      "type": "place",
       "x": 20000,
       "y": 32000,
       "level": 1,
@@ -219,7 +219,7 @@ export const buildingEvacuationGraph = {
     {
       "id": "gl_barrio",
       "label": "Barrio Fiesta",
-      "type": "room",
+      "type": "place",
       "x": 30000,
       "y": 32000,
       "level": 1,
@@ -228,7 +228,7 @@ export const buildingEvacuationGraph = {
     {
       "id": "gl_razons",
       "label": "Razon's of Guagua",
-      "type": "room",
+      "type": "place",
       "x": 39000,
       "y": 32000,
       "level": 1,
@@ -237,7 +237,7 @@ export const buildingEvacuationGraph = {
     {
       "id": "gl_faceshop",
       "label": "The Face Shop",
-      "type": "room",
+      "type": "place",
       "x": 30000,
       "y": 23000,
       "level": 1,
@@ -246,7 +246,7 @@ export const buildingEvacuationGraph = {
     {
       "id": "gl_barbershop",
       "label": "GQ Barbershop",
-      "type": "room",
+      "type": "place",
       "x": 39000,
       "y": 12000,
       "level": 1,
@@ -255,7 +255,7 @@ export const buildingEvacuationGraph = {
     {
       "id": "gl_guess",
       "label": "Guess",
-      "type": "room",
+      "type": "place",
       "x": 39000,
       "y": 23000,
       "level": 1,
@@ -264,7 +264,7 @@ export const buildingEvacuationGraph = {
     {
       "id": "gl_sm_store",
       "label": "The SM Store (GL)",
-      "type": "room",
+      "type": "place",
       "x": 45000,
       "y": 12000,
       "level": 1,
@@ -453,7 +453,7 @@ export const buildingEvacuationGraph = {
     {
       "id": "l2_cinema",
       "label": "SM Cinema",
-      "type": "room",
+      "type": "place",
       "x": 6000,
       "y": 12000,
       "level": 2,
@@ -462,7 +462,7 @@ export const buildingEvacuationGraph = {
     {
       "id": "l2_turks",
       "label": "Turks Shawarma",
-      "type": "room",
+      "type": "place",
       "x": 11000,
       "y": 23000,
       "level": 2,
@@ -471,7 +471,7 @@ export const buildingEvacuationGraph = {
     {
       "id": "l2_dental",
       "label": "Precious Teeth Dental",
-      "type": "room",
+      "type": "place",
       "x": 20000,
       "y": 23000,
       "level": 2,
@@ -480,7 +480,7 @@ export const buildingEvacuationGraph = {
     {
       "id": "l2_foodcourt",
       "label": "SM Foodcourt",
-      "type": "room",
+      "type": "place",
       "x": 25000,
       "y": 12000,
       "level": 2,
@@ -489,7 +489,7 @@ export const buildingEvacuationGraph = {
     {
       "id": "l2_cyberzone",
       "label": "Cyberzone",
-      "type": "room",
+      "type": "place",
       "x": 35000,
       "y": 12000,
       "level": 2,
@@ -498,7 +498,7 @@ export const buildingEvacuationGraph = {
     {
       "id": "l2_mac",
       "label": "Power Mac Center",
-      "type": "room",
+      "type": "place",
       "x": 45000,
       "y": 23000,
       "level": 2,
@@ -507,7 +507,7 @@ export const buildingEvacuationGraph = {
     {
       "id": "l2_vivo",
       "label": "Vivo",
-      "type": "room",
+      "type": "place",
       "x": 35000,
       "y": 23000,
       "level": 2,
@@ -516,7 +516,7 @@ export const buildingEvacuationGraph = {
     {
       "id": "l2_payless",
       "label": "Payless Shoesource",
-      "type": "room",
+      "type": "place",
       "x": 30000,
       "y": 23000,
       "level": 2,
@@ -525,7 +525,7 @@ export const buildingEvacuationGraph = {
     {
       "id": "l2_office_warehouse",
       "label": "Office Warehouse",
-      "type": "room",
+      "type": "place",
       "x": 30000,
       "y": 12000,
       "level": 2,
@@ -534,7 +534,7 @@ export const buildingEvacuationGraph = {
     {
       "id": "l2_sm_store",
       "label": "The SM Store (L2)",
-      "type": "room",
+      "type": "place",
       "x": 45000,
       "y": 12000,
       "level": 2,

@@ -4,7 +4,7 @@ import path from "node:path";
 interface GraphNode {
   id: string;
   label: string;
-  type: "origin" | "emergency_exit" | "corridor" | "room" | "stairwell";
+  type: "origin" | "emergency_exit" | "corridor" | "room" | "stairwell"| "place";
   x: number;
   y: number;
   level: number;
@@ -76,19 +76,19 @@ function generateMassiveSMRosaMap() {
     { id: "gl_se_wing", label: "GL South-East Wing", type: "corridor", x: 35000, y: 27000, level: 1, buildingId: GL },
 
     // 🏬 STORES (Pushed extremely far out into the quadrants)
-    { id: "gl_supermarket", label: "SM Supermarket", type: "room", x: 6000, y: 12000, level: 1, buildingId: GL },
-    { id: "gl_dermcare", label: "Dermcare", type: "room", x: 11000, y: 12000, level: 1, buildingId: GL },
-    { id: "gl_silverworks", label: "Silverworks", type: "room", x: 11000, y: 23000, level: 1, buildingId: GL },
-    { id: "gl_pierre_cardin", label: "Pierre Cardin", type: "room", x: 20000, y: 12000, level: 1, buildingId: GL },
-    { id: "gl_macao", label: "Macao Imperial Tea", type: "room", x: 20000, y: 23000, level: 1, buildingId: GL },
-    { id: "gl_ramen", label: "Ramen Kuroda", type: "room", x: 11000, y: 32000, level: 1, buildingId: GL },
-    { id: "gl_batchoi", label: "Oishi Batchoi", type: "room", x: 20000, y: 32000, level: 1, buildingId: GL },
-    { id: "gl_barrio", label: "Barrio Fiesta", type: "room", x: 30000, y: 32000, level: 1, buildingId: GL },
-    { id: "gl_razons", label: "Razon's of Guagua", type: "room", x: 39000, y: 32000, level: 1, buildingId: GL },
-    { id: "gl_faceshop", label: "The Face Shop", type: "room", x: 30000, y: 23000, level: 1, buildingId: GL },
-    { id: "gl_barbershop", label: "GQ Barbershop", type: "room", x: 39000, y: 12000, level: 1, buildingId: GL },
-    { id: "gl_guess", label: "Guess", type: "room", x: 39000, y: 23000, level: 1, buildingId: GL },
-    { id: "gl_sm_store", label: "The SM Store (GL)", type: "room", x: 45000, y: 12000, level: 1, buildingId: GL },
+    { id: "gl_supermarket", label: "SM Supermarket", type: "place", x: 6000, y: 12000, level: 1, buildingId: GL },
+    { id: "gl_dermcare", label: "Dermcare", type: "place", x: 11000, y: 12000, level: 1, buildingId: GL },
+    { id: "gl_silverworks", label: "Silverworks", type: "place", x: 11000, y: 23000, level: 1, buildingId: GL },
+    { id: "gl_pierre_cardin", label: "Pierre Cardin", type: "place", x: 20000, y: 12000, level: 1, buildingId: GL },
+    { id: "gl_macao", label: "Macao Imperial Tea", type: "place", x: 20000, y: 23000, level: 1, buildingId: GL },
+    { id: "gl_ramen", label: "Ramen Kuroda", type: "place", x: 11000, y: 32000, level: 1, buildingId: GL },
+    { id: "gl_batchoi", label: "Oishi Batchoi", type: "place", x: 20000, y: 32000, level: 1, buildingId: GL },
+    { id: "gl_barrio", label: "Barrio Fiesta", type: "place", x: 30000, y: 32000, level: 1, buildingId: GL },
+    { id: "gl_razons", label: "Razon's of Guagua", type: "place", x: 39000, y: 32000, level: 1, buildingId: GL },
+    { id: "gl_faceshop", label: "The Face Shop", type: "place", x: 30000, y: 23000, level: 1, buildingId: GL },
+    { id: "gl_barbershop", label: "GQ Barbershop", type: "place", x: 39000, y: 12000, level: 1, buildingId: GL },
+    { id: "gl_guess", label: "Guess", type: "place", x: 39000, y: 23000, level: 1, buildingId: GL },
+    { id: "gl_sm_store", label: "The SM Store (GL)", type: "place", x: 45000, y: 12000, level: 1, buildingId: GL },
 
     // 🪜 ESCALATORS (Severely offset from atriums to prevent text overlap)
     { id: "esc_main_gl", label: "Grand Escalator", type: "stairwell", x: 28000, y: 21000, level: 1, buildingId: GL },
@@ -129,16 +129,16 @@ function generateMassiveSMRosaMap() {
     { id: "l2_se_wing", label: "L2 South-East Wing", type: "corridor", x: 35000, y: 27000, level: 2, buildingId: L2 },
 
     // 🏬 STORES
-    { id: "l2_cinema", label: "SM Cinema", type: "room", x: 6000, y: 12000, level: 2, buildingId: L2 },
-    { id: "l2_turks", label: "Turks Shawarma", type: "room", x: 11000, y: 23000, level: 2, buildingId: L2 },
-    { id: "l2_dental", label: "Precious Teeth Dental", type: "room", x: 20000, y: 23000, level: 2, buildingId: L2 },
-    { id: "l2_foodcourt", label: "SM Foodcourt", type: "room", x: 25000, y: 12000, level: 2, buildingId: L2 }, 
-    { id: "l2_cyberzone", label: "Cyberzone", type: "room", x: 35000, y: 12000, level: 2, buildingId: L2 },
-    { id: "l2_mac", label: "Power Mac Center", type: "room", x: 45000, y: 23000, level: 2, buildingId: L2 },
-    { id: "l2_vivo", label: "Vivo", type: "room", x: 35000, y: 23000, level: 2, buildingId: L2 },
-    { id: "l2_payless", label: "Payless Shoesource", type: "room", x: 30000, y: 23000, level: 2, buildingId: L2 },
-    { id: "l2_office_warehouse", label: "Office Warehouse", type: "room", x: 30000, y: 12000, level: 2, buildingId: L2 },
-    { id: "l2_sm_store", label: "The SM Store (L2)", type: "room", x: 45000, y: 12000, level: 2, buildingId: L2 },
+    { id: "l2_cinema", label: "SM Cinema", type: "place", x: 6000, y: 12000, level: 2, buildingId: L2 },
+    { id: "l2_turks", label: "Turks Shawarma", type: "place", x: 11000, y: 23000, level: 2, buildingId: L2 },
+    { id: "l2_dental", label: "Precious Teeth Dental", type: "place", x: 20000, y: 23000, level: 2, buildingId: L2 },
+    { id: "l2_foodcourt", label: "SM Foodcourt", type: "place", x: 25000, y: 12000, level: 2, buildingId: L2 }, 
+    { id: "l2_cyberzone", label: "Cyberzone", type: "place", x: 35000, y: 12000, level: 2, buildingId: L2 },
+    { id: "l2_mac", label: "Power Mac Center", type: "place", x: 45000, y: 23000, level: 2, buildingId: L2 },
+    { id: "l2_vivo", label: "Vivo", type: "place", x: 35000, y: 23000, level: 2, buildingId: L2 },
+    { id: "l2_payless", label: "Payless Shoesource", type: "place", x: 30000, y: 23000, level: 2, buildingId: L2 },
+    { id: "l2_office_warehouse", label: "Office Warehouse", type: "place", x: 30000, y: 12000, level: 2, buildingId: L2 },
+    { id: "l2_sm_store", label: "The SM Store (L2)", type: "place", x: 45000, y: 12000, level: 2, buildingId: L2 },
 
     // 🪜 ESCALATORS
     { id: "esc_main_l2", label: "Grand Escalator", type: "stairwell", x: 28000, y: 21000, level: 2, buildingId: L2 },

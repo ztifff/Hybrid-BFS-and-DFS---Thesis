@@ -34,7 +34,7 @@ const SCENARIO_BADGES: Record<string, string> = {
 const extractPrimitive = (val: any): string | number => {
   if (val === null || val === undefined) return 'N/A';
   if (typeof val === 'object') {
-    return val.score ?? val.value ?? val.text ?? Object.values(val)[0] as string | number;
+    return val.score ?? val.value ?? val.label ?? val.text ?? Object.values(val)[0] as string | number;
   }
   return val;
 };
@@ -120,19 +120,18 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
       // FIX: Fallback to `res` itself if `metrics` is undefined (handles older saved histories)
       const metrics = res.metrics || res;
       
-      // If it's so corrupted that pathLength isn't even there, bail out safely
-      if (metrics.pathLength === undefined) return null;
+      // If it's so corrupted that totalLatency isn't even there, bail out safely
+      if (metrics.totalLatency === undefined && metrics.pathLength === undefined) return null;
 
-      const actualHops = Math.max(metrics.pathLength || 0, 0);
+      const actualDistance = Math.max(metrics.totalLatency || metrics.pathLength || 0, 0);
       const cRate = metrics.completionRate !== undefined ? `${metrics.completionRate.toFixed(1)}%` : '0%';
-      const optimality = getPathOptimality(actualHops, entry.optimalPathLength || 0);
       
       return {
         time: metrics.timeElapsed || 0,
         nodes: metrics.nodesExplored || 0,
-        hops: actualHops,
+        distance: actualDistance,
         memory: getMemoryInMB(metrics.memoryUsed || 0),
-        optimality: optimality.label,
+        optimality: extractPrimitive(getPathOptimality(actualDistance, entry.optimalPathLength || 0)),
         completion: cRate,
         adaptability: extractPrimitive(getAdaptabilityScore('done', metrics, algo, res.dynamicEvents || [])),
         success: metrics.exitFound || false
@@ -185,10 +184,10 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
                   {renderCell(hyb ? `${hyb.time.toFixed(2)} ms` : 'N/A', '#fb923c', hyb !== null && !hyb.success)}
                 </tr>
                 <tr>
-                  <td className="py-3 text-xs text-gray-400">Total Hops Length</td>
-                  {renderCell(bfs ? `${bfs.hops} nodes` : 'N/A', '#cbd5e1', bfs !== null && !bfs.success)}
-                  {renderCell(dfs ? `${dfs.hops} nodes` : 'N/A', '#cbd5e1', dfs !== null && !dfs.success)}
-                  {renderCell(hyb ? `${hyb.hops} nodes` : 'N/A', '#cbd5e1', hyb !== null && !hyb.success)}
+                  <td className="py-3 text-xs text-gray-400">Total Distance</td>
+                  {renderCell(bfs ? `${bfs.distance.toFixed(1)}` : 'N/A', '#cbd5e1', bfs !== null && !bfs.success)}
+                  {renderCell(dfs ? `${dfs.distance.toFixed(1)}` : 'N/A', '#cbd5e1', dfs !== null && !dfs.success)}
+                  {renderCell(hyb ? `${hyb.distance.toFixed(1)}` : 'N/A', '#cbd5e1', hyb !== null && !hyb.success)}
                 </tr>
                 <tr>
                   <td className="py-3 text-xs text-gray-400">Nodes Swept/Explored</td>
@@ -226,7 +225,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
 
           <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 text-xs text-gray-400 space-y-2">
             <span className="font-bold text-gray-300 block uppercase text-[10px] tracking-wider text-orange-400">📌 Structural Metadata Summary</span>
-            <p>This entry documents an evaluated graph grid composed of <strong className="text-white">{entry.totalNodes || 0} total nodes</strong> running across real-world topology presets. The baseline optimal path calculation requires a theoretical minimum index of <strong className="text-white">{entry.optimalPathLength || 0} hops</strong>.</p>
+            <p>This entry documents an evaluated graph grid composed of <strong className="text-white">{entry.totalNodes || 0} total nodes</strong> running across real-world topology presets. The baseline optimal path calculation requires a theoretical minimum index of <strong className="text-white">{entry.optimalPathLength || 0} distance units</strong>.</p>
           </div>
         </div>
 

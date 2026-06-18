@@ -7,6 +7,8 @@ export type ScenarioType =
   | 'evacuation'
   | 'gameai';
 
+export type GameAIBoard = 'chess' | 'checkers' | 'snakes';
+
 // ── Graph Node Types per scenario ──────────────────────────────────────────
 export type NetworkNodeType =
   | 'datacenter'   // source
@@ -38,7 +40,16 @@ export type EvacuationNodeType =
   | 'corridor'
   | 'stairwell'
   | 'fire';
-
+export type RealWorldNodeType =
+  | 'place'
+  | 'shop'
+  | 'restaurant'
+  | 'amenity'
+  | 'building'
+  | 'leisure'
+  | 'tourism'
+  | 'office'
+  | 'commercial';
 export type GameAINodeType =
   | 'spawn'        // strategy planner source
   | 'portal'       // winning square destination
@@ -51,13 +62,14 @@ export type ScenarioNodeType =
   | RoboticsNodeType
   | TrafficNodeType
   | EvacuationNodeType
-  | GameAINodeType;
+  | GameAINodeType
+  | RealWorldNodeType;
 
 // ── Core Graph Structures ──────────────────────────────────────────────────
 export interface GraphNode {
   id: string;
   label: string;
-  type: ScenarioNodeType;
+  type: ScenarioNodeType | string;
   x: number; // SVG layout position (0-1000)
   y: number;
   level: number; // hierarchy depth from source
@@ -150,3 +162,48 @@ export interface AlgorithmConfig {
   textColor: string;
   borderColor: string;
 }
+
+// ── Procedural Map Generation ──────────────────────────────────────────────
+
+export interface NetworkProceduralParams {
+  buildings: number;
+  floorsPerBuilding: number;
+  apsPerFloor: number;
+}
+
+export interface RoboticsProceduralParams {
+  zones: number;
+  aislesPerZone: number;
+  shelvesPerAisle: number;
+}
+
+export interface TrafficProceduralParams {
+  corridors: number;
+  intersectionsPerCorridor: number;
+  streetsPerIntersection: number;
+}
+
+export interface EvacuationProceduralParams {
+  floors: number;
+  corridorsPerFloor: number;
+  exits: number;
+}
+
+export interface GameAIProceduralParams {
+  board: GameAIBoard;
+  boardSize: number;
+}
+
+export interface ProceduralParams {
+  scenario: ScenarioType;
+  seed: number;
+  edgeDensity: number;
+  realistic?: boolean;
+  network?: NetworkProceduralParams;
+  robotics?: RoboticsProceduralParams;
+  traffic?: TrafficProceduralParams;
+  evacuation?: EvacuationProceduralParams;
+  gameai?: GameAIProceduralParams;
+}
+
+

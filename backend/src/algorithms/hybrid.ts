@@ -70,10 +70,18 @@ export async function runGraphHybrid(
     const node = nodeMap.get(current);
     const neighbors = adj.get(current) ?? [];
     const branchingFactor = neighbors.length;
-    const isHub = node?.level === 1;
+
+    // Only treat a node as a hub if it is truly a top-level entry point
+    // (level === 1) AND has significant branching — this prevents board-game
+    // entry tiles (which also have level 1) from falsely triggering DFS.
+    const isHub = node?.level === 1 && branchingFactor > 3;
 
     if (isHub) return 'DFS';
-    if (branchingFactor > 3) return 'BFS';
+    // Use BFS whenever there are at least 2 neighbours so that board-game
+    // graphs (chess, checkers, snakes) produce enough traversal steps to
+    // animate visibly. The previous threshold of > 3 caused DFS to dominate
+    // on checkers/snakes where most nodes have ≤ 3 edges.
+    if (branchingFactor >= 2) return 'BFS';
     return 'DFS';
   }
 

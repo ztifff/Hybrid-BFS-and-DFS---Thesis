@@ -216,10 +216,14 @@ function buildSnakesAndLaddersBoard(
     addNode({
       id: snakesId(tileNumber),
       label: `${tileNumber}`,
-      type: tileNumber % 10 === 0 ? 'corridor' : 'room',
+      type: 'room',
       x: originX + col * tile,
       y: originY + (9 - row) * tile,
-      level: tileNumber,
+      // Offset by 1 so the first tile (tile 1) gets level 2, not level 1.
+      // level === 1 is reserved for top-level hub nodes in the hybrid
+      // algorithm; using it here caused snakes_1 to be misidentified as a
+      // hub, forcing DFS throughout the board and collapsing the animation.
+      level: tileNumber + 1,
       buildingId: 'Snakes & Ladders',
       metadata: { board, row, col, tile: tileNumber }
     });
@@ -245,7 +249,7 @@ function buildSnakesAndLaddersBoard(
     type: 'portal',
     x: originX,
     y: originY,
-    level: 101,
+    level: 102,
     buildingId: 'Snakes & Ladders',
     metadata: { board, row: 9, col: 0, tile: 100 }
   });

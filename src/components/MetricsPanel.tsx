@@ -32,7 +32,7 @@ export function getCompletionRate(explored: number, totalNodes?: number): { perc
 
 export function getMemoryInMB(memoryKB: number): string {
   const memoryMB = memoryKB / 1024;
-  return memoryMB >= 1 ? `${memoryMB.toFixed(2)} MB` : `${memoryKB.toFixed(1)} KB`;
+  return `${memoryMB.toFixed(3)} MB`;
 }
 
 export function getAdaptabilityScore(
@@ -94,9 +94,9 @@ export const MetricsPanel: React.FC<Props> = ({
 
       const exploredCount = (stepIndex === 0) ? 0 : (status === 'done' && resultData ? resultData.metrics.nodesExplored : (stepData?.explored.length || 0));
       
-      const actualHops = (stepIndex === 0) ? 0 : (status === 'done' && resultData ? resultData.metrics.pathLength : Math.max(0, (stepData?.path.length || 1) - 1));
+      const actualDistance = (stepIndex === 0) ? 0 : (status === 'done' && resultData ? resultData.metrics.totalLatency : Math.max(0, (stepData?.path.length || 1) - 1));
       
-      const optimality = isStart ? { ratio: 0, label: 'N/A', color: '#64748b' } : getPathOptimality(actualHops, optimalPathLength);
+      const optimality = isStart ? { ratio: 0, label: 'N/A', color: '#64748b' } : getPathOptimality(actualDistance, optimalPathLength);
       
       const adaptability = isStart 
         ? { score: 0, label: '-', color: '#64748b' } 
@@ -131,8 +131,8 @@ export const MetricsPanel: React.FC<Props> = ({
               </div>
 
               <div className="flex flex-col">
-                  <div className="text-[9px] text-gray-500 uppercase tracking-wider">Hops</div>
-                  <div className="text-sm font-bold text-gray-200">{actualHops > 0 ? actualHops : '-'}</div>
+                  <div className="text-[9px] text-gray-500 uppercase tracking-wider">Distance</div>
+                  <div className="text-sm font-bold text-gray-200">{actualDistance > 0 ? actualDistance.toFixed(1) : '-'}</div>
               </div>
 
               <div className="flex flex-col">

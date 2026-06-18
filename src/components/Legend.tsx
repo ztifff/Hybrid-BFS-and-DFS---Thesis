@@ -40,12 +40,13 @@ const SCENARIO_NODE_ITEMS: Record<ScenarioType, LegendItem[]> = {
     { color: '#b91c1c', label: 'Emergency Exit (Target)',   icon: '🚪' },
     { color: '#dc2626', label: 'Corridor',                  icon: '🚶' },
     { color: '#ef4444', label: 'Stairwell',                 icon: '🪜' },
+    { color: '#0e7490', label: 'Real-World Place',          icon: '🏬' },
     { color: '#450a0a', label: 'Fire Blocked',              icon: '🔥' },
   ],
   gameai: [
     { color: '#4c1d95', label: 'Strategy Planner (Source)', icon: '♟️' },
     { color: '#6d28d9', label: 'Winning Square (Target)', icon: '🏁' },
-    { color: '#7c3aed', label: 'Board Tile / Legal Move', icon: '▣' },
+    { color: '#7c3aed', label: 'Board Tile / Legal Move', icon: '⬡' },
     { color: '#450a0a', label: 'Blocked Board Tile', icon: '✖' },
   ],
 };
