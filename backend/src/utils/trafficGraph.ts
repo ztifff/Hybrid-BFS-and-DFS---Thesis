@@ -1,81 +1,83 @@
-import { ScenarioGraph, GraphSize } from '../types/index';
+import { ScenarioGraph, GraphNode, GraphEdge, GraphSize } from '../types/index';
 import { cabuyaoTrafficGraph } from '../data/traffic.cabuyao';
 
-const W = 1200;
-const H = 900;
+const W = 1600; 
+const H = 1200;
 
 const SIZE_CONFIG = {
-  small: [
-    { id: 'N', name: 'North', cx: W * 0.25, intersections: 2, streetsPerInt: [2, 2], exit: 'Highway Exit North' },
-    { id: 'S', name: 'South', cx: W * 0.75, intersections: 2, streetsPerInt: [2, 2], exit: 'Highway Exit South' },
-  ],
-  medium: [
-    { id: 'N', name: 'North', cx: W * 0.18, intersections: 2, streetsPerInt: [2, 3], exit: 'Highway Exit North' },
-    { id: 'E', name: 'East',  cx: W * 0.50, intersections: 2, streetsPerInt: [2, 2], exit: 'Highway Exit East'  },
-    { id: 'S', name: 'South', cx: W * 0.82, intersections: 2, streetsPerInt: [3, 2], exit: 'Highway Exit South' },
-  ],
-  large: [
-    { id: 'NW', name: 'North-West', cx: W * 0.10, intersections: 3, streetsPerInt: [3, 3, 2], exit: 'Exit NW'    },
-    { id: 'N',  name: 'North',      cx: W * 0.28, intersections: 3, streetsPerInt: [2, 3, 3], exit: 'Exit North' },
-    { id: 'E',  name: 'East',       cx: W * 0.50, intersections: 4, streetsPerInt: [2, 2, 3, 2], exit: 'Exit East' },
-    { id: 'S',  name: 'South',      cx: W * 0.72, intersections: 3, streetsPerInt: [3, 2, 3], exit: 'Exit South' },
-    { id: 'SW', name: 'South-West', cx: W * 0.90, intersections: 3, streetsPerInt: [2, 2, 2], exit: 'Exit SW'    },
-  ],
+  small: { cols: 4, rows: 4 },
+  medium: { cols: 6, rows: 6 },
+  large: { cols: 9, rows: 7 }
 };
 
-export function buildTrafficGraph(useRealWorld: boolean = true, graphSize: GraphSize = 'medium'): ScenarioGraph {
+export function buildTrafficGraph(
+  useRealWorld: boolean = false, 
+  graphSize: GraphSize = 'medium'
+): ScenarioGraph {
   if (useRealWorld) {
-    return {
-      ...cabuyaoTrafficGraph,
-      width: cabuyaoTrafficGraph.width || W,
-      height: cabuyaoTrafficGraph.height || H,
-    };
+    return cabuyaoTrafficGraph as ScenarioGraph;
   }
+  const nodes: GraphNode[] = [];
+  const edges: GraphEdge[] = [];
+  const config = SIZE_CONFIG[graphSize];
 
-  const nodes: any[] = [];
-  const edges: any[] = [];
-  const corridors = SIZE_CONFIG[graphSize];
+  const cellW = (W - 200) / (config.cols - 1);
+  const cellH = (H - 200) / (config.rows - 1);
 
-  nodes.push({ id: 'city_center', label: 'City Center', type: 'origin', x: W / 2, y: 50, level: 0 });
+  // 1. Build the Grid of Intersections
+  for (let r = 0; r < config.rows; r++) {
+    for (let c = 0; c < config.cols; c++) {
+      const id = `int_${r}_${c}`;
+      nodes.push({
+        id,
+        label: `Block ${r}-${c}`,
+        type: 'intersection',
+        x: 100 + (c * cellW),
+        y: 100 + (r * cellH),
+        level: 1,
+        buildingId: 'city'
+      });
 
-  const corridorY = 165;
-  const intStartY = 300;
-  const intGapY = 145;
-
-  corridors.forEach((cor) => {
-    const corId = `corridor_${cor.id}`;
-    nodes.push({ id: corId, label: `${cor.name} Corridor`, type: 'intersection', x: cor.cx, y: corridorY, level: 1, buildingId: cor.id });
-    edges.push({ id: `cc-${corId}`, from: 'city_center', to: corId, latency: 3, label: '3min', type: 'road' });
-
-    for (let ii = 0; ii < cor.intersections; ii++) {
-      const intId = `int_${cor.id}_${ii + 1}`;
-      const intY = intStartY + ii * intGapY;
-      const prevId = ii === 0 ? corId : `int_${cor.id}_${ii}`;
-
-      nodes.push({ id: intId, label: `Int-${cor.id}${ii + 1}`, type: 'intersection', x: cor.cx, y: intY, level: 2, buildingId: cor.id });
-      edges.push({ id: `${prevId}-${intId}`, from: prevId, to: intId, latency: 4, label: '4min', type: 'road' });
-
-      const streetCount = cor.streetsPerInt[ii] ?? 2;
-      const spread = 52;
-      for (let si = 0; si < streetCount; si++) {
-        const stId = `street_${cor.id}_${ii + 1}_${si + 1}`;
-        const offset = (si - (streetCount - 1) / 2) * spread;
-        nodes.push({ id: stId, label: `St-${cor.id}${ii + 1}${si + 1}`, type: 'street', x: cor.cx + offset, y: intY + 90, level: 3, buildingId: cor.id });
-        edges.push({ id: `${intId}-${stId}`, from: intId, to: stId, latency: 2, label: '2min', type: 'road' });
+      // Connect West (Horizontal Street)
+      if (c > 0) {
+        edges.push({ id: `int_${r}_${c-1}-${id}`, from: `int_${r}_${c-1}`, to: id, latency: 3, label: '3m', type: 'road' });
+      }
+      // Connect North (Vertical Street)
+      if (r > 0) {
+        edges.push({ id: `int_${r-1}_${c}-${id}`, from: `int_${r-1}_${c}`, to: id, latency: 4, label: '4m', type: 'road' });
       }
     }
+  }
 
-    const exitId = `exit_${cor.id}`;
-    const lastIntId = `int_${cor.id}_${cor.intersections}`;
-    const exitY = intStartY + (cor.intersections - 1) * intGapY + 205;
-    nodes.push({ id: exitId, label: cor.exit, type: 'highway', x: cor.cx, y: Math.min(exitY, H - 40), level: 4, buildingId: cor.id });
-    edges.push({ id: `${lastIntId}-${exitId}`, from: lastIntId, to: exitId, latency: 2, label: '2min', type: 'road' });
+  // 2. Add an "Expressway" cutting diagonally (Fast but risky)
+  for (let i = 0; i < Math.min(config.rows, config.cols) - 1; i++) {
+    edges.push({ 
+      id: `hwy_${i}`, 
+      from: `int_${i}_${i}`, 
+      to: `int_${i+1}_${i+1}`, 
+      latency: 1, 
+      label: '1m HWY', 
+      type: 'road' 
+    });
+  }
+
+  // 3. Start Point (Top Left) and Exits (Bottom Right edges)
+  const sourceId = 'int_0_0';
+  const destinationIds = [
+    `int_${config.rows - 1}_${config.cols - 1}`, // Bottom Right corner
+    `int_${config.rows - 1}_${Math.floor(config.cols / 2)}`, // Bottom Middle
+    `int_${Math.floor(config.rows / 2)}_${config.cols - 1}`  // Right Middle
+  ];
+
+  // Tag exits visually
+  destinationIds.forEach(id => {
+    const n = nodes.find(n => n.id === id);
+    if (n) { n.type = 'highway'; n.label = 'City Exit'; }
   });
 
-  const destinationIds = nodes.filter(n => n.type === 'highway').map(n => n.id);
-  return { nodes, edges, sourceId: 'city_center', destinationIds, width: W, height: H };
+  return { nodes, edges, sourceId, destinationIds, width: W, height: H };
 }
 
 export function getTrafficClosureCandidates(graph: ScenarioGraph): string[] {
-  return graph.nodes.filter(n => n.type === 'intersection' || n.type === 'street').map(n => n.id);
+  return graph.nodes.filter(n => n.type === 'intersection').map(n => n.id);
 }

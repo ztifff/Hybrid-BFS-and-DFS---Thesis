@@ -10,14 +10,22 @@ export function buildScenarioGraph(
   useRealWorld: boolean = false,
   gameBoard?: GameAIBoard,
   networkMode?: 'datacenter' | 'as733' | 'synthetic',
-  graphSize: GraphSize = 'medium'
+  graphSize: GraphSize = 'medium',
+  seed: number = 123
 ): ScenarioGraph {
   switch (scenario) {
-    case 'network':    return buildNetworkGraph(useRealWorld, undefined, networkMode ?? (useRealWorld ? 'datacenter' : 'synthetic'), graphSize);
-    case 'robotics':   return buildRoboticsGraph(useRealWorld, graphSize);
-    case 'traffic':    return buildTrafficGraph(useRealWorld, graphSize);
-    case 'evacuation': return buildEvacuationGraph(useRealWorld, graphSize);
-    case 'gameai':     return buildGameAIGraph(gameBoard, graphSize);
+    case 'robotics':
+      return buildRoboticsGraph(useRealWorld, seed, graphSize); 
+    case 'evacuation':
+      return buildEvacuationGraph(useRealWorld, seed, graphSize); 
+    case 'network':
+      return buildNetworkGraph(useRealWorld, seed, networkMode, graphSize); 
+    case 'traffic':
+      return buildTrafficGraph(useRealWorld, graphSize); 
+    case 'gameai':
+      return buildGameAIGraph(gameBoard, graphSize);
+    default:
+      throw new Error(`Unknown scenario: ${scenario}`);
   }
 }
 

@@ -1,7 +1,7 @@
 import { ScenarioGraph, GraphNode, GraphEdge, GraphSize } from '../types/index';
 
-const W = 1000;
-const H = 860;
+const W = 1600; 
+const H = 1200;
 
 export type GameAIBoard = 'chess' | 'checkers' | 'snakes';
 
@@ -60,8 +60,8 @@ export function buildGameAIGraph(
 
   addNode({
     id: 'spawn',
-    label: 'Strategy AI\nMove Planner',
-    type: 'spawn',
+    label: 'Strategy AI',
+    type: 'strategy_planner',
     x: W / 2,
     y: 56,
     level: 0,
@@ -86,7 +86,7 @@ export function buildGameAIGraph(
     destinationIds = ['portal_chess'];
   }
 
-  addEdge('spawn', entryNode, 1, 'wireless', `select ${board}`);
+  addEdge('spawn', entryNode, 1, 'wireless');
 
   return {
     nodes,
@@ -103,9 +103,9 @@ function buildChessBoard(
   addTwoWayEdge: (from: string, to: string, latency?: number, type?: GraphEdge['type'], label?: string) => void,
   size: number
 ) {
-  const tileSize = Math.floor(520 / size);
-  const originX = Math.floor((W - tileSize * size) / 2);
-  const originY = 178;
+  const tileSize = Math.floor(400 / size);
+const originX = Math.floor((W - tileSize * size) / 2);
+const originY = Math.floor((H - tileSize * size) / 2);
 
   for (let row = 0; row < size; row++) {
     for (let col = 0; col < size; col++) {
@@ -113,7 +113,7 @@ function buildChessBoard(
       addNode({
         id,
         label: `${files[col]}${row + 1}`,
-        type: 'room',
+        type: 'board_tile',
         x: originX + col * tileSize,
         y: originY + (size - 1 - row) * tileSize,
         level: row + col + 1,
@@ -132,7 +132,7 @@ function buildChessBoard(
         if (nc < 0 || nc >= size || nr < 0 || nr >= size) continue;
         const from = `chess_${files[col]}${row + 1}`;
         const to = `chess_${files[nc]}${nr + 1}`;
-        if (from < to) addTwoWayEdge(from, to, 1, 'path', 'knight jump');
+        if (from < to) addTwoWayEdge(from, to, 1, 'path', '');
       }
     }
   }
@@ -140,7 +140,7 @@ function buildChessBoard(
   addNode({
     id: 'portal_chess',
     label: 'Chess Checkmate\nTarget Square',
-    type: 'portal',
+    type: 'winning_square',
     x: originX + (size - 1) * tileSize,
     y: originY,
     level: size * 2,
@@ -155,9 +155,9 @@ function buildCheckersBoard(
   addTwoWayEdge: (from: string, to: string, latency?: number, type?: GraphEdge['type'], label?: string) => void,
   size: number
 ) {
-  const tileSize = Math.floor(520 / size);
+  const tileSize = Math.floor(400 / size); 
   const originX = Math.floor((W - tileSize * size) / 2);
-  const originY = 178;
+  const originY = Math.floor((H - tileSize * size) / 2);
 
   for (let row = 0; row < size; row++) {
     for (let col = 0; col < size; col++) {
@@ -165,7 +165,7 @@ function buildCheckersBoard(
       addNode({
         id: `checkers_${files[col]}${row + 1}`,
         label: `${files[col]}${row + 1}`,
-        type: 'room',
+        type: 'board_tile',
         x: originX + col * tileSize,
         y: originY + (size - 1 - row) * tileSize,
         level: row + col + 1,
@@ -201,7 +201,7 @@ function buildCheckersBoard(
   addNode({
     id: 'portal_checkers',
     label: 'Checkers Crown Row\nTarget Square',
-    type: 'portal',
+    type: 'winning_square',
     x: originX + portalCol * tileSize,
     y: originY,
     level: size * 2,
@@ -217,16 +217,16 @@ function buildSnakesAndLaddersBoard(
   totalTiles: number
 ) {
   const gridSize = Math.round(Math.sqrt(totalTiles));
-  const tileSize = Math.floor(520 / gridSize);
+  const tileSize = Math.floor(400 / gridSize); 
   const originX = Math.floor((W - tileSize * gridSize) / 2);
-  const originY = 114;
+  const originY = Math.floor((H - tileSize * gridSize) / 2);
 
   for (let t = 1; t <= totalTiles; t++) {
     const { row, col } = serpentinePosition(t, gridSize);
     addNode({
       id: `snakes_${t}`,
       label: `${t}`,
-      type: 'room',
+      type: 'board_tile',
       x: originX + col * tileSize,
       y: originY + (gridSize - 1 - row) * tileSize,
       level: t + 1,
@@ -264,7 +264,7 @@ function buildSnakesAndLaddersBoard(
   addNode({
     id: 'portal_snakes',
     label: 'Snakes & Ladders\nFinish Tile',
-    type: 'portal',
+    type: 'winning_square',
     x: originX + pc * tileSize,
     y: originY + (gridSize - 1 - pr) * tileSize,
     level: totalTiles + 2,
@@ -283,5 +283,6 @@ function serpentinePosition(tileNumber: number, gridSize: number): { row: number
 }
 
 export function getGameAIEnemyCandidates(graph: ScenarioGraph): string[] {
-  return graph.nodes.filter(n => n.type === 'room' || n.type === 'corridor').map(n => n.id);
+  // 🧠 FIX: Look for 'board_tile' so the dynamic event engine knows where it can spawn obstacles!
+  return graph.nodes.filter(n => n.type === 'board_tile').map(n => n.id);
 }

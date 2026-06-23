@@ -130,11 +130,15 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         const graphParams = new URLSearchParams({
           scenario,
           useRealWorld: String(mapMode !== 'synthetic'),
-          networkMode: mapMode === 'realworld' ? 'datacenter' : mapMode === 'realworld2' ? 'as733' : 'synthetic', graphSize,
-            });
-      if (scenario === 'gameai') {
-        graphParams.set('gameBoard', gameBoard);
-      }
+          networkMode: mapMode === 'realworld' ? 'datacenter' : mapMode === 'realworld2' ? 'as733' : 'synthetic', 
+          graphSize,
+          seed: seed.toString() 
+        });
+        
+        if (scenario === 'gameai') {
+          graphParams.set('gameBoard', gameBoard);
+        }
+        
         const response = await fetch(`api/network/graph?${graphParams}`);
         if (!response.ok) throw new Error(`Graph API Error: ${response.statusText}`);
         const json = await response.json();
@@ -155,7 +159,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     return () => {
       isMounted = false;
     };
-  }, [scenario, mapMode, gameBoard, graphSize]);
+  }, [scenario, mapMode, gameBoard, graphSize, seed]);
 
   // Fetch run metrics and evaluated paths from the computing engine (Chunked)
   useEffect(() => {
@@ -679,14 +683,23 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             </div>
 
             <div className="rounded-2xl overflow-hidden border border-gray-700 w-full relative flex-1 min-h-[400px] shrink-0 shadow-[0_0_48px_rgba(37,99,235,0.1)] bg-[#0a0f1e]" style={{ maxWidth: 1200 }}>
-              {!isGraphLoading && currentGraph ? (
-                <NetworkCanvas
-                  graph={currentGraph}
-                  activeSteps={activeSteps}
-                  scenario={scenario}
-                  stepIndex={stepIndex}
-                  dynamicEvents={simResults?.hybrid.dynamicEvents || []}
-                />
+              {currentGraph ? (
+                <>
+                  <NetworkCanvas
+                    graph={currentGraph}
+                    activeSteps={activeSteps}
+                    scenario={scenario}
+                    stepIndex={stepIndex}
+                    dynamicEvents={simResults?.hybrid.dynamicEvents || []}
+                  />
+                  {/* Subtle transparent overlay when fetching new data so the canvas isn't destroyed! */}
+                  {isGraphLoading && (
+                    <div className="absolute inset-0 bg-[#0a0f1e]/40 backdrop-blur-[2px] flex flex-col items-center justify-center text-white gap-3 z-50 transition-all">
+                      <div className="w-8 h-8 border-4 border-gray-600 border-t-blue-500 rounded-full animate-spin" />
+                      <span className="text-sm font-mono tracking-wider font-bold shadow-black drop-shadow-md">Resyncing Map...</span>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="absolute inset-0 bg-[#0a0f1e] flex flex-col items-center justify-center text-gray-500 gap-3">
                   <div className="w-6 h-6 border-2 border-gray-600 border-t-blue-500 rounded-full animate-spin" />

@@ -28,32 +28,10 @@ export async function runGraphDFS(
   const visited = new Set<string>();
   const parentMap = new Map<string, string | null>();
   const steps: AlgorithmStep[] = [];
-
-  const blockedHistory = new Set<string>(blockedNodes);
   const stack: string[] = [];
 
-  function resetSearchState() {
-    stack.splice(0, stack.length);
-    visited.clear();
-    parentMap.clear();
-    stack.push(sourceId);
-    parentMap.set(sourceId, null);
-  }
-
-  function blockedSetChanged(): boolean {
-    if (blockedHistory.size !== blockedNodes.size) return true;
-    for (const nodeId of blockedNodes) {
-      if (!blockedHistory.has(nodeId)) return true;
-    }
-    return false;
-  }
-
-  function syncBlockedHistory() {
-    blockedHistory.clear();
-    for (const nodeId of blockedNodes) blockedHistory.add(nodeId);
-  }
-
-  resetSearchState();
+  stack.push(sourceId);
+  parentMap.set(sourceId, null);
 
   let foundDestination: string | null = null;
   let lastCurrent: string | null = null;
@@ -62,41 +40,21 @@ export async function runGraphDFS(
   let lastYieldTime = performance.now();
 
   while (stack.length > 0 && !foundDestination) {
-    // ⚠️ Dynamic Obstacle Detected: Fluidly Adapt without resetting
-    if (blockedSetChanged()) {
-      syncBlockedHistory();
-      iteration++;
-
-      const alertStep: AlgorithmStep = {
-        stepIndex: iteration,
-        explored: Array.from(visited),
-        frontier: [...stack],
-        path: reconstructPath(parentMap, lastCurrent ?? sourceId),
-        current: lastCurrent ?? sourceId,
-        done: false,
-        foundDestination: null,
-        phaseLabel: '⚠️ Map Updated — Adjusting On-the-Fly'
-      };
-      steps.push(alertStep);
-      if (onStepProgress) onStepProgress(alertStep);
-
-      // We DO NOT resetSearchState() here anymore.
-      continue;
-    }
-
     const current = stack.pop()!;
-    lastCurrent = current;
-    if (blockedNodes.has(current)) continue;
-
+    
+    // 🧠 Native Detour: Silently skip without wiping memory
+    if (blockedNodes.has(current)) {
+        const parent = parentMap.get(current);
+        if (parent) stack.push(parent);
+        continue;
+    }
     if (visited.has(current)) continue;
    
-    // Lazy Evaluation: Abandon branch if blocked
-    if (blockedNodes.has(current)) continue;
-   
     visited.add(current);
+    lastCurrent = current;
     nodesExplored++;
-
     iteration++;
+
     const now = performance.now();
     const step: AlgorithmStep = {
       stepIndex: iteration,
@@ -106,7 +64,7 @@ export async function runGraphDFS(
       current,
       done: false,
       foundDestination: null,
-      phaseLabel: '🎯 DFS — Deep Dive (Tunnel Vision)'
+      phaseLabel: '🎯 DFS — Deep Dive'
     };
 
     steps.push(step);
@@ -131,12 +89,7 @@ export async function runGraphDFS(
     }
   }
 
-  let finalPath = foundDestination ? reconstructPath(parentMap, foundDestination) : [];
-  if (finalPath.some(nodeId => blockedNodes.has(nodeId))) {
-    foundDestination = null;
-    finalPath = [];
-  }
-
+  const finalPath = foundDestination ? reconstructPath(parentMap, foundDestination) : [];
   const totalLatency = calcPathLatency(finalPath, edges);
 
   steps.push({

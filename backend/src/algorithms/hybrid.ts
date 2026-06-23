@@ -32,33 +32,11 @@ export async function runGraphHybrid(
   const visited = new Set<string>();
   const parentMap = new Map<string, string | null>();
   const steps: AlgorithmStep[] = [];
-  
-  const blockedHistory = new Set<string>(blockedNodes);
   const frontier: string[] = [];
-
-  function resetSearchState() {
-    frontier.splice(0, frontier.length);
-    visited.clear();
-    parentMap.clear();
-    frontier.push(sourceId);
-    visited.add(sourceId);
-    parentMap.set(sourceId, null);
-  }
-
-  function blockedSetChanged(): boolean {
-    if (blockedHistory.size !== blockedNodes.size) return true;
-    for (const nodeId of blockedNodes) {
-      if (!blockedHistory.has(nodeId)) return true;
-    }
-    return false;
-  }
-
-  function syncBlockedHistory() {
-    blockedHistory.clear();
-    for (const nodeId of blockedNodes) blockedHistory.add(nodeId);
-  }
-
-  resetSearchState();
+  
+  frontier.push(sourceId);
+  visited.add(sourceId);
+  parentMap.set(sourceId, null);
 
   let nodesExplored = 0;
   let foundDestination: string | null = null;
@@ -70,52 +48,30 @@ export async function runGraphHybrid(
     const node = nodeMap.get(current);
     const neighbors = adj.get(current) ?? [];
     const branchingFactor = neighbors.length;
-
-    // Only treat a node as a hub if it is truly a top-level entry point
-    // (level === 1) AND has significant branching — this prevents board-game
-    // entry tiles (which also have level 1) from falsely triggering DFS.
     const isHub = node?.level === 1 && branchingFactor > 3;
-
     if (isHub) return 'DFS';
-    // Use BFS whenever there are at least 2 neighbours so that board-game
-    // graphs (chess, checkers, snakes) produce enough traversal steps to
-    // animate visibly. The previous threshold of > 3 caused DFS to dominate
-    // on checkers/snakes where most nodes have ≤ 3 edges.
     if (branchingFactor >= 2) return 'BFS';
     return 'DFS';
   }
 
   while (frontier.length > 0 && !foundDestination) {
-    // ⚠️ Dynamic Obstacle Detected: Fluidly Adapt without resetting
-    if (blockedSetChanged()) {
-      syncBlockedHistory();
-      iteration++;
-
-      const alertStep: AlgorithmStep = {
-        stepIndex: iteration,
-        explored: Array.from(visited),
-        frontier: [...frontier],
-        path: reconstructPath(parentMap, lastCurrent ?? sourceId),
-        current: lastCurrent ?? sourceId,
-        done: false,
-        foundDestination: null,
-        phaseLabel: '⚠️ Map Updated — Adjusting On-the-Fly'
-      };
-      steps.push(alertStep);
-      if (onStepProgress) onStepProgress(alertStep);
-
-      // We DO NOT resetSearchState() here anymore.
-      continue;
-    }
-
     const peek = frontier[frontier.length - 1];
     const strategy = chooseStrategy(peek);
 
     const current = strategy === 'BFS' ? frontier.shift()! : frontier.pop()!;
     if (!current) continue;
-    lastCurrent = current;
 
+    // 🧠 Native Detour: Silently skip without wiping memory
+    if (blockedNodes.has(current)) {
+        const parent = parentMap.get(current);
+        if (parent) frontier.unshift(parent);
+        continue;
+    }
+
+    lastCurrent = current;
+    nodesExplored++;
     iteration++;
+
     const now = performance.now();
     const step: AlgorithmStep = {
       stepIndex: iteration,
@@ -136,14 +92,6 @@ export async function runGraphHybrid(
       lastYieldTime = performance.now();
     }
 
-    // Lazy Evaluation Check
-    if (blockedNodes.has(current)) {
-      visited.delete(current);
-      continue;
-    }
-
-    nodesExplored++;
-
     if (destSet.has(current)) {
       foundDestination = current;
       break;
@@ -161,12 +109,7 @@ export async function runGraphHybrid(
     }
   }
 
-  let finalPath = foundDestination ? reconstructPath(parentMap, foundDestination) : [];
-  if (finalPath.some(nodeId => blockedNodes.has(nodeId))) {
-    foundDestination = null;
-    finalPath = [];
-  }
-
+  const finalPath = foundDestination ? reconstructPath(parentMap, foundDestination) : [];
   const totalLatency = calcPathLatency(finalPath, edges);
 
   steps.push({

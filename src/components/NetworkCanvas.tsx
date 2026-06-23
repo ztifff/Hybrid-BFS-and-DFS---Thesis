@@ -34,10 +34,10 @@ const NODE_CONFIG: Record<string, { icon: string; radius: number; baseColor: str
   corridor:        { icon: '🚶', radius: 17, baseColor: '#dc2626' },
   stairwell:       { icon: '🪜', radius: 17, baseColor: '#ef4444' },
   fire:            { icon: '🔥', radius: 17, baseColor: '#7f1d1d' },
-  spawn:           { icon: '♟️', radius: 28, baseColor: '#4c1d95' },
-  portal:          { icon: '🏁', radius: 22, baseColor: '#6d28d9' },
-  room:            { icon: '⬡', radius: 17, baseColor: '#7c3aed' },
-  enemy:           { icon: '✖', radius: 17, baseColor: '#7f1d1d' },
+  strategy_planner: { icon: '♟️', radius: 14, baseColor: '#9333ea' }, 
+  winning_square:   { icon: '🏁', radius: 14, baseColor: '#dc2626' }, 
+  board_tile:       { icon: '⚪', radius: 8,  baseColor: '#64748b' },
+  blocked_tile:     { icon: '❌', radius: 10, baseColor: '#ef4444' },
   place:           { icon: '🏬', radius: 20, baseColor: '#0e7490' },
   shop:            { icon: '🏬', radius: 20, baseColor: '#0e7490' },
   restaurant:      { icon: '🍽️', radius: 18, baseColor: '#0e7490' },
@@ -85,9 +85,23 @@ export const NetworkCanvas: React.FC<Props> = ({
   const SVG_W = 960;
   const SVG_H = 680;
 
-  const scale = Math.min(SVG_W / width, SVG_H / height) * 1.05;
-  const offsetX = (SVG_W - (width * scale)) / 2;
-  const offsetY = (SVG_H - (height * scale)) / 2;
+  // 1. Check if the map is our generated synthetic map (1600px or smaller)
+  const isSynthetic = width <= 1600 && height <= 1600;
+
+  // 2. If synthetic, force scale to 1 to prevent clustering. 
+  //    If real-world (massive dimensions), auto-squish it so it fits on screen!
+  const scale = isSynthetic ? 1 : Math.min(SVG_W / width, SVG_H / height) * 1.05;
+
+  const cw = containerRef.current?.getBoundingClientRect().width || windowDimensions.w;
+  const ch = containerRef.current?.getBoundingClientRect().height || windowDimensions.h;
+
+  const offsetX = isSynthetic 
+    ? (cw / 2) - (width / 2) 
+    : (SVG_W - (width * scale)) / 2;
+
+  const offsetY = isSynthetic 
+    ? (ch / 2) - (height / 2) 
+    : (SVG_H - (height * scale)) / 2;
 
   const sx = (x: number) => (x * scale) + offsetX;
   const sy = (y: number) => (y * scale) + offsetY;
@@ -132,6 +146,22 @@ export const NetworkCanvas: React.FC<Props> = ({
         document.removeEventListener('fullscreenchange', handleFullscreenChange);
         window.removeEventListener('resize', handleResize);
     };
+  }, []);
+
+  // Add this inside NetworkCanvas to trap the mouse wheel scroll
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    // This native listener forces the browser to STOP scrolling the page when hovering the canvas
+    const preventPageScroll = (e: WheelEvent) => {
+      e.preventDefault(); 
+    };
+
+    // { passive: false } is required to allow preventDefault() to work
+    container.addEventListener('wheel', preventPageScroll, { passive: false });
+    
+    return () => container.removeEventListener('wheel', preventPageScroll);
   }, []);
 
   // Follow Algorithm Logic
@@ -514,73 +544,84 @@ export const NetworkCanvas: React.FC<Props> = ({
       const shouldShowStreetLabel = isMassive && isKnownPlace && zoom >= 1.5;
       const shouldShowNormalLabel = (!isMassive && isKnownPlace) || isImportant;
 
-      if (shouldShowStreetLabel) {
-        const screenX = (cx * zoom) + pan.x;
-        const screenY = (cy * zoom) + pan.y;
+      // Calculate how faded the text should be based on zoom
+      const textAlpha = isImportant ? 1 : Math.max(0, Math.min(1, (zoom - 0.6) * 2.5));
 
-        const separationThreshold = Math.max(50 / (zoom * 0.15), 35); 
+      // Only draw the text if it is actually visible
+      if (textAlpha > 0) {
+        ctx.save();
+        ctx.globalAlpha = textAlpha; // Apply the fade to the canvas
 
-        const isOverlapping = renderedTextPositions.some(pos => {
-          const distance = Math.hypot(pos.x - screenX, pos.y - screenY);
-          return distance < separationThreshold;
-        });
+        if (shouldShowStreetLabel) {
+          const screenX = (cx * zoom) + pan.x;
+          const screenY = (cy * zoom) + pan.y;
 
-        if (!isOverlapping || isImportant) {
-          // Standard inverse scaling keeps text size perfectly locked on your screen
-          const baseFontSize = isImportant ? 16 : 14; 
-          const dynamicFontSize = baseFontSize / zoom; 
-          ctx.font = `${isImportant ? 'bold' : '600'} ${dynamicFontSize}px sans-serif`;
-          
-          ctx.lineJoin = 'round';
-          ctx.lineWidth = 3 / zoom;
-          ctx.strokeStyle = '#0a0f1e'; 
-          
-          const labelOffsetY = r + (10 / zoom);
-          ctx.strokeText(displayLabel, cx, cy - labelOffsetY);
-          
-          ctx.fillStyle = isImportant ? '#fb923c' : '#f1f5f9'; 
-          ctx.fillText(displayLabel, cx, cy - labelOffsetY);
+          const separationThreshold = Math.max(50 / (zoom * 0.15), 35); 
 
-          renderedTextPositions.push({ x: screenX, y: screenY, radius: separationThreshold });
-        }
-      } else if (shouldShowNormalLabel && displayLabel) {
-        if (isMassive && isImportant) {
-          const dynamicFontSize = 16 / zoom;
-          ctx.font = `bold ${dynamicFontSize}px sans-serif`;
-          ctx.strokeStyle = '#0a0f1e';
-          ctx.lineWidth = 3 / zoom;
-          
-          const labelOffsetY = r + (10 / zoom);
-          ctx.strokeText(displayLabel, cx, cy - labelOffsetY);
-          
-          ctx.fillStyle = isSource ? '#4ade80' : isDest ? '#f87171' : '#fb923c';
-          ctx.fillText(displayLabel, cx, cy - labelOffsetY);
-        } else if (!isMassive) {
-          if (!isDatacenter) {
+          const isOverlapping = renderedTextPositions.some(pos => {
+            const distance = Math.hypot(pos.x - screenX, pos.y - screenY);
+            return distance < separationThreshold;
+          });
+
+          if (!isOverlapping || isImportant) {
+            // Standard inverse scaling keeps text size perfectly locked on your screen
+            const baseFontSize = isImportant ? 16 : 14; 
+            const dynamicFontSize = baseFontSize / zoom; 
+            ctx.font = `${isImportant ? 'bold' : '600'} ${dynamicFontSize}px sans-serif`;
             
-            // Labels stay a readable constant size on screen
-            const baseLabelSize = isImportant ? 14 : 12;
-            const labelSize = baseLabelSize / zoom;
-            ctx.font = `${isImportant ? 'bold ' : ''}${labelSize}px sans-serif`;
-            ctx.fillStyle = '#cbd5e1';
+            ctx.lineJoin = 'round';
+            ctx.lineWidth = 3 / zoom;
+            ctx.strokeStyle = '#0a0f1e'; 
             
-            const labelOffsetY = r + (12 / zoom);
-            ctx.fillText(displayLabel, cx, cy + labelOffsetY);
-          } else {
+            const labelOffsetY = r + (10 / zoom);
+            ctx.strokeText(displayLabel, cx, cy - labelOffsetY);
             
-            const baseLabelSize = isImportant ? 12 : 10;
-            const labelSize = baseLabelSize / zoom;
-            const labelY = cy + r + (8 / zoom);
+            ctx.fillStyle = isImportant ? '#fb923c' : '#f1f5f9'; 
+            ctx.fillText(displayLabel, cx, cy - labelOffsetY);
+
+            renderedTextPositions.push({ x: screenX, y: screenY, radius: separationThreshold });
+          }
+        } else if (shouldShowNormalLabel && displayLabel) {
+          if (isMassive && isImportant) {
+            const dynamicFontSize = 16 / zoom;
+            ctx.font = `bold ${dynamicFontSize}px sans-serif`;
+            ctx.strokeStyle = '#0a0f1e';
+            ctx.lineWidth = 3 / zoom;
             
-            ctx.font = `${labelSize}px sans-serif`;
-            ctx.lineWidth = 2 / zoom;
-            ctx.strokeStyle = '#0f172a';
-            ctx.strokeText(displayLabel, cx, labelY);
+            const labelOffsetY = r + (10 / zoom);
+            ctx.strokeText(displayLabel, cx, cy - labelOffsetY);
             
-            ctx.fillStyle = '#f8fafc';
-            ctx.fillText(displayLabel, cx, labelY);
+            ctx.fillStyle = isSource ? '#4ade80' : isDest ? '#f87171' : '#fb923c';
+            ctx.fillText(displayLabel, cx, cy - labelOffsetY);
+          } else if (!isMassive) {
+            if (!isDatacenter) {
+              
+              // Labels stay a readable constant size on screen
+              const baseLabelSize = isImportant ? 14 : 12;
+              const labelSize = baseLabelSize / zoom;
+              ctx.font = `${isImportant ? 'bold ' : ''}${labelSize}px sans-serif`;
+              ctx.fillStyle = '#cbd5e1';
+              
+              const labelOffsetY = r + (12 / zoom);
+              ctx.fillText(displayLabel, cx, cy + labelOffsetY);
+            } else {
+              
+              const baseLabelSize = isImportant ? 12 : 10;
+              const labelSize = baseLabelSize / zoom;
+              const labelY = cy + r + (8 / zoom);
+              
+              ctx.font = `${labelSize}px sans-serif`;
+              ctx.lineWidth = 2 / zoom;
+              ctx.strokeStyle = '#0f172a';
+              ctx.strokeText(displayLabel, cx, labelY);
+              
+              ctx.fillStyle = '#f8fafc';
+              ctx.fillText(displayLabel, cx, labelY);
+            }
           }
         }
+        
+        ctx.restore(); // Stop fading so the icons (drawn next) stay solid!
       }
       // Draw icon last — on top of rings, fills, and labels — so nothing overwrites it
       if (!isMassive) {
@@ -594,7 +635,9 @@ export const NetworkCanvas: React.FC<Props> = ({
     });
 
     // 4. Draw Edge Labels (Distance/Weight Values)
-    if (!isMassive && zoom >= 1) {
+    if (!isMassive && zoom >= 0.7) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, Math.min(1, (zoom - 0.7) * 3));
       ctx.font = `${Math.max(8, 12 / zoom)}px sans-serif`;
       ctx.fillStyle = '#e2e8f0';
       ctx.strokeStyle = '#0f172a';
@@ -616,6 +659,7 @@ export const NetworkCanvas: React.FC<Props> = ({
         ctx.strokeText(label, midX, midY);
         ctx.fillText(label, midX, midY);
       });
+      ctx.restore();
     }
 
   // Adding windowDimensions to the dependency array ensures resizing updates the canvas visually

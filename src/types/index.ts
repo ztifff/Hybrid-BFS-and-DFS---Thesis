@@ -42,30 +42,18 @@ export type EvacuationNodeType =
   | 'corridor'
   | 'stairwell'
   | 'fire';
-export type RealWorldNodeType =
-  | 'place'
-  | 'shop'
-  | 'restaurant'
-  | 'amenity'
-  | 'building'
-  | 'leisure'
-  | 'tourism'
-  | 'office'
-  | 'commercial';
 export type GameAINodeType =
-  | 'spawn'        // strategy planner source
-  | 'portal'       // winning square destination
-  | 'room'         // board tile
+  | 'strategy_planner:'        // strategy planner source
+  | 'board_tile'   // board tile
   | 'corridor'     // special board tile / penalty path
-  | 'enemy';       // blocked opponent tile
+  | 'blocked_tile';       // blocked opponent tile
 
 export type ScenarioNodeType =
   | NetworkNodeType
   | RoboticsNodeType
   | TrafficNodeType
   | EvacuationNodeType
-  | GameAINodeType
-  | RealWorldNodeType;
+  | GameAINodeType;
 
 // ── Core Graph Structures ──────────────────────────────────────────────────
 export interface GraphNode {
@@ -164,48 +152,4 @@ export interface AlgorithmConfig {
   textColor: string;
   borderColor: string;
 }
-
-// ── Procedural Map Generation ──────────────────────────────────────────────
-
-export interface NetworkProceduralParams {
-  buildings: number;
-  floorsPerBuilding: number;
-  apsPerFloor: number;
-}
-
-export interface RoboticsProceduralParams {
-  zones: number;
-  aislesPerZone: number;
-  shelvesPerAisle: number;
-}
-
-export interface TrafficProceduralParams {
-  corridors: number;
-  intersectionsPerCorridor: number;
-  streetsPerIntersection: number;
-}
-
-export interface EvacuationProceduralParams {
-  floors: number;
-  corridorsPerFloor: number;
-  exits: number;
-}
-
-export interface GameAIProceduralParams {
-  board: GameAIBoard;
-  boardSize: number;
-}
-
-export interface ProceduralParams {
-  scenario: ScenarioType;
-  seed: number;
-  edgeDensity: number;
-  realistic?: boolean;
-  network?: NetworkProceduralParams;
-  robotics?: RoboticsProceduralParams;
-  traffic?: TrafficProceduralParams;
-  evacuation?: EvacuationProceduralParams;
-  gameai?: GameAIProceduralParams;
-}
-
 

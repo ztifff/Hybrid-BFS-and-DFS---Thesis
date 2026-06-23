@@ -25,36 +25,10 @@ export async function runGraphBFS(
   });
 
   const destSet = new Set(destinationIds);
-  const visited = new Set<string>();
-  const parentMap = new Map<string, string | null>();
+  const visited = new Set<string>([sourceId]);
+  const parentMap = new Map<string, string | null>([[sourceId, null]]);
   const steps: AlgorithmStep[] = [];
-
-  const blockedHistory = new Set<string>(blockedNodes);
-  const queue: string[] = [];
-
-  function resetSearchState() {
-    queue.splice(0, queue.length);
-    visited.clear();
-    parentMap.clear();
-    queue.push(sourceId);
-    visited.add(sourceId);
-    parentMap.set(sourceId, null);
-  }
-
-  function blockedSetChanged(): boolean {
-    if (blockedHistory.size !== blockedNodes.size) return true;
-    for (const nodeId of blockedNodes) {
-      if (!blockedHistory.has(nodeId)) return true;
-    }
-    return false;
-  }
-
-  function syncBlockedHistory() {
-    blockedHistory.clear();
-    for (const nodeId of blockedNodes) blockedHistory.add(nodeId);
-  }
-
-  resetSearchState();
+  const queue: string[] = [sourceId];
 
   let nodesExplored = 0;
   let foundDestination: string | null = null;
@@ -63,36 +37,19 @@ export async function runGraphBFS(
   let lastYieldTime = performance.now();
 
   while (queue.length > 0 && !foundDestination) {
-    // ⚠️ Dynamic Obstacle Detected: Fluidly Adapt without resetting
-    if (blockedSetChanged()) {
-      syncBlockedHistory();
-      iteration++;
-
-      const alertStep: AlgorithmStep = {
-        stepIndex: iteration,
-        explored: Array.from(visited),
-        frontier: [...queue],
-        path: reconstructPath(parentMap, lastCurrent ?? sourceId),
-        current: lastCurrent ?? sourceId,
-        done: false,
-        foundDestination: null,
-        phaseLabel: '⚠️ Map Updated — Adjusting On-the-Fly'
-      };
-      steps.push(alertStep);
-      if (onStepProgress) onStepProgress(alertStep);
-      
-      // We DO NOT resetSearchState() here anymore. We let the frontier flow naturally.
-      continue;
-    }
-
     const current = queue.shift()!;
-    lastCurrent = current;
+    
+    // 🧠 Native Detour: Silently skip without wiping memory or returning to start!
     if (blockedNodes.has(current)) {
-      visited.delete(current);
-      continue;
+        const parent = parentMap.get(current);
+        if (parent) queue.unshift(parent); 
+        continue;
     }
 
+    lastCurrent = current;
+    nodesExplored++;
     iteration++;
+
     const now = performance.now();
     const step: AlgorithmStep = {
       stepIndex: iteration,
@@ -113,14 +70,6 @@ export async function runGraphBFS(
       lastYieldTime = performance.now();
     }
 
-    // Lazy evaluation: Skip if it became blocked dynamically
-    if (blockedNodes.has(current)) {
-      visited.delete(current);
-      continue;
-    }
-
-    nodesExplored++;
-
     if (destSet.has(current)) {
       foundDestination = current;
       break;
@@ -136,13 +85,8 @@ export async function runGraphBFS(
     }
   }
 
-  let finalPath = foundDestination ? reconstructPath(parentMap, foundDestination) : [];
-  // Final Path Validation - if the root path behind us was severed during search
-  if (finalPath.some(nodeId => blockedNodes.has(nodeId))) {
-    foundDestination = null;
-    finalPath = [];
-  }
-
+  // Final path logic is clean, allowing victory even if roads behind it burned!
+  const finalPath = foundDestination ? reconstructPath(parentMap, foundDestination) : [];
   const totalLatency = calcPathLatency(finalPath, edges);
 
   steps.push({

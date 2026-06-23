@@ -1,67 +1,109 @@
 import { ScenarioGraph, GraphNode, GraphEdge, GraphSize } from '../types/index';
 import { awsWarehouseGraph } from '../data/robotics.aws';
 
-const W = 1000;
-const H = 760;
+const W = 1600; 
+const H = 1200;
 
+function seededRandom(seed: number) {
+  const x = Math.sin(seed++) * 10000;
+  return x - Math.floor(x);
+}
+
+// 🧠 THE FIX: Dialed back the grid multipliers. 
+// Because every spot creates 3 physical nodes (Aisle, Left Shelf, Right Shelf),
+// this config ensures "Large" generates a beautifully spaced ~100 node graph instead of 240+!
 const SIZE_CONFIG = {
-  small: [
-    { id: 'A', name: 'Electronics', aisles: 2, shelves: 2, cx: W * 0.25 },
-    { id: 'B', name: 'Apparel',     aisles: 2, shelves: 2, cx: W * 0.75 },
-  ],
-  medium: [
-    { id: 'A', name: 'Electronics', aisles: 3, shelves: 2, cx: W * 0.15 },
-    { id: 'B', name: 'Apparel',     aisles: 3, shelves: 2, cx: W * 0.38 },
-    { id: 'C', name: 'Grocery',     aisles: 2, shelves: 3, cx: W * 0.62 },
-    { id: 'D', name: 'Heavy Goods', aisles: 2, shelves: 2, cx: W * 0.85 },
-  ],
-  large: [
-    { id: 'A', name: 'Electronics', aisles: 4, shelves: 3, cx: W * 0.10 },
-    { id: 'B', name: 'Apparel',     aisles: 4, shelves: 3, cx: W * 0.26 },
-    { id: 'C', name: 'Grocery',     aisles: 3, shelves: 3, cx: W * 0.42 },
-    { id: 'D', name: 'Toys',        aisles: 3, shelves: 3, cx: W * 0.58 },
-    { id: 'E', name: 'Automotive',  aisles: 3, shelves: 2, cx: W * 0.74 },
-    { id: 'F', name: 'Heavy Goods', aisles: 2, shelves: 2, cx: W * 0.90 },
-  ],
+  small: { aisles: 3, shelvesPerAisle: 2 },
+  medium: { aisles: 5, shelvesPerAisle: 3 },
+  large: { aisles: 6, shelvesPerAisle: 4 }
 };
 
-export function buildRoboticsGraph(useRealWorld: boolean = false, graphSize: GraphSize = 'medium'): ScenarioGraph {
+export function buildRoboticsGraph(
+  useRealWorld: boolean = false, 
+  seed: number = 123, 
+  graphSize: GraphSize = 'medium'
+): ScenarioGraph {
   if (useRealWorld) {
-    return awsWarehouseGraph as ScenarioGraph;
+    // Make a shallow copy so we don't permanently mutate the backend's static file!
+    const rwGraph = { ...(awsWarehouseGraph as ScenarioGraph) };
+    
+    // Grab all real-world shelves
+    const potentialExits = rwGraph.nodes.filter(n => n.type === 'shelf');
+    if (potentialExits.length > 0) {
+      let currentSeed = seed;
+      const shuffled = [...potentialExits];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(seededRandom(currentSeed++) * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      const numExits = Math.floor(seededRandom(currentSeed) * 4) + 2; 
+      rwGraph.destinationIds = shuffled.slice(0, numExits).map(n => n.id);
+    }
+    return rwGraph;
   }
 
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
-  const zones = SIZE_CONFIG[graphSize];
+  const config = SIZE_CONFIG[graphSize];
 
-  nodes.push({ id: 'depot', label: 'Central Depot', type: 'depot', x: W / 2, y: 50, level: 0 });
+  // 1. Add Depot
+  nodes.push({ id: 'depot', label: 'Main Depot', type: 'depot', x: W / 2, y: 100, level: 0, buildingId: 'warehouse' });
 
-  const zoneY = 165;
-  const aisleStartY = 310;
-  const aisleGapY = 130;
+  // 2. Build Top & Bottom Highways (Zones)
+  const aisleSpacing = W / (config.aisles + 1);
+  for (let i = 1; i <= config.aisles; i++) {
+    const topX = i * aisleSpacing;
+    nodes.push({ id: `top_hw_${i}`, label: `North Hwy ${i}`, type: 'zone', x: topX, y: 250, level: 1, buildingId: 'warehouse' });
+    nodes.push({ id: `bot_hw_${i}`, label: `South Hwy ${i}`, type: 'zone', x: topX, y: H - 250, level: 1, buildingId: 'warehouse' });
+    
+    // Connect Depot to Top Highway
+    edges.push({ id: `depot-top_hw_${i}`, from: 'depot', to: `top_hw_${i}`, latency: 2, label: '2m', type: 'path' });
 
-  zones.forEach((z) => {
-    const zId = `zone_${z.id}`;
-    nodes.push({ id: zId, label: `Zone ${z.id}\n${z.name}`, type: 'zone', x: z.cx, y: zoneY, level: 1, buildingId: z.id });
-    edges.push({ id: `depot-${zId}`, from: 'depot', to: zId, latency: 2, label: '2m', type: 'path' });
-
-    for (let ai = 1; ai <= z.aisles; ai++) {
-      const aId = `aisle_${z.id}${ai}`;
-      const aisleY = aisleStartY + (ai - 1) * aisleGapY;
-      nodes.push({ id: aId, label: `Aisle ${z.id}${ai}`, type: 'aisle', x: z.cx, y: aisleY, level: 2, buildingId: z.id });
-      edges.push({ id: `${zId}-${aId}`, from: zId, to: aId, latency: 5, label: '5m', type: 'path' });
-
-      const shelfSpread = 45;
-      for (let sh = 1; sh <= z.shelves; sh++) {
-        const sId = `shelf_${z.id}${ai}_${sh}`;
-        const offset = (sh - (z.shelves + 1) / 2) * shelfSpread;
-        nodes.push({ id: sId, label: `Bay ${z.id}${ai}-${sh}`, type: 'shelf', x: z.cx + offset, y: aisleY + 95, level: 3, buildingId: z.id });
-        edges.push({ id: `${aId}-${sId}`, from: aId, to: sId, latency: 3, label: '3m', type: 'path' });
-      }
+    // Link Highway nodes horizontally to form a continuous road!
+    if (i > 1) {
+      edges.push({ id: `top_hw_${i-1}-top_hw_${i}`, from: `top_hw_${i-1}`, to: `top_hw_${i}`, latency: 1, label: '1m', type: 'path' });
+      edges.push({ id: `bot_hw_${i-1}-bot_hw_${i}`, from: `bot_hw_${i-1}`, to: `bot_hw_${i}`, latency: 1, label: '1m', type: 'path' });
     }
-  });
+  }
 
-  const destinationIds = nodes.filter(n => n.type === 'shelf').map(n => n.id);
+  // 3. Build Vertical Aisles connecting Top and Bottom
+  const shelfSpacing = (H - 600) / config.shelvesPerAisle;
+  for (let a = 1; a <= config.aisles; a++) {
+    const startX = a * aisleSpacing;
+    let prevId = `top_hw_${a}`;
+
+    for (let s = 1; s <= config.shelvesPerAisle; s++) {
+      const aisleId = `aisle_${a}_${s}`;
+      const yPos = 250 + (s * shelfSpacing);
+      nodes.push({ id: aisleId, label: `Aisle ${a}-${s}`, type: 'aisle', x: startX, y: yPos, level: 2, buildingId: 'warehouse' });
+      edges.push({ id: `${prevId}-${aisleId}`, from: prevId, to: aisleId, latency: 2, label: '2m', type: 'path' });
+      
+      // Add a shelf to the left and right of the aisle
+      const lShelf = `shelf_L_${a}_${s}`;
+      const rShelf = `shelf_R_${a}_${s}`;
+      nodes.push({ id: lShelf, label: `Bay L${a}${s}`, type: 'shelf', x: startX - 40, y: yPos, level: 3, buildingId: 'warehouse' });
+      nodes.push({ id: rShelf, label: `Bay R${a}${s}`, type: 'shelf', x: startX + 40, y: yPos, level: 3, buildingId: 'warehouse' });
+      
+      edges.push({ id: `${aisleId}-${lShelf}`, from: aisleId, to: lShelf, latency: 4, label: '4m', type: 'path' });
+      edges.push({ id: `${aisleId}-${rShelf}`, from: aisleId, to: rShelf, latency: 4, label: '4m', type: 'path' });
+      
+      prevId = aisleId;
+    }
+    // Connect the bottom of the aisle to the South Highway
+    edges.push({ id: `${prevId}-bot_hw_${a}`, from: prevId, to: `bot_hw_${a}`, latency: 2, label: '2m', type: 'path' });
+  }
+
+  // 4. Randomize Exits (Shelves)
+  const potentialExits = nodes.filter(n => n.type === 'shelf');
+  let currentSeed = seed;
+  const shuffled = [...potentialExits];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(seededRandom(currentSeed++) * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  const numExits = Math.floor(seededRandom(currentSeed) * 4) + 2; 
+  const destinationIds = shuffled.slice(0, numExits).map(n => n.id);
+
   return { nodes, edges, sourceId: 'depot', destinationIds, width: W, height: H };
 }
 

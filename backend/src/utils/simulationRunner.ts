@@ -43,14 +43,13 @@ function generateDynamicEvents(
     adj.get(e.to)!.push(e.from); 
   });
 
-  // 🛡️ NEW FIX: Establish a "Safe Zone" around the Start and Exits
+  // 🛡️ UPDATED SAFE ZONE: Protect the Start Node ONLY
   const protectedNodes = new Set<string>();
   protectedNodes.add(graph.sourceId);
-  graph.destinationIds.forEach(id => protectedNodes.add(id));
 
-  // Expand the Safe Zone by 2 hops to ensure the algorithms have room to breathe
+  // Expand the Start Node's safe zone by 1 hop so the algorithm doesn't get trapped on Step 1
   let currentProtected = Array.from(protectedNodes);
-  for (let depth = 0; depth < 2; depth++) {
+  for (let depth = 0; depth < 1; depth++) {
     const nextProtected: string[] = [];
     for (const p of currentProtected) {
       const neighbors = adj.get(p) || [];
@@ -64,14 +63,33 @@ function generateDynamicEvents(
     currentProtected = nextProtected;
   }
 
-  const isMassive = graph.nodes.length > 200;
+  // 🎯 VULNERABLE EXITS: Protect EXACTLY ONE random exit so the map remains solvable.
+  // The rest of the exits are completely unprotected and have a high chance to get blocked!
+  const guaranteedExit = graph.destinationIds[Math.floor(rng() * graph.destinationIds.length)];
+  protectedNodes.add(guaranteedExit);
+
   const isGameAI = scenario === 'gameai';
-  const maxIncidents = isGameAI ? 6 : (isMassive ? 30 : 5);
-  const incidentDensity = isGameAI ? 0.10 : 0.5;
-  const minIncidents = isGameAI ? 3 : 1;
+  const isTraffic = scenario === 'traffic';
+  const isMassive = graph.nodes.length > 150;
+  
+  // 🔥 DYNAMIC CHAOS DIALS: 
+  // Traffic networks brick instantly if too many intersections close. We cap Traffic at a strict ~8% density.
+  // Other scenarios scale up to 45% to create fun obstacle courses.
+  let dynamicDensity = 0.15;
+  if (isGameAI) {
+    dynamicDensity = 0.10;
+  } else if (isTraffic) {
+    dynamicDensity = Math.min(0.08, 0.02 + (graph.nodes.length / 5000)); // Gentle scaling, max 8%
+  } else {
+    dynamicDensity = Math.min(0.45, 0.15 + (graph.nodes.length / 800));  // Aggressive scaling, max 45%
+  }
+  
+  const minIncidents = isGameAI ? 3 : 2; 
+  const maxIncidents = isGameAI ? 6 : Math.floor(candidates.length * (isTraffic ? 0.10 : 0.60)); 
+  
   const incidentCount = Math.min(
     maxIncidents,
-    Math.max(minIncidents, Math.floor(candidates.length * incidentDensity))
+    Math.max(minIncidents, Math.floor(candidates.length * dynamicDensity))
   );
 
   let standardLabels: { block: string, clear: string }[] = [];
@@ -219,7 +237,7 @@ export async function runSimulation(
 ): Promise<SimulationResult & { meta?: { hasMore: boolean; totalSteps: number; currentOffset: number } }> {
   
   // Build the scenario graph
-  const graph = buildScenarioGraph(scenario, useRealWorld, gameBoard, networkMode, graphSize);
+  const graph = buildScenarioGraph(scenario, useRealWorld, gameBoard, networkMode, graphSize, dynamicSeed);
   const startTime = performance.now();
 
   let result: {
@@ -240,13 +258,17 @@ export async function runSimulation(
     }
   });
 
+  let currentFrame = 1;
+
   const wrappedStepProgress = (step: AlgorithmStep) => {
     dynamicEvents.forEach(event => {
-      if (event.stepIndex > 0 && event.stepIndex === step.stepIndex) {
+      // Use currentFrame instead of step.stepIndex
+      if (event.stepIndex > 0 && event.stepIndex === currentFrame) {
         if (event.blocked) blockedNodes.add(event.nodeId);
         else blockedNodes.delete(event.nodeId);
       }
     });
+    currentFrame++; // Advance the frame every time ANY step (even an alert step) is pushed
     onStepProgress?.(step);
   };
 
