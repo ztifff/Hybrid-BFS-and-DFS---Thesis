@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { SimulationResult, ScenarioType } from '../types/index';
+import { SimulationResult, ScenarioType, GraphSize } from '../types/index';
 import { runSimulation } from '../utils/simulationRunner';
 import { runGraphBFS } from '../algorithms/bfs';
 
@@ -9,12 +9,14 @@ const simulationHistory: Map<string, any> = new Map();
 export class SimulationController {
   async runSimulation(req: Request, res: Response): Promise<void> {
     try {
-      const { scenario, useRealWorld, seed, gameBoard, customGraphId } = req.body as {
+      const { scenario, useRealWorld, networkMode, seed, gameBoard, graphSize } = req.body as {
         scenario: ScenarioType;
         useRealWorld: boolean;
+        networkMode: 'datacenter' | 'as733' | 'synthetic';
         seed: number;
         gameBoard?: 'chess' | 'checkers' | 'snakes';
         customGraphId?: string;
+        graphSize: GraphSize;
       };
 
       // 🚀 EXTRACT CHUNKING PARAMETERS FROM QUERY STRING
@@ -29,9 +31,9 @@ export class SimulationController {
       // 🔥 OFFLOAD HEAVY LIFTING TO BACKEND:
       // Pass the offset and limit down to the simulation runner
       const [bfsRes, dfsRes, hybridRes] = await Promise.all([
-        runSimulation(scenario, 'bfs', seed, useRealWorld, undefined, offset, limit, gameBoard, ),
-        runSimulation(scenario, 'dfs', seed, useRealWorld, undefined, offset, limit, gameBoard, ),
-        runSimulation(scenario, 'hybrid', seed, useRealWorld, undefined, offset, limit, gameBoard, )
+        runSimulation(scenario, 'bfs',    seed, useRealWorld, networkMode, undefined, offset, limit, gameBoard, graphSize ?? 'medium'),
+        runSimulation(scenario, 'dfs',    seed, useRealWorld, networkMode, undefined, offset, limit, gameBoard, graphSize ?? 'medium'),
+        runSimulation(scenario, 'hybrid', seed, useRealWorld, networkMode, undefined, offset, limit, gameBoard, graphSize ?? 'medium'),
       ]);
 
       let optimalPathLength = 0;

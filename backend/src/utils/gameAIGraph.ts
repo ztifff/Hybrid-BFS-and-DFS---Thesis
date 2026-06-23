@@ -1,26 +1,35 @@
-/**
- * Board-game Game AI pathfinding graph.
- *
- * The scenario models three familiar board-game movement spaces in one arena:
- * chess knight routing, checkers diagonal/jump routing, and Snakes & Ladders
- * race-board routing. They remain plain graph topologies so BFS, DFS, and the
- * hybrid strategy can compare pathfinding behavior without a full rules engine.
- */
-
-import { ScenarioGraph, GraphNode, GraphEdge } from '../types/index';
+import { ScenarioGraph, GraphNode, GraphEdge, GraphSize } from '../types/index';
 
 const W = 1000;
 const H = 860;
 
 export type GameAIBoard = 'chess' | 'checkers' | 'snakes';
 
-const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'];
 
-export function buildGameAIGraph(board: GameAIBoard = 'chess'): ScenarioGraph {
+const BOARD_SIZE: Record<GraphSize, number> = {
+  small: 6,
+  medium: 8,
+  large: 10
+};
+
+const SNAKES_SIZE: Record<GraphSize, number> = {
+  small: 64,
+  medium: 100,
+  large: 144
+};
+
+export function buildGameAIGraph(
+  board: GameAIBoard = 'chess',
+  graphSize: GraphSize = 'medium'
+): ScenarioGraph {
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
+  const boardDim = BOARD_SIZE[graphSize];
+  const snakesTiles = SNAKES_SIZE[graphSize];
 
   const addNode = (node: GraphNode) => nodes.push(node);
+
   const addEdge = (
     from: string,
     to: string,
@@ -28,8 +37,16 @@ export function buildGameAIGraph(board: GameAIBoard = 'chess'): ScenarioGraph {
     type: GraphEdge['type'] = 'path',
     label = `${latency} move`
   ) => {
-    edges.push({ id: `${from}-${to}`, from, to, latency, label, type });
+    edges.push({
+      id: `${from}-${to}`,
+      from,
+      to,
+      latency,
+      label,
+      type
+    });
   };
+
   const addTwoWayEdge = (
     from: string,
     to: string,
@@ -52,19 +69,21 @@ export function buildGameAIGraph(board: GameAIBoard = 'chess'): ScenarioGraph {
     metadata: { board: 'arena' }
   });
 
-  let entryNode = 'chess_b1';
+  let entryNode = `chess_${files[1]}1`;
   let destinationIds = ['portal_chess'];
 
   if (board === 'checkers') {
-    buildCheckersBoard(addNode, addTwoWayEdge);
-    entryNode = 'checkers_b1';
+    buildCheckersBoard(addNode, addTwoWayEdge, boardDim);
+    entryNode = `checkers_${files[1]}1`;
     destinationIds = ['portal_checkers'];
   } else if (board === 'snakes') {
-    buildSnakesAndLaddersBoard(addNode, addEdge);
+    buildSnakesAndLaddersBoard(addNode, addEdge, snakesTiles);
     entryNode = 'snakes_1';
     destinationIds = ['portal_snakes'];
   } else {
-    buildChessBoard(addNode, addTwoWayEdge);
+    buildChessBoard(addNode, addTwoWayEdge, boardDim);
+    entryNode = `chess_${files[1]}1`;
+    destinationIds = ['portal_chess'];
   }
 
   addEdge('spawn', entryNode, 1, 'wireless', `select ${board}`);
@@ -81,44 +100,38 @@ export function buildGameAIGraph(board: GameAIBoard = 'chess'): ScenarioGraph {
 
 function buildChessBoard(
   addNode: (node: GraphNode) => void,
-  addTwoWayEdge: (from: string, to: string, latency?: number, type?: GraphEdge['type'], label?: string) => void
+  addTwoWayEdge: (from: string, to: string, latency?: number, type?: GraphEdge['type'], label?: string) => void,
+  size: number
 ) {
-  const originX = 276;
+  const tileSize = Math.floor(520 / size);
+  const originX = Math.floor((W - tileSize * size) / 2);
   const originY = 178;
-  const tile = 64;
-  const board: GameAIBoard = 'chess';
 
-  for (let row = 0; row < 8; row++) {
-    for (let col = 0; col < 8; col++) {
-      const id = chessId(col, row);
-      const square = `${files[col]}${row + 1}`;
+  for (let row = 0; row < size; row++) {
+    for (let col = 0; col < size; col++) {
+      const id = `chess_${files[col]}${row + 1}`;
       addNode({
         id,
-        label: square,
+        label: `${files[col]}${row + 1}`,
         type: 'room',
-        x: originX + col * tile,
-        y: originY + (7 - row) * tile,
+        x: originX + col * tileSize,
+        y: originY + (size - 1 - row) * tileSize,
         level: row + col + 1,
         buildingId: 'Chess',
-        metadata: { board, row, col, square }
+        metadata: { board: 'chess', row, col }
       });
     }
   }
 
-  const knightMoves = [
-    [1, 2], [2, 1], [-1, 2], [-2, 1],
-    [1, -2], [2, -1], [-1, -2], [-2, -1]
-  ];
-
-  for (let row = 0; row < 8; row++) {
-    for (let col = 0; col < 8; col++) {
+  const knightMoves = [[1,2],[2,1],[-1,2],[-2,1],[1,-2],[2,-1],[-1,-2],[-2,-1]];
+  for (let row = 0; row < size; row++) {
+    for (let col = 0; col < size; col++) {
       for (const [dc, dr] of knightMoves) {
-        const nextCol = col + dc;
-        const nextRow = row + dr;
-        if (nextCol < 0 || nextCol > 7 || nextRow < 0 || nextRow > 7) continue;
-
-        const from = chessId(col, row);
-        const to = chessId(nextCol, nextRow);
+        const nc = col + dc;
+        const nr = row + dr;
+        if (nc < 0 || nc >= size || nr < 0 || nr >= size) continue;
+        const from = `chess_${files[col]}${row + 1}`;
+        const to = `chess_${files[nc]}${nr + 1}`;
         if (from < to) addTwoWayEdge(from, to, 1, 'path', 'knight jump');
       }
     }
@@ -128,59 +141,51 @@ function buildChessBoard(
     id: 'portal_chess',
     label: 'Chess Checkmate\nTarget Square',
     type: 'portal',
-    x: originX + 7 * tile,
+    x: originX + (size - 1) * tileSize,
     y: originY,
-    level: 16,
+    level: size * 2,
     buildingId: 'Chess',
-    metadata: { board, row: 7, col: 7, square: 'h8' }
+    metadata: { board: 'chess', row: size - 1, col: size - 1 }
   });
-  addTwoWayEdge('chess_h8', 'portal_chess', 1, 'wireless', 'checkmate');
+  addTwoWayEdge(`chess_${files[size - 1]}${size}`, 'portal_chess', 1, 'wireless', 'checkmate');
 }
 
 function buildCheckersBoard(
   addNode: (node: GraphNode) => void,
-  addTwoWayEdge: (from: string, to: string, latency?: number, type?: GraphEdge['type'], label?: string) => void
+  addTwoWayEdge: (from: string, to: string, latency?: number, type?: GraphEdge['type'], label?: string) => void,
+  size: number
 ) {
-  const originX = 276;
+  const tileSize = Math.floor(520 / size);
+  const originX = Math.floor((W - tileSize * size) / 2);
   const originY = 178;
-  const tile = 64;
-  const board: GameAIBoard = 'checkers';
 
-  for (let row = 0; row < 8; row++) {
-    for (let col = 0; col < 8; col++) {
+  for (let row = 0; row < size; row++) {
+    for (let col = 0; col < size; col++) {
       if ((row + col) % 2 === 0) continue;
-
-      const square = `${files[col]}${row + 1}`;
       addNode({
-        id: checkersId(col, row),
-        label: square,
+        id: `checkers_${files[col]}${row + 1}`,
+        label: `${files[col]}${row + 1}`,
         type: 'room',
-        x: originX + col * tile,
-        y: originY + (7 - row) * tile,
+        x: originX + col * tileSize,
+        y: originY + (size - 1 - row) * tileSize,
         level: row + col + 1,
         buildingId: 'Checkers',
-        metadata: { board, row, col, square }
+        metadata: { board: 'checkers', row, col }
       });
     }
   }
 
-  const moves = [
-    [1, 1], [-1, 1], [1, -1], [-1, -1],
-    [2, 2], [-2, 2], [2, -2], [-2, -2]
-  ];
-
-  for (let row = 0; row < 8; row++) {
-    for (let col = 0; col < 8; col++) {
+  const moves = [[1,1],[-1,1],[1,-1],[-1,-1],[2,2],[-2,2],[2,-2],[-2,-2]];
+  for (let row = 0; row < size; row++) {
+    for (let col = 0; col < size; col++) {
       if ((row + col) % 2 === 0) continue;
-
       for (const [dc, dr] of moves) {
-        const nextCol = col + dc;
-        const nextRow = row + dr;
-        if (nextCol < 0 || nextCol > 7 || nextRow < 0 || nextRow > 7) continue;
-        if ((nextRow + nextCol) % 2 === 0) continue;
-
-        const from = checkersId(col, row);
-        const to = checkersId(nextCol, nextRow);
+        const nc = col + dc;
+        const nr = row + dr;
+        if (nc < 0 || nc >= size || nr < 0 || nr >= size) continue;
+        if ((nr + nc) % 2 === 0) continue;
+        const from = `checkers_${files[col]}${row + 1}`;
+        const to = `checkers_${files[nc]}${nr + 1}`;
         if (from < to) {
           const isJump = Math.abs(dc) === 2;
           addTwoWayEdge(from, to, isJump ? 1 : 2, isJump ? 'wireless' : 'path', isJump ? 'capture jump' : 'diagonal move');
@@ -189,95 +194,94 @@ function buildCheckersBoard(
     }
   }
 
+  // Find last valid dark square in top row for portal
+  let portalCol = size - 1;
+  if (((size - 1) + portalCol) % 2 === 0) portalCol = size - 2;
+
   addNode({
     id: 'portal_checkers',
     label: 'Checkers Crown Row\nTarget Square',
     type: 'portal',
-    x: originX + 6 * tile,
+    x: originX + portalCol * tileSize,
     y: originY,
-    level: 16,
+    level: size * 2,
     buildingId: 'Checkers',
-    metadata: { board, row: 7, col: 6, square: 'g8' }
+    metadata: { board: 'checkers', row: size - 1, col: portalCol }
   });
-  addTwoWayEdge('checkers_g8', 'portal_checkers', 1, 'wireless', 'king me');
+  addTwoWayEdge(`checkers_${files[portalCol]}${size}`, 'portal_checkers', 1, 'wireless', 'king me');
 }
 
 function buildSnakesAndLaddersBoard(
   addNode: (node: GraphNode) => void,
-  addEdge: (from: string, to: string, latency?: number, type?: GraphEdge['type'], label?: string) => void
+  addEdge: (from: string, to: string, latency?: number, type?: GraphEdge['type'], label?: string) => void,
+  totalTiles: number
 ) {
-  const originX = 239;
+  const gridSize = Math.round(Math.sqrt(totalTiles));
+  const tileSize = Math.floor(520 / gridSize);
+  const originX = Math.floor((W - tileSize * gridSize) / 2);
   const originY = 114;
-  const tile = 58;
-  const board: GameAIBoard = 'snakes';
 
-  for (let tileNumber = 1; tileNumber <= 100; tileNumber++) {
-    const { row, col } = serpentinePosition(tileNumber);
+  for (let t = 1; t <= totalTiles; t++) {
+    const { row, col } = serpentinePosition(t, gridSize);
     addNode({
-      id: snakesId(tileNumber),
-      label: `${tileNumber}`,
+      id: `snakes_${t}`,
+      label: `${t}`,
       type: 'room',
-      x: originX + col * tile,
-      y: originY + (9 - row) * tile,
-      // Offset by 1 so the first tile (tile 1) gets level 2, not level 1.
-      // level === 1 is reserved for top-level hub nodes in the hybrid
-      // algorithm; using it here caused snakes_1 to be misidentified as a
-      // hub, forcing DFS throughout the board and collapsing the animation.
-      level: tileNumber + 1,
+      x: originX + col * tileSize,
+      y: originY + (gridSize - 1 - row) * tileSize,
+      level: t + 1,
       buildingId: 'Snakes & Ladders',
-      metadata: { board, row, col, tile: tileNumber }
+      metadata: { board: 'snakes', tile: t }
     });
   }
 
-  for (let tileNumber = 1; tileNumber < 100; tileNumber++) {
-    addEdge(snakesId(tileNumber), snakesId(tileNumber + 1), 1, 'path', 'next tile');
+  for (let t = 1; t < totalTiles; t++) {
+    addEdge(`snakes_${t}`, `snakes_${t + 1}`, 1, 'path', 'next tile');
   }
 
-  const ladders: Array<[number, number]> = [
-    [3, 22], [8, 30], [28, 55], [58, 77], [71, 92]
-  ];
-  const snakes: Array<[number, number]> = [
-    [27, 5], [48, 26], [64, 36], [89, 68], [99, 78]
-  ];
+  const scale = totalTiles / 100;
 
-  ladders.forEach(([from, to]) => addEdge(snakesId(from), snakesId(to), 1, 'wireless', 'ladder climb'));
-  snakes.forEach(([from, to]) => addEdge(snakesId(from), snakesId(to), 3, 'corridor', 'snake slide'));
+  const ladders: [number, number][] = [
+    [Math.round(3 * scale),  Math.round(22 * scale)],
+    [Math.round(8 * scale),  Math.round(30 * scale)],
+    [Math.round(28 * scale), Math.round(55 * scale)],
+    [Math.round(58 * scale), Math.round(77 * scale)],
+    [Math.round(71 * scale), Math.round(92 * scale)],
+  ].filter(([f, t]) => f >= 1 && t <= totalTiles && f < t) as [number, number][];
 
+  const snakes: [number, number][] = [
+    [Math.round(27 * scale), Math.round(5 * scale)],
+    [Math.round(48 * scale), Math.round(26 * scale)],
+    [Math.round(64 * scale), Math.round(36 * scale)],
+    [Math.round(89 * scale), Math.round(68 * scale)],
+    [Math.round(99 * scale), Math.round(78 * scale)],
+  ].filter(([f, t]) => f >= 1 && t >= 1 && f <= totalTiles && t <= totalTiles && f > t) as [number, number][];
+
+  ladders.forEach(([f, t]) => addEdge(`snakes_${f}`, `snakes_${t}`, 1, 'wireless', 'ladder climb'));
+  snakes.forEach(([f, t]) => addEdge(`snakes_${f}`, `snakes_${t}`, 3, 'corridor', 'snake slide'));
+
+  const { row: pr, col: pc } = serpentinePosition(totalTiles, gridSize);
   addNode({
     id: 'portal_snakes',
     label: 'Snakes & Ladders\nFinish Tile',
     type: 'portal',
-    x: originX,
-    y: originY,
-    level: 102,
+    x: originX + pc * tileSize,
+    y: originY + (gridSize - 1 - pr) * tileSize,
+    level: totalTiles + 2,
     buildingId: 'Snakes & Ladders',
-    metadata: { board, row: 9, col: 0, tile: 100 }
+    metadata: { board: 'snakes', tile: totalTiles }
   });
-  addEdge('snakes_100', 'portal_snakes', 1, 'wireless', 'finish');
+  addEdge(`snakes_${totalTiles}`, 'portal_snakes', 1, 'wireless', 'finish');
 }
 
-function chessId(col: number, row: number): string {
-  return `chess_${files[col]}${row + 1}`;
-}
-
-function checkersId(col: number, row: number): string {
-  return `checkers_${files[col]}${row + 1}`;
-}
-
-function snakesId(tileNumber: number): string {
-  return `snakes_${tileNumber}`;
-}
-
-function serpentinePosition(tileNumber: number): { row: number; col: number } {
+function serpentinePosition(tileNumber: number, gridSize: number): { row: number; col: number } {
   const index = tileNumber - 1;
-  const row = Math.floor(index / 10);
-  const colInRow = index % 10;
-  const col = row % 2 === 0 ? colInRow : 9 - colInRow;
+  const row = Math.floor(index / gridSize);
+  const colInRow = index % gridSize;
+  const col = row % 2 === 0 ? colInRow : gridSize - 1 - colInRow;
   return { row, col };
 }
 
 export function getGameAIEnemyCandidates(graph: ScenarioGraph): string[] {
-  return graph.nodes
-    .filter((n) => n.type === 'room' || n.type === 'corridor')
-    .map((n) => n.id);
+  return graph.nodes.filter(n => n.type === 'room' || n.type === 'corridor').map(n => n.id);
 }

@@ -435,8 +435,9 @@ export const NetworkCanvas: React.FC<Props> = ({
         { id: 'hyb', active: expHYB, color: ringTint ?? cHYB }
       ].filter(e => e.active);
 
-      let r = isMassive ? (isImportant ? 4.5 : 1.2) : cfg.radius;
-      if (isDatacenter) r = isImportant ? 8 : 4.5;
+      const isBlockedImportant = isBlocked;
+      let r = isMassive ? (isImportant || isBlockedImportant ? 4.5 : 1.2) : cfg.radius;
+      if (isDatacenter) r = (isImportant || isBlockedImportant) ? 8 : 4.5;
       
       const radiiMassive = [2.2, 1.2, 0.6];
       const radiiNormal = [r * 0.85, r * 0.55, r * 0.25];
@@ -447,12 +448,21 @@ export const NetworkCanvas: React.FC<Props> = ({
       const currentStrokes = isMassive ? strokesMassive : strokesNormal;
 
       let fillColor = cfg.baseColor;
-      let opacity = (isMassive && !isImportant) ? 0.3 : 1;
+      let opacity = (isMassive && !isImportant && !isBlockedImportant) ? 0.3 : 1;
       const blockedIcon = scenario === 'gameai' ? '✖' : '💀';
 
-      if (isBlocked) { fillColor = '#450a0a'; opacity = 1; } 
+      if (isBlocked) { fillColor = '#dc2626'; opacity = 1; } 
       else if (isSource) { fillColor = '#16a34a'; } 
       else if (isDest) { fillColor = '#b91c1c'; }
+
+      // Blocked node pulse ring (visible even in massive/datacenter mode)
+      if (isBlocked && (isMassive || isDatacenter)) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, r + (isDatacenter ? 4 : 2.5), 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.7)';
+        ctx.lineWidth = isDatacenter ? 1.5 : 1;
+        ctx.stroke();
+      }
 
       // Outer active search rings
       if (currBFS || currDFS || currHYB) {

@@ -1,4 +1,4 @@
-import { ScenarioType, ScenarioGraph } from '../types/index';
+import { ScenarioType, ScenarioGraph, GraphSize } from '../types/index';
 import { buildNetworkGraph, getNetworkFailureCandidates } from './networkGraph';
 import { buildRoboticsGraph, getRoboticsBlockCandidates } from './roboticsGraph';
 import { buildTrafficGraph, getTrafficClosureCandidates } from './trafficGraph';
@@ -8,21 +8,20 @@ import { buildGameAIGraph, getGameAIEnemyCandidates, GameAIBoard } from './gameA
 export function buildScenarioGraph(
   scenario: ScenarioType,
   useRealWorld: boolean = false,
-  gameBoard?: GameAIBoard
+  gameBoard?: GameAIBoard,
+  networkMode?: 'datacenter' | 'as733' | 'synthetic',
+  graphSize: GraphSize = 'medium'
 ): ScenarioGraph {
   switch (scenario) {
-    case 'network':    return buildNetworkGraph(useRealWorld);
-    case 'robotics':   return buildRoboticsGraph(useRealWorld); 
-    case 'traffic':    return buildTrafficGraph(useRealWorld); 
-    case 'evacuation': return buildEvacuationGraph(useRealWorld);
-    case 'gameai':     return buildGameAIGraph(gameBoard); 
+    case 'network':    return buildNetworkGraph(useRealWorld, undefined, networkMode ?? (useRealWorld ? 'datacenter' : 'synthetic'), graphSize);
+    case 'robotics':   return buildRoboticsGraph(useRealWorld, graphSize);
+    case 'traffic':    return buildTrafficGraph(useRealWorld, graphSize);
+    case 'evacuation': return buildEvacuationGraph(useRealWorld, graphSize);
+    case 'gameai':     return buildGameAIGraph(gameBoard, graphSize);
   }
 }
 
-export function getDynamicCandidates(
-  graph: ScenarioGraph,
-  scenario: ScenarioType
-): string[] {
+export function getDynamicCandidates(graph: ScenarioGraph, scenario: ScenarioType): string[] {
   switch (scenario) {
     case 'network':    return getNetworkFailureCandidates(graph);
     case 'robotics':   return getRoboticsBlockCandidates(graph);

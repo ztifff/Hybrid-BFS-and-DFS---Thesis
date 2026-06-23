@@ -1,212 +1,114 @@
-/**
- * Multi-Story Office Building Evacuation Graph (Mock Fallback)
- *
- * Topology:
- * Evacuation Start Points (3 zones on Floor 4)
- * └── Corridors → Stairwells → Ground Floor → Emergency Exits
- *
- * Buildings have:
- * - 4 floors
- * - 2 stairwells (North and South)
- * - 2-3 corridors per floor
- * - 3 ground-floor emergency exits
- *
- * Edge costs (evacuation time in seconds):
- * Zone → Corridor      : 10s
- * Corridor → Stairwell : 8s
- * Stairwell descent    : 15s per floor
- * Stairwell → Exit     : 5s
- */
-
-import { ScenarioGraph, GraphNode, GraphEdge } from '../types/index';
-
-// ✅ Import the generated SM Santa Rosa map
+import { ScenarioGraph, GraphNode, GraphEdge, GraphSize } from '../types/index';
 import { buildingEvacuationGraph } from '../data/evacuation.building';
 
 const W = 1000;
 const H = 760;
 
-// ✅ Added the useRealWorld parameter with a default of false
-export function buildEvacuationGraph(useRealWorld: boolean = false): ScenarioGraph {
-  
-  // 🏢 IF ENABLED: Return the real SM Sta Rosa Map
+const SIZE_CONFIG = {
+  small: {
+    floors: 2,
+    corridorXs: [W * 0.25, W * 0.75],
+    exits: [
+      { id: 'exit_main', label: 'Main Exit', x: W * 0.35 },
+      { id: 'exit_rear', label: 'Rear Exit', x: W * 0.65 },
+    ],
+  },
+  medium: {
+    floors: 4,
+    corridorXs: [W * 0.15, W * 0.50, W * 0.85],
+    exits: [
+      { id: 'exit_main', label: 'Main Exit',  x: W * 0.25 },
+      { id: 'exit_side', label: 'Side Exit',  x: W * 0.50 },
+      { id: 'exit_rear', label: 'Rear Exit',  x: W * 0.75 },
+    ],
+  },
+  large: {
+    floors: 6,
+    corridorXs: [W * 0.10, W * 0.30, W * 0.50, W * 0.70, W * 0.90],
+    exits: [
+      { id: 'exit_nw',   label: 'NW Exit',    x: W * 0.10 },
+      { id: 'exit_main', label: 'Main Exit',   x: W * 0.30 },
+      { id: 'exit_side', label: 'Side Exit',   x: W * 0.50 },
+      { id: 'exit_rear', label: 'Rear Exit',   x: W * 0.70 },
+      { id: 'exit_ne',   label: 'NE Exit',     x: W * 0.90 },
+    ],
+  },
+};
+
+export function buildEvacuationGraph(useRealWorld: boolean = false, graphSize: GraphSize = 'medium'): ScenarioGraph {
   if (useRealWorld) {
     return buildingEvacuationGraph as any;
   }
 
-  // 🏢 IF DISABLED: Generate the default 4-story mock office
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
+  const { floors, corridorXs, exits } = SIZE_CONFIG[graphSize];
 
-  const floors = 4;
   const floorGapY = 140;
   const startY = 50;
-
-  // Stairwell X positions
   const stairNX = W * 0.28;
   const stairSX = W * 0.72;
 
-  // ── Evacuation start zones (top floor) ─────────────────────────────────
-  const startZones = [
-    { id: 'zone_A', label: 'Zone A\n(Finance)', x: W * 0.15 },
-    { id: 'zone_B', label: 'Zone B\n(HR)', x: W * 0.50 },
-    { id: 'zone_C', label: 'Zone C\n(IT)', x: W * 0.85 },
-  ];
+  const startZones = corridorXs.map((x, i) => ({
+    id: `zone_${String.fromCharCode(65 + i)}`,
+    label: `Zone ${String.fromCharCode(65 + i)}`,
+    x,
+  }));
 
   startZones.forEach((z) => {
-    nodes.push({
-      id: z.id,
-      label: z.label,
-      type: 'start',
-      x: z.x,
-      y: startY,
-      level: 0,
-      buildingId: 'top',
-    });
+    nodes.push({ id: z.id, label: z.label, type: 'start', x: z.x, y: startY, level: 0, buildingId: 'top' });
   });
 
-  // ── Floors (top = floor 4, bottom = floor 1) ────────────────────────────
   for (let f = floors; f >= 1; f--) {
-    const floorIdx = floors - f; // 0 = floor 4 (top)
+    const floorIdx = floors - f;
     const floorY = startY + 100 + floorIdx * floorGapY;
 
-    // North stairwell node for this floor
     const stairNId = `stair_N_F${f}`;
-    nodes.push({
-      id: stairNId,
-      label: `N-Stair F${f}`,
-      type: 'stairwell',
-      x: stairNX,
-      y: floorY,
-      level: floorIdx + 1,
-      buildingId: 'stair_N',
-    });
-
-    // South stairwell node
     const stairSId = `stair_S_F${f}`;
-    nodes.push({
-      id: stairSId,
-      label: `S-Stair F${f}`,
-      type: 'stairwell',
-      x: stairSX,
-      y: floorY,
-      level: floorIdx + 1,
-      buildingId: 'stair_S',
-    });
 
-    // Corridor nodes per floor
-    const corridorXs = [W * 0.15, W * 0.50, W * 0.85];
+    nodes.push({ id: stairNId, label: `N-Stair F${f}`, type: 'stairwell', x: stairNX, y: floorY, level: floorIdx + 1, buildingId: 'stair_N' });
+    nodes.push({ id: stairSId, label: `S-Stair F${f}`, type: 'stairwell', x: stairSX, y: floorY, level: floorIdx + 1, buildingId: 'stair_S' });
+
     corridorXs.forEach((cx, ci) => {
       const corrId = `corr_F${f}_${ci + 1}`;
-      nodes.push({
-        id: corrId,
-        label: `Corridor F${f}-${ci + 1}`,
-        type: 'corridor',
-        x: cx,
-        y: floorY,
-        level: floorIdx + 1,
-        buildingId: `floor_${f}`,
-      });
+      nodes.push({ id: corrId, label: `Corridor F${f}-${ci + 1}`, type: 'corridor', x: cx, y: floorY, level: floorIdx + 1, buildingId: `floor_${f}` });
 
-      // Connect start zones to top-floor corridors
       if (f === floors) {
-        const zone = startZones[ci];
-        edges.push({
-          id: `${zone.id}-${corrId}`,
-          from: zone.id,
-          to: corrId,
-          latency: 10,
-          label: '10s',
-          type: 'corridor',
-        });
-      } else {
-        // Connect from floor above stairwells down to this corridor
-        // (handled via stairwell links below)
+        edges.push({ id: `${startZones[ci].id}-${corrId}`, from: startZones[ci].id, to: corrId, latency: 10, label: '10s', type: 'corridor' });
       }
 
-      // Corridors connect to both stairwells on same floor
-      edges.push({
-        id: `${corrId}-${stairNId}`,
-        from: corrId,
-        to: stairNId,
-        latency: 8,
-        label: '8s',
-        type: 'corridor',
-      });
-      edges.push({
-        id: `${corrId}-${stairSId}`,
-        from: corrId,
-        to: stairSId,
-        latency: 8,
-        label: '8s',
-        type: 'corridor',
-      });
+      edges.push({ id: `${corrId}-${stairNId}`, from: corrId, to: stairNId, latency: 8, label: '8s', type: 'corridor' });
+      edges.push({ id: `${corrId}-${stairSId}`, from: corrId, to: stairSId, latency: 8, label: '8s', type: 'corridor' });
     });
 
-    // Stairwell descends to next floor
     if (f > 1) {
-      const stairNNextId = `stair_N_F${f - 1}`;
-      const stairSNextId = `stair_S_F${f - 1}`;
-      edges.push({
-        id: `${stairNId}-${stairNNextId}`,
-        from: stairNId,
-        to: stairNNextId,
-        latency: 15,
-        label: '15s',
-        type: 'path',
-      });
-      edges.push({
-        id: `${stairSId}-${stairSNextId}`,
-        from: stairSId,
-        to: stairSNextId,
-        latency: 15,
-        label: '15s',
-        type: 'path',
-      });
+      edges.push({ id: `stair_N_F${f}-stair_N_F${f - 1}`, from: stairNId, to: `stair_N_F${f - 1}`, latency: 15, label: '15s', type: 'path' });
+      edges.push({ id: `stair_S_F${f}-stair_S_F${f - 1}`, from: stairSId, to: `stair_S_F${f - 1}`, latency: 15, label: '15s', type: 'path' });
     }
   }
 
-  // ── Ground floor emergency exits ────────────────────────────────────────
   const exitY = startY + 100 + floors * floorGapY;
-  const exitConfigs = [
-    { id: 'exit_main',  label: 'Main Exit',  x: W * 0.25 },
-    { id: 'exit_side',  label: 'Side Exit',  x: W * 0.50 },
-    { id: 'exit_rear',  label: 'Rear Exit',  x: W * 0.75 },
-  ];
-
-  exitConfigs.forEach((ex) => {
-    nodes.push({
-      id: ex.id,
-      label: ex.label,
-      type: 'emergency_exit',
-      x: ex.x,
-      y: exitY,
-      level: floors + 2,
-      buildingId: 'ground',
-    });
+  exits.forEach((ex) => {
+    nodes.push({ id: ex.id, label: ex.label, type: 'emergency_exit', x: ex.x, y: exitY, level: floors + 2, buildingId: 'ground' });
   });
 
-  // Ground floor stairwells connect to exits
-  const groundStairN = `stair_N_F1`;
-  const groundStairS = `stair_S_F1`;
+  const groundStairN = 'stair_N_F1';
+  const groundStairS = 'stair_S_F1';
+  const midIdx = Math.floor(exits.length / 2);
 
-  edges.push({ id: `${groundStairN}-exit_main`, from: groundStairN, to: 'exit_main', latency: 5, label: '5s', type: 'path' });
-  edges.push({ id: `${groundStairN}-exit_side`, from: groundStairN, to: 'exit_side', latency: 5, label: '5s', type: 'path' });
-  edges.push({ id: `${groundStairS}-exit_side`, from: groundStairS, to: 'exit_side', latency: 5, label: '5s', type: 'path' });
-  edges.push({ id: `${groundStairS}-exit_rear`, from: groundStairS, to: 'exit_rear', latency: 5, label: '5s', type: 'path' });
+  exits.forEach((ex, i) => {
+    if (i <= midIdx) {
+      edges.push({ id: `${groundStairN}-${ex.id}`, from: groundStairN, to: ex.id, latency: 5, label: '5s', type: 'path' });
+    }
+    if (i >= midIdx) {
+      edges.push({ id: `${groundStairS}-${ex.id}`, from: groundStairS, to: ex.id, latency: 5, label: '5s', type: 'path' });
+    }
+  });
 
-  const destinationIds = exitConfigs.map((e) => e.id);
-
-  // Source = first start zone (others are connected internally)
-  return {
-    nodes, edges,
-    sourceId: 'zone_A',
-    destinationIds,
-    width: W,
-    height: H,
-  };
+  const destinationIds = exits.map(e => e.id);
+  return { nodes, edges, sourceId: startZones[0].id, destinationIds, width: W, height: H };
 }
 
 export function getEvacuationFireCandidates(graph: ScenarioGraph): string[] {
-  return graph.nodes.filter((n) => n.type === 'corridor' || n.type === 'stairwell').map((n) => n.id);
+  return graph.nodes.filter(n => n.type === 'corridor' || n.type === 'stairwell').map(n => n.id);
 }

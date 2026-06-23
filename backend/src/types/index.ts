@@ -9,6 +9,8 @@ export type ScenarioType =
 
 export type GameAIBoard = 'chess' | 'checkers' | 'snakes';
 
+export type GraphSize = 'small' | 'medium' | 'large';
+
 // ── Graph Node Types per scenario ──────────────────────────────────────────
 export type NetworkNodeType =
   | 'datacenter'   // source

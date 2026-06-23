@@ -15,7 +15,7 @@ interface Props {
 
 type Status = 'idle' | 'running' | 'done' | 'paused';
 const STEP_INTERVAL_MS = 60;
-const HISTORY_API = 'https://backend-1e4y.onrender.com/api/history';
+const HISTORY_API = 'api/history';
 
 const GAME_AI_BOARDS: { id: GameAIBoard; label: string; icon: string }[] = [
   { id: 'chess', label: 'Chess', icon: '♟️' },
@@ -63,7 +63,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
   const [gameBoard, setGameBoard] = useState<GameAIBoard>('chess');
   const [seed, setSeed] = useState(() => Date.now());
-  const [mapMode, setMapMode] = useState<'synthetic' | 'realworld'>('synthetic');
+  const [mapMode, setMapMode] = useState<'synthetic' | 'realworld' | 'realworld2'>('synthetic');
+  const [graphSize, setGraphSize] = useState<'small' | 'medium' | 'large'>('medium');
   
   // Base graph data state pulled directly from backend infrastructure
   const [currentGraph, setCurrentGraph] = useState<ScenarioGraph | null>(null);
@@ -128,12 +129,13 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         setIsGraphLoading(true);
         const graphParams = new URLSearchParams({
           scenario,
-          useRealWorld: String(mapMode === 'realworld'),
-        });
-        if (scenario === 'gameai') {
-          graphParams.set('gameBoard', gameBoard);
-        }
-        const response = await fetch(`https://backend-1e4y.onrender.com/api/network/graph?${graphParams}`);
+          useRealWorld: String(mapMode !== 'synthetic'),
+          networkMode: mapMode === 'realworld' ? 'datacenter' : mapMode === 'realworld2' ? 'as733' : 'synthetic', graphSize,
+            });
+      if (scenario === 'gameai') {
+        graphParams.set('gameBoard', gameBoard);
+      }
+        const response = await fetch(`api/network/graph?${graphParams}`);
         if (!response.ok) throw new Error(`Graph API Error: ${response.statusText}`);
         const json = await response.json();
         
@@ -153,7 +155,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     return () => {
       isMounted = false;
     };
-  }, [scenario, mapMode, gameBoard]);
+  }, [scenario, mapMode, gameBoard, graphSize]);
 
   // Fetch run metrics and evaluated paths from the computing engine (Chunked)
   useEffect(() => {
@@ -172,13 +174,15 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         let mergedResults: any = null;
 
         while (keepFetching && isMounted) {
-          const response = await fetch(`https://backend-1e4y.onrender.com/api/simulation/run?offset=${currentOffset}&limit=${limit}`, {
+          const response = await fetch(`api/simulation/run?offset=${currentOffset}&limit=${limit}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               scenario,
-              useRealWorld: mapMode === 'realworld',
+              useRealWorld: mapMode !== 'synthetic',
+              networkMode: mapMode === 'realworld' ? 'datacenter' : mapMode === 'realworld2' ? 'as733' : 'synthetic',
               seed,
+              graphSize,
               ...(scenario === 'gameai' ? { gameBoard } : {}),
             })
           });
@@ -254,7 +258,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
       isMounted = false;
       stopAnimation();
     };
-  }, [scenario, mapMode, seed, gameBoard, stopAnimation]);
+  }, [scenario, mapMode, seed, gameBoard, graphSize, stopAnimation]);
 
   const openSaveModal = useCallback(() => {
     if (!simResults || isCurrentSaved) return;
@@ -619,7 +623,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     Synthetic Map
                   </button>
                   <button
-                    onClick={() => setMapMode('realworld')}
+                    onClick={() => { setMapMode('realworld'); setGraphSize('medium'); }}
                     disabled={isComputing || isGraphLoading}
                     className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
                       mapMode === 'realworld'
@@ -635,8 +639,43 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                      scenario === 'network' ? 'Real-World (Cloud Datacenter)' :
                      'Real-World (SM City Santa Rosa)'}
                   </button>
+                  {scenario === 'network' && (
+                    <button
+                      onClick={() => { setMapMode('realworld2'); setGraphSize('medium'); }}
+                      disabled={isComputing || isGraphLoading}
+                      className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
+                        mapMode === 'realworld2'
+                          ? 'bg-purple-900/40 text-purple-300 border border-purple-500/60 shadow-[0_0_10px_rgba(139,92,246,0.25)]'
+                          : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
+                      }`}
+                    >
+                      <span>🛰️</span>
+                      Real-World (Stanford AS-733 ISP)
+                    </button>
+                  )}
                 </div>
               )}
+
+              {mapMode === 'synthetic' && (
+                <div className="flex items-center gap-2 flex-wrap justify-center">
+                  <span className="text-xs text-gray-500 font-semibold">Graph Size:</span>
+                  {(['small', 'medium', 'large'] as const).map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => setGraphSize(size)}
+                      disabled={isComputing || isGraphLoading}
+                      className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 capitalize ${
+                        graphSize === size
+                          ? 'bg-teal-900/40 text-teal-300 border border-teal-500/60 shadow-[0_0_10px_rgba(20,184,166,0.25)]'
+                          : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
+                      }`}
+                    >
+                      {size === 'small' ? '🔹 Small' : size === 'medium' ? '🔷 Medium' : '🔶 Large'}
+                    </button>
+                  ))}
+                </div>
+              )}
+
             </div>
 
             <div className="rounded-2xl overflow-hidden border border-gray-700 w-full relative flex-1 min-h-[400px] shrink-0 shadow-[0_0_48px_rgba(37,99,235,0.1)] bg-[#0a0f1e]" style={{ maxWidth: 1200 }}>

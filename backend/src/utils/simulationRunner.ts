@@ -1,4 +1,4 @@
-import { AlgorithmType, ScenarioType, AlgorithmStep, PerformanceMetrics, DynamicEvent, SimulationResult, ScenarioGraph } from '../types';
+import { AlgorithmType, ScenarioType, AlgorithmStep, PerformanceMetrics, DynamicEvent, SimulationResult, ScenarioGraph, GraphSize } from '../types';
 import { buildScenarioGraph, getDynamicCandidates } from './graphBuilder';
 import { runGraphBFS } from '../algorithms/bfs';
 import { runGraphDFS } from '../algorithms/dfs';
@@ -208,16 +208,18 @@ function generateDynamicEvents(
 export async function runSimulation(
   scenario: ScenarioType,
   algorithm: AlgorithmType,
-  dynamicSeed: number = Date.now(), 
+  dynamicSeed: number = Date.now(),
   useRealWorld: boolean = false,
+  networkMode: 'datacenter' | 'as733' | 'synthetic' = 'synthetic',
   onStepProgress?: (step: AlgorithmStep) => void,
   offset: number = 0,
   limit: number = 0,
   gameBoard?: GameAIBoard,
+  graphSize: GraphSize = 'medium',
 ): Promise<SimulationResult & { meta?: { hasMore: boolean; totalSteps: number; currentOffset: number } }> {
-
+  
   // Build the scenario graph
-  const graph = buildScenarioGraph(scenario, useRealWorld, gameBoard);
+  const graph = buildScenarioGraph(scenario, useRealWorld, gameBoard, networkMode, graphSize);
   const startTime = performance.now();
 
   let result: {
