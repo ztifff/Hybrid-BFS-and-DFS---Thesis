@@ -87,10 +87,10 @@ export async function runGraphHybrid(
     steps.push(step);
     if (onStepProgress) onStepProgress(step);
 
-    if (now - lastYieldTime > 15) {
-      await yieldToMain();
-      lastYieldTime = performance.now();
-    }
+    if (now - lastYieldTime > 100) {
+  await yieldToMain();
+  lastYieldTime = performance.now();
+}
 
     if (destSet.has(current)) {
       foundDestination = current;

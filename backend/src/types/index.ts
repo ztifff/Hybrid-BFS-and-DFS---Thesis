@@ -8,6 +8,7 @@ export type ScenarioType =
   | 'gameai';
 
 export type GameAIBoard = 'chess' | 'checkers' | 'snakes';
+export type ChessPiece = 'knight' | 'bishop' | 'rook' | 'queen';
 
 export type GraphSize = 'small' | 'medium' | 'large';
 

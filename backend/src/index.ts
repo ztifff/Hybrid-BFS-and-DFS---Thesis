@@ -12,6 +12,8 @@ import scenarioRoutes from './routes/scenario.routes';
 import simulationRoutes from './routes/simulation.routes';
 import networkRoutes from './routes/network.routes';
 
+import { initDb } from './store/historyStore';
+
 const app = express();
 
 // 🚨 Set to your new port 3200
@@ -40,6 +42,11 @@ app.use('/api/network', networkRoutes);
 app.use(errorHandler);
 
 // Start the server
-app.listen(PORT, () => {
-  console.log(`🚀 Simulation Backend running on http://localhost:${PORT}`);
+initDb().then(() => {
+  app.listen(PORT, () => {
+    console.log(`🚀 Simulation Backend running on http://localhost:${PORT}`);
+  });
+}).catch((err) => {
+  console.error('Failed to initialize database:', err);
+  process.exit(1);
 });

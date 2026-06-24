@@ -79,14 +79,14 @@ export const NetworkCanvas: React.FC<Props> = ({
   
   const isDatacenter = scenario === 'network' && width > 100000;
   const isLayeredMap = useMemo(() => nodes.some(n => n.buildingId === 'GL' || n.buildingId === 'L2'), [nodes]);
-  const isDenseProcedural = nodes.length > 90 && width <= 100000 && !isLayeredMap && scenario !== 'gameai';
+  const isDenseProcedural = nodes.length > 90 && width <= 100000 && !isLayeredMap && scenario !== 'gameai' && scenario !== 'robotics' && scenario !== 'traffic';
   const isMassive = nodes.length > 200 || isDenseProcedural;
 
   const SVG_W = 960;
   const SVG_H = 680;
 
   // 1. Check if the map is our generated synthetic map (1600px or smaller)
-  const isSynthetic = width <= 1600 && height <= 1600;
+  const isSynthetic = width <= 1600 && height <= 1600 || (nodes.length <= 200 && width <= 10000 && height <= 10000);
 
   // 2. If synthetic, force scale to 1 to prevent clustering. 
   //    If real-world (massive dimensions), auto-squish it so it fits on screen!
@@ -655,7 +655,8 @@ export const NetworkCanvas: React.FC<Props> = ({
         const midX = (x1 + x2) / 2;
         const midY = (y1 + y2) / 2;
 
-        const label = edge.label || `${edge.latency}`;
+        const unit = scenario === 'evacuation' ? 's' : scenario === 'gameai' ? ' move' : 'm';
+        const label = edge.label || `${edge.latency}${unit}`;
         ctx.strokeText(label, midX, midY);
         ctx.fillText(label, midX, midY);
       });

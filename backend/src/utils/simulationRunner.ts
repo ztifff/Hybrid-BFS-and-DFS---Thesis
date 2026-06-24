@@ -25,7 +25,8 @@ function generateDynamicEvents(
   graph: ScenarioGraph,
   scenario: ScenarioType,
   totalSteps: number,
-  seed: number
+  seed: number,
+  gameBoard?: GameAIBoard
 ): DynamicEvent[] {
   if (totalSteps < 5) return [];
   const candidates = getDynamicCandidates(graph, scenario);
@@ -128,15 +129,36 @@ function generateDynamicEvents(
       ];
       break;
     case 'gameai':
-      standardLabels = [
-        { block: '♟️ Opponent Piece Blocks', clear: '✅ Piece Captured' },
-        { block: '🎲 Rule Lock Freezes', clear: '🔓 Rule Lock Released' },
-        { block: '⏱️ Turn Timer Blocks', clear: '▶️ Turn Resumed' }
-      ];
-      aoeLabels = [
-        { block: '♜ Board Control Trap', clear: '♞ Tactical Escape Found' },
-        { block: '🎲 Forced Reroll Zone', clear: '✅ Board State Stabilized' }
-      ];
+      if (gameBoard === 'checkers') {
+        standardLabels = [
+          { block: '⚫ Checker Piece Blocks', clear: '✅ Piece Jumped' },
+          { block: '👑 King Piece Dominates', clear: '✅ King Removed' },
+          { block: '🚫 Forced Move Lock', clear: '▶️ Move Unlocked' }
+        ];
+        aoeLabels = [
+          { block: '⚫ Board Control Sweep', clear: '✅ Board Cleared' },
+          { block: '👑 Multi-King Trap', clear: '♟ Escape Route Found' }
+        ];
+      } else if (gameBoard === 'snakes') {
+        standardLabels = [
+          { block: '🐍 Snake Blocks Tile', clear: '✅ Snake Passed' },
+          { block: '⬇️ Slide Trap Active', clear: '✅ Trap Bypassed' }
+        ];
+        aoeLabels = [
+          { block: '🐍 Snake Nest Outbreak', clear: '✅ Nest Cleared' },
+          { block: '🎲 Cursed Zone Active', clear: '✅ Curse Lifted' }
+        ];
+      } else {
+        standardLabels = [
+          { block: '♟️ Opponent Piece Blocks', clear: '✅ Piece Captured' },
+          { block: '🎲 Rule Lock Freezes', clear: '🔓 Rule Lock Released' },
+          { block: '⏱️ Turn Timer Blocks', clear: '▶️ Turn Resumed' }
+        ];
+        aoeLabels = [
+          { block: '♜ Board Control Trap', clear: '♞ Tactical Escape Found' },
+          { block: '🎲 Forced Reroll Zone', clear: '✅ Board State Stabilized' }
+        ];
+      }
       break;
     case 'traffic':
     default:
@@ -228,17 +250,16 @@ export async function runSimulation(
   algorithm: AlgorithmType,
   dynamicSeed: number = Date.now(),
   useRealWorld: boolean = false,
-  networkMode: 'datacenter' | 'as733' | 'synthetic' = 'synthetic',
+  networkMode: 'datacenter' | 'as733' | 'synthetic' | 'aws' | 'shopee' = 'synthetic',
   onStepProgress?: (step: AlgorithmStep) => void,
   offset: number = 0,
   limit: number = 0,
   gameBoard?: GameAIBoard,
   graphSize: GraphSize = 'medium',
+  chessPiece: string = 'knight',
 ): Promise<SimulationResult & { meta?: { hasMore: boolean; totalSteps: number; currentOffset: number } }> {
   
-  // Build the scenario graph
-  const graph = buildScenarioGraph(scenario, useRealWorld, gameBoard, networkMode, graphSize, dynamicSeed);
-  const startTime = performance.now();
+  const graph = buildScenarioGraph(scenario, useRealWorld, gameBoard, networkMode, graphSize, dynamicSeed, chessPiece);
 
   let result: {
     steps: AlgorithmStep[];
@@ -250,7 +271,7 @@ export async function runSimulation(
 
   const blockedNodes = new Set<string>();
   const estimatedSteps = Math.max(50, Math.floor(graph.nodes.length * 1.5));
-  const dynamicEvents = generateDynamicEvents(graph, scenario, estimatedSteps, dynamicSeed);
+  const dynamicEvents = generateDynamicEvents(graph, scenario, estimatedSteps, dynamicSeed, gameBoard);
 
   dynamicEvents.forEach(event => {
     if (event.stepIndex === 0 && event.blocked) {
@@ -272,6 +293,7 @@ export async function runSimulation(
     onStepProgress?.(step);
   };
 
+  const startTime = performance.now();
   if (algorithm === 'bfs') {
     result = await runGraphBFS(graph, blockedNodes, wrappedStepProgress);
   } else if (algorithm === 'dfs') {
@@ -279,9 +301,7 @@ export async function runSimulation(
   } else {
     result = await runGraphHybrid(graph, blockedNodes, wrappedStepProgress);
   }
-
-  const endTime = performance.now();
-  const timeElapsed = Math.max(endTime - startTime, 0.001);
+  const timeElapsed = Math.max(performance.now() - startTime, 0.001);
   const memoryUsed = estimateMemory(result.nodesExplored, algorithm);
 
   const exitIndex = result.foundDestination ? graph.destinationIds.indexOf(result.foundDestination) : null;

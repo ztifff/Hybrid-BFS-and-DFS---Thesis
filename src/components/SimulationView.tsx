@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { ScenarioType, SimulationResult, ScenarioGraph, GameAIBoard } from '../types';
+import { ScenarioType, SimulationResult, ScenarioGraph, GameAIBoard, ChessPiece } from '../types';
 import { getScenario } from '../config/scenarios';
 import { NetworkCanvas } from './NetworkCanvas';
 import { MetricsPanel } from './MetricsPanel';
@@ -54,7 +54,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   
   const [isCurrentSaved, setIsCurrentSaved] = useState(false); 
   const [currentSavedId, setCurrentSavedId] = useState<string | null>(null);
-  
+
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [saveNameInput, setSaveNameInput] = useState('');
   const [saveDefaultName, setSaveDefaultName] = useState('');
@@ -62,6 +62,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const sc = getScenario(scenario);
 
   const [gameBoard, setGameBoard] = useState<GameAIBoard>('chess');
+  const [chessPiece, setChessPiece] = useState<ChessPiece>('knight');
   const [seed, setSeed] = useState(() => Date.now());
   const [mapMode, setMapMode] = useState<'synthetic' | 'realworld' | 'realworld2'>('synthetic');
   const [graphSize, setGraphSize] = useState<'small' | 'medium' | 'large'>('medium');
@@ -131,12 +132,14 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
           scenario,
           useRealWorld: String(mapMode !== 'synthetic'),
           networkMode: mapMode === 'realworld' ? 'datacenter' : mapMode === 'realworld2' ? 'as733' : 'synthetic', 
+          roboticsMode: mapMode === 'realworld' ? 'aws' : mapMode === 'realworld2' ? 'shopee' : 'synthetic',
           graphSize,
           seed: seed.toString() 
         });
         
         if (scenario === 'gameai') {
           graphParams.set('gameBoard', gameBoard);
+          if (gameBoard === 'chess') graphParams.set('chessPiece', chessPiece);
         }
         
         const response = await fetch(`api/network/graph?${graphParams}`);
@@ -185,9 +188,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               scenario,
               useRealWorld: mapMode !== 'synthetic',
               networkMode: mapMode === 'realworld' ? 'datacenter' : mapMode === 'realworld2' ? 'as733' : 'synthetic',
+              roboticsMode: mapMode === 'realworld' ? 'aws' : mapMode === 'realworld2' ? 'shopee' : 'synthetic',
               seed,
               graphSize,
-              ...(scenario === 'gameai' ? { gameBoard } : {}),
+              ...(scenario === 'gameai' ? { gameBoard, ...(gameBoard === 'chess' ? { chessPiece } : {}) } : {}),
             })
           });
 
@@ -262,7 +266,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
       isMounted = false;
       stopAnimation();
     };
-  }, [scenario, mapMode, seed, gameBoard, graphSize, stopAnimation]);
+  }, [scenario, mapMode, seed, gameBoard, chessPiece, graphSize, stopAnimation]);
 
   const openSaveModal = useCallback(() => {
     if (!simResults || isCurrentSaved) return;
@@ -575,61 +579,63 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
           <main className="flex-1 flex flex-col items-center justify-start p-4 w-full relative overflow-hidden">
             
-            <div className="mb-3 flex flex-col items-center gap-3 w-full shrink-0">
-              <div className="flex items-center gap-3 flex-wrap justify-center text-center">
-                <div className="px-4 py-1.5 rounded-full text-sm font-bold bg-blue-900/20 text-blue-400 border border-blue-500/50">
+            <div className="mb-1 flex flex-col items-center gap-1.5 w-full shrink-0">
+              <div className="flex items-center gap-2 flex-wrap justify-center text-center">
+                <div className="px-3 py-1 rounded-full text-xs font-bold bg-blue-900/20 text-blue-400 border border-blue-500/50">
                   Simultaneous Multi-Algorithm Evaluation
                 </div>
-                <div className="text-sm text-gray-400 flex items-center gap-2">
+                <div className="text-xs text-gray-400 flex items-center gap-2">
                   <span>Dynamic: <span className="text-orange-400">{sc.dynamicDescription}</span></span>
                   <button
                     onClick={handleRerollEvents}
                     disabled={isComputing}
-                    className="ml-2 px-3 py-1 bg-gray-800 hover:bg-gray-700 border border-orange-500/50 rounded-md text-xs text-orange-400 font-bold transition-colors disabled:opacity-50 cursor-pointer shadow-[0_0_10px_rgba(249,115,22,0.2)]"
+                    className="ml-1 px-2 py-0.5 bg-gray-800 hover:bg-gray-700 border border-orange-500/50 rounded-md text-xs text-orange-400 font-bold transition-colors disabled:opacity-50 cursor-pointer shadow-[0_0_10px_rgba(249,115,22,0.2)]"
                   >
-                    🔀 Re-roll Events
+                    🔀 Re-roll
                   </button>
                 </div>
               </div>
 
               {scenario === 'gameai' && (
-                <div className="flex items-center gap-2 flex-wrap justify-center">
-                  {GAME_AI_BOARDS.map(({ id, label, icon }) => (
-                    <button
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex items-center gap-2 justify-center overflow-x-auto max-w-full" style={{ scrollbarWidth: 'none' }}>
+                    {GAME_AI_BOARDS.map(({ id, label, icon }) => (
+                                          <button
                       key={id}
                       onClick={() => { setGameBoard(id); setMapMode('synthetic'); }}
                       disabled={isComputing || isGraphLoading}
-                      className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
-                        gameBoard === id
-                          ? 'bg-purple-900/40 text-purple-300 border border-purple-500/60 shadow-[0_0_10px_rgba(139,92,246,0.25)]'
-                          : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
-                      }`}
-                    >
-                      <span>{icon}</span>
-                      {label}
-                    </button>
-))}
+                      className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
+                          gameBoard === id
+                            ? 'bg-purple-900/40 text-purple-300 border border-purple-500/60 shadow-[0_0_10px_rgba(139,92,246,0.25)]'
+                            : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
+                        }`}
+                      >
+                        <span>{icon}</span>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 
               {(scenario === 'traffic' || scenario === 'evacuation' || scenario === 'robotics' || scenario === 'network') && (
-                <div className="flex items-center gap-2 flex-wrap justify-center">
+                <div className="flex items-center gap-2 justify-center overflow-x-auto max-w-full scrollbar-none" style={{ scrollbarWidth: 'none' }}>
                   <button
                     onClick={() => setMapMode('synthetic')}
                     disabled={isComputing || isGraphLoading}
-                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
+                    className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
                       mapMode === 'synthetic'
                         ? 'bg-purple-900/40 text-purple-300 border border-purple-500/60 shadow-[0_0_10px_rgba(139,92,246,0.25)]'
                         : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
                     }`}
                   >
                     <span>🗺️</span>
-                    Synthetic Map
+                    Synthetic
                   </button>
                   <button
                     onClick={() => { setMapMode('realworld'); setGraphSize('medium'); }}
                     disabled={isComputing || isGraphLoading}
-                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
+                    className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
                       mapMode === 'realworld'
                         ? 'bg-purple-900/40 text-purple-300 border border-purple-500/60 shadow-[0_0_10px_rgba(139,92,246,0.25)]'
                         : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
@@ -638,29 +644,29 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     <span>
                       {scenario === 'traffic' ? '🌍' : scenario === 'robotics' ? '🤖' : scenario === 'network' ? '🌐' : '🏢'}
                     </span>
-                    {scenario === 'traffic' ? 'Real-World (Cabuyao City)' :
-                     scenario === 'robotics' ? 'Real-World (AWS Warehouse)' :
-                     scenario === 'network' ? 'Real-World (Cloud Datacenter)' :
-                     'Real-World (SM City Santa Rosa)'}
+                    {scenario === 'traffic' ? 'Cabuyao City' :
+                     scenario === 'robotics' ? 'AWS Warehouse' :
+                     scenario === 'network' ? 'Cloud Datacenter' :
+                     'SM City Santa Rosa'}
                   </button>
-                  {scenario === 'network' && (
+                  {(scenario === 'network' || scenario === 'robotics') && (
                     <button
                       onClick={() => { setMapMode('realworld2'); setGraphSize('medium'); }}
                       disabled={isComputing || isGraphLoading}
-                      className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
+                      className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
                         mapMode === 'realworld2'
                           ? 'bg-purple-900/40 text-purple-300 border border-purple-500/60 shadow-[0_0_10px_rgba(139,92,246,0.25)]'
                           : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
                       }`}
                     >
-                      <span>🛰️</span>
-                      Real-World (Stanford AS-733 ISP)
+                      <span>{scenario === 'network' ? '🛰️' : '📦'}</span>
+                      {scenario === 'network' ? 'AS-733 ISP' : 'Shopee Mega Hub'}
                     </button>
                   )}
                 </div>
               )}
 
-              {mapMode === 'synthetic' && (
+              {mapMode === 'synthetic' && scenario !== 'gameai' && (
                 <div className="flex items-center gap-2 flex-wrap justify-center">
                   <span className="text-xs text-gray-500 font-semibold">Graph Size:</span>
                   {(['small', 'medium', 'large'] as const).map((size) => (
@@ -682,7 +688,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
             </div>
 
-            <div className="rounded-2xl overflow-hidden border border-gray-700 w-full relative flex-1 min-h-[400px] shrink-0 shadow-[0_0_48px_rgba(37,99,235,0.1)] bg-[#0a0f1e]" style={{ maxWidth: 1200 }}>
+            <div className="rounded-2xl overflow-hidden border border-gray-700 w-full relative flex-1 min-h-[300px] shrink-0 shadow-[0_0_48px_rgba(37,99,235,0.1)] bg-[#0a0f1e]" style={{ maxWidth: 1200 }}>
               {currentGraph ? (
                 <>
                   <NetworkCanvas
@@ -693,6 +699,31 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     dynamicEvents={simResults?.hybrid.dynamicEvents || []}
                   />
                   {/* Subtle transparent overlay when fetching new data so the canvas isn't destroyed! */}
+                  {scenario === 'gameai' && gameBoard === 'chess' && (
+                    <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 bg-gray-900/80 border border-gray-700 rounded-xl px-3 py-1.5 backdrop-blur-sm shadow-lg">
+                      <span className="text-[10px] text-gray-500 font-semibold mr-1">PIECE:</span>
+                      {([
+                        { id: 'knight', icon: '♞', label: 'Knight' },
+                        { id: 'bishop', icon: '♝', label: 'Bishop' },
+                        { id: 'rook',   icon: '♜', label: 'Rook' },
+                        { id: 'queen',  icon: '♛', label: 'Queen' },
+                      ] as { id: ChessPiece; icon: string; label: string }[]).map(({ id, icon, label }) => (
+                        <button
+                          key={id}
+                          onClick={() => setChessPiece(id)}
+                          disabled={isComputing || isGraphLoading}
+                          className={`px-2 py-1 rounded-md text-[11px] font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1 ${
+                            chessPiece === id
+                              ? 'bg-yellow-900/60 text-yellow-300 border border-yellow-500/60'
+                              : 'bg-gray-800/60 hover:bg-gray-700 text-gray-300 border border-gray-600'
+                          }`}
+                        >
+                          <span>{icon}</span>
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   {isGraphLoading && (
                     <div className="absolute inset-0 bg-[#0a0f1e]/40 backdrop-blur-[2px] flex flex-col items-center justify-center text-white gap-3 z-50 transition-all">
                       <div className="w-8 h-8 border-4 border-gray-600 border-t-blue-500 rounded-full animate-spin" />
@@ -708,7 +739,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               )}
             </div>
 
-            <div className="mt-4 flex items-center gap-2 flex-wrap justify-center w-full shrink-0">
+            <div className="mt-2 flex items-center gap-2 flex-wrap justify-center w-full shrink-0">
               <button disabled={isComputing || isGraphLoading} onClick={handleReset} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none">↺ Reset</button>
               <button disabled={isComputing || isGraphLoading || stepIndex === 0} onClick={handleStepBackward} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none">◀ Back</button>
 

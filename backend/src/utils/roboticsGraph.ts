@@ -1,5 +1,6 @@
 import { ScenarioGraph, GraphNode, GraphEdge, GraphSize } from '../types/index';
 import { awsWarehouseGraph } from '../data/robotics.aws';
+import { shopeeHubGraph } from '../data/robotics.shopee_hub';
 
 const W = 1600; 
 const H = 1200;
@@ -21,11 +22,34 @@ const SIZE_CONFIG = {
 export function buildRoboticsGraph(
   useRealWorld: boolean = false, 
   seed: number = 123, 
+  roboticsMode: string = 'aws',
   graphSize: GraphSize = 'medium'
 ): ScenarioGraph {
   if (useRealWorld) {
     // Make a shallow copy so we don't permanently mutate the backend's static file!
-    const rwGraph = { ...(awsWarehouseGraph as ScenarioGraph) };
+    const baseGraph = roboticsMode === 'shopee' ? shopeeHubGraph : awsWarehouseGraph;
+let rwGraph = { ...(baseGraph as ScenarioGraph) };
+
+if (roboticsMode === 'shopee') {
+  const xs = rwGraph.nodes.map(n => n.x);
+  const ys = rwGraph.nodes.map(n => n.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const scaleX = 1400 / (maxX - minX);
+  const scaleY = 1000 / (maxY - minY);
+  const s = Math.min(scaleX, scaleY);
+  rwGraph = {
+    ...rwGraph,
+    width: 1600,
+    height: 1200,
+    nodes: rwGraph.nodes.map(n => ({
+      ...n,
+      x: (n.x - minX) * s + 100,
+      y: (n.y - minY) * s + 100,
+    }))
+  };
+}
+
     
     // Grab all real-world shelves
     const potentialExits = rwGraph.nodes.filter(n => n.type === 'shelf');

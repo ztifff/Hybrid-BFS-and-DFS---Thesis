@@ -1,109 +1,89 @@
-// ============================================================
-// CONTROLLERS: history.controller.ts
-// Handles fetching and deleting saved simulation runs
-// ============================================================
-
 import { Request, Response } from 'express';
 import { simulationHistory, HistoryEntry } from '../store/historyStore';
 
-type IncomingHistoryEntry = Partial<Omit<HistoryEntry, 'timestamp'>> & {
-  timestamp?: string | Date;
-};
-
-const createHistoryId = (): string =>
-  `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
-const parseTimestamp = (timestamp?: string | Date): Date => {
-  const parsed = timestamp ? new Date(timestamp) : new Date();
-  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
-};
-
 export class HistoryController {
-  
-  // 1. Get all history entries (sorted newest first)
-  async getHistory(req: Request, res: Response): Promise<void> {
+  async getAll(req: Request, res: Response): Promise<void> {
     try {
-      const allRecords = Array.from(simulationHistory.values())
-        .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-      
-      res.status(200).json({ success: true, data: allRecords, total: allRecords.length });
+      const page = parseInt((req.query.page as string) ?? '1', 10);
+      const limit = parseInt((req.query.limit as string) ?? '10', 10);
+      const { data, total } = simulationHistory.getPaginated(page, limit);
+
+      res.status(200).json({ success: true, data, total, page, limit });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to fetch history';
+      const message = err instanceof Error ? err.message : 'Unknown error';
       res.status(500).json({ success: false, error: message });
     }
   }
 
-  // 2. Save a history entry from the frontend
-  async createHistory(req: Request, res: Response): Promise<void> {
-    try {
-      const body = req.body as IncomingHistoryEntry;
-      const simResult = body.simResult ?? body.multiResults?.hybrid;
-
-      if (!body.name || !body.scenario || !simResult) {
-        res.status(400).json({
-          success: false,
-          error: 'History entry requires name, scenario, and simResult or multiResults'
-        });
-        return;
-      }
-
-      const record: HistoryEntry = {
-        id: body.id || createHistoryId(),
-        runNumber: typeof body.runNumber === 'number' && Number.isFinite(body.runNumber)
-          ? body.runNumber
-          : simulationHistory.size + 1,
-        name: body.name,
-        algorithm: body.algorithm || 'hybrid',
-        scenario: body.scenario,
-        simResult,
-        multiResults: body.multiResults,
-        optimalPathLength: body.optimalPathLength ?? simResult.metrics?.pathLength ?? 0,
-        totalNodes: body.totalNodes ?? simResult.graph?.nodes?.length ?? 0,
-        timestamp: parseTimestamp(body.timestamp)
-      };
-
-      simulationHistory.set(record.id, record);
-      res.status(201).json({ success: true, data: record });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to save history';
-      res.status(500).json({ success: false, error: message });
-    }
-  }
-
-  // 3. Get a single history entry by ID
   async getById(req: Request, res: Response): Promise<void> {
+    const result = simulationHistory.get(req.params.id);
+    if (!result) {
+      res.status(404).json({ success: false, error: 'Not found' });
+      return;
+    }
+    res.status(200).json({ success: true, data: result });
+  }
+
+  async create(req: Request, res: Response): Promise<void> {
     try {
-      const result = simulationHistory.get(req.params.id);
-      if (!result) {
-        res.status(404).json({ success: false, error: 'Simulation record not found' });
+      const entry = req.body as HistoryEntry;
+      if (!entry || !entry.id) {
+        res.status(400).json({ success: false, error: 'Invalid entry' });
         return;
       }
-      res.status(200).json({ success: true, data: result });
+      simulationHistory.set(entry.id, {
+        ...entry,
+        timestamp: new Date(entry.timestamp),
+      });
+      res.status(201).json({ success: true, data: entry });
     } catch (err: unknown) {
-      res.status(500).json({ success: false, error: 'Server error' });
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      res.status(500).json({ success: false, error: message });
     }
   }
 
-  // 4. Delete one or multiple entries
-  async deleteHistory(req: Request, res: Response): Promise<void> {
+  async deleteById(req: Request, res: Response): Promise<void> {
+    const existed = simulationHistory.delete(req.params.id);
+    if (!existed) {
+      res.status(404).json({ success: false, error: 'Not found' });
+      return;
+    }
+    res.status(200).json({ success: true, message: 'Deleted' });
+  }
+
+  async deleteMany(req: Request, res: Response): Promise<void> {
     try {
-      // Allow passing a single ID in URL or an array of IDs in the body
-      const idParam = req.params.id;
-      const { ids } = req.body; 
+      const { ids } = req.body as { ids: string[] };
+      if (!Array.isArray(ids) || ids.length === 0) {
+        res.status(400).json({ success: false, error: 'ids array required' });
+        return;
+      }
+      ids.forEach(id => simulationHistory.delete(id));
+      res.status(200).json({ success: true, message: `Deleted ${ids.length} records` });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      res.status(500).json({ success: false, error: message });
+    }
+  }
 
-      let deletedCount = 0;
+  async exportCSV(req: Request, res: Response): Promise<void> {
+    try {
+      const scenario = req.query.scenario as string | undefined;
+      const graphSize = req.query.graphSize as string | undefined;
+      const csv = simulationHistory.exportCSV(scenario, graphSize);
 
-      if (idParam) {
-        if (simulationHistory.delete(idParam)) deletedCount++;
-      } else if (Array.isArray(ids)) {
-        ids.forEach(id => {
-          if (simulationHistory.delete(id)) deletedCount++;
-        });
+      if (!csv) {
+        res.status(404).json({ success: false, error: 'No data found' });
+        return;
       }
 
-      res.status(200).json({ success: true, message: `Deleted ${deletedCount} records` });
+      const filename = `simulation_results${scenario ? `_${scenario}` : ''}${graphSize ? `_${graphSize}` : ''}.csv`;
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.status(200).send(csv);
     } catch (err: unknown) {
-      res.status(500).json({ success: false, error: 'Failed to delete records' });
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      res.status(500).json({ success: false, error: message });
     }
   }
 }

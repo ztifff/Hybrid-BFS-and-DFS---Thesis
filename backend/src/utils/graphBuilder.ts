@@ -9,21 +9,22 @@ export function buildScenarioGraph(
   scenario: ScenarioType,
   useRealWorld: boolean = false,
   gameBoard?: GameAIBoard,
-  networkMode?: 'datacenter' | 'as733' | 'synthetic',
+  mode?: string, 
   graphSize: GraphSize = 'medium',
-  seed: number = 123
+  seed: number = 123,
+  chessPiece: string = 'knight'
 ): ScenarioGraph {
   switch (scenario) {
     case 'robotics':
-      return buildRoboticsGraph(useRealWorld, seed, graphSize); 
+      return buildRoboticsGraph(useRealWorld, seed, mode, graphSize); // Now 'mode' exists!
     case 'evacuation':
       return buildEvacuationGraph(useRealWorld, seed, graphSize); 
     case 'network':
-      return buildNetworkGraph(useRealWorld, seed, networkMode, graphSize); 
+      return buildNetworkGraph(useRealWorld, seed, mode, graphSize); 
     case 'traffic':
       return buildTrafficGraph(useRealWorld, graphSize); 
     case 'gameai':
-      return buildGameAIGraph(gameBoard, graphSize);
+      return buildGameAIGraph(gameBoard, graphSize, chessPiece, seed);
     default:
       throw new Error(`Unknown scenario: ${scenario}`);
   }

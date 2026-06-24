@@ -21,7 +21,9 @@ const SNAKES_SIZE: Record<GraphSize, number> = {
 
 export function buildGameAIGraph(
   board: GameAIBoard = 'chess',
-  graphSize: GraphSize = 'medium'
+  graphSize: GraphSize = 'medium',
+  chessPiece: string = 'knight',
+  seed: number = 123
 ): ScenarioGraph {
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
@@ -72,18 +74,65 @@ export function buildGameAIGraph(
   let entryNode = `chess_${files[1]}1`;
   let destinationIds = ['portal_chess'];
 
+  // seeded shuffle helper
+  const seededRng = (s: number) => { const x = Math.sin(s) * 10000; return x - Math.floor(x); };
+
   if (board === 'checkers') {
     buildCheckersBoard(addNode, addTwoWayEdge, boardDim);
     entryNode = `checkers_${files[1]}1`;
-    destinationIds = ['portal_checkers'];
+
+    // Pick 2-3 random dark squares from the top 2 rows as targets
+    const topDarkCols: number[] = [];
+    for (let row = boardDim - 1; row >= boardDim - 2; row--) {
+      for (let col = 0; col < boardDim; col++) {
+        if ((row + col) % 2 !== 0) topDarkCols.push(col * boardDim + row);
+      }
+    }
+    // shuffle with seed
+    const shuffled = [...topDarkCols].sort((a, b) => seededRng(seed + a) - seededRng(seed + b));
+    const numTargets = 2 + (seededRng(seed + 99) > 0.5 ? 1 : 0);
+    destinationIds = shuffled.slice(0, numTargets).map((encoded) => {
+      const col = Math.floor(encoded / boardDim);
+      const row = encoded % boardDim;
+      return `checkers_${files[col]}${row + 1}`;
+    }).filter(id => nodes.some(n => n.id === id));
+
+    // fallback if filter removed some
+    if (destinationIds.length === 0) destinationIds = [`checkers_${files[boardDim % 2 === 0 ? 1 : 0]}${boardDim}`];
+
+    // mark them as winning_square
+    destinationIds.forEach(id => {
+      const n = nodes.find(n => n.id === id);
+      if (n) { n.type = 'winning_square'; n.label = 'Crown Row Target'; }
+    });
+
   } else if (board === 'snakes') {
     buildSnakesAndLaddersBoard(addNode, addEdge, snakesTiles);
     entryNode = 'snakes_1';
     destinationIds = ['portal_snakes'];
   } else {
-    buildChessBoard(addNode, addTwoWayEdge, boardDim);
-    entryNode = `chess_${files[1]}1`;
-    destinationIds = ['portal_chess'];
+    buildChessBoard(addNode, addTwoWayEdge, boardDim, chessPiece);
+
+    // Pick 2-3 random top-row squares as targets, color-safe for bishop
+    const targetColor = chessPiece === 'bishop' ? ((boardDim - 1 + boardDim - 1) % 2) : -1;
+    const topRowCols = Array.from({ length: boardDim }, (_, col) => col)
+      .filter(col => targetColor === -1 || ((boardDim - 1 + col) % 2) === targetColor);
+    const shuffledCols = [...topRowCols].sort((a, b) => seededRng(seed + a) - seededRng(seed + b));
+    const numTargets = 2 + (seededRng(seed + 77) > 0.5 ? 1 : 0);
+    destinationIds = shuffledCols.slice(0, numTargets).map(col => `chess_${files[col]}${boardDim}`);
+
+    // mark them as winning_square
+    destinationIds.forEach(id => {
+      const n = nodes.find(n => n.id === id);
+      if (n) { n.type = 'winning_square'; n.label = 'Checkmate Target'; }
+    });
+
+    // randomize start from bottom row, color-safe for bishop
+    const bottomColor = chessPiece === 'bishop' ? ((0 + 0) % 2) : -1;
+    const bottomCols = Array.from({ length: boardDim }, (_, col) => col)
+      .filter(col => targetColor === -1 || (0 + col) % 2 === bottomColor);
+    const pickedStart = bottomCols[Math.floor(seededRng(seed + 55) * bottomCols.length)];
+    entryNode = `chess_${files[pickedStart]}1`;
   }
 
   addEdge('spawn', entryNode, 1, 'wireless');
@@ -101,7 +150,8 @@ export function buildGameAIGraph(
 function buildChessBoard(
   addNode: (node: GraphNode) => void,
   addTwoWayEdge: (from: string, to: string, latency?: number, type?: GraphEdge['type'], label?: string) => void,
-  size: number
+  size: number,
+  chessPiece: string = 'knight'
 ) {
   const tileSize = Math.floor(400 / size);
 const originX = Math.floor((W - tileSize * size) / 2);
@@ -123,16 +173,37 @@ const originY = Math.floor((H - tileSize * size) / 2);
     }
   }
 
-  const knightMoves = [[1,2],[2,1],[-1,2],[-2,1],[1,-2],[2,-1],[-1,-2],[-2,-1]];
+  const getMoves = (): [number, number][] => {
+    if (chessPiece === 'bishop') {
+      const moves: [number, number][] = [];
+      for (let i = 1; i < size; i++) moves.push([i,i],[-i,i],[i,-i],[-i,-i]);
+      return moves;
+    }
+    if (chessPiece === 'rook') {
+      const moves: [number, number][] = [];
+      for (let i = 1; i < size; i++) moves.push([i,0],[-i,0],[0,i],[0,-i]);
+      return moves;
+    }
+    if (chessPiece === 'queen') {
+      const moves: [number, number][] = [];
+      for (let i = 1; i < size; i++) moves.push([i,0],[-i,0],[0,i],[0,-i],[i,i],[-i,i],[i,-i],[-i,-i]);
+      return moves;
+    }
+    // knight (default)
+    return [[1,2],[2,1],[-1,2],[-2,1],[1,-2],[2,-1],[-1,-2],[-2,-1]];
+  };
+  const pieceMoves = getMoves();
+  const latencyMap: Record<string, number> = { knight: 1, bishop: 2, rook: 1, queen: 1 };
+  const moveLatency = latencyMap[chessPiece] ?? 1;
   for (let row = 0; row < size; row++) {
     for (let col = 0; col < size; col++) {
-      for (const [dc, dr] of knightMoves) {
+      for (const [dc, dr] of pieceMoves) {
         const nc = col + dc;
         const nr = row + dr;
         if (nc < 0 || nc >= size || nr < 0 || nr >= size) continue;
         const from = `chess_${files[col]}${row + 1}`;
         const to = `chess_${files[nc]}${nr + 1}`;
-        if (from < to) addTwoWayEdge(from, to, 1, 'path', '');
+        if (from < to) addTwoWayEdge(from, to, moveLatency, 'path', `${chessPiece} move`);
       }
     }
   }
