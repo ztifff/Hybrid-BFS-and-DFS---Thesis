@@ -586,13 +586,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 </div>
                 <div className="text-xs text-gray-400 flex items-center gap-2">
                   <span>Dynamic: <span className="text-orange-400">{sc.dynamicDescription}</span></span>
-                  <button
-                    onClick={handleRerollEvents}
-                    disabled={isComputing}
-                    className="ml-1 px-2 py-0.5 bg-gray-800 hover:bg-gray-700 border border-orange-500/50 rounded-md text-xs text-orange-400 font-bold transition-colors disabled:opacity-50 cursor-pointer shadow-[0_0_10px_rgba(249,115,22,0.2)]"
-                  >
-                    🔀 Re-roll
-                  </button>
+
                 </div>
               </div>
 
@@ -737,9 +731,16 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   <span className="text-sm font-mono tracking-wider">Syncing Topology Data...</span>
                 </div>
               )}
-            </div>
+             </div>
 
             <div className="mt-2 flex items-center gap-2 flex-wrap justify-center w-full shrink-0">
+              <button
+                onClick={handleRerollEvents} // 👈 Keep whatever your onClick was!
+                disabled={status === 'running'} // 👈 Disables the button while algorithms are searching
+                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-amber-500 border border-gray-600 rounded-md font-bold text-sm transition-colors flex items-center gap-2 shadow-sm cursor-pointer disabled:opacity-50"
+              >
+                🎲 Reroll Events
+              </button>
               <button disabled={isComputing || isGraphLoading} onClick={handleReset} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none">↺ Reset</button>
               <button disabled={isComputing || isGraphLoading || stepIndex === 0} onClick={handleStepBackward} className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none">◀ Back</button>
 
