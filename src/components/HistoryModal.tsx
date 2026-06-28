@@ -152,6 +152,9 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
     // Identify the best base graph and parameters to pass to the visualizer safely
     const baseGraph = results.hybrid?.graph || results.bfs?.graph || results.dfs?.graph || entry.simResult?.graph;
     const allEvents = results.hybrid?.dynamicEvents || results.bfs?.dynamicEvents || results.dfs?.dynamicEvents || entry.simResult?.dynamicEvents || [];
+    const blockedNodeIds = new Set<string>();
+    allEvents.forEach(e => { if (e.blocked) blockedNodeIds.add(e.nodeId); });
+    const maxEventStep = allEvents.length > 0 ? Math.max(...allEvents.map(e => e.stepIndex)) : 0;
     const maxSteps = Math.max(
       results.bfs?.steps?.length || 0,
       results.dfs?.steps?.length || 0,
@@ -227,6 +230,23 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
           <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 text-xs text-gray-400 space-y-2">
             <span className="font-bold text-gray-300 block uppercase text-[10px] tracking-wider text-orange-400">📌 Structural Metadata Summary</span>
             <p>This entry documents an evaluated graph grid composed of <strong className="text-white">{entry.totalNodes || 0} total nodes</strong> running across real-world topology presets. The baseline optimal path calculation requires a theoretical minimum index of <strong className="text-white">{entry.optimalPathLength || 0} distance units</strong>.</p>
+                        {allEvents.length > 0 && (
+                <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 text-xs text-gray-400 space-y-2">
+                  <span className="font-bold text-gray-300 block uppercase text-[10px] tracking-wider text-orange-400">⚡ Dynamic Blockages</span>
+                  <div className="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto">
+                    {allEvents.map((event, idx) => (
+                      <div key={idx} className={`flex items-start gap-2 p-2 rounded border ${
+                        event.blocked
+                          ? 'border-orange-500/30 bg-orange-900/10 text-orange-300'
+                          : 'border-green-500/30 bg-green-900/10 text-green-300'
+                      }`}>
+                        <span className="font-mono opacity-60 shrink-0">[{event.stepIndex}]</span>
+                        <span>{event.blocked ? '🔴' : '🟢'} {event.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
           </div>
         </div>
 
@@ -242,9 +262,10 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
                 hybrid: results.hybrid?.steps?.length ? results.hybrid.steps[results.hybrid.steps.length - 1] : null
               }} 
               scenario={entry.scenario} 
-              stepIndex={maxSteps} 
-              dynamicEvents={allEvents} 
-            />
+              stepIndex={maxEventStep > 0 ? maxEventStep : maxSteps}
+                  dynamicEvents={allEvents}
+                  historicalBlockedNodeIds={blockedNodeIds}
+                />
           )}
         </div>
       </div>

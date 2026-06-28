@@ -8,6 +8,7 @@ interface Props {
   scenario: ScenarioType;
   stepIndex: number;
   dynamicEvents: DynamicEvent[];
+  historicalBlockedNodeIds?: Set<string>;
 }
 
 const NODE_CONFIG: Record<string, { icon: string; radius: number; baseColor: string }> = {
@@ -60,6 +61,7 @@ export const NetworkCanvas: React.FC<Props> = ({
   scenario,
   dynamicEvents,
   stepIndex,
+  historicalBlockedNodeIds,
 }) => {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -183,7 +185,9 @@ export const NetworkCanvas: React.FC<Props> = ({
     });
     return blocked;
   }, [dynamicEvents, stepIndex]);
-
+  
+  const wasHistoricallyBlocked = historicalBlockedNodeIds ?? new Set<string>();
+    
   const visibleNodes = useMemo(() => {
     if (!isLayeredMap) return nodes;
     return nodes.filter(n => !n.buildingId || n.buildingId === activeFloor);
@@ -464,6 +468,7 @@ export const NetworkCanvas: React.FC<Props> = ({
       const blockedIcon = scenario === 'gameai' ? '✖' : '💀';
 
       if (isBlocked) { fillColor = '#dc2626'; opacity = 1; } 
+      else if (wasHistoricallyBlocked.has(node.id)) { fillColor = '#ef4444'; opacity = 1; }
       else if (isSource) { fillColor = '#16a34a'; } 
       else if (isDest) { fillColor = '#b91c1c'; }
 
@@ -474,6 +479,16 @@ export const NetworkCanvas: React.FC<Props> = ({
         ctx.strokeStyle = 'rgba(239, 68, 68, 0.7)';
         ctx.lineWidth = isDatacenter ? 1.5 : 1;
         ctx.stroke();
+      }
+
+      if (wasHistoricallyBlocked.has(node.id) && !isBlocked) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, r + 4, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([3, 3]);
+        ctx.stroke();
+        ctx.setLineDash([]);
       }
 
       // Outer active search rings
@@ -611,7 +626,7 @@ export const NetworkCanvas: React.FC<Props> = ({
         ctx.font = `${iconSize}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(isBlocked ? blockedIcon : cfg.icon, cx, cy);
+        ctx.fillText((isBlocked || wasHistoricallyBlocked.has(node.id)) ? blockedIcon : cfg.icon, cx, cy);
       }
 
     });
@@ -637,7 +652,7 @@ export const NetworkCanvas: React.FC<Props> = ({
         const midX = (x1 + x2) / 2;
         const midY = (y1 + y2) / 2;
 
-        const unit = scenario === 'evacuation' ? 's' : scenario === 'gameai' ? ' move' : 'm';
+        const unit = scenario === 'evacuation' ? 's' : scenario === 'gameai' ? ' move' : scenario === 'network' ? 'ms' : 'm';
         const label = edge.label || `${edge.latency}${unit}`;
         ctx.strokeText(label, midX, midY);
         ctx.fillText(label, midX, midY);

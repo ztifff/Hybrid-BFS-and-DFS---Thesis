@@ -67,7 +67,7 @@ export interface SimulationState {
 // Local convenience types
 export type Status = 'idle' | 'running' | 'done' | 'paused';
 const STEP_INTERVAL_MS = 60;
-const HISTORY_API = 'https://backend-1e4y.onrender.com/api/history';
+const HISTORY_API = 'api/history';
 
 // Local helper types matching SimulationView usage
 type MultiResultsLocal = {
@@ -194,7 +194,7 @@ export function useSimulation(params: { scenario: ScenarioType; mapMode: 'synthe
           if (gameBoard === 'chess') graphParams.set('chessPiece', chessPiece);
         }
 
-        const response = await fetch(`https://backend-1e4y.onrender.com/api/network/graph?${graphParams}`);
+        const response = await fetch(`api/network/graph?${graphParams}`);
         if (!response.ok) throw new Error(`Graph API Error: ${response.statusText}`);
         const json = await response.json();
 
@@ -270,7 +270,7 @@ export function useSimulation(params: { scenario: ScenarioType; mapMode: 'synthe
         let mergedResults: any = null;
 
         while (keepFetching && isMounted) {
-          const response = await fetch(`https://backend-1e4y.onrender.com/api/simulation/run?offset=${currentOffset}&limit=${limit}`, {
+          const response = await fetch(`api/simulation/run?offset=${currentOffset}&limit=${limit}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
