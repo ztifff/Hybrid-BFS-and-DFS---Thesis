@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { GameAIBoard, ChessPiece, GraphSize, ScenarioGraph, ScenarioType, SimulationResult } from '../types';
-
+import { AlgorithmStep, GameAIBoard, ChessPiece, GraphSize, ScenarioGraph, ScenarioType, SimulationResult } from '../types';
+import { normalizeHistoryEntry, normalizeHistoryEntries, loadLocalHistory, persistLocalHistory } from '../utils/historyHelpers';
 
 import { HistoryEntry } from '../components/HistoryModal';
 
@@ -10,8 +10,6 @@ type MultiResults = {
   hybrid: SimulationResult;
 };
 
-
-// NOTE: This project currently models algorithm results as `{ bfs, dfs, hybrid }`.
 // SimulationView historically used `simResults` with this shape.
 export interface SimulationState {
   // Data
@@ -31,9 +29,9 @@ export interface SimulationState {
 
   // Derived animation slices (used by MetricsPanel/NetworkCanvas)
   activeSteps: {
-    bfs: any | null;
-    dfs: any | null;
-    hybrid: any | null;
+    bfs: AlgorithmStep | null;
+    dfs: AlgorithmStep | null;
+    hybrid: AlgorithmStep | null;
   };
 
   // Save state
@@ -78,7 +76,9 @@ type MultiResultsLocal = {
   hybrid: SimulationResult;
 };
 
-export function useSimulation(params: { scenario: ScenarioType; mapMode: 'synthetic' | 'realworld' | 'realworld2'; graphSize: GraphSize; seed: number; gameBoard: GameAIBoard; chessPiece: ChessPiece; onReroll: () => void; }) { {
+export function useSimulation(params: { scenario: ScenarioType; mapMode: 'synthetic' | 'realworld' | 'realworld2'; 
+  graphSize: GraphSize; seed: number; gameBoard: GameAIBoard; 
+  chessPiece: ChessPiece; onReroll: () => void; }) { 
   const [history, setHistory] = useState<HistoryEntry[]>([]);
 
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
@@ -97,7 +97,7 @@ export function useSimulation(params: { scenario: ScenarioType; mapMode: 'synthe
   const [isGraphLoading, setIsGraphLoading] = useState(true);
 
   const [simResults, setSimResults] = useState<MultiResultsLocal | null>(null);
-  const [bfsResult, setBfsResult] = useState<any>(null);
+  const [bfsResult, setBfsResult] = useState<{ pathLength: number } | null>(null);
   const [isComputing, setIsComputing] = useState(true);
 
   const [stepIndex, setStepIndex] = useState(0);
@@ -136,31 +136,6 @@ export function useSimulation(params: { scenario: ScenarioType; mapMode: 'synthe
       animRef.current = null;
     }
   }, []);
-
-  const getLocalHistoryKey = (scenario: ScenarioType) => `simulation_history_${scenario}`;
-
-  const normalizeHistoryEntry = (entry: any): HistoryEntry => ({
-    ...entry,
-    simResult: entry.simResult ?? entry.multiResults?.hybrid,
-    timestamp: entry.timestamp ? new Date(entry.timestamp) : new Date()
-  });
-
-  const normalizeHistoryEntries = (entries: any[]): HistoryEntry[] =>
-    entries
-      .filter((entry) => entry && (entry.simResult || entry.multiResults?.hybrid))
-      .map(normalizeHistoryEntry);
-
-  const loadLocalHistory = (scenario: ScenarioType): HistoryEntry[] => {
-    const storedData = localStorage.getItem(getLocalHistoryKey(scenario));
-    if (!storedData) return [];
-
-    const parsed = JSON.parse(storedData);
-    return Array.isArray(parsed) ? normalizeHistoryEntries(parsed) : [];
-  };
-
-  const persistLocalHistory = (scenario: ScenarioType, entries: HistoryEntry[]) => {
-    localStorage.setItem(getLocalHistoryKey(scenario), JSON.stringify(entries));
-  };
 
   const loadHistory = useCallback(async () => {
     try {
@@ -591,7 +566,7 @@ export function useSimulation(params: { scenario: ScenarioType; mapMode: 'synthe
 
   const value: SimulationState = {
     currentGraph,
-    simResults: simResults as any,
+    simResults,
     bfsResult,
     history,
 
@@ -636,5 +611,4 @@ export function useSimulation(params: { scenario: ScenarioType; mapMode: 'synthe
   // (SimulationView delegates via openSaveModal + sets, and will keep the same inline behavior it had before.)
 
   return value;
-}
 }

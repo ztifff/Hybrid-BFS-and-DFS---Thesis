@@ -102,7 +102,6 @@ function computeAdaptabilityScore(
   return Math.min(100, Math.max(0, score));
 }
 
-
 export interface HistoryEntry {
   id: string;
   runNumber: number;
@@ -119,26 +118,29 @@ export interface HistoryEntry {
   timestamp: Date;
 }
 
-function rowToEntry(row: any[]): HistoryEntry {
-  const [
-    id, run_number, name, algorithm, scenario,
-    graph_size, map_mode, seed, timestamp,
-    ,,,,,,,, ,,,,,,,, ,,,,,,,,
-    optimal_path_length, total_nodes, dynamic_event_count,
-    full_result_json
-  ] = row;
+function rowToEntry(row: any[], columns: string[]): HistoryEntry {
+  const col = (name: string) => {
+    const idx = columns.indexOf(name);
+    return idx >= 0 ? row[idx] : undefined;
+  };
 
   let parsed: any = {};
-  try { parsed = JSON.parse(full_result_json || '{}'); } catch {}
+  try { parsed = JSON.parse(col('full_result_json') || '{}'); } catch {}
 
   return {
-    id, runNumber: run_number, name, algorithm, scenario,
-    graphSize: graph_size, mapMode: map_mode, seed,
+    id: col('id'),
+    runNumber: col('run_number'),
+    name: col('name'),
+    algorithm: col('algorithm'),
+    scenario: col('scenario'),
+    graphSize: col('graph_size'),
+    mapMode: col('map_mode'),
+    seed: col('seed'),
     simResult: parsed.simResult ?? null,
     multiResults: parsed.multiResults ?? null,
-    optimalPathLength: optimal_path_length,
-    totalNodes: total_nodes,
-    timestamp: new Date(timestamp),
+    optimalPathLength: col('optimal_path_length'),
+    totalNodes: col('total_nodes'),
+    timestamp: new Date(col('timestamp')),
   };
 }
 
@@ -187,7 +189,7 @@ export const simulationHistory = {
       'SELECT * FROM simulation_results WHERE id = ?', [id]
     );
     if (!result.length || !result[0].values.length) return undefined;
-    return rowToEntry(result[0].values[0]);
+    return rowToEntry(result[0].values[0], result[0].columns);
   },
 
   delete(id: string): boolean {
@@ -201,7 +203,7 @@ export const simulationHistory = {
       'SELECT * FROM simulation_results ORDER BY timestamp DESC'
     );
     if (!result.length) return [];
-    return result[0].values.map(rowToEntry);
+    return result[0].values.map(row => rowToEntry(row, result[0].columns));
   },
 
   getPaginated(page: number, limit: number): { data: HistoryEntry[]; total: number } {
@@ -212,7 +214,7 @@ export const simulationHistory = {
     );
     const countResult = getDb().exec('SELECT COUNT(*) FROM simulation_results');
     const total = countResult[0]?.values[0]?.[0] as number ?? 0;
-    const data = result.length ? result[0].values.map(rowToEntry) : [];
+    const data = result.length ? result[0].values.map(row => rowToEntry(row, result[0].columns)) : [];
     return { data, total };
   },
 

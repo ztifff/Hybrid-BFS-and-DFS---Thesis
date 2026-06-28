@@ -1,5 +1,5 @@
 import React from 'react';
-import { PerformanceMetrics, AlgorithmType, ScenarioType, DynamicEvent, SimulationResult, AlgorithmStep } from '../types';
+import { AlgorithmType, ScenarioType, SimulationResult, AlgorithmStep } from '../types';
 import { getScenario, ALGORITHMS } from '../config/scenarios';
 import { getAdaptabilityScore } from '../utils/metricsHelpers';
 
@@ -61,7 +61,7 @@ export const MetricsPanel: React.FC<Props> = ({
 
       const exploredCount = (stepIndex === 0) ? 0 : (status === 'done' && resultData ? resultData.metrics.nodesExplored : (stepData?.explored.length || 0));
       
-      const actualDistance = (stepIndex === 0) ? 0 : (status === 'done' && resultData ? resultData.metrics.totalLatency : Math.max(0, (stepData?.path.length || 1) - 1));
+      const actualDistance = (stepIndex === 0) ? 0 : (status === 'done' && resultData ? resultData.metrics.pathLength : Math.max(0, (stepData?.path.length || 1) - 1));
       
       const optimality = isStart ? { ratio: 0, label: 'N/A', color: '#64748b' } : getPathOptimality(actualDistance, optimalPathLength);
       

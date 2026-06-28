@@ -124,7 +124,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
       // If it's so corrupted that totalLatency isn't even there, bail out safely
       if (metrics.totalLatency === undefined && metrics.pathLength === undefined) return null;
 
-      const actualDistance = Math.max(metrics.totalLatency || metrics.pathLength || 0, 0);
+      const actualDistance = Math.max(metrics.pathLength || 0, 0);
       const cRate = metrics.completionRate !== undefined ? `${metrics.completionRate.toFixed(1)}%` : '0%';
       
       return {

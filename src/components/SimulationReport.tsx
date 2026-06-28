@@ -21,11 +21,11 @@ export const SimulationReport: React.FC<Props> = ({
   onSaveResult,
   isSaved
 }) => {
-  const optimalDistance = bfsResult?.totalLatency || 1;
+  const optimalDistance = bfsResult?.pathLength || 1;
 
   const getData = (algo: 'bfs' | 'dfs' | 'hybrid') => {
       const res = multiResults[algo];
-      const actualDistance = Math.max(res.metrics.totalLatency, 1);
+      const actualDistance = Math.max(res.metrics.pathLength, 1);
       // Grab official completion rate injected from simulationRunner
       const cRate = res.metrics.completionRate ? res.metrics.completionRate.toFixed(1) + '%' : '0%';
       

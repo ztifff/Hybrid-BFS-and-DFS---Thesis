@@ -66,7 +66,6 @@ export const NetworkCanvas: React.FC<Props> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isFollowing, setIsFollowing] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeFloor, setActiveFloor] = useState<string>('L2');
   
   // Force re-render on resize to prevent canvas stretching
@@ -123,29 +122,12 @@ export const NetworkCanvas: React.FC<Props> = ({
       };
   }, [activeSteps]);
 
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      containerRef.current?.requestFullscreen().catch(() => {});
-    } else {
-      document.exitFullscreen();
-    }
-  };
-
   // Setup Resize and Fullscreen Listeners
   useEffect(() => {
-    const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
     const handleResize = () => setWindowDimensions({ w: window.innerWidth, h: window.innerHeight });
-
-    // Initialize dimensions
     handleResize();
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
     window.addEventListener('resize', handleResize);
-    
-    return () => {
-        document.removeEventListener('fullscreenchange', handleFullscreenChange);
-        window.removeEventListener('resize', handleResize);
-    };
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // Add this inside NetworkCanvas to trap the mouse wheel scroll
@@ -736,7 +718,6 @@ export const NetworkCanvas: React.FC<Props> = ({
         <div className="bg-gray-900/80 border border-gray-700 rounded px-2 py-1 text-[10px] font-mono text-gray-400 select-none text-center">
           Zoom: {zoom.toFixed(1)}x
         </div>
-        <button onClick={toggleFullscreen} className="w-8 h-8 bg-gray-800 border border-gray-600 rounded text-white flex items-center justify-center hover:bg-gray-700 cursor-pointer text-lg transition-colors" title="Toggle Fullscreen">{isFullscreen ? '✖' : '⛶'}</button>
         <button onClick={() => setIsFollowing(!isFollowing)} className={`w-8 h-8 border rounded flex items-center justify-center cursor-pointer text-lg transition-colors ${isFollowing ? 'bg-blue-600 border-blue-400 text-white shadow-[0_0_10px_rgba(37,99,235,0.5)]' : 'bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700 hover:text-white'}`} title="Follow Algorithms">🎯</button>
         <button onClick={() => { setIsFollowing(false); setZoom(z => Math.min(z * 1.5, 30)); }} className="w-8 h-8 bg-gray-800 border border-gray-600 rounded text-white flex items-center justify-center hover:bg-gray-700 cursor-pointer text-xl font-bold transition-colors">+</button>
         <button onClick={() => { setIsFollowing(false); setZoom(z => Math.max(z / 1.5, 0.2)); }} className="w-8 h-8 bg-gray-800 border border-gray-600 rounded text-white flex items-center justify-center hover:bg-gray-700 cursor-pointer text-xl font-bold transition-colors">-</button>
