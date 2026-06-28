@@ -81,21 +81,27 @@ function computeAdaptabilityScore(
   algorithm: string,
   dynamicEventCount: number
 ): number {
+  // NOTE: Canonical formula mirrors frontend/src/utils/metricsHelpers.ts (keep synchronized)
   if (!metrics) return 0;
   let score = metrics.exitFound ? 50 : 0;
+
   if (dynamicEventCount > 0) {
     const eventBonus = Math.min(40, dynamicEventCount * 10);
     score += metrics.exitFound ? eventBonus : Math.floor(eventBonus / 3);
+
     if (algorithm === 'hybrid' && metrics.exitFound) score += 10;
     else if (algorithm === 'bfs' && metrics.exitFound) score += 5;
   } else {
     score += metrics.exitFound ? 35 : 0;
   }
+
   if (metrics.exitFound && metrics.pathLength > 0) {
     score += Math.min(10, Math.max(0, Math.floor((50 - metrics.pathLength) / 5)));
   }
+
   return Math.min(100, Math.max(0, score));
 }
+
 
 export interface HistoryEntry {
   id: string;

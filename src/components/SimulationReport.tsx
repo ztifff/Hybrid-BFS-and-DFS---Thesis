@@ -1,7 +1,9 @@
 import React from 'react';
 import { SimulationResult, DynamicEvent } from '../types';
-import { getPathOptimality, getMemoryInMB, getAdaptabilityScore } from './MetricsPanel';
+import { getPathOptimality, getMemoryInMB } from './MetricsPanel';
+import { getAdaptabilityScore } from '../utils/metricsHelpers';
 import { ALGORITHMS } from '../config/scenarios';
+
 
 interface Props {
   multiResults: { bfs: SimulationResult, dfs: SimulationResult, hybrid: SimulationResult };

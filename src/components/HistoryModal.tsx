@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { SimulationResult, ScenarioType } from '../types';
-import { getMemoryInMB, getPathOptimality, getAdaptabilityScore } from './MetricsPanel';
+import { getMemoryInMB, getPathOptimality } from './MetricsPanel';
+import { getAdaptabilityScore } from '../utils/metricsHelpers';
 import { NetworkCanvas } from './NetworkCanvas'; 
 
 export interface HistoryEntry {
