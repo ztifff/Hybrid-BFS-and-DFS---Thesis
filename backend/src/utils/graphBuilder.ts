@@ -16,7 +16,7 @@ export function buildScenarioGraph(
 ): ScenarioGraph {
   switch (scenario) {
     case 'robotics':
-      return buildRoboticsGraph(useRealWorld, seed, mode, graphSize); // Now 'mode' exists!
+      return buildRoboticsGraph(useRealWorld, seed, mode, graphSize);
     case 'evacuation':
       return buildEvacuationGraph(useRealWorld, seed, graphSize); 
     case 'network':
