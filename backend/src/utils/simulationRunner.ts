@@ -44,17 +44,20 @@ function generateDynamicEvents(
     adj.get(e.to)!.push(e.from); 
   });
 
-  // 🛡️ UPDATED SAFE ZONE: Protect the Start Node ONLY
   const protectedNodes = new Set<string>();
   protectedNodes.add(graph.sourceId);
 
-  // Expand the Start Node's safe zone by 1 hop so the algorithm doesn't get trapped on Step 1
+  // 🧠 FIX 1: Limit the Safe Zone Expansion!
+  // If a core router has 150 fibers, we only protect a maximum of 4 random neighbors so the rest of the map can still catch fire!
   let currentProtected = Array.from(protectedNodes);
   for (let depth = 0; depth < 1; depth++) {
     const nextProtected: string[] = [];
     for (const p of currentProtected) {
       const neighbors = adj.get(p) || [];
-      for (const n of neighbors) {
+      const maxToProtect = Math.min(neighbors.length, 4); 
+      const shuffledNeighbors = [...neighbors].sort(() => rng() - 0.5).slice(0, maxToProtect);
+      
+      for (const n of shuffledNeighbors) {
         if (!protectedNodes.has(n)) {
           protectedNodes.add(n);
           nextProtected.push(n);
@@ -64,8 +67,6 @@ function generateDynamicEvents(
     currentProtected = nextProtected;
   }
 
-  // 🎯 VULNERABLE EXITS: Protect EXACTLY ONE random exit so the map remains solvable.
-  // The rest of the exits are completely unprotected and have a high chance to get blocked!
   const guaranteedExit = graph.destinationIds[Math.floor(rng() * graph.destinationIds.length)];
   protectedNodes.add(guaranteedExit);
 
@@ -73,16 +74,13 @@ function generateDynamicEvents(
   const isTraffic = scenario === 'traffic';
   const isMassive = graph.nodes.length > 150;
   
-  // 🔥 DYNAMIC CHAOS DIALS: 
-  // Traffic networks brick instantly if too many intersections close. We cap Traffic at a strict ~8% density.
-  // Other scenarios scale up to 45% to create fun obstacle courses.
   let dynamicDensity = 0.15;
   if (isGameAI) {
     dynamicDensity = 0.10;
   } else if (isTraffic) {
-    dynamicDensity = Math.min(0.08, 0.02 + (graph.nodes.length / 5000)); // Gentle scaling, max 8%
+    dynamicDensity = Math.min(0.08, 0.02 + (graph.nodes.length / 5000));
   } else {
-    dynamicDensity = Math.min(0.45, 0.15 + (graph.nodes.length / 800));  // Aggressive scaling, max 45%
+    dynamicDensity = Math.min(0.45, 0.15 + (graph.nodes.length / 800));
   }
   
   const minIncidents = isGameAI ? 3 : 2; 
@@ -98,97 +96,32 @@ function generateDynamicEvents(
 
   switch (scenario) {
     case 'robotics':
-      standardLabels = [
-        { block: '📦 Pallet Spill', clear: '🧹 Aisle Cleared' },
-        { block: '🛑 Forklift Maintenance', clear: '✅ Maintenance Complete' },
-        { block: '🤖 Robot Malfunction', clear: '🔧 Robot Repaired' }
-      ];
-      aoeLabels = [
-        { block: '⚠️ Massive Rack Collapse', clear: '🏗️ Rack Rebuilt' },
-        { block: '🛑 Zone-wide Power Outage', clear: '⚡ Power Restored' }
-      ];
-      break;
-    case 'evacuation':
-      standardLabels = [
-        { block: '🔥 Localized Fire', clear: '🧯 Fire Extinguished' },
-        { block: '🧱 Falling Debris', clear: '🧹 Debris Cleared' }
-      ];
-      aoeLabels = [
-        { block: '🔥 Massive Fire Outbreak', clear: '🧯 Outbreak Contained' },
-        { block: '💥 Structural Collapse', clear: '🚧 Alternate Route Secured' }
-      ];
+      standardLabels = [{ block: '📦 Pallet Spill', clear: '🧹 Aisle Cleared' }, { block: '🤖 Robot Malfunction', clear: '🔧 Robot Repaired' }];
+      aoeLabels = [{ block: '⚠️ Massive Rack Collapse', clear: '🏗️ Rack Rebuilt' }];
       break;
     case 'network':
-      standardLabels = [
-        { block: '🔌 Cable Unplugged', clear: '🔌 Cable Reconnected' },
-        { block: '🔥 Overheating Switch', clear: '❄️ Cooling Restored' }
-      ];
-      aoeLabels = [
-        { block: '⚡ Rack Power Loss', clear: '⚡ Power Restored' },
-        { block: '🌐 Massive DDoS Attack', clear: '🛡️ Attack Mitigated' }
-      ];
+      standardLabels = [{ block: '🔌 Cable Unplugged', clear: '🔌 Cable Reconnected' }, { block: '🔥 Overheating Switch', clear: '❄️ Cooling Restored' }];
+      aoeLabels = [{ block: '⚡ Rack Power Loss', clear: '⚡ Power Restored' }, { block: '🌐 Massive DDoS Attack', clear: '🛡️ Attack Mitigated' }];
       break;
-    case 'gameai':
-      if (gameBoard === 'checkers') {
-        standardLabels = [
-          { block: '⚫ Checker Piece Blocks', clear: '✅ Piece Jumped' },
-          { block: '👑 King Piece Dominates', clear: '✅ King Removed' },
-          { block: '🚫 Forced Move Lock', clear: '▶️ Move Unlocked' }
-        ];
-        aoeLabels = [
-          { block: '⚫ Board Control Sweep', clear: '✅ Board Cleared' },
-          { block: '👑 Multi-King Trap', clear: '♟ Escape Route Found' }
-        ];
-      } else if (gameBoard === 'snakes') {
-        standardLabels = [
-          { block: '🐍 Snake Blocks Tile', clear: '✅ Snake Passed' },
-          { block: '⬇️ Slide Trap Active', clear: '✅ Trap Bypassed' }
-        ];
-        aoeLabels = [
-          { block: '🐍 Snake Nest Outbreak', clear: '✅ Nest Cleared' },
-          { block: '🎲 Cursed Zone Active', clear: '✅ Curse Lifted' }
-        ];
-      } else {
-        standardLabels = [
-          { block: '♟️ Opponent Piece Blocks', clear: '✅ Piece Captured' },
-          { block: '🎲 Rule Lock Freezes', clear: '🔓 Rule Lock Released' },
-          { block: '⏱️ Turn Timer Blocks', clear: '▶️ Turn Resumed' }
-        ];
-        aoeLabels = [
-          { block: '♜ Board Control Trap', clear: '♞ Tactical Escape Found' },
-          { block: '🎲 Forced Reroll Zone', clear: '✅ Board State Stabilized' }
-        ];
-      }
-      break;
-    case 'traffic':
     default:
-      standardLabels = [
-        { block: '💥 Minor Collision', clear: '🚓 Accident Cleared' },
-        { block: '🚧 Roadwork', clear: '✅ Roadwork Finished' }
-      ];
-      aoeLabels = [
-        { block: '💥 Multi-Vehicle Pileup', clear: '🚓 Pileup Cleared' },
-        { block: '🚧 Major Road Collapse', clear: '🚧 Temporary Bypass Opened' }
-      ];
+      standardLabels = [{ block: '⚠️ Dynamic Outage', clear: '✅ Outage Resolved' }];
+      aoeLabels = [{ block: '💥 Critical Cascading Failure', clear: '✅ Network Restored' }];
       break;
   }
 
   for (let i = 0; i < incidentCount; i++) {
     const epicenterId = candidates[Math.floor(rng() * candidates.length)];
-    
-    // 🚨 Prevent traps from spawning in the Safe Zone
     if (usedNodes.has(epicenterId) || protectedNodes.has(epicenterId)) continue;
     
-    // 🧠 FIXED: Front-load spawns to the first 15% of total steps (min 3 steps for tiny maps)
-    const maxSpawnWindow = scenario === 'gameai'
-      ? Math.max(3, Math.floor(totalSteps * 0.10))
-      : Math.max(3, Math.floor(totalSteps * 0.15));
-    const stepIndex = Math.floor(rng() * maxSpawnWindow); 
+    // 🧠 FIX 2: THE TIMING OVERHAUL
+    // Force 50% of the blockages to exist at Step 0. 
+    // Force the other 50% to spawn within the first 15 frames so they trigger before fast algorithms finish!
+    let stepIndex = 0;
+    if (rng() > 0.50) {
+      stepIndex = Math.floor(rng() * 15) + 1; 
+    }
 
-    // 🧠 FIXED: Clear hazards after a proportional duration (min 15 steps) so logs show closures and openings
-    const hazardDuration = scenario === 'gameai'
-      ? Math.max(6, Math.floor(totalSteps * 0.08))
-      : Math.max(15, Math.floor(totalSteps * 0.30));
+    const hazardDuration = Math.max(15, Math.floor(totalSteps * 0.30));
     const reopenStep = stepIndex + hazardDuration;
 
     const isAoE = isMassive && rng() > 0.55;
@@ -200,12 +133,11 @@ function generateDynamicEvents(
       const expandedSet = new Set<string>();
       let currentFrontier = [epicenterId];
 
-      for (let depth = 0; depth < 3; depth++) {
+      for (let depth = 0; depth < 2; depth++) {
         const nextFrontier: string[] = [];
         for (const current of currentFrontier) {
           const neighbors = adj.get(current) || [];
           for (const neighbor of neighbors) {
-            // 🚨 Prevent AoE blast radius from bleeding into the Safe Zone
             if (!expandedSet.has(neighbor) && neighbor !== epicenterId && !protectedNodes.has(neighbor)) {
               expandedSet.add(neighbor);
               nextFrontier.push(neighbor);
@@ -214,7 +146,7 @@ function generateDynamicEvents(
         }
         currentFrontier = nextFrontier;
       }
-      const collateral = Array.from(expandedSet).sort(() => rng() - 0.5).slice(0, 25);
+      const collateral = Array.from(expandedSet).sort(() => rng() - 0.5).slice(0, 15);
       affectedNodes.push(...collateral);
     }
 
@@ -244,13 +176,12 @@ function generateDynamicEvents(
   return events.sort((a, b) => a.stepIndex - b.stepIndex);
 }
 
-// 🚨 UPDATED SIGNATURE: Added offset and limit parameters with defaults
 export async function runSimulation(
   scenario: ScenarioType,
   algorithm: AlgorithmType,
   dynamicSeed: number = Date.now(),
   useRealWorld: boolean = false,
-  networkMode: 'datacenter' | 'as733' | 'synthetic' | 'aws' | 'shopee' = 'synthetic',
+  networkMode: 'datacenter' | 'as733' | 'synthetic' | 'aws' | 'clinic' = 'synthetic',
   onStepProgress?: (step: AlgorithmStep) => void,
   offset: number = 0,
   limit: number = 0,
@@ -283,13 +214,12 @@ export async function runSimulation(
 
   const wrappedStepProgress = (step: AlgorithmStep) => {
     dynamicEvents.forEach(event => {
-      // Use currentFrame instead of step.stepIndex
       if (event.stepIndex > 0 && event.stepIndex === currentFrame) {
         if (event.blocked) blockedNodes.add(event.nodeId);
         else blockedNodes.delete(event.nodeId);
       }
     });
-    currentFrame++; // Advance the frame every time ANY step (even an alert step) is pushed
+    currentFrame++; 
     onStepProgress?.(step);
   };
 
@@ -305,7 +235,6 @@ export async function runSimulation(
   const memoryUsed = estimateMemory(result.nodesExplored, algorithm);
 
   const exitIndex = result.foundDestination ? graph.destinationIds.indexOf(result.foundDestination) : null;
-  
   const totalGraphNodes = graph.nodes.length || 1;
   const completionRate = Math.min(100, (result.nodesExplored / totalGraphNodes) * 100);
 
@@ -320,14 +249,10 @@ export async function runSimulation(
     completionRate, 
   };
 
-  // --------------------------------------------------------
-  // 🚀 CHUNKING & PAGINATION LOGIC
-  // --------------------------------------------------------
   const totalStepsLength = result.steps.length;
   let finalSteps = result.steps;
   let hasMore = false;
 
-  // If a limit is provided, slice the array
   if (limit > 0) {
     const numericOffset = Number(offset);
     const numericLimit = Number(limit);
@@ -339,8 +264,6 @@ export async function runSimulation(
     steps: finalSteps,
     metrics,
     dynamicEvents,
-    // 🧠 MASSIVE OPTIMIZATION: Only send the huge Graph object on the very first chunk.
-    // For offset > 0, send an empty graph to save Vercel payload size limits.
     graph: offset === 0 ? graph : { nodes: [], edges: [], sourceId: '', destinationIds: [] } as any,
     meta: {
       hasMore,

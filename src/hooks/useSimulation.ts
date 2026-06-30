@@ -184,7 +184,7 @@ export function useSimulation(params: { scenario: ScenarioType; mapMode: 'synthe
           scenario,
           useRealWorld: String(mapMode !== 'synthetic'),
           networkMode: mapMode === 'realworld' ? 'datacenter' : mapMode === 'realworld2' ? 'as733' : 'synthetic',
-          roboticsMode: mapMode === 'realworld' ? 'aws' : mapMode === 'realworld2' ? 'shopee' : 'synthetic',
+          roboticsMode: mapMode === 'realworld' ? 'aws' : mapMode === 'realworld2' ? 'clinic' : 'synthetic',
           graphSize,
           seed: seed.toString()
         });
@@ -277,7 +277,7 @@ export function useSimulation(params: { scenario: ScenarioType; mapMode: 'synthe
               scenario,
               useRealWorld: mapMode !== 'synthetic',
               networkMode: mapMode === 'realworld' ? 'datacenter' : mapMode === 'realworld2' ? 'as733' : 'synthetic',
-              roboticsMode: mapMode === 'realworld' ? 'aws' : mapMode === 'realworld2' ? 'shopee' : 'synthetic',
+              roboticsMode: mapMode === 'realworld' ? 'aws' : mapMode === 'realworld2' ? 'clinic' : 'synthetic',
               seed,
               graphSize,
               ...(scenario === 'gameai' ? { gameBoard, ...(gameBoard === 'chess' ? { chessPiece } : {}) } : {})

@@ -102,8 +102,8 @@ export function buildNetworkGraph(
 export function getNetworkFailureCandidates(graph: ScenarioGraph): string[] {
   // 1. Try to find specifically labeled network infrastructure (for synthetic/datacenter maps)
   let candidates = graph.nodes
-    .filter(n => n.type === 'floor_router' || n.type === 'building_router' || n.type === 'router' || n.type === 'switch')
-    .map(n => n.id);
+  .filter(n => n.type === 'floor_router' || n.type === 'building_router' || n.type === 'router' || n.type === 'switch')
+  .map(n => n.id);
 
   // 2. 🧠 THE FIX: If the list is empty (e.g., AS733 real-world raw node data), 
   // fallback to grabbing all nodes EXCEPT the Start node and Exits!

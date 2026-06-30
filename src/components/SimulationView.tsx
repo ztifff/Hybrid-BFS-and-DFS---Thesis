@@ -207,8 +207,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                           : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
                       }`}
                     >
-                      <span>{scenario === 'network' ? '🛰️' : '📦'}</span>
-                      {scenario === 'network' ? 'AS-733 ISP' : 'Shopee Mega Hub'}
+                      <span>{scenario === 'network' ? '🛰️' : '🏥'}</span>
+                      {scenario === 'network' ? 'AS-733 ISP' : 'Clinic Building'}
                     </button>
                   )}
                 </div>

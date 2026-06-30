@@ -30,7 +30,7 @@ export class SimulationController {
       }
 
       // 🧠 FIX: Determine which mode to use based on the scenario
-      const modeArg = (scenario === 'robotics' ? roboticsMode : networkMode) as 'datacenter' | 'as733' | 'synthetic' | 'aws' | 'shopee';
+      const modeArg = (scenario === 'robotics' ? roboticsMode : networkMode) as 'datacenter' | 'as733' | 'synthetic' | 'aws' | 'clinic';
 
 
       // 🧠 FIX: Argument order corrected! 'modeArg' comes BEFORE 'gameBoard'

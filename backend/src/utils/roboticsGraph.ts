@@ -1,6 +1,6 @@
 import { ScenarioGraph, GraphNode, GraphEdge, GraphSize } from '../types/index';
 import { awsWarehouseGraph } from '../data/robotics.aws';
-import { shopeeHubGraph } from '../data/robotics.shopee_hub';
+import { clinicGraph } from '../data/robotics.clinic';
 
 const W = 1600; 
 const H = 1200;
@@ -27,10 +27,10 @@ export function buildRoboticsGraph(
 ): ScenarioGraph {
   if (useRealWorld) {
     // Make a shallow copy so we don't permanently mutate the backend's static file!
-    const baseGraph = roboticsMode === 'shopee' ? shopeeHubGraph : awsWarehouseGraph;
+    const baseGraph = roboticsMode === 'clinic' ? clinicGraph : awsWarehouseGraph;
 let rwGraph = { ...(baseGraph as ScenarioGraph) };
 
-if (roboticsMode === 'shopee') {
+if (roboticsMode === 'clinic') {
   const xs = rwGraph.nodes.map(n => n.x);
   const ys = rwGraph.nodes.map(n => n.y);
   const minX = Math.min(...xs), maxX = Math.max(...xs);
