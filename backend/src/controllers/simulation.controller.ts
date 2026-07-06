@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { SimulationResult, ScenarioType, GraphSize } from '../types/index';
+import { SimulationResult, ScenarioType, GraphSize, GraphSizing } from '../types/index';
 import { runSimulation } from '../utils/simulationRunner';
 import { runGraphBFS } from '../algorithms/bfs';
 import { simulationHistory } from '../store/historyStore';
@@ -8,16 +8,17 @@ import { simulationHistory } from '../store/historyStore';
 export class SimulationController {
  async runSimulation(req: Request, res: Response): Promise<void> {
     try {
-      const { scenario, useRealWorld, networkMode, roboticsMode, seed, gameBoard, graphSize, chessPiece } = req.body as {
+      const { scenario, useRealWorld, networkMode, roboticsMode, seed, gameBoard, graphSize, chessPiece, sizing } = req.body as {
         scenario: ScenarioType;
         useRealWorld: boolean;
         networkMode: string;
         roboticsMode: string; 
         seed: number;
-        gameBoard?: 'chess' | 'checkers' | 'snakes';
+        gameBoard?: 'chess' | 'checkers' ;
         customGraphId?: string;
         graphSize: GraphSize;
         chessPiece?: string;
+        sizing?: GraphSizing;
       };
 
 
@@ -34,9 +35,10 @@ export class SimulationController {
 
 
       // 🧠 FIX: Argument order corrected! 'modeArg' comes BEFORE 'gameBoard'
-      const bfsRes    = await runSimulation(scenario, 'bfs',    seed, useRealWorld, modeArg, undefined, offset, limit, gameBoard, graphSize, chessPiece);
-      const dfsRes    = await runSimulation(scenario, 'dfs',    seed, useRealWorld, modeArg, undefined, offset, limit, gameBoard, graphSize, chessPiece);
-      const hybridRes = await runSimulation(scenario, 'hybrid', seed, useRealWorld, modeArg, undefined, offset, limit, gameBoard, graphSize, chessPiece);
+      const activeSizing = useRealWorld ? undefined : sizing;
+      const bfsRes    = await runSimulation(scenario, 'bfs',    seed, useRealWorld, modeArg, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing);
+      const dfsRes    = await runSimulation(scenario, 'dfs',    seed, useRealWorld, modeArg, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing);
+      const hybridRes = await runSimulation(scenario, 'hybrid', seed, useRealWorld, modeArg, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing);
 
 
       let optimalPathLength = 0;

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AlgorithmStep, GameAIBoard, ChessPiece, GraphSize, ScenarioGraph, ScenarioType, SimulationResult } from '../types';
+import { AlgorithmStep, GameAIBoard, ChessPiece, GraphSize, GraphSizing, ScenarioGraph, ScenarioType, SimulationResult } from '../types';
 import { normalizeHistoryEntry, normalizeHistoryEntries, loadLocalHistory, persistLocalHistory } from '../utils/historyHelpers';
 
 import { HistoryEntry } from '../components/HistoryModal';
@@ -35,9 +35,20 @@ export interface SimulationState {
   };
 
   // Save state
-
   isCurrentSaved: boolean;
   currentSavedId: string | null;
+
+  // Configuration State
+  gameBoard: GameAIBoard;
+  setGameBoard: (board: GameAIBoard) => void;
+  chessPiece: ChessPiece;
+  setChessPiece: (piece: ChessPiece) => void;
+  mapMode: 'synthetic' | 'realworld' | 'realworld2';
+  setMapMode: (mode: 'synthetic' | 'realworld' | 'realworld2') => void;
+  graphSize: GraphSize;
+  setGraphSize: (size: GraphSize) => void;
+  syntheticSizing: GraphSizing;
+  updateSyntheticSizing: (field: keyof GraphSizing, value: number) => void;
 
   // Actions
   handleRun: () => void;
@@ -69,16 +80,65 @@ export type Status = 'idle' | 'running' | 'done' | 'paused';
 const STEP_INTERVAL_MS = 60;
 const HISTORY_API = 'api/history';
 
-// Local helper types matching SimulationView usage
+// Constants for Sizing moved from SimulationView
+const DEFAULT_SYNTHETIC_SIZING: Record<ScenarioType, GraphSizing> = {
+  network: { nodes: 28, edges: 44 },
+  robotics: { nodes: 56, edges: 63 },
+  traffic: { nodes: 36, edges: 65 },
+  evacuation: { nodes: 43, edges: 81 },
+  gameai: { nodes: 66, edges: 339 },
+};
+
+const MIN_SYNTHETIC_NODES: Record<ScenarioType, number> = {
+  network: 7,
+  robotics: 10,
+  traffic: 9,
+  evacuation: 10,
+  gameai: 18,
+};
+
+const MAX_SYNTHETIC_NODES: Record<ScenarioType, number> = {
+  network: 220,
+  robotics: 220,
+  traffic: 220,
+  evacuation: 220,
+  gameai: 220,
+};
+
+const clampSizing = (value: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, Math.round(value)));
+
 type MultiResultsLocal = {
   bfs: SimulationResult;
   dfs: SimulationResult;
   hybrid: SimulationResult;
 };
 
-export function useSimulation(params: { scenario: ScenarioType; mapMode: 'synthetic' | 'realworld' | 'realworld2'; 
-  graphSize: GraphSize; seed: number; gameBoard: GameAIBoard; 
-  chessPiece: ChessPiece; onReroll: () => void; }) { 
+export function useSimulation(params: { scenario: ScenarioType }) { 
+  const { scenario } = params;
+  
+  // UI / Configuration State (Lifted from SimulationView)
+  const [gameBoard, setGameBoard] = useState<GameAIBoard>('chess');
+  const [chessPiece, setChessPiece] = useState<ChessPiece>('knight');
+  const [seed, setSeed] = useState(() => Date.now());
+  const [mapMode, setMapMode] = useState<'synthetic' | 'realworld' | 'realworld2'>('synthetic');
+  const [graphSize, setGraphSize] = useState<'small' | 'medium' | 'large'>('medium');
+  const [syntheticSizingByScenario, setSyntheticSizingByScenario] = useState(DEFAULT_SYNTHETIC_SIZING);
+  
+  const syntheticSizing = syntheticSizingByScenario[scenario];
+  const updateSyntheticSizing = useCallback((field: keyof GraphSizing, rawValue: number) => {
+    const min = field === 'nodes' ? MIN_SYNTHETIC_NODES[scenario] : 4;
+    const max = field === 'nodes' ? MAX_SYNTHETIC_NODES[scenario] : 1600;
+
+    setSyntheticSizingByScenario((previous) => ({
+      ...previous,
+      [scenario]: {
+        ...previous[scenario],
+        [field]: clampSizing(rawValue, min, max),
+      },
+    }));
+  }, [scenario]);
+
   const [history, setHistory] = useState<HistoryEntry[]>([]);
 
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
@@ -88,9 +148,6 @@ export function useSimulation(params: { scenario: ScenarioType; mapMode: 'synthe
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [saveNameInput, setSaveNameInput] = useState('');
   const [saveDefaultName, setSaveDefaultName] = useState('');
-
-  const { scenario, mapMode, graphSize, seed, gameBoard, chessPiece } = params;
-
 
   // Base graph data state pulled directly from backend infrastructure
   const [currentGraph, setCurrentGraph] = useState<ScenarioGraph | null>(null);
@@ -189,6 +246,11 @@ export function useSimulation(params: { scenario: ScenarioType; mapMode: 'synthe
           seed: seed.toString()
         });
 
+        if (mapMode === 'synthetic') {
+          graphParams.set('targetNodes', String(syntheticSizing.nodes));
+          graphParams.set('targetEdges', String(syntheticSizing.edges));
+        }
+
         if (scenario === 'gameai') {
           graphParams.set('gameBoard', gameBoard);
           if (gameBoard === 'chess') graphParams.set('chessPiece', chessPiece);
@@ -212,7 +274,7 @@ export function useSimulation(params: { scenario: ScenarioType; mapMode: 'synthe
     return () => {
       isMounted = false;
     };
-  }, [scenario, mapMode, gameBoard, graphSize, seed, chessPiece]);
+  }, [scenario, mapMode, gameBoard, graphSize, seed, chessPiece, syntheticSizing.nodes, syntheticSizing.edges]);
 
   const handleDeleteHistory = useCallback((ids: string[]) => {
     if (ids.length === 0) return;
@@ -253,7 +315,6 @@ export function useSimulation(params: { scenario: ScenarioType; mapMode: 'synthe
   }, [currentSavedId, scenario]);
 
   // Fetch run metrics and evaluated paths from the computing engine (Chunked)
-
   useEffect(() => {
     let isMounted = true;
 
@@ -280,6 +341,7 @@ export function useSimulation(params: { scenario: ScenarioType; mapMode: 'synthe
               roboticsMode: mapMode === 'realworld' ? 'aws' : mapMode === 'realworld2' ? 'clinic' : 'synthetic',
               seed,
               graphSize,
+              ...(mapMode === 'synthetic' ? { sizing: syntheticSizing } : {}),
               ...(scenario === 'gameai' ? { gameBoard, ...(gameBoard === 'chess' ? { chessPiece } : {}) } : {})
             })
           });
@@ -350,7 +412,7 @@ export function useSimulation(params: { scenario: ScenarioType; mapMode: 'synthe
       isMounted = false;
       stopAnimation();
     };
-  }, [scenario, mapMode, seed, gameBoard, chessPiece, graphSize, stopAnimation]);
+  }, [scenario, mapMode, seed, gameBoard, chessPiece, graphSize, syntheticSizing, stopAnimation]);
 
   const startAnimation = useCallback(() => {
     if (!simResults || totalSteps === 0) return;
@@ -442,10 +504,8 @@ export function useSimulation(params: { scenario: ScenarioType; mapMode: 'synthe
   };
 
   const handleRerollEvents = () => {
-    params.onReroll();
+    setSeed(Date.now());
   };
-
-
 
   const openSaveModal = useCallback(() => {
     if (!simResults || isCurrentSaved) return;
@@ -559,11 +619,6 @@ export function useSimulation(params: { scenario: ScenarioType; mapMode: 'synthe
     bfsResult
   ]);
 
-
-  // This hook returns UI state + delegates modal actions to SimulationView.
-  // To keep behavior identical, SimulationView will call confirmSaveResult through the returned action.
-
-
   const value: SimulationState = {
     currentGraph,
     simResults,
@@ -581,6 +636,17 @@ export function useSimulation(params: { scenario: ScenarioType; mapMode: 'synthe
     isCurrentSaved,
     currentSavedId,
 
+    gameBoard,
+    setGameBoard,
+    chessPiece,
+    setChessPiece,
+    mapMode,
+    setMapMode,
+    graphSize,
+    setGraphSize,
+    syntheticSizing,
+    updateSyntheticSizing,
+
     handleRun,
     handleStepForward,
     handleStepBackward,
@@ -593,9 +659,6 @@ export function useSimulation(params: { scenario: ScenarioType; mapMode: 'synthe
     confirmSaveResult,
     handleDeleteHistory,
 
-
-
-
     isHistoryModalOpen,
     setIsHistoryModalOpen,
     isSaveModalOpen,
@@ -605,10 +668,6 @@ export function useSimulation(params: { scenario: ScenarioType; mapMode: 'synthe
     saveDefaultName,
     setSaveDefaultName,
   };
-
-
-  // confirmSaveResult is intentionally not exposed directly; openSaveModal triggers it via UI.
-  // (SimulationView delegates via openSaveModal + sets, and will keep the same inline behavior it had before.)
 
   return value;
 }

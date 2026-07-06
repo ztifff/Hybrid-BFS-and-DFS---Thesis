@@ -1,4 +1,4 @@
-import { AlgorithmType, ScenarioType, AlgorithmStep, PerformanceMetrics, DynamicEvent, SimulationResult, ScenarioGraph, GraphSize } from '../types';
+import { AlgorithmType, ScenarioType, AlgorithmStep, PerformanceMetrics, DynamicEvent, SimulationResult, ScenarioGraph, GraphSize, GraphSizing } from '../types';
 import { buildScenarioGraph, getDynamicCandidates } from './graphBuilder';
 import { runGraphBFS } from '../algorithms/bfs';
 import { runGraphDFS } from '../algorithms/dfs';
@@ -37,11 +37,16 @@ function generateDynamicEvents(
   const usedNodes = new Set<string>();
 
   const adj = new Map<string, string[]>();
+  const adjReverse = new Map<string, string[]>();
   graph.edges.forEach(e => {
     if (!adj.has(e.from)) adj.set(e.from, []);
     if (!adj.has(e.to)) adj.set(e.to, []);
+    if (!adjReverse.has(e.from)) adjReverse.set(e.from, []);
+    if (!adjReverse.has(e.to)) adjReverse.set(e.to, []);
     adj.get(e.from)!.push(e.to);
-    adj.get(e.to)!.push(e.from); 
+    adj.get(e.to)!.push(e.from);
+    adjReverse.get(e.to)!.push(e.from);
+    adjReverse.get(e.from)!.push(e.to);
   });
 
   const protectedNodes = new Set<string>();
@@ -91,6 +96,18 @@ function generateDynamicEvents(
     Math.max(minIncidents, Math.floor(candidates.length * dynamicDensity))
   );
 
+  // 🎮 AI vs AI: Spawn 2-4 opponent pieces for gameai
+  const opponentPieces: string[] = [];
+  if (isGameAI) {
+    const numOpponents = 2 + Math.floor(rng() * 3); // 2-4 pieces
+    const boardTiles = candidates.filter(id => !graph.destinationIds.includes(id));
+    for (let i = 0; i < numOpponents && i < boardTiles.length; i++) {
+      const randomIdx = Math.floor(rng() * boardTiles.length);
+      const piece = boardTiles.splice(randomIdx, 1)[0];
+      opponentPieces.push(piece);
+    }
+  }
+
   let standardLabels: { block: string, clear: string }[] = [];
   let aoeLabels: { block: string, clear: string }[] = [];
 
@@ -103,6 +120,18 @@ function generateDynamicEvents(
       standardLabels = [{ block: '🔌 Cable Unplugged', clear: '🔌 Cable Reconnected' }, { block: '🔥 Overheating Switch', clear: '❄️ Cooling Restored' }];
       aoeLabels = [{ block: '⚡ Rack Power Loss', clear: '⚡ Power Restored' }, { block: '🌐 Massive DDoS Attack', clear: '🛡️ Attack Mitigated' }];
       break;
+    case 'traffic':
+      standardLabels = [{ block: '🚫 Road Closure', clear: '✅ Road Reopened' }, { block: '🚦 Signal Failure', clear: '🟢 Signal Restored' }];
+      aoeLabels = [{ block: '🚗 Major Accident', clear: '🚚 Cleared' }, { block: '⚠️ Congestion Cascade', clear: '✅ Flow Restored' }];
+      break;
+    case 'evacuation':
+      standardLabels = [{ block: '🔥 Fire Outbreak', clear: '✅ Fire Extinguished' }, { block: '🚪 Exit Blocked', clear: '🚪 Exit Cleared' }];
+      aoeLabels = [{ block: '🔥 Fire Spreads Rapidly', clear: '✅ Fire Contained' }, { block: '💨 Smoke Fills Corridor', clear: '✅ Ventilation Restored' }];
+      break;
+    case 'gameai':
+      standardLabels = [{ block: '♟️ Opponent Piece Deployed', clear: '✅ Opponent Retreats' }, { block: '🎯 Opponent Attacks', clear: '♟️ Opponent Moves Away' }];
+      aoeLabels = [{ block: '[Act] 💥 Opponent Formation', clear: '✅ Formation Breaks' }];
+      break;
     default:
       standardLabels = [{ block: '⚠️ Dynamic Outage', clear: '✅ Outage Resolved' }];
       aoeLabels = [{ block: '💥 Critical Cascading Failure', clear: '✅ Network Restored' }];
@@ -110,6 +139,9 @@ function generateDynamicEvents(
   }
 
   for (let i = 0; i < incidentCount; i++) {
+    // 🎮 OPTION A: Skip standard incidents for gameai with opponent pieces (AI vs AI only)
+    if (isGameAI && opponentPieces.length > 0) break;
+
     const epicenterId = candidates[Math.floor(rng() * candidates.length)];
     if (usedNodes.has(epicenterId) || protectedNodes.has(epicenterId)) continue;
     
@@ -173,6 +205,55 @@ function generateDynamicEvents(
     });
   }
 
+  // 🎮 AI vs AI: Predictive opponent piece movements
+  if (isGameAI && opponentPieces.length > 0) {
+    opponentPieces.forEach((piece, idx) => {
+      // Deploy opponent piece immediately
+      const pieceNode = graph.nodes.find(n => n.id === piece);
+      const pieceName = `Opponent ${idx + 1}`;
+      
+      events.push({
+        stepIndex: 1 + idx,
+        nodeId: piece,
+        blocked: true,
+        label: `${standardLabels[0].block} - ${pieceName} deployed at ${pieceNode?.label?.split('\n')[0] ?? piece}`,
+      });
+
+      // Move opponent piece every step for turn-based gameplay
+      let currentPiecePos = piece;
+      for (let moveStep = 2 + idx; moveStep < totalSteps - 5; moveStep += 1) {
+        // Clear current position
+        events.push({
+          stepIndex: moveStep,
+          nodeId: currentPiecePos,
+          blocked: false,
+          label: `${standardLabels[0].clear} - ${pieceName} repositioning`,
+        });
+
+        // Pick a new strategic blocking position
+        const neighbors = adj.get(currentPiecePos) || [];
+        const futureBlockSquares = neighbors
+          .filter(n => !protectedNodes.has(n) && !graph.destinationIds.includes(n))
+          .sort(() => rng() - 0.5)
+          .slice(0, 3);
+
+        if (futureBlockSquares.length > 0) {
+          const nextPiecePos = futureBlockSquares[Math.floor(rng() * futureBlockSquares.length)];
+          const nextNode = graph.nodes.find(n => n.id === nextPiecePos);
+          
+          events.push({
+            stepIndex: moveStep,
+            nodeId: nextPiecePos,
+            blocked: true,
+            label: `${standardLabels[1].block} - ${pieceName} blocks at ${nextNode?.label?.split('\n')[0] ?? nextPiecePos}`,
+          });
+          
+          currentPiecePos = nextPiecePos;
+        }
+      }
+    });
+  }
+
   return events.sort((a, b) => a.stepIndex - b.stepIndex);
 }
 
@@ -188,9 +269,10 @@ export async function runSimulation(
   gameBoard?: GameAIBoard,
   graphSize: GraphSize = 'medium',
   chessPiece: string = 'knight',
+  sizing?: GraphSizing,
 ): Promise<SimulationResult & { meta?: { hasMore: boolean; totalSteps: number; currentOffset: number } }> {
   
-  const graph = buildScenarioGraph(scenario, useRealWorld, gameBoard, networkMode, graphSize, dynamicSeed, chessPiece);
+  const graph = buildScenarioGraph(scenario, useRealWorld, gameBoard, networkMode, graphSize, dynamicSeed, chessPiece, sizing);
 
   let result: {
     steps: AlgorithmStep[];

@@ -1,4 +1,4 @@
-import { ScenarioType, ScenarioGraph, GraphSize } from '../types/index';
+import { ScenarioType, ScenarioGraph, GraphSize, GraphSizing } from '../types/index';
 import { buildNetworkGraph, getNetworkFailureCandidates } from './networkGraph';
 import { buildRoboticsGraph, getRoboticsBlockCandidates } from './roboticsGraph';
 import { buildTrafficGraph, getTrafficClosureCandidates } from './trafficGraph';
@@ -12,19 +12,20 @@ export function buildScenarioGraph(
   mode?: string, 
   graphSize: GraphSize = 'medium',
   seed: number = 123,
-  chessPiece: string = 'knight'
+  chessPiece: string = 'knight',
+  sizing?: GraphSizing
 ): ScenarioGraph {
   switch (scenario) {
     case 'robotics':
-      return buildRoboticsGraph(useRealWorld, seed, mode, graphSize);
+      return buildRoboticsGraph(useRealWorld, seed, mode, graphSize, sizing);
     case 'evacuation':
-      return buildEvacuationGraph(useRealWorld, seed, graphSize); 
+      return buildEvacuationGraph(useRealWorld, seed, graphSize, sizing); 
     case 'network':
-      return buildNetworkGraph(useRealWorld, seed, mode, graphSize); 
+      return buildNetworkGraph(useRealWorld, seed, mode, graphSize, sizing); 
     case 'traffic':
-      return buildTrafficGraph(useRealWorld, graphSize); 
+      return buildTrafficGraph(useRealWorld, graphSize, seed, sizing); 
     case 'gameai':
-      return buildGameAIGraph(gameBoard, graphSize, chessPiece, seed);
+      return buildGameAIGraph(gameBoard, graphSize, chessPiece, seed, sizing);
     default:
       throw new Error(`Unknown scenario: ${scenario}`);
   }

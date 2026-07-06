@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { buildScenarioGraph } from '../utils/graphBuilder';
 import { ScenarioType, GraphSize } from '../types';
 import { GameAIBoard } from '../utils/gameAIGraph';
+import { parseGraphSizing } from '../utils/graphSizing';
 
 export const getGraphData = (req: Request, res: Response) => {
   try {
@@ -12,6 +13,9 @@ export const getGraphData = (req: Request, res: Response) => {
     const mode = scenario === 'robotics' ? roboticsMode : networkMode;
     const gameBoard = req.query.gameBoard as GameAIBoard | undefined;
     const graphSize = (req.query.graphSize as GraphSize) || 'medium';
+    const sizing = useRealWorld
+      ? undefined
+      : parseGraphSizing(req.query.targetNodes, req.query.targetEdges);
     
     // 1. Extract the seed from the frontend request (fallback to Date.now() if missing)
     const seed = req.query.seed ? parseInt(req.query.seed as string, 10) : Date.now();
@@ -22,7 +26,7 @@ export const getGraphData = (req: Request, res: Response) => {
     }
 
     // 2. Pass the seed into the builder as the 6th parameter
-    const graph = buildScenarioGraph(scenario, useRealWorld, gameBoard, mode, graphSize, seed, chessPiece);
+    const graph = buildScenarioGraph(scenario, useRealWorld, gameBoard, mode, graphSize, seed, chessPiece, sizing);
     
     return res.status(200).json({ data: graph });
   } catch (error) {

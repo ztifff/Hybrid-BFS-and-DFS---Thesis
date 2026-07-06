@@ -1,6 +1,7 @@
-import { ScenarioGraph, GraphNode, GraphEdge, GraphSize } from '../types/index';
+import { ScenarioGraph, GraphNode, GraphEdge, GraphSize, GraphSizing } from '../types/index';
 import { datacenterNetworkGraph } from '../data/network.datacenter';
 import { as733NetworkGraph } from '../data/network.as733';
+import { clampInt, fitGraphEdgeCount, resolveSizingValue } from './graphSizing';
 
 const W = 1600; 
 const H = 1200;
@@ -16,11 +17,41 @@ const SIZE_CONFIG = {
   large: { spines: 4, leafs: 9, racksPerLeaf: 4 }
 };
 
+function resolveNetworkShape(targetNodes: number, fallback: typeof SIZE_CONFIG.medium, hasSizing: boolean) {
+  if (!hasSizing) {
+    return {
+      spines: fallback.spines,
+      leafs: fallback.leafs,
+      rackCounts: Array.from({ length: fallback.leafs }, () => fallback.racksPerLeaf),
+    };
+  }
+
+  let leafs = clampInt(Math.sqrt(targetNodes) * 1.25, 2, 24);
+  let spines = clampInt(leafs / 2, 2, 8);
+
+  while (1 + spines + leafs + leafs > targetNodes && leafs > 2) leafs--;
+  while (1 + spines + leafs + leafs > targetNodes && spines > 2) spines--;
+
+  const rackTotal = Math.max(leafs, targetNodes - 1 - spines - leafs);
+  const rackCounts = Array.from({ length: leafs }, () => 1);
+  let remainingRacks = rackTotal - leafs;
+  let index = 0;
+
+  while (remainingRacks > 0) {
+    rackCounts[index % leafs]++;
+    remainingRacks--;
+    index++;
+  }
+
+  return { spines, leafs, rackCounts };
+}
+
 export function buildNetworkGraph(
   useRealWorld: boolean = false, 
   seed: number = 123, 
   networkMode: string = 'synthetic',
-  graphSize: GraphSize = 'medium'
+  graphSize: GraphSize = 'medium',
+  sizing?: GraphSizing
 ): ScenarioGraph {
   if (useRealWorld) {
     const baseGraph = networkMode === 'datacenter' ? datacenterNetworkGraph : as733NetworkGraph;
@@ -46,7 +77,10 @@ export function buildNetworkGraph(
   }
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
-  const config = SIZE_CONFIG[graphSize];
+  const fallback = SIZE_CONFIG[graphSize];
+  const fallbackNodes = 1 + fallback.spines + fallback.leafs + (fallback.leafs * fallback.racksPerLeaf);
+  const targetNodes = resolveSizingValue(sizing?.nodes, fallbackNodes, 7, 220);
+  const config = resolveNetworkShape(targetNodes, fallback, Boolean(sizing));
 
   // 1. Data Ingress (Start Node)
   nodes.push({ id: 'dc_ingress', label: 'Global Ingress', type: 'datacenter', x: W / 2, y: 80, level: 0, buildingId: 'core' });
@@ -76,10 +110,11 @@ export function buildNetworkGraph(
     }
 
     // 4. Server Racks (Bottom Level)
-    const rackSpread = leafSpacing / config.racksPerLeaf;
-    for (let r = 1; r <= config.racksPerLeaf; r++) {
+    const racksForLeaf = config.rackCounts[l - 1] ?? 1;
+    const rackSpread = leafSpacing / (racksForLeaf + 1);
+    for (let r = 1; r <= racksForLeaf; r++) {
       const rackId = `rack_${l}_${r}`;
-      const offset = (r - (config.racksPerLeaf + 1) / 2) * rackSpread;
+      const offset = (r - (racksForLeaf + 1) / 2) * rackSpread;
       nodes.push({ id: rackId, label: `Rack-${l}${r}`, type: 'access_point', x: 50 + ((l-1) * leafSpacing) + offset, y: 900, level: 3, buildingId: 'access' });
       edges.push({ id: `${leafId}-${rackId}`, from: leafId, to: rackId, latency: 5, label: '5ms', type: 'ethernet' });
     }
@@ -93,10 +128,15 @@ export function buildNetworkGraph(
     const j = Math.floor(seededRandom(currentSeed++) * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
-  const numExits = Math.floor(seededRandom(currentSeed) * 5) + 3; 
+  const numExits = Math.min(shuffled.length, Math.floor(seededRandom(currentSeed) * 5) + 3); 
   const destinationIds = shuffled.slice(0, numExits).map(n => n.id);
 
-  return { nodes, edges, sourceId: 'dc_ingress', destinationIds, width: W, height: H };
+  return fitGraphEdgeCount(
+    { nodes, edges, sourceId: 'dc_ingress', destinationIds, width: W, height: H },
+    sizing?.edges,
+    seed,
+    { edgeType: 'ethernet', labelUnit: 'ms', latencyBase: 2, latencySpread: 5, maxEdges: targetNodes * 12 }
+  );
 }
 
 export function getNetworkFailureCandidates(graph: ScenarioGraph): string[] {

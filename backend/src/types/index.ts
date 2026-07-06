@@ -7,10 +7,15 @@ export type ScenarioType =
   | 'evacuation'
   | 'gameai';
 
-export type GameAIBoard = 'chess' | 'checkers' | 'snakes';
+export type GameAIBoard = 'chess' | 'checkers';
 export type ChessPiece = 'knight' | 'bishop' | 'rook' | 'queen';
 
 export type GraphSize = 'small' | 'medium' | 'large';
+
+export interface GraphSizing {
+  nodes: number;
+  edges: number;
+}
 
 // ── Graph Node Types per scenario ──────────────────────────────────────────
 export type NetworkNodeType =

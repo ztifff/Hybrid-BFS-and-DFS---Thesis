@@ -80,14 +80,15 @@ export const NetworkCanvas: React.FC<Props> = ({
   
   const isDatacenter = scenario === 'network' && width > 100000;
   const isLayeredMap = useMemo(() => nodes.some(n => n.buildingId === 'GL' || n.buildingId === 'L2'), [nodes]);
-  const isDenseProcedural = nodes.length > 90 && width <= 100000 && !isLayeredMap && scenario !== 'gameai' && scenario !== 'robotics' && scenario !== 'traffic';
-  const isMassive = nodes.length > 200 || isDenseProcedural;
+  const isDenseProcedural = nodes.length > 220 && width <= 100000 && !isLayeredMap && (scenario === 'network' || scenario === 'evacuation');
+
+  const isMassive = nodes.length > 220 || isDenseProcedural;
 
   const SVG_W = 960;
   const SVG_H = 680;
 
   // 1. Check if the map is our generated synthetic map (1600px or smaller)
-  const isSynthetic = width <= 1600 && height <= 1600 || (nodes.length <= 200 && width <= 10000 && height <= 10000);
+  const isSynthetic = width <= 1600 && height <= 1600 || (nodes.length <= 220 && width <= 10000 && height <= 10000);
 
   // 2. If synthetic, force scale to 1 to prevent clustering. 
   //    If real-world (massive dimensions), auto-squish it so it fits on screen!
@@ -465,7 +466,7 @@ export const NetworkCanvas: React.FC<Props> = ({
 
       let fillColor = cfg.baseColor;
       let opacity = (isMassive && !isImportant && !isBlockedImportant) ? 0.3 : 1;
-      const blockedIcon = scenario === 'gameai' ? '✖' : '💀';
+      const blockedIcon = scenario === 'gameai' ? '♟️' : '💀';
 
       if (isBlocked) { fillColor = '#dc2626'; opacity = 1; } 
       else if (wasHistoricallyBlocked.has(node.id)) { fillColor = '#ef4444'; opacity = 1; }
@@ -567,13 +568,15 @@ export const NetworkCanvas: React.FC<Props> = ({
             ctx.font = `${isImportant ? 'bold' : '600'} ${dynamicFontSize}px sans-serif`;
             
             ctx.lineJoin = 'round';
-            ctx.lineWidth = 3 / zoom;
-            ctx.strokeStyle = '#0a0f1e'; 
+            // Thicker dark outline for gameai so labels read on both light and dark squares
+            ctx.lineWidth = (scenario === 'gameai' ? 5 : 3) / zoom;
+            ctx.strokeStyle = scenario === 'gameai' ? '#000000' : '#0a0f1e'; 
             
             const labelOffsetY = r + (10 / zoom);
             ctx.strokeText(displayLabel, cx, cy - labelOffsetY);
             
-            ctx.fillStyle = isImportant ? '#fb923c' : '#f1f5f9'; 
+            // Gameai: use high-contrast amber instead of near-white so labels are visible on light squares
+            ctx.fillStyle = isImportant ? '#fb923c' : (scenario === 'gameai' ? '#fde68a' : '#f1f5f9'); 
             ctx.fillText(displayLabel, cx, cy - labelOffsetY);
 
             renderedTextPositions.push({ x: screenX, y: screenY, radius: separationThreshold });
@@ -597,10 +600,21 @@ export const NetworkCanvas: React.FC<Props> = ({
               const baseLabelSize = isImportant ? 14 : 12;
               const labelSize = baseLabelSize / zoom;
               ctx.font = `${isImportant ? 'bold ' : ''}${labelSize}px sans-serif`;
-              ctx.fillStyle = '#cbd5e1';
-              
-              const labelOffsetY = r + (12 / zoom);
-              ctx.fillText(displayLabel, cx, cy + labelOffsetY);
+
+              // Gameai: strong dark outline + amber fill so coords pop on both square colours
+              if (scenario === 'gameai') {
+                ctx.lineJoin = 'round';
+                ctx.lineWidth = 4 / zoom;
+                ctx.strokeStyle = '#000000';
+                const labelOffsetY = r + (12 / zoom);
+                ctx.strokeText(displayLabel, cx, cy + labelOffsetY);
+                ctx.fillStyle = isImportant ? '#fb923c' : '#fde68a';
+                ctx.fillText(displayLabel, cx, cy + labelOffsetY);
+              } else {
+                ctx.fillStyle = '#cbd5e1';
+                const labelOffsetY = r + (12 / zoom);
+                ctx.fillText(displayLabel, cx, cy + labelOffsetY);
+              }
             } else {
               
               const baseLabelSize = isImportant ? 12 : 10;
@@ -632,7 +646,7 @@ export const NetworkCanvas: React.FC<Props> = ({
     });
 
     // 4. Draw Edge Labels (Distance/Weight Values)
-    if (!isMassive && zoom >= 0.7) {
+    if (!isMassive && zoom >= 0.7 && scenario !== 'gameai') {
       ctx.save();
       ctx.globalAlpha = Math.max(0, Math.min(1, (zoom - 0.7) * 3));
       ctx.font = `${Math.max(8, 12 / zoom)}px sans-serif`;
@@ -652,7 +666,7 @@ export const NetworkCanvas: React.FC<Props> = ({
         const midX = (x1 + x2) / 2;
         const midY = (y1 + y2) / 2;
 
-        const unit = scenario === 'evacuation' ? 's' : scenario === 'gameai' ? ' move' : scenario === 'network' ? 'ms' : 'm';
+        const unit = scenario === 'evacuation' ? 's' : scenario === 'network' ? 'ms' : 'm';
         const label = edge.label || `${edge.latency}${unit}`;
         ctx.strokeText(label, midX, midY);
         ctx.fillText(label, midX, midY);

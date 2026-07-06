@@ -1,5 +1,6 @@
-import { ScenarioGraph, GraphNode, GraphEdge, GraphSize } from '../types/index';
+import { ScenarioGraph, GraphNode, GraphEdge, GraphSize, GraphSizing } from '../types/index';
 import { cabuyaoTrafficGraph } from '../data/traffic.cabuyao';
+import { fitGraphEdgeCount, resolveSizingValue } from './graphSizing';
 
 const W = 1600; 
 const H = 1200;
@@ -12,7 +13,9 @@ const SIZE_CONFIG = {
 
 export function buildTrafficGraph(
   useRealWorld: boolean = false, 
-  graphSize: GraphSize = 'medium'
+  graphSize: GraphSize = 'medium',
+  seed: number = 123,
+  sizing?: GraphSizing
 ): ScenarioGraph {
   if (useRealWorld) {
     return cabuyaoTrafficGraph as ScenarioGraph;
@@ -20,14 +23,22 @@ export function buildTrafficGraph(
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
   const config = SIZE_CONFIG[graphSize];
+  const targetNodes = resolveSizingValue(sizing?.nodes, config.cols * config.rows, 9, 220);
+  const cols = sizing
+    ? Math.min(targetNodes, Math.max(3, Math.round(Math.sqrt(targetNodes * 1.25))))
+    : config.cols;
+  const rows = sizing ? Math.ceil(targetNodes / cols) : config.rows;
 
-  const cellW = (W - 200) / (config.cols - 1);
-  const cellH = (H - 200) / (config.rows - 1);
+  const cellW = (W - 200) / Math.max(cols - 1, 1);
+  const cellH = (H - 200) / Math.max(rows - 1, 1);
+  const hasNode = (r: number, c: number) => r >= 0 && c >= 0 && c < cols && (r * cols + c) < targetNodes;
+  const nodeId = (r: number, c: number) => `int_${r}_${c}`;
 
-  // 1. Build the Grid of Intersections
-  for (let r = 0; r < config.rows; r++) {
-    for (let c = 0; c < config.cols; c++) {
-      const id = `int_${r}_${c}`;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (!hasNode(r, c)) continue;
+
+      const id = nodeId(r, c);
       nodes.push({
         id,
         label: `Block ${r}-${c}`,
@@ -38,44 +49,53 @@ export function buildTrafficGraph(
         buildingId: 'city'
       });
 
-      // Connect West (Horizontal Street)
-      if (c > 0) {
-        edges.push({ id: `int_${r}_${c-1}-${id}`, from: `int_${r}_${c-1}`, to: id, latency: 3, label: '3m', type: 'road' });
+      if (hasNode(r, c - 1)) {
+        edges.push({ id: `${nodeId(r, c-1)}-${id}`, from: nodeId(r, c-1), to: id, latency: 3, label: '3m', type: 'road' });
       }
-      // Connect North (Vertical Street)
-      if (r > 0) {
-        edges.push({ id: `int_${r-1}_${c}-${id}`, from: `int_${r-1}_${c}`, to: id, latency: 4, label: '4m', type: 'road' });
+
+      if (hasNode(r - 1, c)) {
+        edges.push({ id: `${nodeId(r-1, c)}-${id}`, from: nodeId(r-1, c), to: id, latency: 4, label: '4m', type: 'road' });
       }
     }
   }
 
-  // 2. Add an "Expressway" cutting diagonally (Fast but risky)
-  for (let i = 0; i < Math.min(config.rows, config.cols) - 1; i++) {
+  for (let i = 0; i < Math.min(rows, cols) - 1; i++) {
+    if (!hasNode(i, i) || !hasNode(i + 1, i + 1)) continue;
     edges.push({ 
       id: `hwy_${i}`, 
-      from: `int_${i}_${i}`, 
-      to: `int_${i+1}_${i+1}`, 
+      from: nodeId(i, i), 
+      to: nodeId(i+1, i+1), 
       latency: 1, 
       label: '1m HWY', 
       type: 'road' 
     });
   }
 
-  // 3. Start Point (Top Left) and Exits (Bottom Right edges)
-  const sourceId = 'int_0_0';
-  const destinationIds = [
-    `int_${config.rows - 1}_${config.cols - 1}`, // Bottom Right corner
-    `int_${config.rows - 1}_${Math.floor(config.cols / 2)}`, // Bottom Middle
-    `int_${Math.floor(config.rows / 2)}_${config.cols - 1}`  // Right Middle
-  ];
+  const sourceId = nodeId(0, 0);
+  const lastIndex = targetNodes - 1;
+  const lastRow = Math.floor(lastIndex / cols);
+  const lastCol = lastIndex % cols;
+  const bottomRowNodes = Array.from({ length: lastCol + 1 }, (_, c) => nodeId(lastRow, c));
+  const rightColumnNodes = Array.from({ length: rows }, (_, r) => nodeId(r, cols - 1)).filter((id) =>
+    nodes.some((node) => node.id === id)
+  );
+  const destinationIds = Array.from(new Set([
+    nodeId(lastRow, lastCol),
+    bottomRowNodes[Math.floor(bottomRowNodes.length / 2)],
+    rightColumnNodes[Math.floor(rightColumnNodes.length / 2)] ?? nodeId(lastRow, lastCol),
+  ]));
 
-  // Tag exits visually
   destinationIds.forEach(id => {
     const n = nodes.find(n => n.id === id);
     if (n) { n.type = 'highway'; n.label = 'City Exit'; }
   });
 
-  return { nodes, edges, sourceId, destinationIds, width: W, height: H };
+  return fitGraphEdgeCount(
+    { nodes, edges, sourceId, destinationIds, width: W, height: H },
+    sizing?.edges,
+    seed,
+    { edgeType: 'road', labelUnit: 'm', latencyBase: 2, latencySpread: 5, maxEdges: targetNodes * 10 }
+  );
 }
 
 export function getTrafficClosureCandidates(graph: ScenarioGraph): string[] {

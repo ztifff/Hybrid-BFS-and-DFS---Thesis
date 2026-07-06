@@ -1,6 +1,7 @@
-import { ScenarioGraph, GraphNode, GraphEdge, GraphSize } from '../types/index';
+import { ScenarioGraph, GraphNode, GraphEdge, GraphSize, GraphSizing } from '../types/index';
 import { awsWarehouseGraph } from '../data/robotics.aws';
 import { clinicGraph } from '../data/robotics.clinic';
+import { clampInt, fitGraphEdgeCount, resolveSizingValue } from './graphSizing';
 
 const W = 1600; 
 const H = 1200;
@@ -19,11 +20,46 @@ const SIZE_CONFIG = {
   large: { aisles: 6, shelvesPerAisle: 4 }
 };
 
+function resolveRoboticsShape(targetNodes: number, fallback: typeof SIZE_CONFIG.medium, hasSizing: boolean) {
+  if (!hasSizing) {
+    return {
+      aisles: fallback.aisles,
+      sectionsByAisle: Array.from(
+        { length: fallback.aisles },
+        () => Array.from({ length: fallback.shelvesPerAisle }, () => 2)
+      ),
+    };
+  }
+
+  let aisles = clampInt(Math.sqrt(targetNodes / 3), 2, 18);
+  while (1 + (2 * aisles) >= targetNodes && aisles > 2) aisles--;
+
+  const sectionsByAisle: number[][] = Array.from({ length: aisles }, () => []);
+  let remaining = targetNodes - 1 - (2 * aisles);
+  let aisleIndex = 0;
+
+  while (remaining > 0) {
+    remaining--;
+    let shelfCount = 0;
+
+    while (shelfCount < 2 && remaining > 0) {
+      shelfCount++;
+      remaining--;
+    }
+
+    sectionsByAisle[aisleIndex % aisles].push(shelfCount);
+    aisleIndex++;
+  }
+
+  return { aisles, sectionsByAisle };
+}
+
 export function buildRoboticsGraph(
   useRealWorld: boolean = false, 
   seed: number = 123, 
   roboticsMode: string = 'aws',
-  graphSize: GraphSize = 'medium'
+  graphSize: GraphSize = 'medium',
+  sizing?: GraphSizing
 ): ScenarioGraph {
   if (useRealWorld) {
     // Make a shallow copy so we don't permanently mutate the backend's static file!
@@ -68,7 +104,10 @@ if (roboticsMode === 'clinic') {
 
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
-  const config = SIZE_CONFIG[graphSize];
+  const fallback = SIZE_CONFIG[graphSize];
+  const fallbackNodes = 1 + (2 * fallback.aisles) + (fallback.aisles * fallback.shelvesPerAisle * 3);
+  const targetNodes = resolveSizingValue(sizing?.nodes, fallbackNodes, 10, 220);
+  const config = resolveRoboticsShape(targetNodes, fallback, Boolean(sizing));
 
   // 1. Add Depot
   nodes.push({ id: 'depot', label: 'Main Depot', type: 'depot', x: W / 2, y: 100, level: 0, buildingId: 'warehouse' });
@@ -91,25 +130,32 @@ if (roboticsMode === 'clinic') {
   }
 
   // 3. Build Vertical Aisles connecting Top and Bottom
-  const shelfSpacing = (H - 600) / config.shelvesPerAisle;
+  const maxSections = Math.max(...config.sectionsByAisle.map((sections) => sections.length), 1);
+  const shelfSpacing = (H - 600) / Math.max(maxSections + 1, 2);
   for (let a = 1; a <= config.aisles; a++) {
     const startX = a * aisleSpacing;
     let prevId = `top_hw_${a}`;
+    const sections = config.sectionsByAisle[a - 1] ?? [];
 
-    for (let s = 1; s <= config.shelvesPerAisle; s++) {
+    for (let s = 1; s <= sections.length; s++) {
       const aisleId = `aisle_${a}_${s}`;
       const yPos = 250 + (s * shelfSpacing);
       nodes.push({ id: aisleId, label: `Aisle ${a}-${s}`, type: 'aisle', x: startX, y: yPos, level: 2, buildingId: 'warehouse' });
       edges.push({ id: `${prevId}-${aisleId}`, from: prevId, to: aisleId, latency: 2, label: '2m', type: 'path' });
       
       // Add a shelf to the left and right of the aisle
-      const lShelf = `shelf_L_${a}_${s}`;
-      const rShelf = `shelf_R_${a}_${s}`;
-      nodes.push({ id: lShelf, label: `Bay L${a}${s}`, type: 'shelf', x: startX - 40, y: yPos, level: 3, buildingId: 'warehouse' });
-      nodes.push({ id: rShelf, label: `Bay R${a}${s}`, type: 'shelf', x: startX + 40, y: yPos, level: 3, buildingId: 'warehouse' });
-      
-      edges.push({ id: `${aisleId}-${lShelf}`, from: aisleId, to: lShelf, latency: 4, label: '4m', type: 'path' });
-      edges.push({ id: `${aisleId}-${rShelf}`, from: aisleId, to: rShelf, latency: 4, label: '4m', type: 'path' });
+      const shelfCount = sections[s - 1] ?? 0;
+      if (shelfCount >= 1) {
+        const lShelf = `shelf_L_${a}_${s}`;
+        nodes.push({ id: lShelf, label: `Bay L${a}${s}`, type: 'shelf', x: startX - 40, y: yPos, level: 3, buildingId: 'warehouse' });
+        edges.push({ id: `${aisleId}-${lShelf}`, from: aisleId, to: lShelf, latency: 4, label: '4m', type: 'path' });
+      }
+
+      if (shelfCount >= 2) {
+        const rShelf = `shelf_R_${a}_${s}`;
+        nodes.push({ id: rShelf, label: `Bay R${a}${s}`, type: 'shelf', x: startX + 40, y: yPos, level: 3, buildingId: 'warehouse' });
+        edges.push({ id: `${aisleId}-${rShelf}`, from: aisleId, to: rShelf, latency: 4, label: '4m', type: 'path' });
+      }
       
       prevId = aisleId;
     }
@@ -128,7 +174,12 @@ if (roboticsMode === 'clinic') {
   const numExits = Math.floor(seededRandom(currentSeed) * 4) + 2; 
   const destinationIds = shuffled.slice(0, numExits).map(n => n.id);
 
-  return { nodes, edges, sourceId: 'depot', destinationIds, width: W, height: H };
+  return fitGraphEdgeCount(
+    { nodes, edges, sourceId: 'depot', destinationIds, width: W, height: H },
+    sizing?.edges,
+    seed,
+    { edgeType: 'path', labelUnit: 'm', latencyBase: 1, latencySpread: 4, maxEdges: targetNodes * 10 }
+  );
 }
 
 export function getRoboticsBlockCandidates(graph: ScenarioGraph): string[] {

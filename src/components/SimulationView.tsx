@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 
 import { ScenarioType, GameAIBoard, ChessPiece } from '../types';
 import { useSimulation } from '../hooks/useSimulation';
@@ -10,6 +10,7 @@ import { Legend } from './Legend';
 import { SimulationReport } from './SimulationReport';
 import { HistoryModal } from './HistoryModal';
 import { DynamicMapEvents } from './DynamicMapEvents';
+import { StrategyMapEvents } from './StrategyMapEvents';
 
 interface Props {
   scenario: ScenarioType;
@@ -19,37 +20,35 @@ interface Props {
 const GAME_AI_BOARDS: { id: GameAIBoard; label: string; icon: string }[] = [
   { id: 'chess', label: 'Chess', icon: '♟️' },
   { id: 'checkers', label: 'Checkers', icon: '⚫' },
-  { id: 'snakes', label: 'Snakes & Ladders', icon: '🐍' },
 ];
 
-type Status = 'idle' | 'running' | 'done' | 'paused';
+const MIN_SYNTHETIC_NODES: Record<ScenarioType, number> = {
+  network: 7,
+  robotics: 10,
+  traffic: 9,
+  evacuation: 10,
+  gameai: 18,
+};
+
+const MAX_SYNTHETIC_NODES: Record<ScenarioType, number> = {
+  network: 220,
+  robotics: 220,
+  traffic: 220,
+  evacuation: 220,
+  gameai: 220,
+};
 
 export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const sc = getScenario(scenario);
 
-  // UI-only state that influences simulation inputs.
-  const [gameBoard, setGameBoard] = useState<GameAIBoard>('chess');
-  const [chessPiece, setChessPiece] = useState<ChessPiece>('knight');
-  const [seed, setSeed] = useState(() => Date.now());
-  const [mapMode, setMapMode] = useState<'synthetic' | 'realworld' | 'realworld2'>('synthetic');
-  const [graphSize, setGraphSize] = useState<'small' | 'medium' | 'large'>('medium');
-
-
-  const sim = useSimulation({
-    scenario,
-    mapMode,
-    graphSize,
-    seed,
-    gameBoard,
-    chessPiece,
-    onReroll: () => setSeed(Date.now()),
-  });
+  const sim = useSimulation({ scenario });
 
   const scenarioHistoryCount = useMemo(
     () => sim.history.filter((h) => h.scenario === scenario).length,
     [sim.history, scenario]
   );
-
+  const generatedNodeCount = sim.currentGraph?.nodes.length ?? sim.syntheticSizing.nodes;
+  const generatedEdgeCount = sim.currentGraph?.edges.length ?? sim.syntheticSizing.edges;
 
   return (
     <>
@@ -103,7 +102,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 multiResults={sim.simResults}
                 activeSteps={sim.activeSteps}
                 scenario={scenario}
-                status={sim.status as Status}
+                status={sim.status}
                 stepIndex={sim.stepIndex}
                 totalSteps={sim.totalSteps}
                 totalNodes={sim.currentGraph.nodes.length}
@@ -139,12 +138,12 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                       <button
                         key={id}
                         onClick={() => {
-                          setGameBoard(id);
-                          setMapMode('synthetic');
+                          sim.setGameBoard(id);
+                          sim.setMapMode('synthetic');
                         }}
                         disabled={sim.isComputing || sim.isGraphLoading}
                         className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
-                          gameBoard === id
+                          sim.gameBoard === id
                             ? 'bg-purple-900/40 text-purple-300 border border-purple-500/60 shadow-[0_0_10px_rgba(139,92,246,0.25)]'
                             : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
                         }`}
@@ -160,10 +159,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               {(scenario === 'traffic' || scenario === 'evacuation' || scenario === 'robotics' || scenario === 'network') && (
                 <div className="flex items-center gap-2 justify-center overflow-x-auto max-w-full scrollbar-none" style={{ scrollbarWidth: 'none' }}>
                   <button
-                    onClick={() => setMapMode('synthetic')}
+                    onClick={() => sim.setMapMode('synthetic')}
                     disabled={sim.isComputing || sim.isGraphLoading}
                     className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
-                      mapMode === 'synthetic'
+                      sim.mapMode === 'synthetic'
                         ? 'bg-purple-900/40 text-purple-300 border border-purple-500/60 shadow-[0_0_10px_rgba(139,92,246,0.25)]'
                         : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
                     }`}
@@ -173,12 +172,12 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   </button>
                   <button
                     onClick={() => {
-                      setMapMode('realworld');
-                      setGraphSize('medium');
+                      sim.setMapMode('realworld');
+                      sim.setGraphSize('medium');
                     }}
                     disabled={sim.isComputing || sim.isGraphLoading}
                     className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
-                      mapMode === 'realworld'
+                      sim.mapMode === 'realworld'
                         ? 'bg-purple-900/40 text-purple-300 border border-purple-500/60 shadow-[0_0_10px_rgba(139,92,246,0.25)]'
                         : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
                     }`}
@@ -197,12 +196,12 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   {(scenario === 'network' || scenario === 'robotics') && (
                     <button
                       onClick={() => {
-                        setMapMode('realworld2');
-                        setGraphSize('medium');
+                        sim.setMapMode('realworld2');
+                        sim.setGraphSize('medium');
                       }}
                       disabled={sim.isComputing || sim.isGraphLoading}
                       className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
-                        mapMode === 'realworld2'
+                        sim.mapMode === 'realworld2'
                           ? 'bg-purple-900/40 text-purple-300 border border-purple-500/60 shadow-[0_0_10px_rgba(139,92,246,0.25)]'
                           : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
                       }`}
@@ -211,26 +210,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                       {scenario === 'network' ? 'AS-733 ISP' : 'Clinic Building'}
                     </button>
                   )}
-                </div>
-              )}
-
-              {mapMode === 'synthetic' && scenario !== 'gameai' && (
-                <div className="flex items-center gap-2 flex-wrap justify-center">
-                  <span className="text-xs text-gray-500 font-semibold">Graph Size:</span>
-                  {(['small', 'medium', 'large'] as const).map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => setGraphSize(size)}
-                      disabled={sim.isComputing || sim.isGraphLoading}
-                      className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 capitalize ${
-                        graphSize === size
-                          ? 'bg-teal-900/40 text-teal-300 border border-teal-500/60 shadow-[0_0_10px_rgba(20,184,166,0.25)]'
-                          : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
-                      }`}
-                    >
-                      {size === 'small' ? '🔹 Small' : size === 'medium' ? '🔷 Medium' : '🔶 Large'}
-                    </button>
-                  ))}
                 </div>
               )}
             </div>
@@ -249,7 +228,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     dynamicEvents={sim.simResults?.hybrid.dynamicEvents || []}
                   />
 
-                  {scenario === 'gameai' && gameBoard === 'chess' && (
+                  {scenario === 'gameai' && sim.gameBoard === 'chess' && (
                     <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 bg-gray-900/80 border border-gray-700 rounded-xl px-3 py-1.5 backdrop-blur-sm shadow-lg">
                       <span className="text-[10px] text-gray-500 font-semibold mr-1">PIECE:</span>
                       {([
@@ -260,10 +239,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                       ] as { id: ChessPiece; icon: string; label: string }[]).map(({ id, icon, label }) => (
                         <button
                           key={id}
-                          onClick={() => setChessPiece(id)}
+                          onClick={() => sim.setChessPiece(id)}
                           disabled={sim.isComputing || sim.isGraphLoading}
                           className={`px-2 py-1 rounded-md text-[11px] font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1 ${
-                            chessPiece === id
+                            sim.chessPiece === id
                               ? 'bg-yellow-900/60 text-yellow-300 border border-yellow-500/60'
                               : 'bg-gray-800/60 hover:bg-gray-700 text-gray-300 border border-gray-600'
                           }`}
@@ -392,6 +371,105 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 simResults={sim.simResults}
               />
             </div>
+
+            {scenario === 'gameai' && (
+              <div className="shrink-0">
+                <StrategyMapEvents
+                  dynamicEvents={sim.simResults?.hybrid.dynamicEvents || []}
+                  stepIndex={sim.stepIndex}
+                  simResults={sim.simResults}
+                />
+              </div>
+            )}
+
+            {sim.mapMode === 'synthetic' && (
+              <div className="shrink-0 bg-gray-900 border border-gray-700 rounded-xl p-4 flex flex-col gap-2">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold mb-1">
+                  Dynamic Size Adjuster
+                </div>
+                
+                <div className="flex items-center justify-between gap-2">
+                  
+                  {/* --- CUSTOM NODES ADJUSTER --- */}
+                  <label className="flex items-center gap-1.5 flex-1 rounded-md border border-gray-700 bg-gray-800 pl-3 pr-0 py-1 overflow-hidden transition-colors focus-within:border-teal-500">
+                    <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold flex-1">Nodes</span>
+                    <div className="flex items-stretch bg-gray-950 border-l border-gray-700 h-full ml-1">
+                      <input
+                        type="number"
+                        min={MIN_SYNTHETIC_NODES[scenario]}
+                        max={MAX_SYNTHETIC_NODES[scenario]}
+                        value={sim.syntheticSizing.nodes}
+                        onChange={(event) => {
+                          if (event.target.value !== '') sim.updateSyntheticSizing('nodes', Number(event.target.value));
+                        }}
+                        disabled={sim.isComputing || sim.isGraphLoading}
+                        /* Tailwind magic to completely hide the ugly default browser arrows */
+                        className="w-10 bg-transparent py-1 text-center text-xs font-bold text-teal-300 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 m-0"
+                      />
+                      <div className="flex flex-col border-l border-gray-700 bg-gray-900 w-5">
+                        <button
+                          type="button"
+                          disabled={sim.isComputing || sim.isGraphLoading || sim.syntheticSizing.nodes >= MAX_SYNTHETIC_NODES[scenario]}
+                          onClick={() => sim.updateSyntheticSizing('nodes', sim.syntheticSizing.nodes + 1)}
+                          className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center"
+                        >
+                          <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={sim.isComputing || sim.isGraphLoading || sim.syntheticSizing.nodes <= MIN_SYNTHETIC_NODES[scenario]}
+                          onClick={() => sim.updateSyntheticSizing('nodes', sim.syntheticSizing.nodes - 1)}
+                          className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 border-t border-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center"
+                        >
+                          <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </label>
+
+                  {/* --- CUSTOM LINKS ADJUSTER --- */}
+                  <label className="flex items-center gap-1.5 flex-1 rounded-md border border-gray-700 bg-gray-800 pl-3 pr-0 py-1 overflow-hidden transition-colors focus-within:border-teal-500">
+                    <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold flex-1">Links</span>
+                    <div className="flex items-stretch bg-gray-950 border-l border-gray-700 h-full ml-1">
+                      <input
+                        type="number"
+                        min={4}
+                        max={1600}
+                        value={sim.syntheticSizing.edges}
+                        onChange={(event) => {
+                          if (event.target.value !== '') sim.updateSyntheticSizing('edges', Number(event.target.value));
+                        }}
+                        disabled={sim.isComputing || sim.isGraphLoading}
+                        className="w-10 bg-transparent py-1 text-center text-xs font-bold text-teal-300 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 m-0"
+                      />
+                      <div className="flex flex-col border-l border-gray-700 bg-gray-900 w-5">
+                        <button
+                          type="button"
+                          disabled={sim.isComputing || sim.isGraphLoading || sim.syntheticSizing.edges >= 1600}
+                          onClick={() => sim.updateSyntheticSizing('edges', sim.syntheticSizing.edges + 1)}
+                          className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center"
+                        >
+                          <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={sim.isComputing || sim.isGraphLoading || sim.syntheticSizing.edges <= 4}
+                          onClick={() => sim.updateSyntheticSizing('edges', sim.syntheticSizing.edges - 1)}
+                          className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 border-t border-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center"
+                        >
+                          <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </label>
+
+                </div>
+                
+                <div className="text-center mt-1 text-[9px] text-gray-500 tracking-wider">
+                  Generated: {generatedNodeCount} nodes / {generatedEdgeCount} links
+                </div>
+              </div>
+            )}
           </aside>
         </div>
       </div>
@@ -444,4 +522,3 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     </>
   );
 };
-

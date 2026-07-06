@@ -47,7 +47,7 @@ const SCENARIO_NODE_ITEMS: Record<ScenarioType, LegendItem[]> = {
     { color: '#4c1d95', label: 'Strategy Planner (Source)', icon: '♟️' },
     { color: '#6d28d9', label: 'Winning Square (Target)', icon: '🏁' },
     { color: '#7c3aed', label: 'Board Tile / Legal Move', icon: '⬡' },
-    { color: '#450a0a', label: 'Blocked Board Tile', icon: '✖' },
+    { color: '#ef4444', label: 'Opponent Piece (Moving)', icon: '♟️' },
   ],
 };
 
