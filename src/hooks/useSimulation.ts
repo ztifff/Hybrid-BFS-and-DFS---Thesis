@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AlgorithmStep, GameAIBoard, ChessPiece, GraphSize, GraphSizing, ScenarioGraph, ScenarioType, SimulationResult } from '../types';
+import { AlgorithmStep, GameAIBoard, GraphSize, GraphSizing, ScenarioGraph, ScenarioType, SimulationResult } from '../types';
 import { normalizeHistoryEntry, normalizeHistoryEntries, loadLocalHistory, persistLocalHistory } from '../utils/historyHelpers';
 
 import { HistoryEntry } from '../components/HistoryModal';
@@ -41,8 +41,6 @@ export interface SimulationState {
   // Configuration State
   gameBoard: GameAIBoard;
   setGameBoard: (board: GameAIBoard) => void;
-  chessPiece: ChessPiece;
-  setChessPiece: (piece: ChessPiece) => void;
   mapMode: 'synthetic' | 'realworld' | 'realworld2';
   setMapMode: (mode: 'synthetic' | 'realworld' | 'realworld2') => void;
   graphSize: GraphSize;
@@ -118,8 +116,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
   const { scenario } = params;
   
   // UI / Configuration State (Lifted from SimulationView)
-  const [gameBoard, setGameBoard] = useState<GameAIBoard>('chess');
-  const [chessPiece, setChessPiece] = useState<ChessPiece>('knight');
+  const [gameBoard, setGameBoard] = useState<GameAIBoard>('dama');
   const [seed, setSeed] = useState(() => Date.now());
   const [mapMode, setMapMode] = useState<'synthetic' | 'realworld' | 'realworld2'>('synthetic');
   const [graphSize, setGraphSize] = useState<'small' | 'medium' | 'large'>('medium');
@@ -251,10 +248,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
           graphParams.set('targetEdges', String(syntheticSizing.edges));
         }
 
-        if (scenario === 'gameai') {
-          graphParams.set('gameBoard', gameBoard);
-          if (gameBoard === 'chess') graphParams.set('chessPiece', chessPiece);
-        }
+        if (scenario === 'gameai') graphParams.set('gameBoard', gameBoard);
 
         const response = await fetch(`api/network/graph?${graphParams}`);
         if (!response.ok) throw new Error(`Graph API Error: ${response.statusText}`);
@@ -274,7 +268,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
     return () => {
       isMounted = false;
     };
-  }, [scenario, mapMode, gameBoard, graphSize, seed, chessPiece, syntheticSizing.nodes, syntheticSizing.edges]);
+  }, [scenario, mapMode, gameBoard, graphSize, seed, syntheticSizing.nodes, syntheticSizing.edges]);
 
   const handleDeleteHistory = useCallback((ids: string[]) => {
     if (ids.length === 0) return;
@@ -342,7 +336,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
               seed,
               graphSize,
               ...(mapMode === 'synthetic' ? { sizing: syntheticSizing } : {}),
-              ...(scenario === 'gameai' ? { gameBoard, ...(gameBoard === 'chess' ? { chessPiece } : {}) } : {})
+              ...(scenario === 'gameai' ? { gameBoard } : {})
             })
           });
 
@@ -412,7 +406,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
       isMounted = false;
       stopAnimation();
     };
-  }, [scenario, mapMode, seed, gameBoard, chessPiece, graphSize, syntheticSizing, stopAnimation]);
+  }, [scenario, mapMode, seed, gameBoard, graphSize, syntheticSizing, stopAnimation]);
 
   const startAnimation = useCallback(() => {
     if (!simResults || totalSteps === 0) return;
@@ -638,8 +632,6 @@ export function useSimulation(params: { scenario: ScenarioType }) {
 
     gameBoard,
     setGameBoard,
-    chessPiece,
-    setChessPiece,
     mapMode,
     setMapMode,
     graphSize,

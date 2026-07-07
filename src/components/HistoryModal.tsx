@@ -117,11 +117,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
     const getData = (algo: 'bfs' | 'dfs' | 'hybrid') => {
       const res = results[algo];
       if (!res) return null;
-      
-      // FIX: Fallback to `res` itself if `metrics` is undefined (handles older saved histories)
       const metrics = res.metrics || res;
-      
-      // If it's so corrupted that totalLatency isn't even there, bail out safely
       if (metrics.totalLatency === undefined && metrics.pathLength === undefined) return null;
 
       const actualDistance = Math.max(metrics.pathLength || 0, 0);
@@ -149,7 +145,6 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
       </td>
     );
 
-    // Identify the best base graph and parameters to pass to the visualizer safely
     const baseGraph = results.hybrid?.graph || results.bfs?.graph || results.dfs?.graph || entry.simResult?.graph;
     const allEvents = results.hybrid?.dynamicEvents || results.bfs?.dynamicEvents || results.dfs?.dynamicEvents || entry.simResult?.dynamicEvents || [];
     const blockedNodeIds = new Set<string>();
@@ -162,63 +157,144 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
       entry.simResult?.steps?.length || 0
     );
 
+    type AlgoData = NonNullable<ReturnType<typeof getData>>;
+    const algoEntries: { key: AlgorithmKey; label: string; color: string; data: AlgoData }[] = [
+      ...(bfs && bfs.success ? [{ key: 'bfs' as AlgorithmKey, label: 'BFS', color: '#4ade80', data: bfs }] : []),
+      ...(dfs && dfs.success ? [{ key: 'dfs' as AlgorithmKey, label: 'DFS', color: '#c084fc', data: dfs }] : []),
+      ...(hyb && hyb.success ? [{ key: 'hybrid' as AlgorithmKey, label: 'Hybrid', color: '#fb923c', data: hyb }] : []),
+    ];
+
+    const computeScore = (d: AlgoData) => {
+      const maxTime = Math.max(bfs?.time || 0, dfs?.time || 0, hyb?.time || 0, 0.001);
+      const maxDist = Math.max(bfs?.distance || 0, dfs?.distance || 0, hyb?.distance || 0, 1);
+      const maxMem  = Math.max(bfs?.nodes || 0, dfs?.nodes || 0, hyb?.nodes || 0, 1);
+      const speedScore  = 1 - d.time / maxTime;
+      const distScore   = 1 - d.distance / maxDist;
+      const memScore    = 1 - d.nodes / maxMem;
+      const adaptScore  = (Number(d.adaptability) || 0) / 100;
+      return (speedScore * 0.25) + (distScore * 0.35) + (memScore * 0.20) + (adaptScore * 0.20);
+    };
+
+    const scoredAlgos = algoEntries.map(a => ({ ...a, score: computeScore(a.data) }))
+      .sort((a, b) => b.score - a.score);
+
+    const winner = scoredAlgos[0] ?? null;
+    const runnerUp = scoredAlgos[1] ?? null;
+
+    const MOVEMENT_PROFILES: Record<AlgorithmKey, { motion: string; strategy: string; tradeoff: string; icon: string }> = {
+      bfs: {
+        icon: '🌊',
+        motion: 'Wave-front expansion — visits all neighbors at depth N before advancing to depth N+1',
+        strategy: 'Each step moves laterally across the graph width, building a complete "ring" around the source before proceeding deeper. On a map, this looks like a growing flood-fill.',
+        tradeoff: 'Guarantees shortest path in hops but explores more nodes and uses more memory than DFS on sparse graphs.',
+      },
+      dfs: {
+        icon: '🎯',
+        motion: 'Deep plunge — follows one branch as far as possible, then backtracks to try the next',
+        strategy: 'Each step dives down a single chain of nodes, committing fully to one route before reconsidering. On a map, this looks like a single probe shooting forward.',
+        tradeoff: 'Uses minimal memory and is fast to reach deep nodes, but may miss shorter paths and must backtrack fully when blocked.',
+      },
+      hybrid: {
+        icon: '⚡',
+        motion: 'Adaptive switching — applies BFS at high-branching junctions and DFS in low-branching corridors',
+        strategy: 'Each step evaluates the local branching factor. At hubs (many neighbors) it broadcasts like BFS; in corridors (few neighbors) it dives like DFS. This produces an optimal coverage pattern.',
+        tradeoff: 'Balances speed and coverage — faster than pure BFS on deep paths, shorter than pure DFS on wide graphs. Superior for dynamic maps where routes change.',
+      },
+    };
+
+    const BarRow = ({ label, bfsVal, dfsVal, hybVal, unit = '', lowerBetter = true }: {
+      label: string; bfsVal: number; dfsVal: number; hybVal: number; unit?: string; lowerBetter?: boolean;
+    }) => {
+      const values = [bfsVal, dfsVal, hybVal].filter(v => v > 0);
+      const maxVal = Math.max(...values, 0.001);
+      const toW = (v: number) => `${Math.min(100, (v / maxVal) * 100).toFixed(1)}%`;
+      const isBest = (v: number) => lowerBetter
+        ? values.length > 0 && v === Math.min(...values)
+        : values.length > 0 && v === Math.max(...values);
+      return (
+        <div className="space-y-1.5">
+          <div className="flex justify-between items-center">
+            <span className="text-[10px] text-gray-500 uppercase tracking-wide font-semibold">{label}</span>
+          </div>
+          {[
+            { key: 'BFS', val: bfsVal, color: '#4ade80', bg: 'bg-green-500' },
+            { key: 'DFS', val: dfsVal, color: '#c084fc', bg: 'bg-purple-500' },
+            { key: 'HYB', val: hybVal, color: '#fb923c', bg: 'bg-orange-500' },
+          ].map(({ key, val, color, bg }) => (
+            <div key={key} className="flex items-center gap-2">
+              <span className="text-[10px] font-mono w-7 shrink-0" style={{ color }}>{key}</span>
+              <div className="flex-1 bg-gray-800/60 rounded-full h-2 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all ${bg} ${isBest(val) ? 'ring-1 ring-white/30' : 'opacity-70'}`}
+                  style={{ width: val > 0 ? toW(val) : '2%' }}
+                />
+              </div>
+              <span className={`text-[10px] font-mono w-16 text-right shrink-0 ${isBest(val) ? 'text-white font-bold' : 'text-gray-500'}`}>
+                {val > 0 ? `${val % 1 !== 0 ? val.toFixed(2) : val}${unit}` : 'N/A'}
+                {isBest(val) && <span className="ml-0.5 text-yellow-400">★</span>}
+              </span>
+            </div>
+          ))}
+        </div>
+      );
+    };
+
     return (
-      <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 p-2 h-full overflow-hidden">
-        {/* Left Side: Massive Comparison Metrics Dashboard */}
-        <div className="xl:col-span-2 flex flex-col gap-4 overflow-y-auto max-h-[70vh] pr-2">
-          <div className="bg-gray-900/60 border border-gray-800 rounded-xl p-4 backdrop-blur-md shadow-2xl">
-            <div className="flex justify-between items-center mb-4 border-b border-gray-800 pb-2">
-              <h3 className="font-bold text-white text-xs uppercase tracking-widest text-blue-400">🏆 Execution Benchmarks</h3>
+      <div className="flex flex-col gap-5 p-2 h-full overflow-y-auto max-h-[75vh] pr-1">
+        <div className="grid grid-cols-1 xl:grid-cols-5 gap-5">
+          <div className="xl:col-span-2 bg-gray-900/60 border border-gray-800 rounded-xl p-4 shadow-2xl">
+            <div className="flex justify-between items-center mb-3 border-b border-gray-800 pb-2">
+              <h3 className="font-bold text-xs uppercase tracking-widest text-blue-400">🏆 Execution Benchmarks</h3>
               <span className="text-[10px] font-mono text-gray-500">RUN #{entry.runNumber || 'N/A'}</span>
             </div>
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-gray-800">
-                  <th className="py-2 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Metrics Parameter</th>
-                  <th className="py-2 text-center text-xs text-green-400 font-mono font-bold bg-green-500/5 rounded-t">BFS</th>
-                  <th className="py-2 text-center text-xs text-purple-400 font-mono font-bold bg-purple-500/5 rounded-t">DFS</th>
-                  <th className="py-2 text-center text-xs text-orange-400 font-mono font-bold bg-orange-500/5 rounded-t">HYBRID</th>
+                  <th className="py-2 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Metric</th>
+                  <th className="py-2 text-center text-xs text-green-400 font-mono font-bold bg-green-500/5">BFS</th>
+                  <th className="py-2 text-center text-xs text-purple-400 font-mono font-bold bg-purple-500/5">DFS</th>
+                  <th className="py-2 text-center text-xs text-orange-400 font-mono font-bold bg-orange-500/5">HYB</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800/40">
                 <tr>
-                  <td className="py-3 text-xs text-gray-400">Exec Time</td>
+                  <td className="py-2.5 text-xs text-gray-400">Exec Time</td>
                   {renderCell(bfs ? `${bfs.time.toFixed(2)} ms` : 'N/A', '#4ade80', bfs !== null && !bfs.success)}
                   {renderCell(dfs ? `${dfs.time.toFixed(2)} ms` : 'N/A', '#c084fc', dfs !== null && !dfs.success)}
                   {renderCell(hyb ? `${hyb.time.toFixed(2)} ms` : 'N/A', '#fb923c', hyb !== null && !hyb.success)}
                 </tr>
                 <tr>
-                  <td className="py-3 text-xs text-gray-400">Total Distance</td>
-                  {renderCell(bfs ? `${bfs.distance.toFixed(1)}` : 'N/A', '#cbd5e1', bfs !== null && !bfs.success)}
-                  {renderCell(dfs ? `${dfs.distance.toFixed(1)}` : 'N/A', '#cbd5e1', dfs !== null && !dfs.success)}
-                  {renderCell(hyb ? `${hyb.distance.toFixed(1)}` : 'N/A', '#cbd5e1', hyb !== null && !hyb.success)}
+                  <td className="py-2.5 text-xs text-gray-400">Distance</td>
+                  {renderCell(bfs ? bfs.distance.toFixed(1) : 'N/A', '#cbd5e1', bfs !== null && !bfs.success)}
+                  {renderCell(dfs ? dfs.distance.toFixed(1) : 'N/A', '#cbd5e1', dfs !== null && !dfs.success)}
+                  {renderCell(hyb ? hyb.distance.toFixed(1) : 'N/A', '#cbd5e1', hyb !== null && !hyb.success)}
                 </tr>
                 <tr>
-                  <td className="py-3 text-xs text-gray-400">Nodes Swept/Explored</td>
+                  <td className="py-2.5 text-xs text-gray-400">Nodes Swept</td>
                   {renderCell(bfs ? bfs.nodes : 'N/A', '#94a3b8', bfs !== null && !bfs.success)}
                   {renderCell(dfs ? dfs.nodes : 'N/A', '#94a3b8', dfs !== null && !dfs.success)}
                   {renderCell(hyb ? hyb.nodes : 'N/A', '#94a3b8', hyb !== null && !hyb.success)}
                 </tr>
                 <tr>
-                  <td className="py-3 text-xs text-gray-400">Memory Allocation</td>
+                  <td className="py-2.5 text-xs text-gray-400">Memory</td>
                   {renderCell(bfs ? bfs.memory : 'N/A', '#cbd5e1', bfs !== null && !bfs.success)}
                   {renderCell(dfs ? dfs.memory : 'N/A', '#cbd5e1', dfs !== null && !dfs.success)}
                   {renderCell(hyb ? hyb.memory : 'N/A', '#cbd5e1', hyb !== null && !hyb.success)}
                 </tr>
                 <tr>
-                  <td className="py-3 text-xs text-gray-400">Path Optimality</td>
+                  <td className="py-2.5 text-xs text-gray-400">Path Optimality</td>
                   {renderCell(bfs ? bfs.optimality : 'N/A', '#4ade80', bfs !== null && !bfs.success)}
                   {renderCell(dfs ? dfs.optimality : 'N/A', '#ef4444', dfs !== null && !dfs.success)}
                   {renderCell(hyb ? hyb.optimality : 'N/A', '#fb923c', hyb !== null && !hyb.success)}
                 </tr>
                 <tr>
-                  <td className="py-3 text-xs text-gray-400">Dynamic Adaptation</td>
+                  <td className="py-2.5 text-xs text-gray-400">Adaptability</td>
                   {renderCell(bfs ? `${bfs.adaptability}/100` : 'N/A', '#cbd5e1', bfs !== null && !bfs.success)}
                   {renderCell(dfs ? `${dfs.adaptability}/100` : 'N/A', '#cbd5e1', dfs !== null && !dfs.success)}
                   {renderCell(hyb ? `${hyb.adaptability}/100` : 'N/A', '#fb923c', hyb !== null && !hyb.success)}
                 </tr>
                 <tr className="bg-gray-950/20">
-                  <td className="py-3 text-xs text-gray-400 font-semibold">Task Complete Rate</td>
+                  <td className="py-2.5 text-xs text-gray-400 font-semibold">Completion</td>
                   {renderCell(bfs ? bfs.completion : 'N/A', '#4ade80', bfs !== null && !bfs.success)}
                   {renderCell(dfs ? dfs.completion : 'N/A', '#c084fc', dfs !== null && !dfs.success)}
                   {renderCell(hyb ? hyb.completion : 'N/A', '#fb923c', hyb !== null && !hyb.success)}
@@ -226,46 +302,176 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
               </tbody>
             </table>
           </div>
-
-          <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 text-xs text-gray-400 space-y-2">
-            <span className="font-bold text-gray-300 block uppercase text-[10px] tracking-wider text-orange-400">📌 Structural Metadata Summary</span>
-            <p>This entry documents an evaluated graph grid composed of <strong className="text-white">{entry.totalNodes || 0} total nodes</strong> running across real-world topology presets. The baseline optimal path calculation requires a theoretical minimum index of <strong className="text-white">{entry.optimalPathLength || 0} distance units</strong>.</p>
-                        {allEvents.length > 0 && (
-                <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 text-xs text-gray-400 space-y-2">
-                  <span className="font-bold text-gray-300 block uppercase text-[10px] tracking-wider text-orange-400">⚡ Dynamic Blockages</span>
-                  <div className="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto">
-                    {allEvents.map((event, idx) => (
-                      <div key={idx} className={`flex items-start gap-2 p-2 rounded border ${
-                        event.blocked
-                          ? 'border-orange-500/30 bg-orange-900/10 text-orange-300'
-                          : 'border-green-500/30 bg-green-900/10 text-green-300'
-                      }`}>
-                        <span className="font-mono opacity-60 shrink-0">[{event.stepIndex}]</span>
-                        <span>{event.blocked ? '🔴' : '🟢'} {event.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+          <div className="xl:col-span-3 h-[340px] xl:h-[340px] w-full bg-[#0a0f1e] rounded-xl border border-gray-800 overflow-hidden shadow-inner relative">
+            {baseGraph && (
+              <NetworkCanvas
+                graph={baseGraph}
+                activeSteps={{
+                  bfs: results.bfs?.steps?.length ? results.bfs.steps[results.bfs.steps.length - 1] : null,
+                  dfs: results.dfs?.steps?.length ? results.dfs.steps[results.dfs.steps.length - 1] : null,
+                  hybrid: results.hybrid?.steps?.length ? results.hybrid.steps[results.hybrid.steps.length - 1] : null
+                }}
+                scenario={entry.scenario}
+                stepIndex={maxEventStep > 0 ? maxEventStep : maxSteps}
+                dynamicEvents={allEvents}
+                historicalBlockedNodeIds={blockedNodeIds}
+              />
+            )}
           </div>
         </div>
-
-        {/* Right Side: High-performance Network Canvas Topology Visualizer */}
-        <div className="xl:col-span-3 h-[450px] xl:h-full min-h-[400px] w-full bg-[#0a0f1e] rounded-xl border border-gray-800 overflow-hidden shadow-inner relative">
-          {baseGraph && (
-            <NetworkCanvas 
-              graph={baseGraph} 
-              activeSteps={{
-                // FIX: Safely extract the last step without throwing undefined array read errors
-                bfs: results.bfs?.steps?.length ? results.bfs.steps[results.bfs.steps.length - 1] : null, 
-                dfs: results.dfs?.steps?.length ? results.dfs.steps[results.dfs.steps.length - 1] : null, 
-                hybrid: results.hybrid?.steps?.length ? results.hybrid.steps[results.hybrid.steps.length - 1] : null
-              }} 
-              scenario={entry.scenario} 
-              stepIndex={maxEventStep > 0 ? maxEventStep : maxSteps}
-                  dynamicEvents={allEvents}
-                  historicalBlockedNodeIds={blockedNodeIds}
-                />
+        {winner ? (
+          <div className="rounded-xl border border-yellow-500/30 bg-gradient-to-br from-yellow-950/30 via-amber-950/20 to-gray-900/40 p-4 shadow-lg shadow-yellow-900/10">
+            <div className="flex items-start gap-4">
+              <div className="text-3xl shrink-0 mt-0.5">🥇</div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <h3 className="text-sm font-bold text-yellow-300 uppercase tracking-widest">Best Algorithm for this Map</h3>
+                  <span
+                    className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full border"
+                    style={{ color: winner.color, borderColor: `${winner.color}50`, background: `${winner.color}15` }}
+                  >
+                    {winner.label}
+                  </span>
+                  <span className="text-[10px] font-mono text-gray-500">Score: {(winner.score * 100).toFixed(1)}/100</span>
+                </div>
+                <p className="text-xs text-gray-300 leading-relaxed mb-2">
+                  <span className="text-yellow-400 font-semibold mr-1">{MOVEMENT_PROFILES[winner.key].icon} Movement:</span>
+                  {MOVEMENT_PROFILES[winner.key].motion}
+                </p>
+                <p className="text-[11px] text-gray-400 leading-relaxed mb-2">
+                  {MOVEMENT_PROFILES[winner.key].strategy}
+                </p>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {winner.data.distance <= Math.min(bfs?.distance ?? Infinity, dfs?.distance ?? Infinity, hyb?.distance ?? Infinity) && (
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-blue-950/60 border border-blue-700/40 text-blue-300">📏 Shortest Path</span>
+                  )}
+                  {winner.data.time <= Math.min(bfs?.time ?? Infinity, dfs?.time ?? Infinity, hyb?.time ?? Infinity) && (
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-green-950/60 border border-green-700/40 text-green-300">⚡ Fastest Execution</span>
+                  )}
+                  {winner.data.nodes <= Math.min(bfs?.nodes ?? Infinity, dfs?.nodes ?? Infinity, hyb?.nodes ?? Infinity) && (
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-purple-950/60 border border-purple-700/40 text-purple-300">🔍 Least Nodes Swept</span>
+                  )}
+                  {Number(winner.data.adaptability) >= Math.max(Number(bfs?.adaptability ?? 0), Number(dfs?.adaptability ?? 0), Number(hyb?.adaptability ?? 0)) && (
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-orange-950/60 border border-orange-700/40 text-orange-300">🛡️ Highest Adaptability</span>
+                  )}
+                </div>
+                {runnerUp && (
+                  <p className="text-[10px] text-gray-500 mt-2 border-t border-gray-800/50 pt-2">
+                    Runner-up: <span className="font-semibold" style={{ color: runnerUp.color }}>{runnerUp.label}</span> — {MOVEMENT_PROFILES[runnerUp.key].tradeoff}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-red-500/20 bg-red-950/10 p-4 text-xs text-red-400 text-center">
+            ⚠️ No algorithm completed successfully on this run — all paths were exhausted or severed.
+          </div>
+        )}
+        <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 pb-2 border-b border-gray-800">
+            🧭 How Each Algorithm Moves Node-to-Node
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {(
+              [
+                { key: 'bfs' as AlgorithmKey, label: 'BFS', color: '#4ade80', result: bfs },
+                { key: 'dfs' as AlgorithmKey, label: 'DFS', color: '#c084fc', result: dfs },
+                { key: 'hybrid' as AlgorithmKey, label: 'Hybrid BFS-DFS', color: '#fb923c', result: hyb },
+              ] as const
+            ).map(({ key, label, color, result }) => {
+              const profile = MOVEMENT_PROFILES[key];
+              const isWinner = winner?.key === key;
+              return (
+                <div
+                  key={key}
+                  className={`rounded-lg border p-3 relative ${isWinner ? 'border-yellow-500/40 bg-yellow-950/10' : 'border-gray-800 bg-gray-900/30'}`}
+                >
+                  {isWinner && (
+                    <span className="absolute top-2 right-2 text-[9px] font-bold text-yellow-400 bg-yellow-950/60 border border-yellow-700/40 px-1.5 py-0.5 rounded">
+                      BEST ★
+                    </span>
+                  )}
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">{profile.icon}</span>
+                    <span className="text-xs font-bold" style={{ color }}>{label}</span>
+                    {result && !result.success && (
+                      <span className="text-[9px] text-red-400 border border-red-800/40 px-1 rounded ml-auto">FAILED</span>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-gray-300 leading-relaxed font-semibold mb-1">{profile.motion}</p>
+                  <p className="text-[10px] text-gray-500 leading-relaxed">{profile.tradeoff}</p>
+                  {result && result.success && (
+                    <div className="mt-2 pt-2 border-t border-gray-800/40 grid grid-cols-2 gap-1 text-[10px] font-mono">
+                      <span className="text-gray-600">Hops:</span>
+                      <span className="text-right" style={{ color }}>{result.distance}</span>
+                      <span className="text-gray-600">Nodes:</span>
+                      <span className="text-right" style={{ color }}>{result.nodes}</span>
+                      <span className="text-gray-600">Time:</span>
+                      <span className="text-right" style={{ color }}>{result.time.toFixed(2)} ms</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4 pb-2 border-b border-gray-800">
+            📊 Performance Breakdown — Visual Comparison
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <BarRow
+              label="Execution Time (lower ★ = better)"
+              bfsVal={bfs?.time ?? 0} dfsVal={dfs?.time ?? 0} hybVal={hyb?.time ?? 0}
+              unit=" ms" lowerBetter={true}
+            />
+            <BarRow
+              label="Path Distance — Hops (lower ★ = better)"
+              bfsVal={bfs?.distance ?? 0} dfsVal={dfs?.distance ?? 0} hybVal={hyb?.distance ?? 0}
+              lowerBetter={true}
+            />
+            <BarRow
+              label="Nodes Swept / Explored (lower ★ = better)"
+              bfsVal={bfs?.nodes ?? 0} dfsVal={dfs?.nodes ?? 0} hybVal={hyb?.nodes ?? 0}
+              lowerBetter={true}
+            />
+            <BarRow
+              label="Dynamic Adaptability (higher ★ = better)"
+              bfsVal={Number(bfs?.adaptability ?? 0)} dfsVal={Number(dfs?.adaptability ?? 0)} hybVal={Number(hyb?.adaptability ?? 0)}
+              lowerBetter={false}
+            />
+            <BarRow
+              label="Completion Rate % (higher ★ = better)"
+              bfsVal={parseFloat(bfs?.completion ?? '0')} dfsVal={parseFloat(dfs?.completion ?? '0')} hybVal={parseFloat(hyb?.completion ?? '0')}
+              lowerBetter={false}
+            />
+            <BarRow
+              label="Memory Used — KB (lower ★ = better)"
+              bfsVal={parseFloat(String(bfs?.memory ?? '0'))} dfsVal={parseFloat(String(dfs?.memory ?? '0'))} hybVal={parseFloat(String(hyb?.memory ?? '0'))}
+              unit=" KB" lowerBetter={true}
+            />
+          </div>
+        </div>
+        <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 text-xs text-gray-400 space-y-2">
+          <span className="font-bold text-gray-300 block uppercase text-[10px] tracking-wider text-orange-400">📌 Structural Metadata</span>
+          <p>Graph composed of <strong className="text-white">{entry.totalNodes || 0} total nodes</strong>. Baseline optimal path: <strong className="text-white">{entry.optimalPathLength || 0} distance units</strong>.</p>
+          {allEvents.length > 0 && (
+            <div className="mt-2 pt-2 border-t border-gray-800/50">
+              <span className="font-bold text-orange-400 block text-[10px] uppercase tracking-wider mb-2">⚡ Dynamic Blockages</span>
+              <div className="flex flex-col gap-1.5 max-h-[160px] overflow-y-auto">
+                {allEvents.map((event, idx) => (
+                  <div key={idx} className={`flex items-start gap-2 p-2 rounded border ${
+                    event.blocked
+                      ? 'border-orange-500/30 bg-orange-900/10 text-orange-300'
+                      : 'border-green-500/30 bg-green-900/10 text-green-300'
+                  }`}>
+                    <span className="font-mono opacity-60 shrink-0">[{event.stepIndex}]</span>
+                    <span>{event.blocked ? '🔴' : '🟢'} {event.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       </div>

@@ -70,7 +70,7 @@ export const SCENARIOS: ScenarioConfig[] = [
     name: 'Game AI Pathfinding',
     icon: '🎮',
     description:
-      'A game AI agent evaluates board-game movement spaces across Chess, Checkers, and Snakes & Ladders. The agent starts from a strategy planner and searches for winning target squares while opponent pieces and rule locks can block tiles dynamically.',
+      'A game AI agent evaluates board-game movement spaces across Turkish Draughts (Dama) and Checkers. The agent starts from a strategy planner and searches for the king row (winning target squares) while opponent pieces can block tiles dynamically using orthogonal Dama movement rules.',
     dynamicDescription: 'Opponent pieces and rule locks block board squares dynamically',
     sourceLabel: 'Strategy Planner',
     destinationLabel: 'Winning Square',

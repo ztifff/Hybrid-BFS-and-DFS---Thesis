@@ -44,10 +44,10 @@ const SCENARIO_NODE_ITEMS: Record<ScenarioType, LegendItem[]> = {
     { color: '#450a0a', label: 'Fire Blocked',              icon: '🔥' },
   ],
   gameai: [
-    { color: '#4c1d95', label: 'Strategy Planner (Source)', icon: '♟️' },
-    { color: '#6d28d9', label: 'Winning Square (Target)', icon: '🏁' },
-    { color: '#7c3aed', label: 'Board Tile / Legal Move', icon: '⬡' },
-    { color: '#ef4444', label: 'Opponent Piece (Moving)', icon: '♟️' },
+    { color: '#9333ea', label: 'Strategy Planner (Source)', icon: '♟️' },
+    { color: '#dc2626', label: 'Winning Square / King Row', icon: '🏁' },
+    { color: '#64748b', label: 'Board Tile (Dama Square)', icon: '⚪' },
+    { color: '#ef4444', label: 'Opponent Piece (Blocked)', icon: '♟️' },
   ],
 };
 
@@ -67,9 +67,9 @@ const EDGE_ITEMS: Record<ScenarioType, LegendItem[]> = {
     { color: '#c4b5fd', label: 'Stairwell Descent' },
   ],
   gameai: [
-    { color: '#c4b5fd', label: 'Legal Move' },
-    { color: '#fdba74', label: 'Jump / Ladder Shortcut', dashed: true },
-    { color: '#fca5a5', label: 'Snake Slide / Rule Penalty', dashed: true },
+    { color: '#c4b5fd', label: 'Man Move (forward / lateral)' },
+    { color: '#fdba74', label: 'Capture Jump (orthogonal)', dashed: true },
+    { color: '#86efac', label: 'King Slide (long-range orthogonal)' },
   ],
 };
 

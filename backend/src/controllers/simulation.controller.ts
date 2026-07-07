@@ -14,7 +14,7 @@ export class SimulationController {
         networkMode: string;
         roboticsMode: string; 
         seed: number;
-        gameBoard?: 'chess' | 'checkers' ;
+        gameBoard?: 'dama' | 'checkers' ;
         customGraphId?: string;
         graphSize: GraphSize;
         chessPiece?: string;

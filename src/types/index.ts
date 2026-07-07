@@ -7,8 +7,7 @@ export type ScenarioType =
   | 'evacuation'
   | 'gameai';
 
-export type GameAIBoard = 'chess' | 'checkers' | 'snakes';
-export type ChessPiece = 'knight' | 'bishop' | 'rook' | 'queen';
+export type GameAIBoard = 'dama' | 'checkers' | 'snakes';
 
 export type GraphSize = 'small' | 'medium' | 'large';
 

@@ -35,10 +35,10 @@ const NODE_CONFIG: Record<string, { icon: string; radius: number; baseColor: str
   corridor:        { icon: '🚶', radius: 17, baseColor: '#dc2626' },
   stairwell:       { icon: '🪜', radius: 17, baseColor: '#ef4444' },
   fire:            { icon: '🔥', radius: 17, baseColor: '#7f1d1d' },
-  strategy_planner: { icon: '♟️', radius: 14, baseColor: '#9333ea' }, 
+  strategy_planner: { icon: '🔵', radius: 14, baseColor: '#9333ea' }, 
   winning_square:   { icon: '🏁', radius: 14, baseColor: '#dc2626' }, 
   board_tile:       { icon: '⚪', radius: 8,  baseColor: '#64748b' },
-  blocked_tile:     { icon: '❌', radius: 10, baseColor: '#ef4444' },
+  blocked_tile:     { icon: '🔴', radius: 10, baseColor: '#ef4444' },
   place:           { icon: '🏬', radius: 20, baseColor: '#0e7490' },
   shop:            { icon: '🏬', radius: 20, baseColor: '#0e7490' },
   restaurant:      { icon: '🍽️', radius: 18, baseColor: '#0e7490' },
@@ -279,8 +279,9 @@ export const NetworkCanvas: React.FC<Props> = ({
             const cx = sx(node.x);
             const cy = sy(node.y);
 
-            if (board === 'chess') {
-              ctx.fillStyle = (row + col) % 2 === 0 ? '#e5e7eb' : '#334155';
+            if (board === 'dama') {
+              // Turkish Draughts uses ALL squares — classic tan/dark-brown alternating pattern
+              ctx.fillStyle = (row + col) % 2 === 0 ? '#d4a96a' : '#6b3a1f';
             } else {
               const palette = ['#14532d', '#0f766e', '#1d4ed8', '#7c2d12'];
               ctx.fillStyle = palette[(row + col) % palette.length];
@@ -292,7 +293,7 @@ export const NetworkCanvas: React.FC<Props> = ({
         ctx.restore();
 
         ctx.save();
-        ctx.strokeStyle = board === 'checkers' ? '#f87171' : board === 'chess' ? '#cbd5e1' : '#fde68a';
+        ctx.strokeStyle = board === 'checkers' ? '#f87171' : board === 'dama' ? '#d4a96a' : '#fde68a';
         ctx.lineWidth = 1.5 / zoom;
         ctx.strokeRect(
           minX - tileSize / 2,
@@ -466,7 +467,7 @@ export const NetworkCanvas: React.FC<Props> = ({
 
       let fillColor = cfg.baseColor;
       let opacity = (isMassive && !isImportant && !isBlockedImportant) ? 0.3 : 1;
-      const blockedIcon = scenario === 'gameai' ? '♟️' : '💀';
+      const blockedIcon = scenario === 'gameai' ? '🔴' : '💀';
 
       if (isBlocked) { fillColor = '#dc2626'; opacity = 1; } 
       else if (wasHistoricallyBlocked.has(node.id)) { fillColor = '#ef4444'; opacity = 1; }

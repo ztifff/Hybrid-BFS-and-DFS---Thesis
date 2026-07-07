@@ -4,7 +4,7 @@ import { clampInt, fitGraphEdgeCount, resolveSizingValue } from './graphSizing';
 const W = 1600; 
 const H = 1200;
 
-export type GameAIBoard = 'chess' | 'checkers';
+export type GameAIBoard = 'dama' | 'checkers';
 
 const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'];
 
@@ -17,15 +17,17 @@ const BOARD_SIZE: Record<GraphSize, number> = {
 
 
 export function buildGameAIGraph(
-  board: GameAIBoard = 'chess',
+  board: GameAIBoard = 'dama',
   graphSize: GraphSize = 'medium',
-  chessPiece: string = 'knight',
+  _chessPiece: string = 'man',   // kept for API compat but unused
   seed: number = 123,
   sizing?: GraphSizing
 ): ScenarioGraph {
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
   const fallbackBoardDim = BOARD_SIZE[graphSize];
+
+  // Both Dama and Checkers use all squares for node count purposes here
   const fallbackNodes = board === 'checkers'
     ? Math.floor((fallbackBoardDim * fallbackBoardDim) / 2) + 2
     : (fallbackBoardDim * fallbackBoardDim) + 2;
@@ -39,6 +41,7 @@ export function buildGameAIGraph(
       while (Math.floor((boardDim * boardDim) / 2) + 2 > targetNodes && boardDim > 4) boardDim--;
       auxiliaryNodeCount = targetNodes - (Math.floor((boardDim * boardDim) / 2) + 2);
     } else {
+      // dama uses all squares
       boardDim = clampInt(Math.sqrt(targetNodes - 2), 4, 12);
       while ((boardDim * boardDim) + 2 > targetNodes && boardDim > 4) boardDim--;
       auxiliaryNodeCount = targetNodes - ((boardDim * boardDim) + 2);
@@ -86,11 +89,11 @@ export function buildGameAIGraph(
     metadata: { board: 'arena' }
   });
 
-  let entryNode = `chess_${files[1]}1`;
-  let destinationIds = ['portal_chess'];
-
   // seeded shuffle helper
   const seededRng = (s: number) => { const x = Math.sin(s) * 10000; return x - Math.floor(x); };
+
+  let entryNode = `dama_${files[1]}1`;
+  let destinationIds: string[] = [];
 
   if (board === 'checkers') {
     buildCheckersBoard(addNode, addTwoWayEdge, boardDim);
@@ -103,7 +106,6 @@ export function buildGameAIGraph(
         if ((row + col) % 2 !== 0) topDarkCols.push(col * boardDim + row);
       }
     }
-    // shuffle with seed
     const shuffled = [...topDarkCols].sort((a, b) => seededRng(seed + a) - seededRng(seed + b));
     const numTargets = 2 + (seededRng(seed + 99) > 0.5 ? 1 : 0);
     destinationIds = shuffled.slice(0, numTargets).map((encoded) => {
@@ -112,38 +114,33 @@ export function buildGameAIGraph(
       return `checkers_${files[col]}${row + 1}`;
     }).filter(id => nodes.some(n => n.id === id));
 
-    // fallback if filter removed some
     if (destinationIds.length === 0) destinationIds = [`checkers_${files[boardDim % 2 === 0 ? 1 : 0]}${boardDim}`];
 
-    // mark them as winning_square
     destinationIds.forEach(id => {
       const n = nodes.find(n => n.id === id);
       if (n) { n.type = 'winning_square'; n.label = 'Crown Row Target'; }
     });
 
   } else {
-    buildChessBoard(addNode, addTwoWayEdge, boardDim, chessPiece);
+    // Turkish Draughts (Dama)
+    buildDamaBoard(addNode, addTwoWayEdge, boardDim);
 
-    // Pick 2-3 random top-row squares as targets, color-safe for bishop
-    const targetColor = chessPiece === 'bishop' ? ((boardDim - 1 + boardDim - 1) % 2) : -1;
-    const topRowCols = Array.from({ length: boardDim }, (_, col) => col)
-      .filter(col => targetColor === -1 || ((boardDim - 1 + col) % 2) === targetColor);
+    // Pick 2-3 random top-row squares as targets
+    const topRowCols = Array.from({ length: boardDim }, (_, col) => col);
     const shuffledCols = [...topRowCols].sort((a, b) => seededRng(seed + a) - seededRng(seed + b));
     const numTargets = 2 + (seededRng(seed + 77) > 0.5 ? 1 : 0);
-    destinationIds = shuffledCols.slice(0, numTargets).map(col => `chess_${files[col]}${boardDim}`);
+    destinationIds = shuffledCols.slice(0, numTargets).map(col => `dama_${files[col]}${boardDim}`);
 
     // mark them as winning_square
     destinationIds.forEach(id => {
       const n = nodes.find(n => n.id === id);
-      if (n) { n.type = 'winning_square'; n.label = 'Checkmate Target'; }
+      if (n) { n.type = 'winning_square'; n.label = 'Dama King Row'; }
     });
 
-    // randomize start from bottom row, color-safe for bishop
-    const bottomColor = chessPiece === 'bishop' ? ((0 + 0) % 2) : -1;
-    const bottomCols = Array.from({ length: boardDim }, (_, col) => col)
-      .filter(col => targetColor === -1 || (0 + col) % 2 === bottomColor);
+    // randomize start from bottom row
+    const bottomCols = Array.from({ length: boardDim }, (_, col) => col);
     const pickedStart = bottomCols[Math.floor(seededRng(seed + 55) * bottomCols.length)];
-    entryNode = `chess_${files[pickedStart]}1`;
+    entryNode = `dama_${files[pickedStart]}1`;
   }
 
   addEdge('spawn', entryNode, 1, 'wireless');
@@ -168,23 +165,30 @@ export function buildGameAIGraph(
     labelUnit: ' move',
     latencyBase: 1,
     latencySpread: 3,
-    maxEdges: targetNodes * 16
+    maxEdges: (boardDim * boardDim) * 16
   });
 }
 
-function buildChessBoard(
+// ── Turkish Draughts (Dama) board ────────────────────────────────────────────
+// Rules:
+//   • All 8×8 squares are used (not just dark ones)
+//   • Men move forward orthogonally (left, right, forward — NOT diagonal)
+//   • Men capture by orthogonal jump (any direction) over an opponent piece
+//   • Kings (after promotion) move any number of squares orthogonally (like a chess rook)
+//   • Graph models: short forward/lateral moves (latency 1) + longer king-range moves (latency 2)
+function buildDamaBoard(
   addNode: (node: GraphNode) => void,
   addTwoWayEdge: (from: string, to: string, latency?: number, type?: GraphEdge['type'], label?: string) => void,
-  size: number,
-  chessPiece: string = 'knight'
+  size: number
 ) {
   const tileSize = Math.floor(400 / size);
-const originX = Math.floor((W - tileSize * size) / 2);
-const originY = Math.floor((H - tileSize * size) / 2);
+  const originX = Math.floor((W - tileSize * size) / 2);
+  const originY = Math.floor((H - tileSize * size) / 2);
 
+  // 1. Create every square on the board
   for (let row = 0; row < size; row++) {
     for (let col = 0; col < size; col++) {
-      const id = `chess_${files[col]}${row + 1}`;
+      const id = `dama_${files[col]}${row + 1}`;
       addNode({
         id,
         label: `${files[col]}${row + 1}`,
@@ -192,58 +196,58 @@ const originY = Math.floor((H - tileSize * size) / 2);
         x: originX + col * tileSize,
         y: originY + (size - 1 - row) * tileSize,
         level: row + col + 1,
-        buildingId: 'Chess',
-        metadata: { board: 'chess', row, col }
+        buildingId: 'Dama',
+        metadata: { board: 'dama', row, col }
       });
     }
   }
 
-  const getMoves = (): [number, number][] => {
-    if (chessPiece === 'bishop') {
-      const moves: [number, number][] = [];
-      for (let i = 1; i < size; i++) moves.push([i,i],[-i,i],[i,-i],[-i,-i]);
-      return moves;
-    }
-    if (chessPiece === 'rook') {
-      const moves: [number, number][] = [];
-      for (let i = 1; i < size; i++) moves.push([i,0],[-i,0],[0,i],[0,-i]);
-      return moves;
-    }
-    if (chessPiece === 'queen') {
-      const moves: [number, number][] = [];
-      for (let i = 1; i < size; i++) moves.push([i,0],[-i,0],[0,i],[0,-i],[i,i],[-i,i],[i,-i],[-i,-i]);
-      return moves;
-    }
-    // knight (default)
-    return [[1,2],[2,1],[-1,2],[-2,1],[1,-2],[2,-1],[-1,-2],[-2,-1]];
-  };
-  const pieceMoves = getMoves();
-  const latencyMap: Record<string, number> = { knight: 1, bishop: 2, rook: 1, queen: 1 };
-  const moveLatency = latencyMap[chessPiece] ?? 1;
+  // 2. Connect squares with Dama movement rules:
+  //    a) Man moves: forward (↑) and lateral (←→) — 1 step, latency 1
+  //    b) Man captures: orthogonal jump (↑↓←→ 2 steps), latency 1 (tempo advantage)
+  //    c) King range moves: orthogonal sliding any distance, latency 2
   for (let row = 0; row < size; row++) {
     for (let col = 0; col < size; col++) {
-      for (const [dc, dr] of pieceMoves) {
+      const from = `dama_${files[col]}${row + 1}`;
+
+      // Man moves: forward (row+1), lateral (col±1) — single step
+      const manMoves: [number, number][] = [
+        [0, 1],   // forward
+        [-1, 0],  // left
+        [1, 0],   // right
+        [0, -1],  // backward (allowed for king; also useful for pathfinding model)
+      ];
+      for (const [dc, dr] of manMoves) {
         const nc = col + dc;
         const nr = row + dr;
         if (nc < 0 || nc >= size || nr < 0 || nr >= size) continue;
-        const from = `chess_${files[col]}${row + 1}`;
-        const to = `chess_${files[nc]}${nr + 1}`;
-        if (from < to) addTwoWayEdge(from, to, moveLatency, 'path', `${chessPiece} move`);
+        const to = `dama_${files[nc]}${nr + 1}`;
+        if (from < to) addTwoWayEdge(from, to, 1, 'path', 'man move');
+      }
+
+      // Capture jumps: orthogonal 2-step (over an opponent)
+      const jumpMoves: [number, number][] = [[0,2],[0,-2],[2,0],[-2,0]];
+      for (const [dc, dr] of jumpMoves) {
+        const nc = col + dc;
+        const nr = row + dr;
+        if (nc < 0 || nc >= size || nr < 0 || nr >= size) continue;
+        const to = `dama_${files[nc]}${nr + 1}`;
+        if (from < to) addTwoWayEdge(from, to, 1, 'wireless', 'capture jump');
+      }
+
+      // King sliding moves: orthogonal range 3+ (representing dama king power)
+      for (let dist = 3; dist < size; dist++) {
+        const kingDirections: [number, number][] = [[0,dist],[0,-dist],[dist,0],[-dist,0]];
+        for (const [dc, dr] of kingDirections) {
+          const nc = col + dc;
+          const nr = row + dr;
+          if (nc < 0 || nc >= size || nr < 0 || nr >= size) continue;
+          const to = `dama_${files[nc]}${nr + 1}`;
+          if (from < to) addTwoWayEdge(from, to, 2, 'path', 'king slide');
+        }
       }
     }
   }
-
-  addNode({
-    id: 'portal_chess',
-    label: 'Chess Checkmate\nTarget Square',
-    type: 'winning_square',
-    x: originX + (size - 1) * tileSize,
-    y: originY,
-    level: size * 2,
-    buildingId: 'Chess',
-    metadata: { board: 'chess', row: size - 1, col: size - 1 }
-  });
-  addTwoWayEdge(`chess_${files[size - 1]}${size}`, 'portal_chess', 1, 'wireless', 'checkmate');
 }
 
 function buildCheckersBoard(
@@ -310,6 +314,5 @@ function buildCheckersBoard(
 
 
 export function getGameAIEnemyCandidates(graph: ScenarioGraph): string[] {
-  // 🧠 FIX: Look for 'board_tile' so the dynamic event engine knows where it can spawn obstacles!
   return graph.nodes.filter(n => n.type === 'board_tile').map(n => n.id);
 }

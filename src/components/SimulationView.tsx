@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 
-import { ScenarioType, GameAIBoard, ChessPiece } from '../types';
+import { ScenarioType, GameAIBoard } from '../types';
 import { useSimulation } from '../hooks/useSimulation';
 import { getScenario } from '../config/scenarios';
 
@@ -18,7 +18,7 @@ interface Props {
 }
 
 const GAME_AI_BOARDS: { id: GameAIBoard; label: string; icon: string }[] = [
-  { id: 'chess', label: 'Chess', icon: '♟️' },
+  { id: 'dama', label: 'Turkish Draughts', icon: '🔵' },
   { id: 'checkers', label: 'Checkers', icon: '⚫' },
 ];
 
@@ -227,32 +227,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     stepIndex={sim.stepIndex}
                     dynamicEvents={sim.simResults?.hybrid.dynamicEvents || []}
                   />
-
-                  {scenario === 'gameai' && sim.gameBoard === 'chess' && (
-                    <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 bg-gray-900/80 border border-gray-700 rounded-xl px-3 py-1.5 backdrop-blur-sm shadow-lg">
-                      <span className="text-[10px] text-gray-500 font-semibold mr-1">PIECE:</span>
-                      {([
-                        { id: 'knight', icon: '♞', label: 'Knight' },
-                        { id: 'bishop', icon: '♝', label: 'Bishop' },
-                        { id: 'rook', icon: '♜', label: 'Rook' },
-                        { id: 'queen', icon: '♛', label: 'Queen' },
-                      ] as { id: ChessPiece; icon: string; label: string }[]).map(({ id, icon, label }) => (
-                        <button
-                          key={id}
-                          onClick={() => sim.setChessPiece(id)}
-                          disabled={sim.isComputing || sim.isGraphLoading}
-                          className={`px-2 py-1 rounded-md text-[11px] font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1 ${
-                            sim.chessPiece === id
-                              ? 'bg-yellow-900/60 text-yellow-300 border border-yellow-500/60'
-                              : 'bg-gray-800/60 hover:bg-gray-700 text-gray-300 border border-gray-600'
-                          }`}
-                        >
-                          <span>{icon}</span>
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+      
 
                   {sim.isGraphLoading && (
                     <div className="absolute inset-0 bg-[#0a0f1e]/40 backdrop-blur-[2px] flex flex-col items-center justify-center text-white gap-3 z-50 transition-all">

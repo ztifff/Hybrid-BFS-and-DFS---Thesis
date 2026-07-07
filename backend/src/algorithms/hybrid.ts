@@ -11,6 +11,52 @@ export interface HybridResult {
   maxFrontierSize: number;
 }
 
+const MAX_WAIT_STEPS = 25;
+const MAX_TOTAL_STEPS = 5000;
+
+function reconstructPath(parentMap: Map<string, string | null>, nodeId: string): string[] {
+  const path: string[] = [];
+  let cur: string | null = nodeId;
+  const seen = new Set<string>();
+  while (cur !== null) {
+    if (seen.has(cur)) break;
+    seen.add(cur);
+    path.unshift(cur);
+    cur = parentMap.get(cur) ?? null;
+  }
+  return path;
+}
+
+function collectSubtree(
+  blockedId: string,
+  childrenMap: Map<string, string[]>,
+  visited: Set<string>
+): string[] {
+  const result: string[] = [];
+  const queue = [blockedId];
+  const seen = new Set<string>([blockedId]);
+  while (queue.length > 0) {
+    const node = queue.shift()!;
+    result.push(node);
+    for (const child of childrenMap.get(node) ?? []) {
+      if (!seen.has(child) && visited.has(child)) {
+        seen.add(child);
+        queue.push(child);
+      }
+    }
+  }
+  return result;
+}
+
+function calcPathLatency(path: string[], edges: ScenarioGraph['edges']): number {
+  let total = 0;
+  for (let i = 0; i < path.length - 1; i++) {
+    const edge = edges.find(e => e.from === path[i] && e.to === path[i + 1]);
+    if (edge) total += edge.latency;
+  }
+  return total;
+}
+
 export async function runGraphHybrid(
   graph: ScenarioGraph,
   blockedNodes: Set<string> = new Set(),
@@ -24,7 +70,6 @@ export async function runGraphHybrid(
 
   const adj = new Map<string, { to: string; latency: number }[]>();
   nodes.forEach(n => adj.set(n.id, []));
-
   edges.forEach(e => {
     if (!adj.has(e.from)) adj.set(e.from, []);
     adj.get(e.from)!.push({ to: e.to, latency: e.latency });
@@ -32,10 +77,11 @@ export async function runGraphHybrid(
 
   const visited = new Set<string>();
   const parentMap = new Map<string, string | null>();
+  const childrenMap = new Map<string, string[]>();
   const steps: AlgorithmStep[] = [];
-  const frontier: string[] = [];
-  
-  frontier.push(sourceId);
+  const frontier: { id: string; waited: number }[] = [];
+
+  frontier.push({ id: sourceId, waited: 0 });
   visited.add(sourceId);
   parentMap.set(sourceId, null);
 
@@ -45,6 +91,7 @@ export async function runGraphHybrid(
   let iteration = 0;
   let maxFrontierSize = 0;
   let lastYieldTime = performance.now();
+  const severedBlockedNodes = new Set<string>();
 
   function chooseStrategy(current: string): 'BFS' | 'DFS' {
     const node = nodeMap.get(current);
@@ -56,21 +103,101 @@ export async function runGraphHybrid(
     return 'DFS';
   }
 
-  while (frontier.length > 0 && !foundDestination) {
-    if (frontier.length > maxFrontierSize) {
-      maxFrontierSize = frontier.length;
+  while (frontier.length > 0 && !foundDestination && iteration < MAX_TOTAL_STEPS) {
+    if (frontier.length > maxFrontierSize) maxFrontierSize = frontier.length;
+
+    // ── PATH SEVERING ─────────────────────────────────────────────────────────
+    // Hybrid's adaptive advantage: when a path is severed, it:
+    //   1. Un-visits the full subtree (same as BFS/DFS)
+    //   2. Places the rollback node at the FRONT of the frontier (immediate BFS broadcast)
+    //   3. This pivots from the deep-dive to a broad scan — the fastest way to find an
+    //      alternative route from the rollback junction
+    let didSever = false;
+    for (const blockedId of blockedNodes) {
+      if (blockedId === sourceId) continue;
+      if (severedBlockedNodes.has(blockedId)) continue;
+      if (!visited.has(blockedId)) continue;
+
+      severedBlockedNodes.add(blockedId);
+
+      const subtree = collectSubtree(blockedId, childrenMap, visited);
+      const subtreeSet = new Set(subtree);
+
+      for (const id of subtree) visited.delete(id);
+
+      // Strip from frontier
+      for (let i = frontier.length - 1; i >= 0; i--) {
+        if (subtreeSet.has(frontier[i].id)) frontier.splice(i, 1);
+      }
+
+      // Place rollback at FRONT — Hybrid immediately broadcasts from the junction
+      const rollbackTo = parentMap.get(blockedId) ?? sourceId;
+      if (!blockedNodes.has(rollbackTo)) {
+        visited.delete(rollbackTo);
+        frontier.unshift({ id: rollbackTo, waited: 0 }); // front = next to process
+      } else if (rollbackTo === sourceId) {
+        visited.delete(sourceId);
+        frontier.unshift({ id: sourceId, waited: 0 });
+      }
+
+      if (lastCurrent && subtreeSet.has(lastCurrent)) {
+        lastCurrent = rollbackTo;
+      }
+
+      iteration++;
+      didSever = true;
+
+      const severStep: AlgorithmStep = {
+        stepIndex: iteration,
+        explored: Array.from(visited),
+        frontier: frontier.map(f => f.id),
+        path: reconstructPath(parentMap, rollbackTo),
+        current: rollbackTo,
+        done: false,
+        foundDestination: null,
+        phaseLabel: `🔙 Hybrid — Path severed at [${blockedId}]! Adaptive pivot to [${rollbackTo}], cleared ${subtree.length} node(s), broadcasting BFS scan`
+      };
+      steps.push(severStep);
+      if (onStepProgress) onStepProgress(severStep);
     }
+
+    for (const id of severedBlockedNodes) {
+      if (!blockedNodes.has(id)) severedBlockedNodes.delete(id);
+    }
+
+    if (didSever) continue;
+
+    // ── Normal Hybrid dequeue ─────────────────────────────────────────────────
     const peek = frontier[frontier.length - 1];
-    const strategy = chooseStrategy(peek);
+    const strategy = chooseStrategy(peek?.id ?? sourceId);
+    const entry = strategy === 'BFS' ? frontier.shift()! : frontier.pop()!;
+    if (!entry) continue;
+    const current = entry.id;
 
-    const current = strategy === 'BFS' ? frontier.shift()! : frontier.pop()!;
-    if (!current) continue;
-
-    // 🧠 Native Detour: Silently skip without wiping memory
+    // ── Congestion waiting ────────────────────────────────────────────────────
     if (blockedNodes.has(current)) {
-        const parent = parentMap.get(current);
-        if (parent) frontier.unshift(parent);
-        continue;
+      if (entry.waited < MAX_WAIT_STEPS) {
+        // Opposite-end: explore other branches while waiting
+        if (strategy === 'DFS') {
+          frontier.unshift({ id: current, waited: entry.waited + 1 });
+        } else {
+          frontier.push({ id: current, waited: entry.waited + 1 });
+        }
+        iteration++;
+        const waitStep: AlgorithmStep = {
+          stepIndex: iteration,
+          explored: Array.from(visited),
+          frontier: frontier.map(f => f.id),
+          path: reconstructPath(parentMap, lastCurrent ?? sourceId),
+          current,
+          done: false,
+          foundDestination: null,
+          phaseLabel: `⚡ Hybrid — Adaptive rerouting around congestion (wait ${entry.waited + 1}/${MAX_WAIT_STEPS})`
+        };
+        steps.push(waitStep);
+        if (onStepProgress) onStepProgress(waitStep);
+      }
+      continue;
     }
 
     lastCurrent = current;
@@ -81,35 +208,33 @@ export async function runGraphHybrid(
     const step: AlgorithmStep = {
       stepIndex: iteration,
       explored: Array.from(visited),
-      frontier: [...frontier],
+      frontier: frontier.map(f => f.id),
       path: reconstructPath(parentMap, current),
       current,
       done: false,
       foundDestination: null,
       phaseLabel: `⚡ Adaptive ${strategy}`
     };
-
     steps.push(step);
     if (onStepProgress) onStepProgress(step);
 
     if (now - lastYieldTime > 100) {
-  await yieldToMain();
-  lastYieldTime = performance.now();
-}
-
-    if (destSet.has(current)) {
-      foundDestination = current;
-      break;
+      await yieldToMain();
+      lastYieldTime = performance.now();
     }
+
+    if (destSet.has(current)) { foundDestination = current; break; }
 
     const neighbors = adj.get(current) ?? [];
     const orderedNeighbors = strategy === 'DFS' ? [...neighbors].reverse() : neighbors;
 
     for (const { to } of orderedNeighbors) {
-      if (!visited.has(to) && !blockedNodes.has(to)) {
+      if (!visited.has(to)) {
         visited.add(to);
         parentMap.set(to, current);
-        frontier.push(to);
+        if (!childrenMap.has(current)) childrenMap.set(current, []);
+        childrenMap.get(current)!.push(to);
+        frontier.push({ id: to, waited: 0 });
       }
     }
   }
@@ -125,31 +250,8 @@ export async function runGraphHybrid(
     current: foundDestination ?? lastCurrent ?? sourceId,
     done: true,
     foundDestination,
-    phaseLabel: foundDestination ? 'Path Secured' : 'Path Severed'
+    phaseLabel: foundDestination ? '✅ Hybrid — Path Secured' : '🔄 Hybrid — All Routes Exhausted'
   });
 
   return { steps, nodesExplored, pathLength: foundDestination ? finalPath.length - 1 : -1, totalLatency, foundDestination, maxFrontierSize };
-}
-
-function reconstructPath(parentMap: Map<string, string | null>, nodeId: string): string[] {
-  const path: string[] = [];
-  let cur: string | null = nodeId;
-  const seen = new Set<string>();
-
-  while (cur !== null) {
-    if (seen.has(cur)) break;
-    seen.add(cur);
-    path.unshift(cur);
-    cur = parentMap.get(cur) ?? null;
-  }
-  return path;
-}
-
-function calcPathLatency(path: string[], edges: ScenarioGraph['edges']): number {
-  let total = 0;
-  for (let i = 0; i < path.length - 1; i++) {
-    const edge = edges.find(e => e.from === path[i] && e.to === path[i + 1]);
-    if (edge) total += edge.latency;
-  }
-  return total;
 }
