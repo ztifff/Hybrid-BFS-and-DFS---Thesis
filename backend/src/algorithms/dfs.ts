@@ -8,6 +8,7 @@ export interface DFSResult {
   pathLength: number;
   totalLatency: number;
   foundDestination: string | null;
+  maxFrontierSize: number;
 }
 
 export async function runGraphDFS(
@@ -37,9 +38,13 @@ export async function runGraphDFS(
   let lastCurrent: string | null = null;
   let nodesExplored = 0;
   let iteration = 0;
+  let maxFrontierSize = 0;
   let lastYieldTime = performance.now();
 
   while (stack.length > 0 && !foundDestination) {
+    if (stack.length > maxFrontierSize) {
+      maxFrontierSize = stack.length;
+    }
     const current = stack.pop()!;
     
     // 🧠 Native Detour: Silently skip without wiping memory
@@ -103,7 +108,7 @@ export async function runGraphDFS(
     phaseLabel: foundDestination ? 'Path Secured' : 'Path Severed'
   });
 
-  return { steps, nodesExplored, pathLength: foundDestination ? finalPath.length - 1 : -1, totalLatency, foundDestination };
+  return { steps, nodesExplored, pathLength: foundDestination ? finalPath.length - 1 : -1, totalLatency, foundDestination, maxFrontierSize };
 }
 
 function reconstructPath(parentMap: Map<string, string | null>, nodeId: string): string[] {

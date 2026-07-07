@@ -8,6 +8,7 @@ export interface HybridResult {
   pathLength: number;
   totalLatency: number;
   foundDestination: string | null;
+  maxFrontierSize: number;
 }
 
 export async function runGraphHybrid(
@@ -42,6 +43,7 @@ export async function runGraphHybrid(
   let foundDestination: string | null = null;
   let lastCurrent: string | null = null;
   let iteration = 0;
+  let maxFrontierSize = 0;
   let lastYieldTime = performance.now();
 
   function chooseStrategy(current: string): 'BFS' | 'DFS' {
@@ -55,6 +57,9 @@ export async function runGraphHybrid(
   }
 
   while (frontier.length > 0 && !foundDestination) {
+    if (frontier.length > maxFrontierSize) {
+      maxFrontierSize = frontier.length;
+    }
     const peek = frontier[frontier.length - 1];
     const strategy = chooseStrategy(peek);
 
@@ -123,7 +128,7 @@ export async function runGraphHybrid(
     phaseLabel: foundDestination ? 'Path Secured' : 'Path Severed'
   });
 
-  return { steps, nodesExplored, pathLength: foundDestination ? finalPath.length - 1 : -1, totalLatency, foundDestination };
+  return { steps, nodesExplored, pathLength: foundDestination ? finalPath.length - 1 : -1, totalLatency, foundDestination, maxFrontierSize };
 }
 
 function reconstructPath(parentMap: Map<string, string | null>, nodeId: string): string[] {

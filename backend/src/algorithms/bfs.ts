@@ -8,6 +8,7 @@ export interface BFSResult {
   pathLength: number;
   totalLatency: number;
   foundDestination: string | null;
+  maxFrontierSize: number;
 }
 
 export async function runGraphBFS(
@@ -34,9 +35,13 @@ export async function runGraphBFS(
   let foundDestination: string | null = null;
   let lastCurrent: string | null = null;
   let iteration = 0;
+  let maxFrontierSize = 0;
   let lastYieldTime = performance.now();
 
   while (queue.length > 0 && !foundDestination) {
+    if (queue.length > maxFrontierSize) {
+      maxFrontierSize = queue.length;
+    }
     const current = queue.shift()!;
     
     // 🧠 Native Detour: Silently skip without wiping memory or returning to start!
@@ -100,7 +105,7 @@ export async function runGraphBFS(
     phaseLabel: foundDestination ? 'Path Secured' : 'Path Severed'
   });
 
-  return { steps, nodesExplored, pathLength: foundDestination ? finalPath.length - 1 : -1, totalLatency, foundDestination };
+  return { steps, nodesExplored, pathLength: foundDestination ? finalPath.length - 1 : -1, totalLatency, foundDestination, maxFrontierSize };
 }
 
 function reconstructPath(parentMap: Map<string, string | null>, nodeId: string): string[] {

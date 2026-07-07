@@ -7,10 +7,12 @@ import { GameAIBoard } from './gameAIGraph';
 
 export type { SimulationResult };
 
-function estimateMemory(nodesExplored: number, algorithm: AlgorithmType): number {
+function estimateMemory(nodesExplored: number, maxFrontierSize: number, algorithm: AlgorithmType): number {
   const nodeBytes = 80;
-  const multiplier = algorithm === 'hybrid' ? 2.2 : algorithm === 'bfs' ? 1.5 : 1.2;
-  return (nodesExplored * nodeBytes * multiplier) / 1024;
+  const visitedMemory = nodesExplored * nodeBytes;
+  const frontierMemory = maxFrontierSize * nodeBytes;
+  const multiplier = algorithm === 'hybrid' ? 1.2 : algorithm === 'bfs' ? 1.0 : 1.0;
+  return ((visitedMemory + frontierMemory) * multiplier) / 1024;
 }
 
 function makeRng(seed: number) {
@@ -280,6 +282,7 @@ export async function runSimulation(
     pathLength: number;
     totalLatency: number;
     foundDestination: string | null;
+    maxFrontierSize: number;
   };
 
   const blockedNodes = new Set<string>();
@@ -314,7 +317,7 @@ export async function runSimulation(
     result = await runGraphHybrid(graph, blockedNodes, wrappedStepProgress);
   }
   const timeElapsed = Math.max(performance.now() - startTime, 0.001);
-  const memoryUsed = estimateMemory(result.nodesExplored, algorithm);
+  const memoryUsed = estimateMemory(result.nodesExplored, result.maxFrontierSize, algorithm);
 
   const exitIndex = result.foundDestination ? graph.destinationIds.indexOf(result.foundDestination) : null;
   const totalGraphNodes = graph.nodes.length || 1;
