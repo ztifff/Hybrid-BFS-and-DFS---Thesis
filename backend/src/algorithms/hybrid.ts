@@ -11,7 +11,8 @@ export interface HybridResult {
   maxFrontierSize: number;
 }
 
-const MAX_WAIT_STEPS = 25;
+// How many steps to wait at a congested node before force-severing and rerouting.
+const MAX_WAIT_STEPS = 5000;
 const MAX_TOTAL_STEPS = 5000;
 
 function reconstructPath(parentMap: Map<string, string | null>, nodeId: string): string[] {
@@ -39,7 +40,7 @@ function collectSubtree(
     const node = queue.shift()!;
     result.push(node);
     for (const child of childrenMap.get(node) ?? []) {
-      if (!seen.has(child) && visited.has(child)) {
+      if (!seen.has(child)) {
         seen.add(child);
         queue.push(child);
       }
@@ -60,7 +61,8 @@ function calcPathLatency(path: string[], edges: ScenarioGraph['edges']): number 
 export async function runGraphHybrid(
   graph: ScenarioGraph,
   blockedNodes: Set<string> = new Set(),
-  onStepProgress?: (step: AlgorithmStep) => void
+  onStepProgress?: (step: AlgorithmStep) => void,
+  disablePathSevering: boolean = false
 ): Promise<HybridResult> {
 
   const { nodes, edges, sourceId, destinationIds } = graph;
@@ -113,8 +115,9 @@ export async function runGraphHybrid(
     //   3. This pivots from the deep-dive to a broad scan — the fastest way to find an
     //      alternative route from the rollback junction
     let didSever = false;
-    for (const blockedId of blockedNodes) {
-      if (blockedId === sourceId) continue;
+    if (!disablePathSevering) {
+      for (const blockedId of blockedNodes) {
+        if (blockedId === sourceId) continue;
       if (severedBlockedNodes.has(blockedId)) continue;
       if (!visited.has(blockedId)) continue;
 
@@ -160,6 +163,7 @@ export async function runGraphHybrid(
       steps.push(severStep);
       if (onStepProgress) onStepProgress(severStep);
     }
+    }
 
     for (const id of severedBlockedNodes) {
       if (!blockedNodes.has(id)) severedBlockedNodes.delete(id);
@@ -175,12 +179,17 @@ export async function runGraphHybrid(
     const current = entry.id;
 
     // ── Congestion waiting ────────────────────────────────────────────────────
+    // KEY FIX: When blocked, defer to the OPPOSITE end so other branches are
+    // explored first. BFS→ push to back (frontier end). DFS→ push to front (frontier start).
+    // This ensures the algorithm ACTIVELY finds alternative routes while waiting.
     if (blockedNodes.has(current)) {
       if (entry.waited < MAX_WAIT_STEPS) {
-        // Opposite-end: explore other branches while waiting
+        // Defer to opposite end so other frontier nodes are processed first
         if (strategy === 'DFS') {
+          // DFS pulled from back → defer to front so BFS items process first
           frontier.unshift({ id: current, waited: entry.waited + 1 });
         } else {
+          // BFS pulled from front → defer to back so other BFS items process first
           frontier.push({ id: current, waited: entry.waited + 1 });
         }
         iteration++;
@@ -192,10 +201,39 @@ export async function runGraphHybrid(
           current,
           done: false,
           foundDestination: null,
-          phaseLabel: `⚡ Hybrid — Adaptive rerouting around congestion (wait ${entry.waited + 1}/${MAX_WAIT_STEPS})`
+          phaseLabel: `⚡ Hybrid — Route blocked, exploring alternatives (wait ${entry.waited + 1}/${MAX_WAIT_STEPS})`
         };
         steps.push(waitStep);
         if (onStepProgress) onStepProgress(waitStep);
+      } else {
+        // Wait exhausted — force-sever so Hybrid finds a completely new route
+        if (!severedBlockedNodes.has(current) && visited.has(current)) {
+          const subtree = collectSubtree(current, childrenMap, visited);
+          const subtreeSet = new Set(subtree);
+          for (const id of subtree) visited.delete(id);
+          for (let i = frontier.length - 1; i >= 0; i--) {
+            if (subtreeSet.has(frontier[i].id)) frontier.splice(i, 1);
+          }
+          const rollbackTo = parentMap.get(current) ?? sourceId;
+          if (!blockedNodes.has(rollbackTo)) {
+            visited.delete(rollbackTo);
+            frontier.unshift({ id: rollbackTo, waited: 0 }); // front for immediate BFS scan
+          }
+          severedBlockedNodes.add(current);
+          iteration++;
+          const forceStep: AlgorithmStep = {
+            stepIndex: iteration,
+            explored: Array.from(visited),
+            frontier: frontier.map(f => f.id),
+            path: reconstructPath(parentMap, rollbackTo ?? sourceId),
+            current: rollbackTo ?? sourceId,
+            done: false,
+            foundDestination: null,
+            phaseLabel: `🔀 Hybrid — Wait expired at [${current}], adaptive reroute from [${rollbackTo}]`
+          };
+          steps.push(forceStep);
+          if (onStepProgress) onStepProgress(forceStep);
+        }
       }
       continue;
     }

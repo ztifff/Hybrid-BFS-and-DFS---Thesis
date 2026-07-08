@@ -155,8 +155,8 @@ function generateDynamicEvents(
       stepIndex = Math.floor(rng() * 15) + 1; 
     }
 
-    const hazardDuration = Math.max(15, Math.floor(totalSteps * 0.30));
-    const reopenStep = stepIndex + hazardDuration;
+    const hazardDuration = 5 + Math.floor(rng() * 6); // 5 to 10 steps
+    let reopenStep = stepIndex + hazardDuration;
 
     const isAoE = isMassive && rng() > 0.55;
     let affectedNodes = [epicenterId];
@@ -205,6 +205,37 @@ function generateDynamicEvents(
         label: isAoE ? `[AoE] ${flavor.clear} at ${nodeName}` : `${flavor.clear} at ${nodeName}`,
       });
     });
+
+    // Create a continuous shifting chain until the end of the simulation
+    let shiftStep = reopenStep;
+    while (shiftStep < totalSteps) {
+      const nextDuration = 5 + Math.floor(rng() * 6);
+      const oppCandidates = candidates.filter(c => !usedNodes.has(c) && !protectedNodes.has(c));
+      
+      if (oppCandidates.length > 0) {
+        const oppositeId = oppCandidates[Math.floor(rng() * oppCandidates.length)];
+        usedNodes.add(oppositeId);
+        const oppositeNode = graph.nodes.find(n => n.id === oppositeId);
+        const oppNodeName = oppositeNode?.label?.split('\n')[0] ?? oppositeId;
+        
+        events.push({
+          stepIndex: shiftStep,
+          nodeId: oppositeId,
+          blocked: true,
+          label: `[Balance] ${flavor.block} shifted to ${oppNodeName}`,
+        });
+
+        events.push({
+          stepIndex: shiftStep + nextDuration,
+          nodeId: oppositeId,
+          blocked: false,
+          label: `[Balance] ${flavor.clear} at ${oppNodeName}`,
+        });
+      } else {
+        break; // No more nodes left to block
+      }
+      shiftStep += nextDuration;
+    }
   }
 
   // 🎮 AI vs AI: Predictive opponent piece movements
@@ -309,12 +340,14 @@ export async function runSimulation(
   };
 
   const startTime = performance.now();
+  const disablePathSevering = scenario === 'gameai';
+
   if (algorithm === 'bfs') {
-    result = await runGraphBFS(graph, blockedNodes, wrappedStepProgress);
+    result = await runGraphBFS(graph, blockedNodes, wrappedStepProgress, disablePathSevering);
   } else if (algorithm === 'dfs') {
-    result = await runGraphDFS(graph, blockedNodes, wrappedStepProgress);
+    result = await runGraphDFS(graph, blockedNodes, wrappedStepProgress, disablePathSevering);
   } else {
-    result = await runGraphHybrid(graph, blockedNodes, wrappedStepProgress);
+    result = await runGraphHybrid(graph, blockedNodes, wrappedStepProgress, disablePathSevering);
   }
   const timeElapsed = Math.max(performance.now() - startTime, 0.001);
   const memoryUsed = estimateMemory(result.nodesExplored, result.maxFrontierSize, algorithm);

@@ -19,7 +19,7 @@ export function buildScenarioGraph(
     case 'robotics':
       return buildRoboticsGraph(useRealWorld, seed, mode, graphSize, sizing);
     case 'evacuation':
-      return buildEvacuationGraph(useRealWorld, seed, graphSize, sizing); 
+      return buildEvacuationGraph(useRealWorld, seed, mode, graphSize, sizing);
     case 'network':
       return buildNetworkGraph(useRealWorld, seed, mode, graphSize, sizing); 
     case 'traffic':

@@ -227,6 +227,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
           useRealWorld: String(mapMode !== 'synthetic'),
           networkMode: mapMode === 'realworld' ? 'datacenter' : mapMode === 'realworld2' ? 'as733' : 'synthetic',
           roboticsMode: mapMode === 'realworld' ? 'aws' : mapMode === 'realworld2' ? 'clinic' : 'synthetic',
+          evacuationMode: mapMode === 'realworld' ? 'building' : mapMode === 'realworld2' ? 'city' : 'synthetic',
           graphSize,
           seed: seed.toString()
         });
@@ -331,6 +332,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
               useRealWorld: mapMode !== 'synthetic',
               networkMode: mapMode === 'realworld' ? 'datacenter' : mapMode === 'realworld2' ? 'as733' : 'synthetic',
               roboticsMode: mapMode === 'realworld' ? 'aws' : mapMode === 'realworld2' ? 'clinic' : 'synthetic',
+              evacuationMode: mapMode === 'realworld' ? 'building' : mapMode === 'realworld2' ? 'city' : 'synthetic',
               seed,
               graphSize,
               ...(mapMode === 'synthetic' ? { sizing: syntheticSizing } : {}),

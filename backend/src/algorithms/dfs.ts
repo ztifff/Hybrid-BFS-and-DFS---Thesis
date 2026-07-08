@@ -11,7 +11,9 @@ export interface DFSResult {
   maxFrontierSize: number;
 }
 
-const MAX_WAIT_STEPS = 25;
+// How many steps to wait at a congested node before force-severing and rerouting.
+// Keep low so the algorithm actively explores alternatives rather than spinning.
+const MAX_WAIT_STEPS = 5000;
 const MAX_TOTAL_STEPS = 5000;
 
 function reconstructPath(parentMap: Map<string, string | null>, nodeId: string): string[] {
@@ -39,7 +41,7 @@ function collectSubtree(
     const node = queue.shift()!;
     result.push(node);
     for (const child of childrenMap.get(node) ?? []) {
-      if (!seen.has(child) && visited.has(child)) {
+      if (!seen.has(child)) {
         seen.add(child);
         queue.push(child);
       }
@@ -60,7 +62,8 @@ function calcPathLatency(path: string[], edges: ScenarioGraph['edges']): number 
 export async function runGraphDFS(
   graph: ScenarioGraph,
   blockedNodes: Set<string> = new Set(),
-  onStepProgress?: (step: AlgorithmStep) => void
+  onStepProgress?: (step: AlgorithmStep) => void,
+  disablePathSevering: boolean = false
 ): Promise<DFSResult> {
   const { nodes, edges, sourceId, destinationIds } = graph;
 
@@ -97,8 +100,9 @@ export async function runGraphDFS(
     // up, un-visit the ENTIRE subtree discovered through it, and push the parent
     // back to the TOP of the stack so DFS re-explores sibling branches next.
     let didSever = false;
-    for (const blockedId of blockedNodes) {
-      if (blockedId === sourceId) continue;
+    if (!disablePathSevering) {
+      for (const blockedId of blockedNodes) {
+        if (blockedId === sourceId) continue;
       if (severedBlockedNodes.has(blockedId)) continue;
       if (!visited.has(blockedId)) continue;
 
@@ -144,6 +148,7 @@ export async function runGraphDFS(
       steps.push(severStep);
       if (onStepProgress) onStepProgress(severStep);
     }
+    }
 
     for (const id of severedBlockedNodes) {
       if (!blockedNodes.has(id)) severedBlockedNodes.delete(id);
@@ -155,10 +160,14 @@ export async function runGraphDFS(
     const entry = stack.pop()!;
     const current = entry.id;
 
-    // ── Congestion waiting: DFS holds its deep branch ────────────────────────
+    // ── Congestion waiting: DFS defers blocked node to BOTTOM of stack ────────
+    // KEY FIX: Push to BOTTOM (unshift) instead of top (push). This means DFS will
+    // process all other stacked branches before retrying — actively exploring
+    // alternative routes while waiting for the congestion to clear.
     if (blockedNodes.has(current)) {
       if (entry.waited < MAX_WAIT_STEPS) {
-        stack.push({ id: current, waited: entry.waited + 1 });
+        // Push to BOTTOM of stack — DFS dives other branches first
+        stack.unshift({ id: current, waited: entry.waited + 1 });
         iteration++;
         const waitStep: AlgorithmStep = {
           stepIndex: iteration,
@@ -168,10 +177,39 @@ export async function runGraphDFS(
           current,
           done: false,
           foundDestination: null,
-          phaseLabel: `⏳ DFS — Holding at congestion (${entry.waited + 1}/${MAX_WAIT_STEPS})`
+          phaseLabel: `⏳ DFS — Route blocked, diving other branches (wait ${entry.waited + 1}/${MAX_WAIT_STEPS})`
         };
         steps.push(waitStep);
         if (onStepProgress) onStepProgress(waitStep);
+      } else {
+        // Wait exhausted — force-sever so DFS actively reroutes from a safe parent
+        if (!severedBlockedNodes.has(current) && visited.has(current)) {
+          const subtree = collectSubtree(current, childrenMap, visited);
+          const subtreeSet = new Set(subtree);
+          for (const id of subtree) visited.delete(id);
+          for (let i = stack.length - 1; i >= 0; i--) {
+            if (subtreeSet.has(stack[i].id)) stack.splice(i, 1);
+          }
+          const rollbackTo = parentMap.get(current) ?? sourceId;
+          if (!blockedNodes.has(rollbackTo)) {
+            visited.delete(rollbackTo);
+            stack.push({ id: rollbackTo, waited: 0 });
+          }
+          severedBlockedNodes.add(current);
+          iteration++;
+          const forceStep: AlgorithmStep = {
+            stepIndex: iteration,
+            explored: Array.from(visited),
+            frontier: stack.map(s => s.id),
+            path: reconstructPath(parentMap, rollbackTo ?? sourceId),
+            current: rollbackTo ?? sourceId,
+            done: false,
+            foundDestination: null,
+            phaseLabel: `🔀 DFS — Wait expired at [${current}], forcing reroute from [${rollbackTo}]`
+          };
+          steps.push(forceStep);
+          if (onStepProgress) onStepProgress(forceStep);
+        }
       }
       continue;
     }

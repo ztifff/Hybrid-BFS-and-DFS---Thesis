@@ -5,6 +5,7 @@ interface Props {
   dynamicEvents: DynamicEvent[];
   stepIndex: number;
   simResults: { bfs: SimulationResult; dfs: SimulationResult; hybrid: SimulationResult } | null;
+  scenario?: string;
 }
 
 const ALGORITHM_LABELS: Record<string, string> = {
@@ -27,7 +28,12 @@ function didAlgorithmReroute(
   const wasOnPath = (step?: AlgorithmStep) => {
     if (!step) return false;
     
-    if (step.path.includes(event.nodeId) || step.current === event.nodeId) return true;
+    if (
+      step.path.includes(event.nodeId) || 
+      step.current === event.nodeId ||
+      step.explored.includes(event.nodeId) ||
+      step.frontier.includes(event.nodeId)
+    ) return true;
     
     const parts = event.nodeId.split(/[-_]/);
     if (parts.length === 2) {
@@ -50,7 +56,7 @@ function didAlgorithmReroute(
   return false;
 }
 
-export const DynamicMapEvents: React.FC<Props> = ({ dynamicEvents, stepIndex, simResults }) => {
+export const DynamicMapEvents: React.FC<Props> = ({ dynamicEvents, stepIndex, simResults, scenario }) => {
   // Process and enrich events with active path disruption details
   const activeEvents = useMemo(() => {
     const visibleEvents = dynamicEvents.filter((event) => event.stepIndex <= stepIndex);
@@ -102,7 +108,7 @@ export const DynamicMapEvents: React.FC<Props> = ({ dynamicEvents, stepIndex, si
               </div>
 
               {/* 🧠 Mixed Intelligence: If an algorithm was compromised, display badges contextually right inside the incident card */}
-              {event.blocked && event.affectedAlgorithms.length > 0 && (
+              {event.blocked && event.affectedAlgorithms.length > 0 && scenario !== 'gameai' && (
                 <div className="mt-1 pl-5 flex flex-wrap items-center gap-1.5 text-[10px]">
                   <span className="text-red-400 font-semibold">⚠️ Path Severed:</span>
                   {event.affectedAlgorithms.map((algo) => (

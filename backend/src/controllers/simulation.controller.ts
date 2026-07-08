@@ -8,11 +8,12 @@ import { simulationHistory } from '../store/historyStore';
 export class SimulationController {
  async runSimulation(req: Request, res: Response): Promise<void> {
     try {
-      const { scenario, useRealWorld, networkMode, roboticsMode, seed, gameBoard, graphSize, chessPiece, sizing } = req.body as {
+      const { scenario, useRealWorld, networkMode, roboticsMode, evacuationMode, seed, gameBoard, graphSize, chessPiece, sizing } = req.body as {
         scenario: ScenarioType;
         useRealWorld: boolean;
         networkMode: string;
         roboticsMode: string; 
+        evacuationMode?: string;
         seed: number;
         gameBoard?: 'dama' | 'checkers' ;
         customGraphId?: string;
@@ -31,7 +32,7 @@ export class SimulationController {
       }
 
       // 🧠 FIX: Determine which mode to use based on the scenario
-      const modeArg = (scenario === 'robotics' ? roboticsMode : networkMode) as 'datacenter' | 'as733' | 'synthetic' | 'aws' | 'clinic';
+      const modeArg = (scenario === 'robotics' ? roboticsMode : scenario === 'evacuation' ? (evacuationMode || 'building') : networkMode) as 'datacenter' | 'as733' | 'synthetic' | 'aws' | 'clinic';
 
 
       // 🧠 FIX: Argument order corrected! 'modeArg' comes BEFORE 'gameBoard'

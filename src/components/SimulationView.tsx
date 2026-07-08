@@ -193,7 +193,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                           ? 'Cloud Datacenter'
                           : 'SM City Santa Rosa'}
                   </button>
-                  {(scenario === 'network' || scenario === 'robotics') && (
+                  {(scenario === 'network' || scenario === 'robotics' || scenario === 'evacuation') && (
                     <button
                       onClick={() => {
                         sim.setMapMode('realworld2');
@@ -206,8 +206,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                           : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
                       }`}
                     >
-                      <span>{scenario === 'network' ? '🛰️' : '🏥'}</span>
-                      {scenario === 'network' ? 'AS-733 ISP' : 'Clinic Building'}
+                      <span>{scenario === 'network' ? '🛰️' : scenario === 'evacuation' ? '🚦' : '🏥'}</span>
+                      {scenario === 'network' ? 'AS-733 ISP' : scenario === 'evacuation' ? 'City Emergency Grid' : 'Clinic Building'}
                     </button>
                   )}
                 </div>
@@ -344,6 +344,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 dynamicEvents={sim.simResults?.hybrid.dynamicEvents || []}
                 stepIndex={sim.stepIndex}
                 simResults={sim.simResults}
+                scenario={scenario}
               />
             </div>
 

@@ -10,13 +10,13 @@ export const getGraphData = (req: Request, res: Response) => {
     const useRealWorld = req.query.useRealWorld === 'true';
     const networkMode = (req.query.networkMode as string) || 'synthetic';
     const roboticsMode = (req.query.roboticsMode as string) || 'aws';
-    const mode = scenario === 'robotics' ? roboticsMode : networkMode;
+    const evacuationMode = (req.query.evacuationMode as string) || 'building';
+    const mode = scenario === 'robotics' ? roboticsMode : scenario === 'evacuation' ? evacuationMode : networkMode;
     const gameBoard = req.query.gameBoard as GameAIBoard | undefined;
     const graphSize = (req.query.graphSize as GraphSize) || 'medium';
     const sizing = useRealWorld
       ? undefined
       : parseGraphSizing(req.query.targetNodes, req.query.targetEdges);
-    
     // 1. Extract the seed from the frontend request (fallback to Date.now() if missing)
     const seed = req.query.seed ? parseInt(req.query.seed as string, 10) : Date.now();
     const chessPiece = (req.query.chessPiece as string) || 'knight';

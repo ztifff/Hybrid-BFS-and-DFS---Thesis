@@ -62,7 +62,8 @@ function calcPathLatency(path: string[], edges: ScenarioGraph['edges']): number 
 export async function runGraphBFS(
   graph: ScenarioGraph,
   blockedNodes: Set<string> = new Set(),
-  onStepProgress?: (step: AlgorithmStep) => void
+  onStepProgress?: (step: AlgorithmStep) => void,
+  disablePathSevering: boolean = false
 ): Promise<BFSResult> {
   const { nodes, edges, sourceId, destinationIds } = graph;
 
@@ -102,8 +103,9 @@ export async function runGraphBFS(
     // For each such node: collect its full descendant subtree (via childrenMap),
     // un-visit all of them, strip them from the queue, and re-enqueue the parent.
     let didSever = false;
-    for (const blockedId of blockedNodes) {
-      if (blockedId === sourceId) continue;
+    if (!disablePathSevering) {
+      for (const blockedId of blockedNodes) {
+        if (blockedId === sourceId) continue;
       if (severedBlockedNodes.has(blockedId)) continue; // already handled this block period
       if (!visited.has(blockedId)) continue;            // not yet explored — congestion-wait handles it
 
@@ -152,6 +154,7 @@ export async function runGraphBFS(
       };
       steps.push(severStep);
       if (onStepProgress) onStepProgress(severStep);
+    }
     }
 
     // Clear sever records for any node that has UNBLOCKED (so future re-blocks are caught)

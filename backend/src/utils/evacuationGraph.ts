@@ -1,5 +1,6 @@
 import { ScenarioGraph, GraphNode, GraphEdge, GraphSize, GraphSizing } from '../types/index';
 import { buildingEvacuationGraph } from '../data/evacuation.building';
+import { emergencyRoutingGraph } from '../data/traffic.emergency';
 import { clampInt, fitGraphEdgeCount, resolveSizingValue } from './graphSizing';
 
 const W = 1600;
@@ -55,10 +56,23 @@ function resolveEvacuationShape(targetNodes: number, fallback: typeof SIZE_CONFI
 export function buildEvacuationGraph(
   useRealWorld: boolean = false,
   seed: number = 123,
+  mode?: string,
   graphSize: GraphSize = 'medium',
   sizing?: GraphSizing
 ): ScenarioGraph {
   if (useRealWorld) {
+    if (mode === 'city') {
+      const rwGraph = { ...(emergencyRoutingGraph as ScenarioGraph) };
+      const startZones = rwGraph.nodes.filter((node) => node.type === 'origin' || node.type === 'room');
+
+      if (startZones.length > 0) {
+        const startIdx = Math.floor(seededRandom(seed) * startZones.length);
+        rwGraph.sourceId = startZones[startIdx].id;
+      }
+
+      return rwGraph;
+    }
+
     const rwGraph = { ...(buildingEvacuationGraph as ScenarioGraph) };
     const startZones = rwGraph.nodes.filter((node) => node.type === 'room');
 
@@ -189,5 +203,6 @@ export function buildEvacuationGraph(
 }
 
 export function getEvacuationFireCandidates(graph: ScenarioGraph): string[] {
+  // If it's the traffic emergency graph, use its corridors instead of stairwells
   return graph.nodes.filter((node) => node.type === 'corridor' || node.type === 'stairwell').map((node) => node.id);
 }
