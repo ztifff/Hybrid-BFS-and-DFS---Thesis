@@ -21,8 +21,9 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   history: HistoryEntry[];
-  scenario?: ScenarioType; 
+  scenario?: ScenarioType;
   onDeleteHistory: (ids: string[]) => void;
+  onImportHistory: (entries: HistoryEntry[]) => void;
 }
 
 const SCENARIO_BADGES: Record<string, string> = {
@@ -60,11 +61,62 @@ const getEntryResults = (entry: HistoryEntry): HistoryResults => {
   return { hybrid: entry.simResult };
 };
 
-export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenario, onDeleteHistory }) => {
+export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenario, onDeleteHistory, onImportHistory }) => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [view, setView] = useState<'list' | 'detail'>('list');
   const [activeEntry, setActiveEntry] = useState<HistoryEntry | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const importInputRef = React.useRef<HTMLInputElement>(null);
+
+  // ── Auto-generate a smart export filename ───────────────────────────────
+  const buildExportFilename = (entries: HistoryEntry[]): string => {
+    const scenarioSlug = scenario ?? entries[0]?.scenario ?? 'simulation';
+    const algoSlug = 'multi-alg';
+    const dateSlug = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    return `${algoSlug}-${scenarioSlug}-${dateSlug}.json`;
+  };
+
+  // ── Export selected (or all) entries as a JSON file ─────────────────────
+  const handleExport = () => {
+    const toExport = selectedIds.size > 0
+      ? filteredHistory.filter(e => selectedIds.has(e.id))
+      : filteredHistory;
+    if (toExport.length === 0) return;
+    const blob = new Blob([JSON.stringify(toExport, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = buildExportFilename(toExport);
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // ── Import entries from a JSON file ─────────────────────────────────────
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const parsed = JSON.parse(ev.target?.result as string);
+        const entries: HistoryEntry[] = (Array.isArray(parsed) ? parsed : [parsed]).map(entry => ({
+          ...entry,
+          timestamp: entry.timestamp ? new Date(entry.timestamp) : new Date(),
+          // Re-stamp with a new unique id to avoid collisions
+          id: entry.id ?? Date.now().toString() + Math.random().toString(36).slice(2),
+        }));
+        if (entries.length > 0) {
+          onImportHistory(entries);
+          alert(`✅ Imported ${entries.length} record(s) successfully.`);
+        }
+      } catch {
+        alert('❌ Invalid file format. Please select a valid history JSON file.');
+      }
+      // Reset so the same file can be re-imported
+      if (importInputRef.current) importInputRef.current.value = '';
+    };
+    reader.readAsText(file);
+  };
 
   useEffect(() => {
     if (!isOpen) { 
@@ -490,11 +542,41 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
             </h2>
             {view === 'list' && (
               <span className="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full font-mono">
-                {filteredHistory.length} total entries
+                {filteredHistory.length} entries
               </span>
             )}
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white bg-gray-900 border border-gray-800 hover:border-gray-700 w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-all">✕</button>
+          <div className="flex items-center gap-2">
+            {/* Import/Export toolbar — only shown in list view */}
+            {view === 'list' && (
+              <>
+                {/* Hidden file input for import */}
+                <input
+                  ref={importInputRef}
+                  type="file"
+                  accept=".json"
+                  className="hidden"
+                  onChange={handleImportFile}
+                />
+                <button
+                  onClick={() => importInputRef.current?.click()}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-900/30 hover:bg-blue-800/50 text-blue-300 hover:text-blue-200 border border-blue-700/30 hover:border-blue-600/50 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                  title="Import history from a JSON file"
+                >
+                  📥 Import
+                </button>
+                <button
+                  onClick={handleExport}
+                  disabled={filteredHistory.length === 0}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-900/30 hover:bg-emerald-800/50 text-emerald-300 hover:text-emerald-200 border border-emerald-700/30 hover:border-emerald-600/50 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  title={selectedIds.size > 0 ? `Export ${selectedIds.size} selected record(s)` : 'Export all records'}
+                >
+                  📤 {selectedIds.size > 0 ? `Export (${selectedIds.size})` : 'Export All'}
+                </button>
+              </>
+            )}
+            <button onClick={onClose} className="text-gray-400 hover:text-white bg-gray-900 border border-gray-800 hover:border-gray-700 w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-all">✕</button>
+          </div>
         </header>
 
         {/* Dynamic Action Toolbar for Selection Management */}
@@ -613,19 +695,13 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
           </div>
           <div className="flex gap-2">
             {view === 'detail' && (
-              <button 
-                onClick={() => { setView('list'); setDeleteConfirmId(null); }} 
+              <button
+                onClick={() => { setView('list'); setDeleteConfirmId(null); }}
                 className="px-4 py-2 bg-gray-900 border border-gray-800 hover:border-gray-700 rounded-xl text-xs font-bold text-white transition-all cursor-pointer"
               >
                 ← Return to Index
               </button>
             )}
-            <button 
-              onClick={onClose} 
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl text-xs font-bold text-white shadow-lg shadow-blue-500/10 transition-all cursor-pointer"
-            >
-              Close History Panel
-            </button>
           </div>
         </footer>
       </div>

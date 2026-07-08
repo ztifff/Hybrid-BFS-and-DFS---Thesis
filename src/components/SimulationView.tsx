@@ -455,6 +455,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         history={sim.history}
         scenario={scenario}
         onDeleteHistory={sim.handleDeleteHistory}
+        onImportHistory={sim.handleImportHistory}
       />
 
       {sim.isSaveModalOpen && (

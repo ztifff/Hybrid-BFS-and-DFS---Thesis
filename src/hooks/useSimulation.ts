@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlgorithmStep, GameAIBoard, GraphSize, GraphSizing, ScenarioGraph, ScenarioType, SimulationResult } from '../types';
-import { normalizeHistoryEntry, normalizeHistoryEntries, loadLocalHistory, persistLocalHistory } from '../utils/historyHelpers';
+import { normalizeHistoryEntries, loadLocalHistory, persistLocalHistory } from '../utils/historyHelpers';
 
 import { HistoryEntry } from '../components/HistoryModal';
 
@@ -57,8 +57,9 @@ export interface SimulationState {
   handleReset: () => void;
   handleSkipEnd: () => void;
   handleRerollEvents: () => void;
+  handleImportHistory: (entries: HistoryEntry[]) => void;
   openSaveModal: () => void;
-  confirmSaveResult: () => Promise<void>;
+  confirmSaveResult: () => void;
   handleDeleteHistory: (ids: string[]) => void;
 
   // Modal state
@@ -72,11 +73,10 @@ export interface SimulationState {
   setSaveDefaultName: (name: string) => void;
 }
 
-
 // Local convenience types
 export type Status = 'idle' | 'running' | 'done' | 'paused';
 const STEP_INTERVAL_MS = 60;
-const HISTORY_API = 'api/history';
+// History is stored exclusively in localStorage — no shared backend.
 
 // Constants for Sizing moved from SimulationView
 const DEFAULT_SYNTHETIC_SIZING: Record<ScenarioType, GraphSizing> = {
@@ -112,16 +112,16 @@ type MultiResultsLocal = {
   hybrid: SimulationResult;
 };
 
-export function useSimulation(params: { scenario: ScenarioType }) { 
+export function useSimulation(params: { scenario: ScenarioType }) {
   const { scenario } = params;
-  
+
   // UI / Configuration State (Lifted from SimulationView)
   const [gameBoard, setGameBoard] = useState<GameAIBoard>('dama');
   const [seed, setSeed] = useState(() => Date.now());
   const [mapMode, setMapMode] = useState<'synthetic' | 'realworld' | 'realworld2'>('synthetic');
   const [graphSize, setGraphSize] = useState<'small' | 'medium' | 'large'>('medium');
   const [syntheticSizingByScenario, setSyntheticSizingByScenario] = useState(DEFAULT_SYNTHETIC_SIZING);
-  
+
   const syntheticSizing = syntheticSizingByScenario[scenario];
   const updateSyntheticSizing = useCallback((field: keyof GraphSizing, rawValue: number) => {
     const min = field === 'nodes' ? MIN_SYNTHETIC_NODES[scenario] : 4;
@@ -191,40 +191,28 @@ export function useSimulation(params: { scenario: ScenarioType }) {
     }
   }, []);
 
-  const loadHistory = useCallback(async () => {
+  // ── Load history: reads ALL scenario buckets from localStorage ──────────────
+  const loadHistory = useCallback(() => {
     try {
-      const response = await fetch(HISTORY_API);
-      if (!response.ok) throw new Error(`History API Error: ${response.statusText}`);
-      const json = await response.json();
-      const backendEntries = Array.isArray(json.data) ? normalizeHistoryEntries(json.data) : [];
-
-      try {
-        const localEntries = loadLocalHistory(scenario);
-        const mergedEntries = [...backendEntries];
-        localEntries.forEach((localEntry) => {
-          if (!mergedEntries.some((entry) => entry.id === localEntry.id)) {
-            mergedEntries.push(localEntry);
-          }
+      const allScenarios: string[] = ['network', 'robotics', 'traffic', 'evacuation', 'gameai'];
+      const allEntries: HistoryEntry[] = [];
+      for (const sc of allScenarios) {
+        const entries = loadLocalHistory(sc);
+        entries.forEach((e) => {
+          if (!allEntries.some((x) => x.id === e.id)) allEntries.push(e);
         });
-        setHistory(mergedEntries);
-      } catch (localError) {
-        console.error(`Failed to parse local history for ${scenario}`, localError);
-        setHistory(backendEntries);
       }
-    } catch (error) {
-      console.error('Failed to fetch history from backend. Falling back to local history.', error);
-      try {
-        setHistory(loadLocalHistory(scenario));
-      } catch (localError) {
-        console.error(`Failed to parse local history for ${scenario}`, localError);
-        setHistory([]);
-      }
+      // Sort newest first
+      allEntries.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      setHistory(allEntries);
+    } catch (err) {
+      console.error('Failed to load local history', err);
+      setHistory([]);
     }
-  }, [scenario]);
-
+  }, []);
 
   useEffect(() => {
-    void loadHistory();
+    loadHistory();
   }, [loadHistory]);
 
   // Fetch base graph structure geometry from the backend api
@@ -270,15 +258,20 @@ export function useSimulation(params: { scenario: ScenarioType }) {
     };
   }, [scenario, mapMode, gameBoard, graphSize, seed, syntheticSizing.nodes, syntheticSizing.edges]);
 
+  // ── Delete history entries: localStorage only ─────────────────────────────
   const handleDeleteHistory = useCallback((ids: string[]) => {
     if (ids.length === 0) return;
 
     setHistory((prev) => {
       const updatedHistory = prev.filter((h) => !ids.includes(h.id));
-      try {
-        persistLocalHistory(scenario, updatedHistory.filter((h) => h.scenario === scenario));
-      } catch (err) {
-        console.error('Failed to update local history after delete:', err);
+      // Re-persist each scenario bucket from the updated list
+      const allScenarios: string[] = ['network', 'robotics', 'traffic', 'evacuation', 'gameai'];
+      for (const sc of allScenarios) {
+        try {
+          persistLocalHistory(sc, updatedHistory.filter((h) => h.scenario === sc));
+        } catch (err) {
+          console.error('Failed to update local history after delete:', err);
+        }
       }
       return updatedHistory;
     });
@@ -287,26 +280,31 @@ export function useSimulation(params: { scenario: ScenarioType }) {
       setIsCurrentSaved(false);
       setCurrentSavedId(null);
     }
+  }, [currentSavedId]);
 
-    void (async () => {
-      try {
-        const response = await fetch(
-          ids.length === 1 ? `${HISTORY_API}/${encodeURIComponent(ids[0])}` : HISTORY_API,
-          ids.length === 1
-            ? { method: 'DELETE' }
-            : {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ids })
-              }
-        );
+  // ── Import history entries (merge + persist per scenario) ────────────────
+  const handleImportHistory = useCallback((entries: HistoryEntry[]) => {
+    if (!entries || entries.length === 0) return;
 
-        if (!response.ok) throw new Error(`History API Error: ${response.statusText}`);
-      } catch (error) {
-        console.error('Failed to delete history from backend:', error);
+    setHistory((prev) => {
+      const existingIds = new Set(prev.map((h) => h.id));
+      const newEntries = entries.filter((e) => !existingIds.has(e.id));
+      const merged = [...newEntries, ...prev];
+      // Sort newest first
+      merged.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+      const allScenarios: string[] = ['network', 'robotics', 'traffic', 'evacuation', 'gameai'];
+      for (const sc of allScenarios) {
+        try {
+          persistLocalHistory(sc, merged.filter((h) => h.scenario === sc));
+        } catch (err) {
+          console.error('Failed to persist imported history for', sc, err);
+        }
       }
-    })();
-  }, [currentSavedId, scenario]);
+
+      return merged;
+    });
+  }, []);
 
   // Fetch run metrics and evaluated paths from the computing engine (Chunked)
   useEffect(() => {
@@ -516,7 +514,8 @@ export function useSimulation(params: { scenario: ScenarioType }) {
     setIsSaveModalOpen(true);
   }, [simResults, isCurrentSaved, history, scenario]);
 
-  const confirmSaveResult = useCallback(async () => {
+  // ── Save to localStorage only ─────────────────────────────────────────────
+  const confirmSaveResult = useCallback(() => {
     if (!simResults || !currentGraph) return;
 
     const maxRun = history
@@ -529,29 +528,22 @@ export function useSimulation(params: { scenario: ScenarioType }) {
     const compressedSimResult: MultiResultsLocal = {
       bfs: {
         ...simResults.bfs,
-        steps:
-          simResults.bfs.steps.length > 0
-            ? [simResults.bfs.steps[simResults.bfs.steps.length - 1]]
-            : []
+        steps: simResults.bfs.steps.length > 0
+          ? [simResults.bfs.steps[simResults.bfs.steps.length - 1]] : []
       },
       dfs: {
         ...simResults.dfs,
-        steps:
-          simResults.dfs.steps.length > 0
-            ? [simResults.dfs.steps[simResults.dfs.steps.length - 1]]
-            : []
+        steps: simResults.dfs.steps.length > 0
+          ? [simResults.dfs.steps[simResults.dfs.steps.length - 1]] : []
       },
       hybrid: {
         ...simResults.hybrid,
-        steps:
-          simResults.hybrid.steps.length > 0
-            ? [simResults.hybrid.steps[simResults.hybrid.steps.length - 1]]
-            : []
+        steps: simResults.hybrid.steps.length > 0
+          ? [simResults.hybrid.steps[simResults.hybrid.steps.length - 1]] : []
       }
     };
 
     const newEntryId = Date.now().toString();
-
     const newEntry: HistoryEntry = {
       id: newEntryId,
       runNumber: thisRunNumber,
@@ -565,43 +557,19 @@ export function useSimulation(params: { scenario: ScenarioType }) {
       timestamp: new Date()
     };
 
-    let savedEntry = newEntry;
-    let savedToBackend = false;
-
-    try {
-      const response = await fetch(HISTORY_API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newEntry)
-      });
-
-      if (!response.ok) throw new Error(`History API Error: ${response.statusText}`);
-
-      const json = await response.json();
-      savedEntry = normalizeHistoryEntry(json.data ?? newEntry);
-      savedToBackend = true;
-    } catch (error) {
-      console.error('Failed to save history to backend. Keeping a local copy instead.', error);
-    }
-
     setHistory((prev) => {
-      const updatedHistory = [savedEntry, ...prev.filter((h) => h.id !== savedEntry.id)];
-
+      const updatedHistory = [newEntry, ...prev.filter((h) => h.id !== newEntry.id)];
       try {
         persistLocalHistory(scenario, updatedHistory.filter((h) => h.scenario === scenario));
       } catch (err) {
-        if (!savedToBackend) {
-          alert("Browser storage limit reached and backend save failed. This result may not persist after refresh.");
-        } else {
-          console.warn('History saved to backend, but local cache could not be updated:', err);
-        }
+        alert('Browser storage limit reached. This result may not persist after refresh.');
+        console.warn('localStorage write failed:', err);
       }
-
       return updatedHistory;
     });
 
     setIsCurrentSaved(true);
-    setCurrentSavedId(savedEntry.id);
+    setCurrentSavedId(newEntryId);
     setIsSaveModalOpen(false);
   }, [
     simResults,
@@ -647,6 +615,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
     handleReset,
     handleSkipEnd,
     handleRerollEvents,
+    handleImportHistory,
     openSaveModal,
     confirmSaveResult,
     handleDeleteHistory,
