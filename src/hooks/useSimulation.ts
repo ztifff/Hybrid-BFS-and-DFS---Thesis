@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlgorithmStep, GameAIBoard, GraphSize, GraphSizing, ScenarioGraph, ScenarioType, SimulationResult } from '../types';
-import { normalizeHistoryEntries, loadLocalHistory, persistLocalHistory } from '../utils/historyHelpers';
+import { loadLocalHistory, persistLocalHistory } from '../utils/historyHelpers';
 
 import { HistoryEntry } from '../components/HistoryModal';
 
