@@ -1,8 +1,9 @@
-import { AlgorithmType, ScenarioType, AlgorithmStep, PerformanceMetrics, DynamicEvent, SimulationResult, ScenarioGraph, GraphSize, GraphSizing } from '../types';
+import { ScenarioType, AlgorithmType, SimulationResult, AlgorithmStep, GraphSize, GraphSizing, PerformanceMetrics, DynamicEvent, ScenarioGraph } from '../types';
 import { buildScenarioGraph, getDynamicCandidates } from './graphBuilder';
-import { runGraphBFS } from '../algorithms/bfs';
-import { runGraphDFS } from '../algorithms/dfs';
-import { runGraphHybrid } from '../algorithms/hybrid';
+import { BFSPathfinder } from '../algorithms/bfs';
+import { DFSPathfinder } from '../algorithms/dfs';
+import { HybridPathfinder } from '../algorithms/hybrid';
+import { SimulationEnvironment } from './simulationEnvironment';
 import { GameAIBoard } from './gameAIGraph';
 
 export type { SimulationResult };
@@ -189,7 +190,7 @@ function generateDynamicEvents(
       usedNodes.add(nodeId);
 
       const node = graph.nodes.find(n => n.id === nodeId);
-      const nodeName = node?.label?.split('\n')[0] ?? nodeId;
+      const nodeName = node?.label?.trim() ? node.label.split('\n')[0].trim() : nodeId;
 
       events.push({
         stepIndex,
@@ -295,7 +296,7 @@ export async function runSimulation(
   algorithm: AlgorithmType,
   dynamicSeed: number = Date.now(),
   useRealWorld: boolean = false,
-  networkMode: 'datacenter' | 'as733' | 'synthetic' | 'aws' | 'clinic' = 'synthetic',
+  mapId: string = 'synthetic',
   onStepProgress?: (step: AlgorithmStep) => void,
   offset: number = 0,
   limit: number = 0,
@@ -305,7 +306,8 @@ export async function runSimulation(
   sizing?: GraphSizing,
 ): Promise<SimulationResult & { meta?: { hasMore: boolean; totalSteps: number; currentOffset: number } }> {
   
-  const graph = buildScenarioGraph(scenario, useRealWorld, gameBoard, networkMode, graphSize, dynamicSeed, chessPiece, sizing);
+  const graph = buildScenarioGraph(scenario, useRealWorld, gameBoard, mapId, graphSize, dynamicSeed, chessPiece, sizing);
+
 
   let result: {
     steps: AlgorithmStep[];
@@ -316,38 +318,36 @@ export async function runSimulation(
     maxFrontierSize: number;
   };
 
-  const blockedNodes = new Set<string>();
+  const initialBlockedNodes = new Set<string>();
   const estimatedSteps = Math.max(50, Math.floor(graph.nodes.length * 1.5));
   const dynamicEvents = generateDynamicEvents(graph, scenario, estimatedSteps, dynamicSeed, gameBoard);
 
   dynamicEvents.forEach(event => {
     if (event.stepIndex === 0 && event.blocked) {
-      blockedNodes.add(event.nodeId);
+      initialBlockedNodes.add(event.nodeId);
     }
   });
 
-  let currentFrame = 1;
-
-  const wrappedStepProgress = (step: AlgorithmStep) => {
-    dynamicEvents.forEach(event => {
-      if (event.stepIndex > 0 && event.stepIndex === currentFrame) {
-        if (event.blocked) blockedNodes.add(event.nodeId);
-        else blockedNodes.delete(event.nodeId);
-      }
-    });
-    currentFrame++; 
-    onStepProgress?.(step);
-  };
+  const environment = new SimulationEnvironment(dynamicEvents, onStepProgress);
 
   const startTime = performance.now();
   const disablePathSevering = scenario === 'gameai';
 
   if (algorithm === 'bfs') {
-    result = await runGraphBFS(graph, blockedNodes, wrappedStepProgress, disablePathSevering);
+    const pathfinder = new BFSPathfinder();
+    pathfinder.seedBlockedNodes(initialBlockedNodes);
+    environment.registerObserver(pathfinder);
+    result = await pathfinder.execute(graph, environment, disablePathSevering);
   } else if (algorithm === 'dfs') {
-    result = await runGraphDFS(graph, blockedNodes, wrappedStepProgress, disablePathSevering);
+    const pathfinder = new DFSPathfinder();
+    pathfinder.seedBlockedNodes(initialBlockedNodes);
+    environment.registerObserver(pathfinder);
+    result = await pathfinder.execute(graph, environment, disablePathSevering);
   } else {
-    result = await runGraphHybrid(graph, blockedNodes, wrappedStepProgress, disablePathSevering);
+    const pathfinder = new HybridPathfinder();
+    pathfinder.seedBlockedNodes(initialBlockedNodes);
+    environment.registerObserver(pathfinder);
+    result = await pathfinder.execute(graph, environment, disablePathSevering);
   }
   const timeElapsed = Math.max(performance.now() - startTime, 0.001);
   const memoryUsed = estimateMemory(result.nodesExplored, result.maxFrontierSize, algorithm);
@@ -388,5 +388,43 @@ export async function runSimulation(
       totalSteps: totalStepsLength,
       currentOffset: Number(offset)
     }
+  };
+}
+
+export async function orchestrateSimulation(
+  scenario: ScenarioType,
+  seed: number,
+  useRealWorld: boolean,
+  mapId: string,
+  offset: number,
+  limit: number,
+  gameBoard: GameAIBoard | undefined,
+  graphSize: GraphSize,
+  chessPiece: string,
+  activeSizing: GraphSizing | undefined
+) {
+  const bfsRes    = await runSimulation(scenario, 'bfs',    seed, useRealWorld, mapId, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing);
+  const dfsRes    = await runSimulation(scenario, 'dfs',    seed, useRealWorld, mapId, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing);
+  const hybridRes = await runSimulation(scenario, 'hybrid', seed, useRealWorld, mapId, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing);
+
+  let optimalPathLength = 0;
+  if (offset === 0) {
+    const env = new SimulationEnvironment([]);
+    const pathfinder = new BFSPathfinder();
+    const optimalResult = await pathfinder.execute(hybridRes.graph, env, false);
+    optimalPathLength = optimalResult.pathLength;
+  }
+
+  const recordId = Math.random().toString(36).substring(7);
+
+  return {
+    id: recordId,
+    createdAt: new Date(),
+    results: {
+      bfs: bfsRes,
+      dfs: dfsRes,
+      hybrid: hybridRes
+    },
+    optimalPathLength: optimalPathLength
   };
 }

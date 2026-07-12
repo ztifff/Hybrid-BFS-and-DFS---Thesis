@@ -49,14 +49,27 @@ function resolveNetworkShape(targetNodes: number, fallback: typeof SIZE_CONFIG.m
 export function buildNetworkGraph(
   useRealWorld: boolean = false, 
   seed: number = 123, 
-  networkMode: string = 'synthetic',
+  mapId: string = 'synthetic',
   graphSize: GraphSize = 'medium',
   sizing?: GraphSizing
 ): ScenarioGraph {
   if (useRealWorld) {
-    const baseGraph = networkMode === 'datacenter' ? datacenterNetworkGraph : as733NetworkGraph;
+    const registry: Record<string, any> = {
+      'datacenter': datacenterNetworkGraph,
+      'as733': as733NetworkGraph
+    };
+    const baseGraph = registry[mapId] || datacenterNetworkGraph;
     const rwGraph = { ...(baseGraph as ScenarioGraph) };
     
+    let currentSeed = seed;
+
+    // Pick a random source node among the core routers (datacenter)
+    const potentialCores = rwGraph.nodes.filter(n => n.type === 'datacenter');
+    if (potentialCores.length > 0) {
+      const coreIndex = Math.floor(seededRandom(currentSeed++) * potentialCores.length);
+      rwGraph.sourceId = potentialCores[coreIndex].id;
+    }
+
     // Real-world datacenters use 'server' or 'access_point'. AS733 just uses raw nodes.
     let potentialExits = rwGraph.nodes.filter(n => n.type === 'access_point' || n.type === 'server');
     if (potentialExits.length === 0) {
@@ -64,7 +77,6 @@ export function buildNetworkGraph(
     }
 
     if (potentialExits.length > 0) {
-      let currentSeed = seed;
       const shuffled = [...potentialExits];
       for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(seededRandom(currentSeed++) * (i + 1));

@@ -57,16 +57,19 @@ function resolveRoboticsShape(targetNodes: number, fallback: typeof SIZE_CONFIG.
 export function buildRoboticsGraph(
   useRealWorld: boolean = false, 
   seed: number = 123, 
-  roboticsMode: string = 'aws',
+  mapId: string = 'aws',
   graphSize: GraphSize = 'medium',
   sizing?: GraphSizing
 ): ScenarioGraph {
   if (useRealWorld) {
-    // Make a shallow copy so we don't permanently mutate the backend's static file!
-    const baseGraph = roboticsMode === 'clinic' ? clinicGraph : awsWarehouseGraph;
-let rwGraph = { ...(baseGraph as ScenarioGraph) };
+    const registry: Record<string, any> = {
+      'aws': awsWarehouseGraph,
+      'clinic': clinicGraph
+    };
+    const baseGraph = registry[mapId] || awsWarehouseGraph;
+    let rwGraph = { ...(baseGraph as ScenarioGraph) };
 
-if (roboticsMode === 'clinic') {
+    if (mapId === 'clinic') {
   const xs = rwGraph.nodes.map(n => n.x);
   const ys = rwGraph.nodes.map(n => n.y);
   const minX = Math.min(...xs), maxX = Math.max(...xs);

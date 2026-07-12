@@ -56,25 +56,19 @@ function resolveEvacuationShape(targetNodes: number, fallback: typeof SIZE_CONFI
 export function buildEvacuationGraph(
   useRealWorld: boolean = false,
   seed: number = 123,
-  mode?: string,
+  mapId?: string,
   graphSize: GraphSize = 'medium',
   sizing?: GraphSizing
 ): ScenarioGraph {
   if (useRealWorld) {
-    if (mode === 'city') {
-      const rwGraph = { ...(emergencyRoutingGraph as ScenarioGraph) };
-      const startZones = rwGraph.nodes.filter((node) => node.type === 'origin' || node.type === 'room');
+    const registry: Record<string, any> = {
+      'city': emergencyRoutingGraph,
+      'building': buildingEvacuationGraph
+    };
+    const baseGraph = registry[mapId || 'building'] || buildingEvacuationGraph;
+    const rwGraph = { ...(baseGraph as ScenarioGraph) };
 
-      if (startZones.length > 0) {
-        const startIdx = Math.floor(seededRandom(seed) * startZones.length);
-        rwGraph.sourceId = startZones[startIdx].id;
-      }
-
-      return rwGraph;
-    }
-
-    const rwGraph = { ...(buildingEvacuationGraph as ScenarioGraph) };
-    const startZones = rwGraph.nodes.filter((node) => node.type === 'room');
+    const startZones = rwGraph.nodes.filter((node: any) => node.type === 'origin' || node.type === 'room');
 
     if (startZones.length > 0) {
       const startIdx = Math.floor(seededRandom(seed) * startZones.length);

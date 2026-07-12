@@ -80,9 +80,9 @@ export const NetworkCanvas: React.FC<Props> = ({
   
   const isDatacenter = scenario === 'network' && width > 100000;
   const isLayeredMap = useMemo(() => nodes.some(n => n.buildingId === 'GL' || n.buildingId === 'L2'), [nodes]);
-  const isDenseProcedural = nodes.length > 220 && width <= 100000 && !isLayeredMap && (scenario === 'network' || scenario === 'evacuation');
+  const isDenseProcedural = nodes.length > 500 && width <= 100000 && !isLayeredMap && (scenario === 'network' || scenario === 'evacuation');
 
-  const isMassive = nodes.length > 220 || isDenseProcedural;
+  const isMassive = nodes.length > 500 || isDenseProcedural;
 
   const SVG_W = 960;
   const SVG_H = 680;
@@ -665,12 +665,12 @@ export const NetworkCanvas: React.FC<Props> = ({
         const x1 = sx(fromNode.x), y1 = sy(fromNode.y);
         const x2 = sx(toNode.x), y2 = sy(toNode.y);
         const midX = (x1 + x2) / 2;
-        const midY = (y1 + y2) / 2;
+        const mi = (y1 + y2) / 2;
 
         const unit = scenario === 'evacuation' ? 's' : scenario === 'network' ? 'ms' : 'm';
         const label = edge.label || `${edge.latency}${unit}`;
-        ctx.strokeText(label, midX, midY);
-        ctx.fillText(label, midX, midY);
+        ctx.strokeText(label, midX, mi);
+        ctx.fillText(label, midX, mi);
       });
       ctx.restore();
     }

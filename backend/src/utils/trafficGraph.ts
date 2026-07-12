@@ -15,10 +15,14 @@ export function buildTrafficGraph(
   useRealWorld: boolean = false, 
   graphSize: GraphSize = 'medium',
   seed: number = 123,
+  mapId?: string,
   sizing?: GraphSizing
 ): ScenarioGraph {
   if (useRealWorld) {
-    return cabuyaoTrafficGraph as ScenarioGraph;
+    const registry: Record<string, any> = {
+      'cabuyao': cabuyaoTrafficGraph
+    };
+    return (registry[mapId || 'cabuyao'] || cabuyaoTrafficGraph) as ScenarioGraph;
   }
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];

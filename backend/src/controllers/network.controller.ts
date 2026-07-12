@@ -7,11 +7,9 @@ import { parseGraphSizing } from '../utils/graphSizing';
 export const getGraphData = (req: Request, res: Response) => {
   try {
     const scenario = req.query.scenario as ScenarioType;
-    const useRealWorld = req.query.useRealWorld === 'true';
-    const networkMode = (req.query.networkMode as string) || 'synthetic';
-    const roboticsMode = (req.query.roboticsMode as string) || 'aws';
-    const evacuationMode = (req.query.evacuationMode as string) || 'building';
-    const mode = scenario === 'robotics' ? roboticsMode : scenario === 'evacuation' ? evacuationMode : networkMode;
+    const mapId = (req.query.mapId as string) || 'synthetic';
+    const useRealWorld = mapId !== 'synthetic';
+    const mode = mapId;
     const gameBoard = req.query.gameBoard as GameAIBoard | undefined;
     const graphSize = (req.query.graphSize as GraphSize) || 'medium';
     const sizing = useRealWorld

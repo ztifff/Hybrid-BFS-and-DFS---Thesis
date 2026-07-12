@@ -1,173 +1,152 @@
 import fs from "node:fs";
 import path from "node:path";
-import http from "node:http";
-import zlib from "node:zlib";
 
 interface GraphNode { id: string; label: string; type: string; x: number; y: number; level: number; }
 interface GraphEdge { id: string; from: string; to: string; latency: number; type: string; }
 interface ScenarioGraph { nodes: GraphNode[]; edges: GraphEdge[]; sourceId: string; destinationIds: string[]; width: number; height: number; }
 
-const DOWNLOAD_URL = "http://snap.stanford.edu/data/p2p-Gnutella08.txt.gz";
-const TARGET_NODE_COUNT = 400; 
+// K-ary Fat-Tree Parameters
+const k = 8;
+const CORE_COUNT = (k / 2) * (k / 2); // 16
+const POD_COUNT = k; // 8
+const AGG_PER_POD = k / 2; // 4
+const EDGE_PER_POD = k / 2; // 4
+const HOSTS_PER_EDGE = k / 2; // 4
 
-function generateGnutellaNetwork() {
-  console.log("📥 Downloading p2p-Gnutella08 dataset from Stanford SNAP...");
+const W = 1600;
+const H = 1200;
 
-  http.get(DOWNLOAD_URL, (response) => {
-    if (response.statusCode !== 200) {
-      console.error(`❌ Failed to download: HTTP ${response.statusCode}`);
-      return;
-    }
-
-    const gunzip = zlib.createGunzip();
-    response.pipe(gunzip);
-
-    let data = "";
-    gunzip.on("data", (chunk) => { data += chunk; });
-    gunzip.on("end", () => {
-      console.log("✅ Download complete! Parsing real-world network graph...");
-      parseAndBuildGraph(data);
-    });
-  }).on("error", (err) => {
-    console.error("❌ Network error:", err.message);
-  });
-}
-
-function parseAndBuildGraph(data: string) {
-  const lines = data.split('\n');
-  const adjacencyList = new Map<string, Set<string>>();
-
-  lines.forEach(line => {
-    if (line.startsWith('#') || line.trim() === '') return;
-    const [from, to] = line.trim().split('\t');
-    if (!from || !to) return;
-
-    if (!adjacencyList.has(from)) adjacencyList.set(from, new Set());
-    if (!adjacencyList.has(to)) adjacencyList.set(to, new Set());
-    
-    adjacencyList.get(from)!.add(to);
-    adjacencyList.get(to)!.add(from);
-  });
-
-  let maxDegree = 0;
-  let sourceNodeId = "";
-  for (const [node, edges] of adjacencyList.entries()) {
-    if (edges.size > maxDegree) {
-      maxDegree = edges.size;
-      sourceNodeId = node;
-    }
-  }
-
-  const visited = new Set<string>();
-  const nodeLevels = new Map<string, number>();
-  // 🧠 THE FIX Part 1: Track the Spanning Tree (the backbone)
-  const parentMap = new Map<string, string>(); 
-  
-  const queue: { id: string; level: number }[] = [{ id: sourceNodeId, level: 0 }];
-  
-  visited.add(sourceNodeId);
-  nodeLevels.set(sourceNodeId, 0);
-
-  while (queue.length > 0 && visited.size < TARGET_NODE_COUNT) {
-    const current = queue.shift()!;
-    const neighbors = adjacencyList.get(current.id);
-    
-    if (neighbors) {
-      for (const neighbor of neighbors) {
-        if (!visited.has(neighbor)) {
-          visited.add(neighbor);
-          nodeLevels.set(neighbor, current.level + 1);
-          parentMap.set(neighbor, current.id); // Record who discovered this node!
-          queue.push({ id: neighbor, level: current.level + 1 });
-          if (visited.size >= TARGET_NODE_COUNT) break;
-        }
-      }
-    }
-  }
-
-  const W = 1600;
-  const H = 1200;
-  const cx = W / 2;
-  const cy = H / 2;
-  
-  const maxLevel = Math.max(...Array.from(nodeLevels.values()));
-  const radiusStep = 500 / maxLevel; 
-
-  const nodesByLevel = new Map<number, string[]>();
-  for (const [node, level] of nodeLevels.entries()) {
-    if (!nodesByLevel.has(level)) nodesByLevel.set(level, []);
-    nodesByLevel.get(level)!.push(node);
-  }
+function generateFatTreeNetwork() {
+  console.log(`Generating k=${k} Fat-Tree Datacenter Topology...`);
 
   const nodes: GraphNode[] = [];
+  const edges: GraphEdge[] = [];
   const destinationIds: string[] = [];
+  
+  let sourceId = "core-0"; // Start at the first core router
 
-  for (const [level, group] of nodesByLevel.entries()) {
-    const count = group.length;
-    const radius = level * radiusStep;
-
-    group.forEach((nodeId, index) => {
-      const angle = (index / count) * 2 * Math.PI;
-      const x = cx + radius * Math.cos(angle);
-      const y = cy + radius * Math.sin(angle);
-
-      let type = "router";
-      
-      if (level === 0) {
-        type = "datacenter";
-      } else if (level === maxLevel || adjacencyList.get(nodeId)!.size === 1) {
-        type = "access_point";
-        if (destinationIds.length < 12) destinationIds.push(nodeId);
-      }
-
-      nodes.push({ id: nodeId, label: `IP-${nodeId}`, type, x, y, level });
+  // 1. Generate Core Switches (Level 0)
+  // 16 cores evenly spaced across W
+  for (let i = 0; i < CORE_COUNT; i++) {
+    nodes.push({
+      id: `core-${i}`,
+      label: `Core-${i}`,
+      type: "datacenter",
+      x: (W / (CORE_COUNT + 1)) * (i + 1),
+      y: 150,
+      level: 0
     });
   }
 
-  const edges: GraphEdge[] = [];
-  const addedEdges = new Set<string>();
+  // Generate Pods
+  const podWidth = W / POD_COUNT;
+  for (let p = 0; p < POD_COUNT; p++) {
+    const podStartX = p * podWidth;
+    const podCenterX = podStartX + (podWidth / 2);
 
-  for (const nodeId of visited) {
-    const neighbors = adjacencyList.get(nodeId);
-    if (neighbors) {
-      for (const neighbor of neighbors) {
-        if (visited.has(neighbor)) {
-          const edgeId1 = `e_${nodeId}_${neighbor}`;
-          const edgeId2 = `e_${neighbor}_${nodeId}`;
-          
-          if (!addedEdges.has(edgeId1) && !addedEdges.has(edgeId2)) {
-            
-            // 🧠 THE FIX Part 2: Filter the edges!
-            // Is this edge part of the core backbone?
-            const isSpanningTree = parentMap.get(nodeId) === neighbor || parentMap.get(neighbor) === nodeId;
+    // 2. Generate Aggregation Switches (Level 1)
+    for (let a = 0; a < AGG_PER_POD; a++) {
+      const aggId = `pod${p}-agg${a}`;
+      nodes.push({
+        id: aggId,
+        label: `Agg-${p}-${a}`,
+        type: "building_router",
+        x: podStartX + (podWidth / (AGG_PER_POD + 1)) * (a + 1),
+        y: 350,
+        level: 1
+      });
 
-            // Keep ALL backbone edges (to guarantee connectivity).
-            // For the thousands of extra mesh cables, randomly keep only 10% of them.
-            if (isSpanningTree || Math.random() < 0.10) {
-              const latency = Math.floor(Math.random() * 10) + 1;
-              edges.push({ id: edgeId1, from: nodeId, to: neighbor, latency, type: "fiber" });
-              edges.push({ id: edgeId2, from: neighbor, to: nodeId, latency, type: "fiber" });
-              addedEdges.add(edgeId1);
-              addedEdges.add(edgeId2);
-            }
-          }
-        }
+      // Connect Aggregation to Core
+      // Agg switch 'a' connects to exactly k/2 core switches.
+      // Specifically: cores from (a * k/2) to (a * k/2 + k/2 - 1)
+      const coreStart = a * (k / 2);
+      for (let j = 0; j < k / 2; j++) {
+        const coreIndex = coreStart + j;
+        edges.push({
+          id: `e-${aggId}-core${coreIndex}`,
+          from: aggId,
+          to: `core-${coreIndex}`,
+          latency: 2,
+          type: "fiber"
+        });
+      }
+    }
+
+    // 3. Generate Edge Switches (Level 2)
+    for (let e = 0; e < EDGE_PER_POD; e++) {
+      const edgeId = `pod${p}-edge${e}`;
+      nodes.push({
+        id: edgeId,
+        label: `Edge-${p}-${e}`,
+        type: "floor_router",
+        x: podStartX + (podWidth / (EDGE_PER_POD + 1)) * (e + 1),
+        y: 550,
+        level: 2
+      });
+
+      // Connect Edge to all Aggregation switches in the SAME pod
+      for (let a = 0; a < AGG_PER_POD; a++) {
+        const aggId = `pod${p}-agg${a}`;
+        edges.push({
+          id: `e-${edgeId}-${aggId}`,
+          from: edgeId,
+          to: aggId,
+          latency: 5,
+          type: "fiber"
+        });
+      }
+
+      // 4. Generate Hosts (Level 3)
+      // We will place them in a small grid under the edge switch
+      const edgeX = podStartX + (podWidth / (EDGE_PER_POD + 1)) * (e + 1);
+      for (let h = 0; h < HOSTS_PER_EDGE; h++) {
+        const hostId = `pod${p}-edge${e}-host${h}`;
+        // Stagger X slightly around the edge switch
+        const hx = edgeX + (h - 1.5) * 20; 
+        // Stagger Y so they don't overlap (simulate racks)
+        const hy = 750 + (h % 2) * 50;
+        
+        nodes.push({
+          id: hostId,
+          label: `Host-${p}-${e}-${h}`,
+          type: "server",
+          x: hx,
+          y: hy,
+          level: 3
+        });
+        
+        destinationIds.push(hostId);
+
+        edges.push({
+          id: `e-${hostId}-${edgeId}`,
+          from: hostId,
+          to: edgeId,
+          latency: 10,
+          type: "copper"
+        });
       }
     }
   }
 
-  if (destinationIds.length === 0 && nodes.length > 1) {
-    destinationIds.push(nodes[nodes.length - 1].id);
-  }
+  const graph: ScenarioGraph = {
+    nodes,
+    edges,
+    sourceId,
+    destinationIds,
+    width: W,
+    height: H
+  };
 
-  const graph: ScenarioGraph = { nodes, edges, sourceId: sourceNodeId, destinationIds, width: W, height: H };
-  
-  const outPath = path.join(process.cwd(), "src", "data", "network.datacenter.ts");
-  const fileContent = `// Auto-generated Sparse Stanford SNAP (p2p-Gnutella08)\nimport type { ScenarioGraph } from "../types";\n\nexport const datacenterNetworkGraph: ScenarioGraph = ${JSON.stringify(graph, null, 2)};\n`;
+  const outPath = path.join(__dirname, "..", "data", "network.datacenter.ts");
+  const fileContent = `// Auto-generated k-ary Fat-Tree Topology (k=${k})
+import type { ScenarioGraph } from "../types";
 
-  fs.writeFileSync(outPath, fileContent);
-  console.log(`✅ EPIC SPARSE SNAP NETWORK GENERATED!`);
-  console.log(`📊 Nodes: ${nodes.length} | Edges: ${edges.length / 2} | Exits: ${destinationIds.length}`);
+export const datacenterNetworkGraph: ScenarioGraph = ${JSON.stringify(graph, null, 2)};
+`;
+
+  fs.writeFileSync(outPath, fileContent, "utf8");
+  console.log(`✅ FAT-TREE NETWORK GENERATED!`);
+  console.log(` Nodes: ${nodes.length} | Edges: ${edges.length} | Hosts (Exits): ${destinationIds.length}`);
 }
 
-generateGnutellaNetwork();
+generateFatTreeNetwork();

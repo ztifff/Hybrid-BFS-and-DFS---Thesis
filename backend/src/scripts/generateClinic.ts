@@ -102,6 +102,12 @@ function parseOpenRMFClinic() {
   // 🧠 FIX: Safely map original YAML indices to the new Graph Nodes
   const nodeMap = new Map<number, GraphNode>();
 
+  function getAisleName(x: number, y: number) {
+    const horizontal = x < W * 0.4 ? "West" : x > W * 0.6 ? "East" : "Central";
+    const vertical = y < H * 0.4 ? "North" : y > H * 0.6 ? "South" : "Mid";
+    return `Clinic Corridor (${vertical}-${horizontal})`;
+  }
+
   rawVertices.forEach((v, index) => {
     if (!usedVertexIndices.has(index)) return; // Throw away the unconnected wall corners
 
@@ -116,12 +122,15 @@ function parseOpenRMFClinic() {
       }
     }
 
+    const nodeX = scaleX(v.x);
+    const nodeY = scaleY(v.y);
+
     const node: GraphNode = {
       id: nodeId,
-      label: isNamed ? v.name : '',
+      label: isNamed ? v.name : getAisleName(nodeX, nodeY),
       type: isNamed ? (sourceId === nodeId ? 'depot' : 'shelf') : 'aisle',
-      x: scaleX(v.x),
-      y: scaleY(v.y),
+      x: nodeX,
+      y: nodeY,
       level: 1
     };
     
@@ -145,7 +154,7 @@ function parseOpenRMFClinic() {
 
   const graph: ScenarioGraph = { nodes, edges, sourceId, destinationIds, width: W, height: H };
 
-  const outPath = path.join(process.cwd(), "src", "data", "robotics.clinic.ts.ts");
+  const outPath = path.join(process.cwd(), "src", "data", "robotics.clinic.ts");
   const fileContent = `// Auto-generated from Open-RMF Clinic Dataset\nimport type { ScenarioGraph } from "../types";\n\nexport const clinicGraph : ScenarioGraph = ${JSON.stringify(graph, null, 2)};\n`;
 
   fs.writeFileSync(outPath, fileContent);

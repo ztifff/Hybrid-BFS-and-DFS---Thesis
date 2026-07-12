@@ -1,70 +1,45 @@
 import { Request, Response } from 'express';
 import { SimulationResult, ScenarioType, GraphSize, GraphSizing } from '../types/index';
-import { runSimulation } from '../utils/simulationRunner';
-import { runGraphBFS } from '../algorithms/bfs';
+import { orchestrateSimulation } from '../utils/simulationRunner';
 import { simulationHistory } from '../store/historyStore';
 
 
 export class SimulationController {
  async runSimulation(req: Request, res: Response): Promise<void> {
     try {
-      const { scenario, useRealWorld, networkMode, roboticsMode, evacuationMode, seed, gameBoard, graphSize, chessPiece, sizing } = req.body as {
+      const { scenario, mapId, seed, gameBoard, graphSize, chessPiece, sizing } = req.body as {
         scenario: ScenarioType;
-        useRealWorld: boolean;
-        networkMode: string;
-        roboticsMode: string; 
-        evacuationMode?: string;
+        mapId: string;
         seed: number;
         gameBoard?: 'dama' | 'checkers' ;
-        customGraphId?: string;
-        graphSize: GraphSize;
+        graphSize?: GraphSize;
         chessPiece?: string;
         sizing?: GraphSizing;
       };
-
 
       const offset = Number(req.query.offset || 0);
       const limit = Number(req.query.limit || 0);
 
       if (!scenario) {
-        res.status(400).json({ success: false, error: 'Scenario is required' });
+        res.status(400).json({ success: false, error: 'Missing required field: scenario' });
         return;
       }
 
-      // 🧠 FIX: Determine which mode to use based on the scenario
-      const modeArg = (scenario === 'robotics' ? roboticsMode : scenario === 'evacuation' ? (evacuationMode || 'building') : networkMode) as 'datacenter' | 'as733' | 'synthetic' | 'aws' | 'clinic';
-
-
-      // 🧠 FIX: Argument order corrected! 'modeArg' comes BEFORE 'gameBoard'
+      const useRealWorld = mapId !== 'synthetic';
       const activeSizing = useRealWorld ? undefined : sizing;
-      const bfsRes    = await runSimulation(scenario, 'bfs',    seed, useRealWorld, modeArg, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing);
-      const dfsRes    = await runSimulation(scenario, 'dfs',    seed, useRealWorld, modeArg, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing);
-      const hybridRes = await runSimulation(scenario, 'hybrid', seed, useRealWorld, modeArg, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing);
-
-
-      let optimalPathLength = 0;
       
-      // Only calculate the optimal path if this is the first chunk. 
-      // (Subsequent chunks have the graph data stripped to save payload size)
-      if (offset === 0) {
-        const optimalResult = await runGraphBFS(hybridRes.graph);
-        optimalPathLength = optimalResult.pathLength;
-      }
-
-      const recordId = Math.random().toString(36).substring(7);
-
-const record = {
-  id: recordId,
-  createdAt: new Date(),
-  results: {
-    bfs: bfsRes,
-    dfs: dfsRes,
-    hybrid: hybridRes
-  },
-  optimalPathLength: optimalPathLength
-};
-
-
+      const record = await orchestrateSimulation(
+        scenario,
+        seed,
+        useRealWorld,
+        mapId,
+        offset,
+        limit,
+        gameBoard,
+        graphSize || 'medium',
+        chessPiece || 'knight',
+        activeSizing
+      );
 
       res.status(200).json({ success: true, data: record });
     } catch (err: unknown) {

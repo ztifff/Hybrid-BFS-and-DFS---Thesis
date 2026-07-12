@@ -104,13 +104,13 @@ export const DynamicMapEvents: React.FC<Props> = ({ dynamicEvents, stepIndex, si
             >
               <div className="flex items-start gap-1">
                 <span className="font-mono opacity-60 shrink-0">[{event.stepIndex}]</span>
-                <span>{event.blocked ? '⚡' : '✅'} {event.label}</span>
+                <span>{event.blocked ? '⛔' : '✅'} {event.label}</span>
               </div>
 
               {/* 🧠 Mixed Intelligence: If an algorithm was compromised, display badges contextually right inside the incident card */}
               {event.blocked && event.affectedAlgorithms.length > 0 && scenario !== 'gameai' && (
                 <div className="mt-1 pl-5 flex flex-wrap items-center gap-1.5 text-[10px]">
-                  <span className="text-red-400 font-semibold">⚠️ Path Severed:</span>
+                  <span className="text-red-400 font-semibold">🚨 Path Severed:</span>
                   {event.affectedAlgorithms.map((algo) => (
                     <span 
                       key={algo} 
