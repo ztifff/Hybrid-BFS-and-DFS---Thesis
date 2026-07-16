@@ -66,6 +66,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
   const [view, setView] = useState<'list' | 'detail'>('list');
   const [activeEntry, setActiveEntry] = useState<HistoryEntry | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
   const importInputRef = React.useRef<HTMLInputElement>(null);
 
   // ── Auto-generate a smart export filename ───────────────────────────────
@@ -124,6 +125,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
       setActiveEntry(null); 
       setSelectedIds(new Set()); 
       setDeleteConfirmId(null);
+      setHighlightedNodeId(null);
     }
   }, [isOpen]);
 
@@ -159,6 +161,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
   };
 
   const handleOpenDetail = (entry: HistoryEntry) => {
+    setHighlightedNodeId(null);
     setActiveEntry(entry);
     setView('detail');
   };
@@ -367,6 +370,8 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
                 stepIndex={maxEventStep > 0 ? maxEventStep : maxSteps}
                 dynamicEvents={allEvents}
                 historicalBlockedNodeIds={blockedNodeIds}
+                highlightedNodeId={highlightedNodeId}
+                onDeselect={() => setHighlightedNodeId(null)}
               />
             )}
           </div>
@@ -512,16 +517,26 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
             <div className="mt-2 pt-2 border-t border-gray-800/50">
               <span className="font-bold text-orange-400 block text-[10px] uppercase tracking-wider mb-2">⚡ Dynamic Blockages</span>
               <div className="flex flex-col gap-1.5 max-h-[160px] overflow-y-auto">
-                {allEvents.map((event, idx) => (
-                  <div key={idx} className={`flex items-start gap-2 p-2 rounded border ${
-                    event.blocked
-                      ? 'border-orange-500/30 bg-orange-900/10 text-orange-300'
-                      : 'border-green-500/30 bg-green-900/10 text-green-300'
-                  }`}>
-                    <span className="font-mono opacity-60 shrink-0">[{event.stepIndex}]</span>
-                    <span>{event.blocked ? '🔴' : '🟢'} {event.label}</span>
-                  </div>
-                ))}
+                {allEvents.map((event, idx) => {
+                  const isHighlighted = highlightedNodeId === event.nodeId;
+                  return (
+                    <div
+                      key={idx}
+                      onClick={() => setHighlightedNodeId(prev => prev === event.nodeId ? null : event.nodeId)}
+                      title="Click to locate on map"
+                      className={`flex items-start gap-2 p-2 rounded border cursor-pointer select-none transition-all ${
+                        isHighlighted
+                          ? 'border-yellow-400 bg-yellow-900/20 shadow-[0_0_8px_rgba(234,179,8,0.35)] scale-[1.01]'
+                          : event.blocked
+                            ? 'border-orange-500/30 bg-orange-900/10 text-orange-300 hover:border-orange-400/60'
+                            : 'border-green-500/30 bg-green-900/10 text-green-300 hover:border-green-400/60'
+                      }`}
+                    >
+                      <span className="font-mono opacity-60 shrink-0">[{event.stepIndex}]</span>
+                      <span>{event.blocked ? '🔴' : '🟢'} {event.label}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

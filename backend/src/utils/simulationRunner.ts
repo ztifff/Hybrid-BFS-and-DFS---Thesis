@@ -132,8 +132,8 @@ function generateDynamicEvents(
       aoeLabels = [{ block: '🔥 Fire Spreads Rapidly', clear: '✅ Fire Contained' }, { block: '💨 Smoke Fills Corridor', clear: '✅ Ventilation Restored' }];
       break;
     case 'gameai':
-      standardLabels = [{ block: '♟️ Opponent Piece Deployed', clear: '✅ Opponent Retreats' }, { block: '🎯 Opponent Attacks', clear: '♟️ Opponent Moves Away' }];
-      aoeLabels = [{ block: '[Act] 💥 Opponent Formation', clear: '✅ Formation Breaks' }];
+      standardLabels = [{ block: 'Opponent Piece Deployed', clear: 'Opponent Retreats' }, { block: 'Opponent Attacks', clear: 'Opponent Moves Away' }];
+      aoeLabels = [{ block: 'Opponent Formation', clear: 'Formation Breaks' }];
       break;
     default:
       standardLabels = [{ block: '⚠️ Dynamic Outage', clear: '✅ Outage Resolved' }];
@@ -351,6 +351,57 @@ export async function runSimulation(
   }
   const timeElapsed = Math.max(performance.now() - startTime, 0.001);
   const memoryUsed = estimateMemory(result.nodesExplored, result.maxFrontierSize, algorithm);
+
+  // ✅ PERSIST FIX: Ensure every blockage resolves before the simulation ends.
+  // The events were generated with an *estimated* step count, but the algorithm
+  // may finish faster (especially BFS/Hybrid). Any blocked node with no clear event
+  // at or before the final step gets a forced resolve injected at the last step.
+  const actualFinalStep = Math.max(result.steps.length - 1, 0);
+
+  // Build a map: nodeId -> latest clear step (or -1 if never cleared)
+  const latestClearStep = new Map<string, number>();
+  const firstBlockStep  = new Map<string, { step: number; label: string }>(); // for generating the clear label
+
+  dynamicEvents.forEach(ev => {
+    if (ev.blocked) {
+      if (!firstBlockStep.has(ev.nodeId)) {
+        firstBlockStep.set(ev.nodeId, { step: ev.stepIndex, label: ev.label });
+      }
+    } else {
+      const prev = latestClearStep.get(ev.nodeId) ?? -1;
+      if (ev.stepIndex > prev) latestClearStep.set(ev.nodeId, ev.stepIndex);
+    }
+  });
+
+  // Find the clear-label for each scenario
+  const clearSuffix: Record<string, string> = {
+    robotics:   'Cleared',
+    network:    'Restored',
+    traffic:    'Reopened',
+    evacuation: 'Resolved',
+    gameai:     'Resolved',
+  };
+  const suffix = clearSuffix[scenario] ?? 'Resolved';
+
+  firstBlockStep.forEach((info, nodeId) => {
+    const lastClear = latestClearStep.get(nodeId) ?? -1;
+    // If the last clear is still AFTER the actual simulation end, it won't be seen.
+    // Also inject if there's NO clear event at all before (or at) the final step.
+    const isUnresolved = lastClear < 0 || lastClear > actualFinalStep;
+    if (isUnresolved) {
+      const node = graph.nodes.find(n => n.id === nodeId);
+      const nodeName = node?.label?.trim() ? node.label.split('\n')[0].trim() : nodeId;
+      dynamicEvents.push({
+        stepIndex: actualFinalStep,
+        nodeId,
+        blocked: false,
+        label: `✅ ${suffix} at ${nodeName}`,
+      });
+    }
+  });
+
+  // Re-sort after injections so the frontend renders events in order
+  dynamicEvents.sort((a, b) => a.stepIndex - b.stepIndex);
 
   const exitIndex = result.foundDestination ? graph.destinationIds.indexOf(result.foundDestination) : null;
   const totalGraphNodes = graph.nodes.length || 1;

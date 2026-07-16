@@ -4,6 +4,7 @@ import { ALGORITHMS } from '../config/scenarios';
 
 interface Props {
   scenario: ScenarioType;
+  mapId?: string;
 }
 
 interface LegendItem {
@@ -19,7 +20,7 @@ const SCENARIO_NODE_ITEMS: Record<ScenarioType, LegendItem[]> = {
     { color: '#1d4ed8', label: 'Building / Core Router', icon: '📡' },
     { color: '#2563eb', label: 'Floor / Edge Switch',    icon: '🔀' },
     { color: '#3b82f6', label: 'Access Point (Target)', icon: '📶' },
-    { color: '#450a0a', label: 'Failed Component',       icon: '💀' },
+    { color: '#450a0a', label: 'Failed Component',       icon: '💥' },
   ],
   robotics: [
     { color: '#92400e', label: 'Central Depot (Source)', icon: '🏭' },
@@ -41,13 +42,13 @@ const SCENARIO_NODE_ITEMS: Record<ScenarioType, LegendItem[]> = {
     { color: '#dc2626', label: 'Corridor',                  icon: '🚶' },
     { color: '#ef4444', label: 'Stairwell',                 icon: '🪜' },
     { color: '#0e7490', label: 'Real-World Place',          icon: '🏬' },
-    { color: '#450a0a', label: 'Fire Blocked',              icon: '🔥' },
+    { color: '#c2410c', label: 'Fire Blocked',              icon: '🔥' },
   ],
   gameai: [
-    { color: '#9333ea', label: 'Strategy Planner (Source)', icon: '♟️' },
+    { color: '#9333ea', label: 'Strategy Planner (Source)', icon: '🔵' },
     { color: '#dc2626', label: 'Winning Square / King Row', icon: '🏁' },
     { color: '#64748b', label: 'Board Tile (Dama Square)', icon: '⚪' },
-    { color: '#ef4444', label: 'Opponent Piece (Blocked)', icon: '♟️' },
+    { color: '#ef4444', label: 'Opponent Piece (Blocked)', icon: '🔴' },
   ],
 };
 
@@ -73,8 +74,20 @@ const EDGE_ITEMS: Record<ScenarioType, LegendItem[]> = {
   ],
 };
 
-export const Legend: React.FC<Props> = ({ scenario }) => {
-  const nodeItems = SCENARIO_NODE_ITEMS[scenario] ?? [];
+export const Legend: React.FC<Props> = ({ scenario, mapId }) => {
+  const rawItems = SCENARIO_NODE_ITEMS[scenario] ?? [];
+  // For gameai: replace the generic icons with the board-appropriate icons
+  const nodeItems = scenario === 'gameai'
+    ? rawItems.map(item => {
+        if (item.label === 'Opponent Piece (Blocked)') {
+          return { ...item, icon: mapId === 'dama' ? '🔻' : '🔴' };
+        }
+        if (item.label === 'Strategy Planner (Source)') {
+          return { ...item, icon: mapId === 'dama' ? '🔷' : '🔵' };
+        }
+        return item;
+      })
+    : rawItems;
   const edgeItems = EDGE_ITEMS[scenario] ?? [];
 
   const cBFS = ALGORITHMS.find(a => a.id === 'bfs')?.color || '#4ade80';

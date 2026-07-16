@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { ScenarioType, GameAIBoard } from '../types';
 import { useSimulation } from '../hooks/useSimulation';
@@ -43,6 +43,12 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const sc = getScenario(scenario);
 
   const sim = useSimulation({ scenario });
+
+  const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
+
+  const handleEventClick = (nodeId: string) => {
+    setHighlightedNodeId(prev => prev === nodeId ? null : nodeId);
+  };
 
   const scenarioHistoryCount = useMemo(
     () => sim.history.filter((h) => h.scenario === scenario).length,
@@ -116,7 +122,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               </div>
             )}
 
-            <Legend scenario={scenario} />
+            <Legend scenario={scenario} mapId={sim.mapId} />
           </aside>
 
           <main className="flex-1 flex flex-col items-center justify-start p-4 w-full relative overflow-hidden">
@@ -193,6 +199,9 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     scenario={scenario}
                     stepIndex={sim.stepIndex}
                     dynamicEvents={sim.simResults?.hybrid.dynamicEvents || []}
+                    highlightedNodeId={highlightedNodeId}
+                    onDeselect={() => setHighlightedNodeId(null)}
+                    mapId={sim.mapId}
                   />
       
 
@@ -242,7 +251,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 <button
                   disabled={sim.isComputing || sim.isGraphLoading}
                   onClick={sim.handlePause}
-                  className="px-6 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer disabled:opacity-30 flex-1 sm:flex-none bg-blue-600 text-white"
+                  className="px-6 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer hover:bg-red-500 disabled:opacity-30 flex-1 sm:flex-none bg-red-600 text-white shadow-lg shadow-red-900/20"
                 >
                   ⏸️ Pause
                 </button>
@@ -250,7 +259,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 <button
                   disabled={sim.isComputing || sim.isGraphLoading}
                   onClick={sim.handleResume}
-                  className="px-6 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer disabled:opacity-30 flex-1 sm:flex-none bg-blue-600 text-white"
+                  className="px-6 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer hover:bg-green-500 disabled:opacity-30 flex-1 sm:flex-none bg-green-600 text-white shadow-lg shadow-green-900/20"
                 >
                   ▶️ Resume
                 </button>
@@ -258,7 +267,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 <button
                   disabled={sim.isComputing || sim.isGraphLoading}
                   onClick={sim.handleRun}
-                  className="px-6 py-2 rounded-lg font-bold text-sm cursor-pointer disabled:opacity-30 flex-1 sm:flex-none bg-blue-600 text-white"
+                  className="px-6 py-2 rounded-lg font-bold text-sm cursor-pointer hover:bg-blue-500 disabled:opacity-30 flex-1 sm:flex-none bg-blue-600 text-white"
                 >
                   🔄 Replay
                 </button>
@@ -266,7 +275,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 <button
                   disabled={sim.isComputing || sim.isGraphLoading}
                   onClick={sim.handleRun}
-                  className="px-6 py-2 rounded-lg font-bold text-sm cursor-pointer hover:opacity-90 disabled:opacity-30 disabled:bg-gray-700 flex-1 sm:flex-none w-full sm:w-auto bg-blue-600 text-white"
+                  className="px-6 py-2 rounded-lg font-bold text-sm cursor-pointer hover:bg-green-500 disabled:opacity-30 flex-1 sm:flex-none w-full sm:w-auto bg-green-600 text-white shadow-lg shadow-green-900/20"
                 >
                   {sim.isComputing ? 'Computing...' : '▶️ Run Simulations'}
                 </button>
@@ -312,6 +321,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 stepIndex={sim.stepIndex}
                 simResults={sim.simResults}
                 scenario={scenario}
+                onEventClick={handleEventClick}
+                highlightedNodeId={highlightedNodeId}
               />
             </div>
 

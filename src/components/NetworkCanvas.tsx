@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { ScenarioGraph, GraphNode, ScenarioType, DynamicEvent, AlgorithmStep } from '../types';
 import { ALGORITHMS } from '../config/scenarios';
 
@@ -9,6 +9,9 @@ interface Props {
   stepIndex: number;
   dynamicEvents: DynamicEvent[];
   historicalBlockedNodeIds?: Set<string>;
+  highlightedNodeId?: string | null;
+  onDeselect?: () => void;
+  mapId?: string;
 }
 
 const NODE_CONFIG: Record<string, { icon: string; radius: number; baseColor: string }> = {
@@ -62,12 +65,14 @@ export const NetworkCanvas: React.FC<Props> = ({
   dynamicEvents,
   stepIndex,
   historicalBlockedNodeIds,
+  highlightedNodeId,
+  onDeselect,
+  mapId,
 }) => {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [isFollowing, setIsFollowing] = useState(false);
   const [activeFloor, setActiveFloor] = useState<string>('L2');
   
   // Force re-render on resize to prevent canvas stretching
@@ -149,32 +154,70 @@ export const NetworkCanvas: React.FC<Props> = ({
     return () => container.removeEventListener('wheel', preventPageScroll);
   }, []);
 
-  // Follow Algorithm Logic
-  useEffect(() => {
-    if (!isFollowing || !containerRef.current) return;
+  // Animated zoom-to-node when highlightedNodeId changes
+  const animFrameRef = useRef<number | null>(null);
 
-    let sumX = 0, sumY = 0, count = 0;
-    let targetFloor = activeFloor;
+  const animateTo = useCallback((targetZoom: number, targetPanX: number, targetPanY: number) => {
+    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
 
-    [sets.bfs.current, sets.dfs.current, sets.hyb.current].forEach(curr => {
-        if (curr) {
-            const node = nodes.find(n => n.id === curr);
-            if (node) {
-                sumX += sx(node.x); sumY += sy(node.y); count++;
-                if (isLayeredMap && node.buildingId && node.buildingId !== targetFloor) {
-                    if (node.buildingId === 'GL' || node.buildingId === 'L2') targetFloor = node.buildingId;
-                }
-            }
-        }
+    const DURATION = 500; // ms
+    const startTime = performance.now();
+
+    // Capture start values at animation kick-off time via refs so they stay fresh
+    const startZoomRef = { z: 0, px: 0, py: 0 };
+    setZoom(z => { startZoomRef.z = z; return z; });
+    setPan(p => { startZoomRef.px = p.x; startZoomRef.py = p.y; return p; });
+
+    // Give React one frame to flush the state reads, then animate
+    requestAnimationFrame(() => {
+      const fromZ  = startZoomRef.z  || 1;
+      const fromPx = startZoomRef.px || 0;
+      const fromPy = startZoomRef.py || 0;
+
+      const tick = (now: number) => {
+        const t = Math.min((now - startTime) / DURATION, 1);
+        // Ease-out cubic
+        const ease = 1 - Math.pow(1 - t, 3);
+        setZoom(fromZ  + (targetZoom  - fromZ)  * ease);
+        setPan({
+          x: fromPx + (targetPanX - fromPx) * ease,
+          y: fromPy + (targetPanY - fromPy) * ease,
+        });
+        if (t < 1) animFrameRef.current = requestAnimationFrame(tick);
+      };
+      animFrameRef.current = requestAnimationFrame(tick);
     });
+  }, []);
 
-    if (count === 0) return;
-    if (targetFloor !== activeFloor) setActiveFloor(targetFloor);
+  useEffect(() => {
+    if (!highlightedNodeId || !containerRef.current) return;
+    const node = nodes.find(n => n.id === highlightedNodeId);
+    if (!node) return;
 
-    const centerX = containerRef.current.getBoundingClientRect().width / 2;
-    const centerY = containerRef.current.getBoundingClientRect().height / 2;
-    setPan({ x: centerX - ((sumX / count) * zoom), y: centerY - ((sumY / count) * zoom) });
-  }, [sets, isFollowing, zoom, nodes, activeFloor, isLayeredMap, scale, offsetX, offsetY]);
+    // Switch floor if needed
+    if (isLayeredMap && node.buildingId && (node.buildingId === 'GL' || node.buildingId === 'L2')) {
+      setActiveFloor(node.buildingId);
+    }
+
+    const targetZoom = 3.5;
+    // Compute screen position directly from stable layout values — NOT from sx/sy
+    // which are inline functions that change every render, causing a re-lock loop.
+    const nodeScreenX = (node.x * scale) + offsetX;
+    const nodeScreenY = (node.y * scale) + offsetY;
+    const containerW = containerRef.current.getBoundingClientRect().width;
+    const containerH = containerRef.current.getBoundingClientRect().height;
+    animateTo(
+      targetZoom,
+      containerW / 2 - nodeScreenX * targetZoom,
+      containerH / 2 - nodeScreenY * targetZoom,
+    );
+  // ⚠️ Only re-fire when the SELECTED NODE changes — NOT on every zoom/pan render.
+  // scale/offsetX/offsetY are stable per graph load, so reading them here is safe.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [highlightedNodeId]);
+
+  // Cleanup animation frame on unmount
+  useEffect(() => () => { if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current); }, []);
 
   const activeBlocked = useMemo(() => {
     const blocked = new Set<string>();
@@ -467,10 +510,24 @@ export const NetworkCanvas: React.FC<Props> = ({
 
       let fillColor = cfg.baseColor;
       let opacity = (isMassive && !isImportant && !isBlockedImportant) ? 0.3 : 1;
-      const blockedIcon = scenario === 'gameai' ? '🔴' : '💀';
+      // Scenario-specific blocked icon — matches the Legend exactly
+      const BLOCKED_ICONS: Record<string, string> = {
+        traffic:    '\uD83D\uDEAB', // 🚫 Road Closure
+        evacuation: '\uD83D\uDD25', // 🔥 Fire Blocked
+        robotics:   '\uD83D\uDEA7', // 🚧 Blocked Aisle
+        network:    '\uD83D\uDCA5', // 💥 Failed Component
+        gameai:     mapId === 'dama' ? '\uD83D\uDD3B' : '\uD83D\uDD34', // 🔻 Dama opponent / 🔴 Checkers opponent
+      };
+      const blockedIcon = BLOCKED_ICONS[scenario] ?? '\uD83D\uDCA5';
 
-      if (isBlocked) { fillColor = '#dc2626'; opacity = 1; } 
-      else if (wasHistoricallyBlocked.has(node.id)) { fillColor = '#ef4444'; opacity = 1; }
+      if (isBlocked) { 
+        fillColor = scenario === 'evacuation' ? '#c2410c' : '#dc2626'; // orange-700 vs red-600
+        opacity = 1; 
+      } 
+      else if (wasHistoricallyBlocked.has(node.id)) { 
+        fillColor = scenario === 'evacuation' ? '#ea580c' : '#ef4444'; // orange-600 vs red-500
+        opacity = 1; 
+      }
       else if (isSource) { fillColor = '#16a34a'; } 
       else if (isDest) { fillColor = '#b91c1c'; }
 
@@ -478,7 +535,7 @@ export const NetworkCanvas: React.FC<Props> = ({
       if (isBlocked && (isMassive || isDatacenter)) {
         ctx.beginPath();
         ctx.arc(cx, cy, r + (isDatacenter ? 4 : 2.5), 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(239, 68, 68, 0.7)';
+        ctx.strokeStyle = scenario === 'evacuation' ? 'rgba(194, 65, 12, 0.7)' : 'rgba(239, 68, 68, 0.7)';
         ctx.lineWidth = isDatacenter ? 1.5 : 1;
         ctx.stroke();
       }
@@ -486,7 +543,7 @@ export const NetworkCanvas: React.FC<Props> = ({
       if (wasHistoricallyBlocked.has(node.id) && !isBlocked) {
         ctx.beginPath();
         ctx.arc(cx, cy, r + 4, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
+        ctx.strokeStyle = scenario === 'evacuation' ? 'rgba(234, 88, 12, 0.5)' : 'rgba(239, 68, 68, 0.5)';
         ctx.lineWidth = 2;
         ctx.setLineDash([3, 3]);
         ctx.stroke();
@@ -514,7 +571,7 @@ export const NetworkCanvas: React.FC<Props> = ({
         ctx.fill();
         if (!isMassive || isImportant) {
           ctx.lineWidth = isBlocked ? 2 : 1;
-          ctx.strokeStyle = isBlocked ? '#ef4444' : '#374151';
+          ctx.strokeStyle = isBlocked ? (scenario === 'evacuation' ? '#c2410c' : '#ef4444') : '#374151';
           ctx.stroke();
         }
 
@@ -641,7 +698,11 @@ export const NetworkCanvas: React.FC<Props> = ({
         ctx.font = `${iconSize}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText((isBlocked || wasHistoricallyBlocked.has(node.id)) ? blockedIcon : cfg.icon, cx, cy);
+        let displayIcon = cfg.icon;
+        if (scenario === 'gameai' && isSource) {
+          displayIcon = mapId === 'dama' ? '🔷' : '🔵';
+        }
+        ctx.fillText((isBlocked || wasHistoricallyBlocked.has(node.id)) ? blockedIcon : displayIcon, cx, cy);
       }
 
     });
@@ -675,12 +736,39 @@ export const NetworkCanvas: React.FC<Props> = ({
       ctx.restore();
     }
 
+    // 5. Draw Highlighted Node Ring (click-to-locate)
+    if (highlightedNodeId) {
+      const hNode = visibleNodeMap.get(highlightedNodeId);
+      if (hNode) {
+        const cx = sx(hNode.x);
+        const cy = sy(hNode.y);
+        const cfg = NODE_CONFIG[hNode.type] || NODE_CONFIG['place'];
+        const r = (cfg.radius / scale) * zoom;
+        const pulseR = r + 8 / zoom;
+        ctx.save();
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#facc15';
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = 3 / zoom;
+        ctx.beginPath();
+        ctx.arc(cx, cy, pulseR, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(250,204,21,0.4)';
+        ctx.lineWidth = 6 / zoom;
+        ctx.beginPath();
+        ctx.arc(cx, cy, pulseR + 5 / zoom, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
   // Adding windowDimensions to the dependency array ensures resizing updates the canvas visually
-  }, [visibleNodes, visibleEdges, visibleNodeMap, pan, zoom, sets, activeBlocked, width, height, scenario, isMassive, isDatacenter, cBFS, cDFS, cHYB, scale, offsetX, offsetY, windowDimensions]);
+  }, [visibleNodes, visibleEdges, visibleNodeMap, pan, zoom, sets, activeBlocked, width, height, scenario, isMassive, isDatacenter, cBFS, cDFS, cHYB, scale, offsetX, offsetY, windowDimensions, highlightedNodeId]);
 
   // Mouse Handlers
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    if (isFollowing) setIsFollowing(false);
+    // Deselect highlight so user can freely scroll without re-lock
+    if (highlightedNodeId) onDeselect?.();
     const scaleAdjust = e.deltaY > 0 ? 0.9 : 1.1;
     const newZoom = Math.max(0.2, Math.min(zoom * scaleAdjust, 30)); 
     const rect = e.currentTarget.getBoundingClientRect();
@@ -694,7 +782,7 @@ export const NetworkCanvas: React.FC<Props> = ({
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (isFollowing) setIsFollowing(false);
+    if (highlightedNodeId) onDeselect?.();
     setIsDragging(true);
     setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
   };
@@ -707,7 +795,7 @@ export const NetworkCanvas: React.FC<Props> = ({
   
   // Touch Handlers for Mobile Support
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (isFollowing) setIsFollowing(false);
+    if (highlightedNodeId) onDeselect?.();
     if (e.touches.length === 1) {
       setIsDragging(true);
       setDragStart({ x: e.touches[0].clientX - pan.x, y: e.touches[0].clientY - pan.y });
@@ -719,7 +807,7 @@ export const NetworkCanvas: React.FC<Props> = ({
   };
   const handleTouchEnd = () => setIsDragging(false);
 
-  const resetZoom = () => { setIsFollowing(false); setZoom(1); setPan({ x: 0, y: 0 }); };
+  const resetZoom = () => { setZoom(1); setPan({ x: 0, y: 0 }); };
 
   return (
     <div 
@@ -748,9 +836,8 @@ export const NetworkCanvas: React.FC<Props> = ({
         <div className="bg-gray-900/80 border border-gray-700 rounded px-2 py-1 text-[10px] font-mono text-gray-400 select-none text-center">
           Zoom: {zoom.toFixed(1)}x
         </div>
-        <button onClick={() => setIsFollowing(!isFollowing)} className={`w-8 h-8 border rounded flex items-center justify-center cursor-pointer text-lg transition-colors ${isFollowing ? 'bg-blue-600 border-blue-400 text-white shadow-[0_0_10px_rgba(37,99,235,0.5)]' : 'bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700 hover:text-white'}`} title="Follow Algorithms">🎯</button>
-        <button onClick={() => { setIsFollowing(false); setZoom(z => Math.min(z * 1.5, 30)); }} className="w-8 h-8 bg-gray-800 border border-gray-600 rounded text-white flex items-center justify-center hover:bg-gray-700 cursor-pointer text-xl font-bold transition-colors">+</button>
-        <button onClick={() => { setIsFollowing(false); setZoom(z => Math.max(z / 1.5, 0.2)); }} className="w-8 h-8 bg-gray-800 border border-gray-600 rounded text-white flex items-center justify-center hover:bg-gray-700 cursor-pointer text-xl font-bold transition-colors">-</button>
+        <button onClick={() => { setZoom(z => Math.min(z * 1.5, 30)); }} className="w-8 h-8 bg-gray-800 border border-gray-600 rounded text-white flex items-center justify-center hover:bg-gray-700 cursor-pointer text-xl font-bold transition-colors">+</button>
+        <button onClick={() => { setZoom(z => Math.max(z / 1.5, 0.2)); }} className="w-8 h-8 bg-gray-800 border border-gray-600 rounded text-white flex items-center justify-center hover:bg-gray-700 cursor-pointer text-xl font-bold transition-colors">-</button>
         <button onClick={resetZoom} className="px-2 py-1 bg-gray-800 border border-gray-600 rounded text-xs font-bold text-gray-300 hover:bg-gray-700 cursor-pointer transition-colors">Reset</button>
       </div>
 
