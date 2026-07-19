@@ -75,6 +75,9 @@ export const NetworkCanvas: React.FC<Props> = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [activeFloor, setActiveFloor] = useState<string>('L2');
   const [followAlgo, setFollowAlgo] = useState<'bfs' | 'dfs' | 'hybrid' | null>(null);
+  const [visibleAlgos, setVisibleAlgos] = useState<{ bfs: boolean; dfs: boolean; hybrid: boolean }>({ bfs: true, dfs: true, hybrid: true });
+  const toggleAlgo = (algo: 'bfs' | 'dfs' | 'hybrid') =>
+    setVisibleAlgos(prev => ({ ...prev, [algo]: !prev[algo] }));
   
   // Force re-render on resize to prevent canvas stretching
   const [windowDimensions, setWindowDimensions] = useState({ w: 0, h: 0 });
@@ -234,7 +237,7 @@ export const NetworkCanvas: React.FC<Props> = ({
     const node = nodes.find(n => n.id === currentNodeId);
     if (!node) return;
 
-    const targetZoom = Math.max(zoom, 2.2); // keep at least 2.2x when following
+    const targetZoom = Math.max(zoom, 2.0); // comfortable follow zoom
     const nodeScreenX = (node.x * scale) + offsetX;
     const nodeScreenY = (node.y * scale) + offsetY;
     const containerW = containerRef.current.getBoundingClientRect().width;
@@ -426,9 +429,9 @@ export const NetworkCanvas: React.FC<Props> = ({
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         
-        if (pBFS) { ctx.strokeStyle = getRgba(cBFS, 0.9); ctx.lineWidth = isMassive ? 2.5 : 8; ctx.stroke(); }
-        if (pDFS) { ctx.strokeStyle = getRgba(cDFS, 0.95); ctx.lineWidth = isMassive ? 1.8 : 5; ctx.stroke(); }
-        if (pHYB) { ctx.strokeStyle = getRgba(cHYB, 1); ctx.lineWidth = isMassive ? 1.2 : 3; ctx.stroke(); }
+        if (pBFS && visibleAlgos.bfs) { ctx.strokeStyle = getRgba(cBFS, 0.9); ctx.lineWidth = isMassive ? 2.5 : 8; ctx.stroke(); }
+        if (pDFS && visibleAlgos.dfs) { ctx.strokeStyle = getRgba(cDFS, 0.95); ctx.lineWidth = isMassive ? 1.8 : 5; ctx.stroke(); }
+        if (pHYB && visibleAlgos.hybrid) { ctx.strokeStyle = getRgba(cHYB, 1); ctx.lineWidth = isMassive ? 1.2 : 3; ctx.stroke(); }
       }
     });
 
@@ -454,15 +457,15 @@ export const NetworkCanvas: React.FC<Props> = ({
           // Concentric stacking for dense networks (Thicker sizes retained)
           const opacity = 0.55;
           
-          if (vBFS) { 
+          if (vBFS && visibleAlgos.bfs) { 
             ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); 
             ctx.strokeStyle = getRgba(cBFS, opacity); ctx.lineWidth = baseWidth * 8.0; ctx.stroke(); 
           }
-          if (vDFS) { 
+          if (vDFS && visibleAlgos.dfs) { 
             ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); 
             ctx.strokeStyle = getRgba(cDFS, opacity + 0.1); ctx.lineWidth = baseWidth * 5.0; ctx.stroke(); 
           }
-          if (vHYB) { 
+          if (vHYB && visibleAlgos.hybrid) { 
             ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); 
             ctx.strokeStyle = getRgba(cHYB, opacity + 0.2); ctx.lineWidth = baseWidth * 2.0; ctx.stroke(); 
           }
@@ -475,9 +478,9 @@ export const NetworkCanvas: React.FC<Props> = ({
           const stackOffset = baseWidth * 1.5; 
           
           const algoLines = [
-            { active: vBFS, color: cBFS, offset: -stackOffset },
-            { active: vDFS, color: cDFS, offset: 0 },
-            { active: vHYB, color: cHYB, offset: stackOffset }
+            { active: vBFS && visibleAlgos.bfs, color: cBFS, offset: -stackOffset },
+            { active: vDFS && visibleAlgos.dfs, color: cDFS, offset: 0 },
+            { active: vHYB && visibleAlgos.hybrid, color: cHYB, offset: stackOffset }
           ];
 
           algoLines.forEach(algo => {
@@ -508,14 +511,14 @@ export const NetworkCanvas: React.FC<Props> = ({
       const isSource = node.id === graph.sourceId;
       const isDest = graph.destinationIds.includes(node.id);
 
-      const currBFS = sets.bfs.current === node.id;
-      const currDFS = sets.dfs.current === node.id;
-      const currHYB = sets.hyb.current === node.id;
+      const currBFS = visibleAlgos.bfs && sets.bfs.current === node.id;
+      const currDFS = visibleAlgos.dfs && sets.dfs.current === node.id;
+      const currHYB = visibleAlgos.hybrid && sets.hyb.current === node.id;
       const isImportant = isSource || isDest || currBFS || currDFS || currHYB;
       
-      const expBFS = sets.bfs.explored.has(node.id);
-      const expDFS = sets.dfs.explored.has(node.id);
-      const expHYB = sets.hyb.explored.has(node.id);
+      const expBFS = visibleAlgos.bfs && sets.bfs.explored.has(node.id);
+      const expDFS = visibleAlgos.dfs && sets.dfs.explored.has(node.id);
+      const expHYB = visibleAlgos.hybrid && sets.hyb.explored.has(node.id);
       
       const ringTint = isRealWorldPlace ? cfg.baseColor : null;
       const activeExplorations = [
@@ -791,7 +794,7 @@ export const NetworkCanvas: React.FC<Props> = ({
     }
 
   // Adding windowDimensions to the dependency array ensures resizing updates the canvas visually
-  }, [visibleNodes, visibleEdges, visibleNodeMap, pan, zoom, sets, activeBlocked, width, height, scenario, isMassive, isDatacenter, cBFS, cDFS, cHYB, scale, offsetX, offsetY, windowDimensions, highlightedNodeId]);
+  }, [visibleNodes, visibleEdges, visibleNodeMap, pan, zoom, sets, activeBlocked, width, height, scenario, isMassive, isDatacenter, cBFS, cDFS, cHYB, scale, offsetX, offsetY, windowDimensions, highlightedNodeId, visibleAlgos]);
 
   // Mouse Handlers
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
@@ -854,12 +857,33 @@ export const NetworkCanvas: React.FC<Props> = ({
       onTouchCancel={handleTouchEnd}
     >
       
-      {/* ── Follow Algorithm Buttons ─────────────────────────────────────── */}
-      <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-gray-900/90 backdrop-blur-sm border border-gray-700 rounded-xl px-2 py-1.5 z-20 shadow-lg">
+      {/* ── Show Panel — TOP LEFT ────────────────────────────────── */}
+      <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-gray-900/90 backdrop-blur-sm border border-gray-700 rounded-xl px-3 py-1.5 z-20 shadow-lg">
+        <span className="text-[9px] uppercase tracking-widest text-gray-500 font-bold pr-1 select-none">Show</span>
+        {([
+          { algo: 'bfs',    label: 'BFS',    on: 'bg-green-600  text-white border-green-500  shadow-[0_0_10px_rgba(74,222,128,0.4)]',  off: 'text-gray-600 border-gray-700 line-through' },
+          { algo: 'dfs',    label: 'DFS',    on: 'bg-purple-600 text-white border-purple-500 shadow-[0_0_10px_rgba(192,132,252,0.4)]', off: 'text-gray-600 border-gray-700 line-through' },
+          { algo: 'hybrid', label: 'Hybrid', on: 'bg-orange-600 text-white border-orange-500 shadow-[0_0_10px_rgba(251,146,60,0.4)]',  off: 'text-gray-600 border-gray-700 line-through' },
+        ] as const).map(({ algo, label, on, off }) => (
+          <button
+            key={algo}
+            onClick={() => toggleAlgo(algo)}
+            title={visibleAlgos[algo] ? `Hide ${label}` : `Show ${label}`}
+            className={`px-3 py-1 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
+              visibleAlgos[algo] ? on : off
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Follow Panel — TOP RIGHT ─────────────────────────────── */}
+      <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-gray-900/90 backdrop-blur-sm border border-gray-700 rounded-xl px-2 py-1.5 z-20 shadow-lg">
         <span className="text-[9px] uppercase tracking-widest text-gray-500 font-bold pr-1 select-none">Follow</span>
         {(['bfs', 'dfs', 'hybrid'] as const).map((algo) => {
           const algoColors = {
-            bfs:    { active: 'bg-green-600 text-white shadow-[0_0_12px_rgba(74,222,128,0.5)] border-green-500', inactive: 'text-gray-400 hover:text-green-300 hover:bg-green-950/60 border-transparent' },
+            bfs:    { active: 'bg-green-600 text-white shadow-[0_0_12px_rgba(74,222,128,0.5)] border-green-500',   inactive: 'text-gray-400 hover:text-green-300  hover:bg-green-950/60  border-transparent' },
             dfs:    { active: 'bg-purple-600 text-white shadow-[0_0_12px_rgba(192,132,252,0.5)] border-purple-500', inactive: 'text-gray-400 hover:text-purple-300 hover:bg-purple-950/60 border-transparent' },
             hybrid: { active: 'bg-orange-600 text-white shadow-[0_0_12px_rgba(251,146,60,0.5)] border-orange-500', inactive: 'text-gray-400 hover:text-orange-300 hover:bg-orange-950/60 border-transparent' },
           };
