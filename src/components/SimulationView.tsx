@@ -12,6 +12,7 @@ import { SimulationReport } from './SimulationReport';
 import { HistoryModal } from './HistoryModal';
 import { DynamicMapEvents } from './DynamicMapEvents';
 import { StrategyMapEvents } from './StrategyMapEvents';
+import { HelpModal } from './HelpModal';
 
 interface Props {
   scenario: ScenarioType;
@@ -45,6 +46,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const sim = useSimulation({ scenario });
 
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   const handleEventClick = (nodeId: string) => {
     setHighlightedNodeId(prev => prev === nodeId ? null : nodeId);
@@ -59,7 +61,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
   return (
     <>
-      <div className="min-h-screen w-full max-w-[100vw] bg-[#0a0f1e] text-white flex flex-col relative z-0">
+      {isHelpOpen && <HelpModal scenario={scenario} onClose={() => setIsHelpOpen(false)} />}
+      <div className="min-h-screen lg:h-screen w-full max-w-[100vw] bg-[#0a0f1e] text-white flex flex-col relative z-0 lg:overflow-hidden">
         <header className="border-b border-gray-800 px-3 md:px-6 py-2.5 md:py-3 flex items-center justify-between bg-[#0d1224] shrink-0 relative gap-2 w-full max-w-full">
           <div className="flex items-center gap-2 sm:gap-4 relative z-10 shrink-0">
             <button
@@ -85,7 +88,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             </div>
           </div>
 
-          <div className="z-20 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 shrink-0 ml-auto">
+          <div className="z-20 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 shrink-0 ml-auto md:ml-0 flex items-center justify-center">
             <button
               onClick={() => sim.setIsHistoryModalOpen(true)}
               className="px-2.5 sm:px-5 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-full text-xs font-bold text-white shadow-md transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer"
@@ -97,9 +100,28 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               </span>
             </button>
           </div>
+
+          <div className="z-20 shrink-0 ml-2 sm:ml-4 flex items-center">
+            <button
+              onClick={() => setIsHelpOpen(true)}
+              title="Help & Guide"
+              className="w-8 h-8 md:w-auto md:h-auto md:px-4 md:py-1.5 rounded-full md:rounded-md bg-[#0a0f1e] border text-gray-200 hover:text-white text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+              style={{
+                borderColor: `${sc?.color}60`,
+                boxShadow: `0 0 12px ${sc?.color}20, inset 0 0 8px ${sc?.color}10`,
+                textShadow: `0 0 8px ${sc?.color}40`,
+              }}
+            >
+              <span className="md:hidden">{sc?.icon || '?'}</span>
+              <span className="hidden md:flex items-center gap-2">
+                <span className="text-lg leading-none filter drop-shadow-sm">{sc?.icon || '❓'}</span>
+                Help & Guide
+              </span>
+            </button>
+          </div>
         </header>
 
-        <div className="flex flex-col lg:flex-row flex-1">
+        <div className="flex flex-col lg:flex-row flex-1 lg:min-h-0 overflow-y-auto lg:overflow-hidden">
           <aside
             className="w-full lg:w-80 flex-shrink-0 border-b lg:border-b-0 lg:border-r border-gray-800 p-4 flex flex-col gap-4 overflow-y-auto lg:max-h-[calc(100vh-theme(spacing.20))]"
             style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}
@@ -125,7 +147,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             <Legend scenario={scenario} mapId={sim.mapId} />
           </aside>
 
-          <main className="flex-1 flex flex-col items-center justify-start p-4 w-full relative overflow-hidden">
+          <main className="flex-1 flex flex-col items-center justify-start p-4 w-full relative lg:overflow-hidden min-h-0">
             <div className="mb-1 flex flex-col items-center gap-1.5 w-full shrink-0">
               <div className="flex items-center gap-2 flex-wrap justify-center text-center">
                 <div className="px-3 py-1 rounded-full text-xs font-bold bg-blue-900/20 text-blue-400 border border-blue-500/50">
@@ -188,7 +210,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             </div>
 
             <div
-              className="rounded-2xl overflow-hidden border border-gray-700 w-full relative flex-1 min-h-[300px] shrink-0 shadow-[0_0_48px_rgba(37,99,235,0.1)] bg-[#0a0f1e]"
+              className="rounded-2xl overflow-hidden border border-gray-700 w-full relative h-[50vh] lg:flex-1 lg:min-h-0 shadow-[0_0_48px_rgba(37,99,235,0.1)] bg-[#0a0f1e]"
               style={{ maxWidth: 1200 }}
             >
               {sim.currentGraph ? (

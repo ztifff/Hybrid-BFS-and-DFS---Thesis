@@ -1,0 +1,321 @@
+import React, { useState } from 'react';
+import { ScenarioType } from '../types';
+
+interface Props {
+  scenario: ScenarioType;
+  onClose: () => void;
+}
+
+// ── Scenario-specific content ─────────────────────────────────────────────────
+
+const SCENARIO_MAPS: Record<ScenarioType, { name: string; description: string }[]> = {
+  network: [
+    { name: '🧪 Synthetic', description: 'A procedurally generated network graph of configurable size. Useful for controlled benchmarking. Nodes represent generic routers and the structure is randomized each session.' },
+    { name: '🏗️ Fat-Tree Datacenter', description: 'A 3-tier hierarchical datacenter topology (Core → Aggregation → Edge → Access Points). Modeled after real hyperscale datacenter networks like those used by Amazon and Google. Provides maximum redundancy and fault-tolerance for load balancing.' },
+    { name: '🌐 AS-733 ISP', description: 'A real-world Internet Service Provider (ISP) topology sourced from the CAIDA AS-733 dataset. It represents the actual peering relationships between Autonomous Systems (AS) across the global internet backbone, making it one of the most complex graphs in the system.' },
+  ],
+  robotics: [
+    { name: '🧪 Synthetic', description: 'A generated warehouse grid of adjustable size. Shelf zones, aisles, and delivery bays are randomly placed to simulate varied fulfillment center layouts.' },
+    { name: '🏭 AWS Warehouse', description: 'Inspired by Amazon Fulfillment Center layouts. Features a Central Depot (source), multiple shelf zones organized in rows, and Delivery Bay targets. Shelf-blocking events simulate real robot-shelf collision events.' },
+    { name: '🏥 Clinic Building', description: 'Models a multi-room clinic or hospital floor. Narrow corridors and many dead-end rooms make this a prime test for DFS trap sensitivity and Hybrid backtracking.' },
+  ],
+  traffic: [
+    { name: '🧪 Synthetic', description: 'A procedurally generated road grid with configurable intersections and roads. Good for isolated benchmarking of BFS vs DFS on a pure grid topology.' },
+    { name: '🗺️ Cabuyao City', description: 'A real-world road network based on the actual road map of Cabuyao, Laguna, Philippines. Intersections, highways, and streets are sourced from OpenStreetMap data. This tests algorithms on actual geographic constraints.' },
+  ],
+  evacuation: [
+    { name: '🧪 Synthetic', description: 'A generated floor plan with corridors, stairwells, and emergency exits placed randomly. Used to test evacuation logic in generalized building structures.' },
+    { name: '🏬 SM City Santa Rosa', description: 'Based on the multi-level layout of SM City Santa Rosa mall (Laguna, Philippines). Contains two floors (Ground Level & Level 2) with real-world stairwells, corridors, and emergency exit placement.' },
+    { name: '🏙️ City Emergency Grid', description: 'A larger city-scale evacuation grid. Models an urban area with multiple interconnected buildings, street corridors, and distributed exit points.' },
+  ],
+  gameai: [
+    { name: '🔵 Turkish Draughts (Dama)', description: 'An 8×8 Dama board using tan/dark-brown alternating squares. All squares are playable. The Strategy Planner (🔷) navigates from the bottom to the King Row at the top while avoiding dynamically-placed opponent pieces (🔻).' },
+    { name: '⚫ Checkers', description: 'A classic 8×8 Checkers board using red/black alternating squares. Only dark squares are playable. The Strategy Planner (🔵) navigates diagonally to reach the Winning Square (🏁) while dodging opponent pieces (🔴).' },
+  ],
+};
+
+const SCENARIO_DYNAMIC_EVENTS: Record<ScenarioType, { event: string; icon: string; cause: string; resolution: string }[]> = {
+  network: [
+    { event: 'Cable Unplugged / Overheating Switch', icon: '💥', cause: 'A router, switch, or link fails mid-simulation. The node turns red-orange and is marked as blocked.', resolution: 'The algorithms detect the blocked node and immediately reroute around it. BFS finds the next shortest alternate path; DFS dives deep into branches; Hybrid balances between the two. The event panel shows "Path Severed: [Algorithm]" for any algorithm whose active path was disrupted.' },
+    { event: 'Rack Power Loss / Massive DDoS Attack', icon: '💥', cause: 'A major cascading failure blocks a node and its immediate neighbors (AoE block).', resolution: 'Algorithms must reroute around a much larger blocked area. Tests wide-area detour efficiency.' },
+    { event: 'Restored (Cable Reconnected / Cooling / Power / Attack Mitigated)', icon: '✅', cause: 'A previously failed component or cluster comes back online.', resolution: 'The node becomes unblocked. Algorithms may reconsider it for future path segments. This tests whether the pathfinder can adapt to improving conditions.' },
+  ],
+  robotics: [
+    { event: 'Pallet Spill / Robot Malfunction', icon: '🚧', cause: 'A warehouse robot breaks down or a spill blocks an aisle node. This simulates real warehouse accidents.', resolution: 'Algorithms reroute around the blocked node. The "Path Severed" indicator shows which algorithm was directly affected.' },
+    { event: 'Massive Rack Collapse', icon: '🚧', cause: 'A large section of shelving collapses, blocking an entire cluster of nodes (AoE block).', resolution: 'Algorithms must find alternate aisle routes around the large collapsed zone.' },
+    { event: 'Cleared / Repaired / Rebuilt', icon: '✅', cause: 'Maintenance staff clear a blocked aisle, restoring normal movement through that section.', resolution: 'The blocked node becomes traversable again. Algorithms can resume using that corridor in subsequent path calculations.' },
+  ],
+  traffic: [
+    { event: 'Road Closure / Signal Failure', icon: '🚫', cause: 'An accident, construction, or emergency closes a road segment. The intersection or street node is fully blocked.', resolution: 'Algorithms reroute via alternate roads. In a city grid like Cabuyao, this often forces longer detours around major arterial roads.' },
+    { event: 'Major Accident / Congestion Cascade', icon: '🚫', cause: 'A large-scale traffic incident that blocks an intersection and all immediate neighboring nodes (AoE block).', resolution: 'Algorithms avoid the wide congested area and reroute. Resolves automatically after a set number of steps.' },
+    { event: 'Reopened / Signal Restored / Flow Restored', icon: '✅', cause: 'A failed traffic signal is repaired and normal flow resumes.', resolution: 'The intersection node is unblocked. Flow through that road junction resumes for future path planning.' },
+  ],
+  evacuation: [
+    { event: 'Fire Outbreak / Exit Blocked', icon: '🔥', cause: 'A fire breaks out in a corridor, stairwell, or room, making it impassable for evacuees.', resolution: 'The node turns dark orange and is permanently blocked for the remainder of the simulation. Algorithms must find fire-free routes to the nearest Emergency Exit (🚪). This directly tests BFS\'s safety advantage — it always finds the absolute shortest fire-free path.' },
+    { event: 'Fire Spreads Rapidly / Smoke Fills Corridor', icon: '🔥', cause: 'An Area-of-Effect (AoE) event that blocks a cluster of connected rooms and corridors.', resolution: 'Algorithms must avoid large contaminated areas.' },
+    { event: 'Fire Extinguished / Contained', icon: '🟢', cause: 'Emergency responders extinguish the fire.', resolution: 'The area becomes safe and traversable again.' },
+  ],
+  gameai: [
+    { event: 'Opponent Piece Deployed / Opponent Attacks', icon: '🔴', cause: 'An opponent piece is placed on a board square ahead of the Strategy Planner\'s path, blocking that tile.', resolution: 'The Strategy Planner must reroute around the piece. The Strategy Map Events panel shows which algorithms were UNAFFECTED (not in their path) vs. PATH SEVERED (directly blocked). The piece remains until it retreats.' },
+    { event: 'Opponent Formation', icon: '🔴', cause: 'Multiple opponent pieces form a defensive cluster (AoE block).', resolution: 'The Strategy Planner must adapt its diagonal or straight-line movement to avoid the wide threat position.' },
+    { event: 'Opponent Retreats / Moves Away', icon: '✅', cause: 'The opponent piece vacates the blocked square, reopening that tile.', resolution: 'The board square becomes traversable again. Algorithms can reconsider that square for path planning on subsequent steps.' },
+  ],
+};
+
+// ── Tab definitions ────────────────────────────────────────────────────────────
+const TABS = [
+  { id: 'metrics',   label: 'Live Metrics',   icon: '📊' },
+  { id: 'legend',    label: 'Legend',         icon: '🗺️' },
+  { id: 'canvas',    label: 'Canvas Controls',icon: '🎮' },
+  { id: 'buttons',   label: 'Sim Controls',   icon: '▶️' },
+  { id: 'events',    label: 'Map Events',      icon: '⚡' },
+  { id: 'maps',      label: 'Map Variants',    icon: '📍' },
+  { id: 'results',   label: 'Results & Save',  icon: '🏆' },
+] as const;
+type TabId = typeof TABS[number]['id'];
+
+// ── Sub-components ─────────────────────────────────────────────────────────────
+const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+  <div className="mb-5">
+    <h3 className="text-xs font-bold uppercase tracking-widest text-blue-400 mb-2 border-b border-gray-700/60 pb-1">{title}</h3>
+    <div className="space-y-2">{children}</div>
+  </div>
+);
+
+const Item: React.FC<{ label: string; icon?: string; children: React.ReactNode }> = ({ label, icon, children }) => (
+  <div className="flex gap-3 text-sm">
+    {icon && <span className="text-lg shrink-0 mt-0.5">{icon}</span>}
+    <div>
+      <span className="font-semibold text-white">{label}: </span>
+      <span className="text-gray-300">{children}</span>
+    </div>
+  </div>
+);
+
+// ── Main Component ─────────────────────────────────────────────────────────────
+export const HelpModal: React.FC<Props> = ({ scenario, onClose }) => {
+  const [tab, setTab] = useState<TabId>('metrics');
+  const maps = SCENARIO_MAPS[scenario];
+  const events = SCENARIO_DYNAMIC_EVENTS[scenario];
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="bg-[#0d1224] border border-gray-700 rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh]">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700 shrink-0">
+          <div>
+            <h2 className="text-base font-bold text-white">Help & Guide</h2>
+            <p className="text-xs text-gray-500 mt-0.5">Simulation View — full panel reference</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+          >✕</button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-1 px-4 pt-3 pb-2 shrink-0 overflow-x-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}>
+          {TABS.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`px-3 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer border ${
+                tab === t.id
+                  ? 'bg-blue-600 text-white border-blue-500 shadow-[0_0_12px_rgba(37,99,235,0.4)]'
+                  : 'text-gray-400 border-transparent hover:text-white hover:bg-gray-800'
+              }`}
+            >
+              {t.icon} {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Body */}
+        <div className="overflow-y-auto flex-1 px-5 py-4" style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}>
+
+          {/* ── LIVE METRICS ── */}
+          {tab === 'metrics' && (
+            <>
+              <Section title="Live Metrics Panel (Left Sidebar)">
+                <p className="text-sm text-gray-400 mb-3">Displays real-time statistics for all three algorithms side-by-side as the simulation runs. Each column is color-coded: <span className="text-green-400 font-bold">BFS</span>, <span className="text-purple-400 font-bold">DFS</span>, <span className="text-orange-400 font-bold">Hybrid</span>.</p>
+                <Item label="Visited Nodes" icon="🔢">The total number of nodes each algorithm has explored so far. Higher values mean more of the graph was searched before finding a path.</Item>
+                <Item label="Completion %" icon="📈">Percentage of the path completed toward the target node. Reaches 100% when the destination is found.</Item>
+                <Item label="Distance" icon="📏">The cumulative edge-weight cost of the current path. Lower is better and represents a shorter or faster route.</Item>
+                <Item label="Optimal %" icon="🎯">How close the found path is to the theoretically shortest possible path (BFS optimal = 100% by definition). Values below 100% indicate a suboptimal route.</Item>
+                <Item label="Memory" icon="💾">Estimated memory consumed by the algorithm's frontier and visited sets. BFS typically uses the most; DFS the least; Hybrid is in-between.</Item>
+                <Item label="Adaptability" icon="🔄">A score (0–100) measuring how well the algorithm recovered after a dynamic event (blockage). Higher scores mean faster, cleaner rerouting.</Item>
+              </Section>
+              <Section title="Step Counter">
+                <Item label="Step X / Y" icon="👣">Shows the current animation step out of the total number of steps in the simulation. Each step is one node expansion across all three algorithms simultaneously.</Item>
+              </Section>
+            </>
+          )}
+
+          {/* ── LEGEND ── */}
+          {tab === 'legend' && (
+            <>
+              <Section title="Environment Nodes">
+                <p className="text-sm text-gray-400 mb-2">Scenario-specific nodes have unique icons and colors defined in the Legend. The Source node (green) is where algorithms start. Target/Destination nodes (red) are the goal.</p>
+                <Item label="Source Node" icon="🟢">The starting point of the pathfinding. All three algorithms begin their search from this node simultaneously.</Item>
+                <Item label="Target / Exit Node" icon="🔴">The destination all algorithms are trying to reach. When found, the path is highlighted on the canvas.</Item>
+                <Item label="Blockage Node" icon="⛔">A dynamically generated event node that becomes impassable during the simulation. Different scenarios use different icons (e.g., 🔥 Fire, 🚫 Road Closure, 💥 Failed Component).</Item>
+                <Item label="Explored Nodes (Stacked)" icon="⬤">Nodes explored by multiple algorithms are shown with concentric colored rings — green (BFS outer), purple (DFS middle), orange (Hybrid inner).</Item>
+              </Section>
+              <Section title="Environment Edges">
+                <Item label="Edge Lines" icon="➖">Lines connecting nodes represent traversable paths. Edge thickness and color are scenario-specific (e.g., fiber optic lines vs. roads vs. corridors).</Item>
+              </Section>
+              <Section title="Algorithm Paths">
+                <Item label="BFS Path" icon="🟩">The thickest outermost line. Shows the guaranteed shortest path found by Breadth-First Search.</Item>
+                <Item label="DFS Path" icon="🟪">The middle-width line. Shows the path found by Depth-First Search — often longer but uses less memory.</Item>
+                <Item label="Hybrid Path" icon="🟧">The thinnest innermost line. Shows the balanced path from the Hybrid algorithm.</Item>
+                <Item label="Active Search Heads" icon="⭕">The pulsing colored rings on nodes show where each algorithm's frontier is currently expanding in real time.</Item>
+              </Section>
+            </>
+          )}
+
+          {/* ── CANVAS CONTROLS ── */}
+          {tab === 'canvas' && (
+            <>
+              <Section title="Show Panel (Top-Left of Canvas)">
+                <p className="text-sm text-gray-400 mb-2">Click <strong>SHOW ▼</strong> to expand. Lets you toggle the visibility of each algorithm's coloring on the canvas.</p>
+                <Item label="BFS / DFS / Hybrid toggle" icon="👁️">Click to hide or show that algorithm's explored regions, path lines, and search head rings. Useful for isolating one algorithm for comparison — e.g., hide BFS and DFS to see only the Hybrid path in orange.</Item>
+                <Item label="ON / OFF indicator">Shows the current visibility state. Dot color matches the algorithm's color scheme.</Item>
+              </Section>
+              <Section title="Follow Panel (Top-Right of Canvas)">
+                <p className="text-sm text-gray-400 mb-2">Click <strong>FOLLOW ▼</strong> to expand. Auto-pans the camera to track a specific algorithm's search head as it explores the graph.</p>
+                <Item label="BFS / DFS / Hybrid">Select one to start following that algorithm. The canvas smoothly pans each step to keep the active search head centered. The 📡 icon appears when tracking is active.</Item>
+                <Item label="Stop Following">Appears when following is active. Click to release camera control back to you. Also deactivated automatically when you drag the canvas.</Item>
+              </Section>
+              <Section title="Zoom Controls (Bottom-Right of Canvas)">
+                <Item label="+ Button" icon="🔍">Zooms into the canvas at the current view center (1.5× per click).</Item>
+                <Item label="− Button" icon="🔎">Zooms out of the canvas (1.5× per click). Minimum zoom is 0.2×.</Item>
+                <Item label="Reset Button" icon="🔄">Instantly snaps back to the default zoom (1×) and pan position (centered).</Item>
+                <Item label="Zoom: X.Xx display">Shows your current zoom level. Scroll your mouse wheel over the canvas for smooth zoom-in/out at the cursor position.</Item>
+              </Section>
+              {scenario === 'evacuation' && (
+                <Section title="Floor Switcher (Bottom-Center — SM Map only)">
+                  <Item label="GL (Ground) / L2 (Second)" icon="🏢">Switches between the Ground Level and Level 2 views of the SM City Santa Rosa map. Algorithms run across both floors simultaneously via stairwells.</Item>
+                </Section>
+              )}
+            </>
+          )}
+
+          {/* ── SIM CONTROLS ── */}
+          {tab === 'buttons' && (
+            <>
+              <Section title="Map Selector (Above Canvas)">
+                <Item label="Simultaneous Multi-Algorithm Evaluation badge" icon="🔵">Indicates that BFS, DFS, and Hybrid are all running at the same time on the same graph — not sequentially.</Item>
+                <Item label="Dynamic: [description]" icon="⚡">Describes the type of dynamic events that will appear during this scenario's simulation.</Item>
+                <Item label="Map buttons (Synthetic / Fat-Tree / etc.)" icon="🗺️">Switches the active graph map. Synthetic generates a random configurable graph; real-world maps load fixed topology data. See the Map Variants tab for details on each map.</Item>
+                {scenario === 'gameai' && <Item label="Game Board (Turkish Draughts / Checkers)" icon="♟️">Switches the game board type. Each has different tile layouts, movement rules, and opponent behavior patterns.</Item>}
+              </Section>
+              <Section title="Simulation Control Buttons (Below Canvas)">
+                <Item label="🎲 Reroll Events" icon="">Randomly regenerates the dynamic event schedule (blockages) for the current map. Use this to test a different event pattern without re-running the simulation from scratch.</Item>
+                <Item label="🔄 Reset" icon="">Clears all simulation progress and returns to Step 0. Keeps the current map and event schedule loaded.</Item>
+                <Item label="⏪ Back" icon="">Steps the simulation backward by one step. Useful for reviewing exactly when a path was rerouted.</Item>
+                <Item label="▶️ Run Simulations" icon="🟢">Starts the simulation. All three algorithms begin simultaneously. Button turns red and becomes Pause while running.</Item>
+                <Item label="⏸️ Pause" icon="🔴">Pauses the simulation at the current step. Button turns green and becomes Resume.</Item>
+                <Item label="▶️ Resume" icon="🟢">Continues the simulation from where it was paused.</Item>
+                <Item label="🔄 Replay" icon="🔵">Appears after the simulation finishes. Re-runs the full simulation from the beginning using the same graph and event data.</Item>
+                <Item label="Fwd ⏭️" icon="">Steps the simulation forward by one step. Useful for slow manual inspection of each algorithm decision.</Item>
+                <Item label="⏭️ Skip" icon="">Jumps directly to the final step (end of simulation), skipping all animation frames.</Item>
+              </Section>
+            </>
+          )}
+
+          {/* ── MAP EVENTS ── */}
+          {tab === 'events' && (
+            <>
+              <Section title="Dynamic Map Events Panel (Right Sidebar)">
+                <p className="text-sm text-gray-400 mb-3">Shows a real-time log of all dynamic events that have occurred during the simulation. Each entry includes the step number, the affected node, and which algorithms had their paths severed.</p>
+                <Item label="[Step #]" icon="🕐">The simulation step number at which the event was triggered.</Item>
+                <Item label="[Balance]" icon="⚖️">Indicates this event was generated by the balance system to maintain realistic simulation difficulty. The system ensures events aren't overly clustered at one algorithm.</Item>
+                <Item label="Event Description" icon="📋">A human-readable name of the event generated by the balance system (e.g., "🔥 Overheating Switch at Core-SP3" or "💥 Critical Cascading Failure at Floor-2"). Includes [AoE] tags for area-of-effect cascading blockages.</Item>
+                <Item label="Path Severed: [Algorithm]" icon="⚠️">Shown in red. Identifies which algorithm(s) had their active route cut off by this event and were forced to reroute.</Item>
+                <Item label="Unaffected" icon="✅">Shown in green. The algorithm's path did not pass through the blocked node — no rerouting needed.</Item>
+              </Section>
+              <Section title={`Event Types — ${scenario === 'network' ? 'Network Routing' : scenario === 'robotics' ? 'Robotics / Warehouse' : scenario === 'traffic' ? 'Road Traffic' : scenario === 'evacuation' ? 'Emergency Evacuation' : 'Game AI'}`}>
+                {events.map(ev => (
+                  <div key={ev.event} className="bg-gray-800/60 border border-gray-700 rounded-xl p-3 mb-2">
+                    <p className="text-sm font-bold text-white mb-1">{ev.icon} {ev.event}</p>
+                    <p className="text-xs text-gray-400 mb-1"><span className="text-yellow-400 font-semibold">Cause:</span> {ev.cause}</p>
+                    <p className="text-xs text-gray-400"><span className="text-green-400 font-semibold">Resolution:</span> {ev.resolution}</p>
+                  </div>
+                ))}
+              </Section>
+              {scenario === 'gameai' && (
+                <Section title="Strategy Map Events Panel (Game AI Only)">
+                  <p className="text-sm text-gray-400 mb-2">A second events panel exclusive to Game AI that shows detailed per-algorithm impact analysis for each opponent piece movement.</p>
+                  <Item label="Opponent Piece Deployed / Attacks / Retreats" icon="🔴">The event type for the opponent piece movement.</Item>
+                  <Item label="BFS / DFS / Hybrid — UNAFFECTED" icon="✅">That algorithm's path did not go through the blocked square — it continues without change.</Item>
+                  <Item label="BFS / DFS / Hybrid — PATH SEVERED" icon="⚠️">The opponent blocked a square that was part of that algorithm's active route. The algorithm must immediately find an alternative diagonal or straight-line path.</Item>
+                </Section>
+              )}
+            </>
+          )}
+
+          {/* ── MAP VARIANTS ── */}
+          {tab === 'maps' && (
+            <>
+              <Section title={`Available Maps — ${scenario === 'network' ? 'Network Routing' : scenario === 'robotics' ? 'Robotics / Warehouse' : scenario === 'traffic' ? 'Road Traffic' : scenario === 'evacuation' ? 'Emergency Evacuation' : 'Game AI Pathfinding'}`}>
+                {maps.map(m => (
+                  <div key={m.name} className="bg-gray-800/60 border border-gray-700 rounded-xl p-3 mb-2">
+                    <p className="text-sm font-bold text-white mb-1">{m.name}</p>
+                    <p className="text-xs text-gray-400">{m.description}</p>
+                  </div>
+                ))}
+              </Section>
+              {scenario !== 'gameai' ? (
+                <Section title="Dynamic Size Adjuster (Synthetic Maps only)">
+                  <Item label="Nodes" icon="🔢">Controls how many nodes are generated in the synthetic graph. More nodes = more complex topology = harder pathfinding challenge.</Item>
+                  <Item label="Links" icon="🔗">Controls how many edge connections exist between nodes. More links = more alternative routes available = easier for BFS to find shortest paths.</Item>
+                  <Item label="Generated X nodes / Y links" icon="📋">Displays the actual counts after generation (may differ slightly from requested values due to validity constraints).</Item>
+                </Section>
+              ) : (
+                <Section title="Dynamic Board Scaling">
+                  <Item label="Auto-Expansion" icon="📐">The game board dynamically expands its grid size when more than 20 nodes/pieces are added, automatically adjusting based on the array of the board.</Item>
+                </Section>
+              )}
+            </>
+          )}
+
+          {/* ── RESULTS & SAVE ── */}
+          {tab === 'results' && (
+            <>
+              <Section title="Comparative Benchmark Table (Appears after simulation)">
+                <p className="text-sm text-gray-400 mb-2">Summarizes the final performance of all three algorithms side-by-side once the simulation completes.</p>
+                <Item label="Execution Time" icon="⏱️">How long each algorithm took to find its path (in milliseconds). Includes rerouting time after dynamic events.</Item>
+                <Item label="Nodes Visited" icon="🔢">Total unique nodes explored. Directly measures algorithmic efficiency — fewer explored nodes is better.</Item>
+                <Item label="Completion Rate" icon="📈">Whether the algorithm successfully reached the target. 100% = found a path; values below 100% indicate partial completion or failure due to blocked routes.</Item>
+                <Item label="Memory Used" icon="💾">Peak memory consumed during the run (in MB). BFS typically uses the most; DFS the least.</Item>
+                <Item label="Path Optimality" icon="🎯">How close the found path is to the theoretical shortest path. BFS always achieves 100%; DFS and Hybrid may score lower.</Item>
+                <Item label="Adaptability" icon="🔄">A composite score measuring rerouting speed and path quality after each dynamic event. Higher is better.</Item>
+              </Section>
+              <Section title="Save Comparison to History">
+                <Item label="💾 Save Comparison to History" icon="">Saves the current benchmark result to your in-session history for this scenario. You can view, compare, and replay all saved results via the Result History button in the top header.</Item>
+              </Section>
+              <Section title="Result History Modal">
+                <Item label="🗄️ Result History [N]" icon="">The button in the top header. Opens a modal listing all saved simulation results for the current scenario. Each entry shows the map used, algorithm metrics, and a Replay button to re-animate that exact run.</Item>
+              </Section>
+            </>
+          )}
+
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 py-3 border-t border-gray-700 shrink-0 flex justify-between items-center">
+          <span className="text-xs text-gray-600">Click outside or press ✕ to close</span>
+          <button
+            onClick={onClose}
+            className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
+          >
+            Got it!
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
