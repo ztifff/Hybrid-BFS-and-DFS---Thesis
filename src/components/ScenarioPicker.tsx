@@ -26,6 +26,8 @@ export const ScenarioPicker: React.FC<Props> = ({
 }) => {
   const [scenarios, setScenarios] = useState<ScenarioConfig[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
+  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
 
   useEffect(() => {
     const fetchScenarios = async () => {
@@ -196,6 +198,62 @@ export const ScenarioPicker: React.FC<Props> = ({
           )}
         </button>
       </div>
+
+      {/* FOOTER */}
+      <footer className="mt-8 pt-4 border-t border-gray-800 shrink-0 relative z-10 flex flex-col sm:flex-row items-center justify-between text-[10px] text-gray-500 font-mono w-full">
+        <div className="flex gap-4">
+          <button onClick={() => setIsTermsOpen(true)} className="hover:text-blue-400 transition-colors uppercase tracking-widest">Terms of Use</button>
+          <button onClick={() => setIsPrivacyOpen(true)} className="hover:text-blue-400 transition-colors uppercase tracking-widest">Privacy Policy</button>
+        </div>
+        <div className="mt-2 sm:mt-0 text-gray-600 tracking-widest">
+          ACADEMIC THESIS PROTOTYPE © {new Date().getFullYear()}
+        </div>
+      </footer>
+
+      {/* TERMS OF USE MODAL */}
+      {isTermsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setIsTermsOpen(false)}>
+          <div className="bg-[#0d1224] text-gray-300 border border-gray-700 rounded-2xl shadow-[0_0_30px_rgba(0,0,0,0.8)] w-full max-w-3xl flex flex-col max-h-[90vh] overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="bg-[#0a0f1e] text-white border-b border-gray-700 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold tracking-widest uppercase text-blue-400" style={{ fontFamily: 'monospace' }}>TERMS OF USE</h2>
+              <button onClick={() => setIsTermsOpen(false)} className="w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer">
+                ✕
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto text-sm space-y-4" style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}>
+              <p>This Algorithm Benchmarking Tool is generously offered at no cost to the global Computer Science community. If you appreciate this tool, we kindly request that you <strong className="text-gray-100">spread the word about its existence to fellow Computer Science students and instructors.</strong> You can share this tool through social media platforms, course webpages, blog reviews, emails, and more.</p>
+              <p>Data Structures and Algorithms (DSA) students and instructors are welcome to use this website directly for their classes. If you capture screenshots or videos from this site, feel free to use them elsewhere, provided that you cite the URL of this website or the list of publications below as references. However, please refrain from downloading the client-side files and hosting them on your website, as this constitutes plagiarism.</p>
+              <p>Please note that this evaluation tool has a substantial simulation engine, and it is not easy to save server-side scripts and databases locally. Currently, the general public can access the core pathfinding system only through the interactive mode.</p>
+              <h3 className="font-bold text-base mt-6 text-gray-100">List of Publications</h3>
+              <p>This work is presented as an Academic Thesis for the evaluation of hybrid pathfinding algorithms. You can refer to our upcoming paper about this system for a detailed breakdown of the BFS, DFS, and Hybrid metrics.</p>
+              <h3 className="font-bold text-base mt-6 text-gray-100">Bug Reports or Request for New Features</h3>
+              <p>This benchmarking tool is not a finished product. The developers are still actively improving the visualizations and analytics. If you are using this tool and spot a bug in any of our visualization pages or if you want to request for new features, please contact the authors.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PRIVACY POLICY MODAL */}
+      {isPrivacyOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setIsPrivacyOpen(false)}>
+          <div className="bg-[#0d1224] text-gray-300 border border-gray-700 rounded-2xl shadow-[0_0_30px_rgba(0,0,0,0.8)] w-full max-w-3xl flex flex-col max-h-[90vh] overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="bg-[#0a0f1e] text-white border-b border-gray-700 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold tracking-widest uppercase text-blue-400" style={{ fontFamily: 'monospace' }}>PRIVACY POLICY</h2>
+              <button onClick={() => setIsPrivacyOpen(false)} className="w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer">
+                ✕
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto text-sm space-y-4" style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}>
+              <p className="font-bold text-gray-100 border-b border-gray-800 pb-2">Version 1.0 (Updated {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })})</p>
+              <p>Since the initial deployment, we do not use Google Analytics or invasive tracking scripts. Thus, all cookies that we use now are solely for the operations of this website. The annoying cookie-consent popup is now turned off even for first-time visitors.</p>
+              <p>Since this is an Academic Thesis project, anyone in the world can self-create a local benchmarking session to test algorithms on various topologies (e.g., Datacenters, Robotics, ISP Networks, Traffic, Game AI).</p>
+              <p>Additionally, for students and researchers, by using the export features, you are taking a localized copy of your data. We do not store any personal data on our server side. Your simulation logs and performance evaluations are kept on your local machine.</p>
+              <p>For other CS researchers worldwide who evaluate pathfinding systems, your session state is maintained securely. You can freely use the material to enhance your data structures and algorithm classes. Note that there can be other specific features in the future.</p>
+              <p>For anyone evaluating this tool, you can simply close the browser tab to clear your local session data should you wish to no longer be associated with the tool.</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
