@@ -74,6 +74,7 @@ export const NetworkCanvas: React.FC<Props> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [activeFloor, setActiveFloor] = useState<string>('L2');
+  const [followAlgo, setFollowAlgo] = useState<'bfs' | 'dfs' | 'hybrid' | null>(null);
   
   // Force re-render on resize to prevent canvas stretching
   const [windowDimensions, setWindowDimensions] = useState({ w: 0, h: 0 });
@@ -218,6 +219,33 @@ export const NetworkCanvas: React.FC<Props> = ({
 
   // Cleanup animation frame on unmount
   useEffect(() => () => { if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current); }, []);
+
+  // ── Follow Algorithm: auto-pan to the current search head each step ──────────
+  useEffect(() => {
+    if (!followAlgo || !containerRef.current) return;
+
+    const currentNodeId = followAlgo === 'hybrid'
+      ? activeSteps.hybrid?.current
+      : followAlgo === 'bfs'
+        ? activeSteps.bfs?.current
+        : activeSteps.dfs?.current;
+
+    if (!currentNodeId) return;
+    const node = nodes.find(n => n.id === currentNodeId);
+    if (!node) return;
+
+    const targetZoom = Math.max(zoom, 2.2); // keep at least 2.2x when following
+    const nodeScreenX = (node.x * scale) + offsetX;
+    const nodeScreenY = (node.y * scale) + offsetY;
+    const containerW = containerRef.current.getBoundingClientRect().width;
+    const containerH = containerRef.current.getBoundingClientRect().height;
+    animateTo(
+      targetZoom,
+      containerW / 2 - nodeScreenX * targetZoom,
+      containerH / 2 - nodeScreenY * targetZoom,
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [followAlgo, stepIndex]);
 
   const activeBlocked = useMemo(() => {
     const blocked = new Set<string>();
@@ -783,6 +811,7 @@ export const NetworkCanvas: React.FC<Props> = ({
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (highlightedNodeId) onDeselect?.();
+    if (followAlgo) setFollowAlgo(null); // stop following when user grabs canvas
     setIsDragging(true);
     setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
   };
@@ -825,6 +854,39 @@ export const NetworkCanvas: React.FC<Props> = ({
       onTouchCancel={handleTouchEnd}
     >
       
+      {/* ── Follow Algorithm Buttons ─────────────────────────────────────── */}
+      <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-gray-900/90 backdrop-blur-sm border border-gray-700 rounded-xl px-2 py-1.5 z-20 shadow-lg">
+        <span className="text-[9px] uppercase tracking-widest text-gray-500 font-bold pr-1 select-none">Follow</span>
+        {(['bfs', 'dfs', 'hybrid'] as const).map((algo) => {
+          const algoColors = {
+            bfs:    { active: 'bg-green-600 text-white shadow-[0_0_12px_rgba(74,222,128,0.5)] border-green-500', inactive: 'text-gray-400 hover:text-green-300 hover:bg-green-950/60 border-transparent' },
+            dfs:    { active: 'bg-purple-600 text-white shadow-[0_0_12px_rgba(192,132,252,0.5)] border-purple-500', inactive: 'text-gray-400 hover:text-purple-300 hover:bg-purple-950/60 border-transparent' },
+            hybrid: { active: 'bg-orange-600 text-white shadow-[0_0_12px_rgba(251,146,60,0.5)] border-orange-500', inactive: 'text-gray-400 hover:text-orange-300 hover:bg-orange-950/60 border-transparent' },
+          };
+          const isActive = followAlgo === algo;
+          return (
+            <button
+              key={algo}
+              onClick={() => setFollowAlgo(isActive ? null : algo)}
+              className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-all cursor-pointer ${
+                isActive ? algoColors[algo].active : algoColors[algo].inactive
+              }`}
+            >
+              {isActive ? '📡 ' : ''}{algo.toUpperCase()}
+            </button>
+          );
+        })}
+        {followAlgo && (
+          <button
+            onClick={() => setFollowAlgo(null)}
+            className="ml-1 px-2 py-1 rounded-lg text-[9px] font-bold text-gray-500 hover:text-red-400 hover:bg-gray-800 border border-transparent transition-all cursor-pointer"
+            title="Stop following"
+          >
+            ✕
+          </button>
+        )}
+      </div>
+
       {isLayeredMap && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-gray-900/90 p-1.5 rounded-xl border border-gray-700 backdrop-blur-sm z-20 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.5)]">
           <button onClick={() => setActiveFloor('GL')} className={`px-8 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer ${activeFloor === 'GL' ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.5)]' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>GL (Ground)</button>
