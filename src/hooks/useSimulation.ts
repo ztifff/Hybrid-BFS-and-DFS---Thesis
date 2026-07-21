@@ -111,7 +111,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
         let mergedResults: any = null;
 
         while (keepFetching && isMounted) {
-          const response = await fetch(`api/simulation/run?offset=${currentOffset}&limit=${limit}`, {
+          const response = await fetch(`https://backend-1e4y.onrender.com/api/simulation/run?offset=${currentOffset}&limit=${limit}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
