@@ -7,7 +7,7 @@ import { simulationHistory } from '../store/historyStore';
 export class SimulationController {
  async runSimulation(req: Request, res: Response): Promise<void> {
     try {
-      const { scenario, mapId, seed, gameBoard, graphSize, chessPiece, sizing } = req.body as {
+      const { scenario, mapId, seed, gameBoard, graphSize, chessPiece, sizing, customSourceId, customDestinationIds, deliveryMode } = req.body as {
         scenario: ScenarioType;
         mapId: string;
         seed: number;
@@ -15,6 +15,9 @@ export class SimulationController {
         graphSize?: GraphSize;
         chessPiece?: string;
         sizing?: GraphSizing;
+        customSourceId?: string;
+        customDestinationIds?: string[];
+        deliveryMode?: 'anycast' | 'multicast';
       };
 
       const offset = Number(req.query.offset || 0);
@@ -38,7 +41,10 @@ export class SimulationController {
         gameBoard,
         graphSize || 'medium',
         chessPiece || 'knight',
-        activeSizing
+        activeSizing,
+        customSourceId,
+        customDestinationIds,
+        deliveryMode
       );
 
       res.status(200).json({ success: true, data: record });

@@ -47,6 +47,12 @@ export interface SimulationState {
   setGraphSize: (size: GraphSize) => void;
   syntheticSizing: GraphSizing;
   updateSyntheticSizing: (field: keyof GraphSizing, value: number) => void;
+  networkRoutingMode: 'default' | 'device-to-device';
+  setNetworkRoutingMode: (mode: 'default' | 'device-to-device') => void;
+  sourceDevice: string;
+  setSourceDevice: (device: string) => void;
+  destinationDevices: string[];
+  setDestinationDevices: (devices: string[]) => void;
 
   // Actions
   handleRun: () => void;
@@ -92,6 +98,8 @@ export function useSimulation(params: { scenario: ScenarioType }) {
     const fetchGraphData = async () => {
       try {
         model.setIsComputing(true);
+        model.setIsCurrentSaved(false);
+        model.setCurrentSavedId(null);
         controller.setStatus('idle');
 
         controller.setStepIndex(0);
@@ -103,7 +111,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
         let mergedResults: any = null;
 
         while (keepFetching && isMounted) {
-          const response = await fetch(`https://backend-1e4y.onrender.com/api/simulation/run?offset=${currentOffset}&limit=${limit}`, {
+          const response = await fetch(`api/simulation/run?offset=${currentOffset}&limit=${limit}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -112,7 +120,12 @@ export function useSimulation(params: { scenario: ScenarioType }) {
               seed: model.seed,
               graphSize: model.graphSize,
               ...(model.mapId === 'synthetic' ? { sizing: model.syntheticSizing } : {}),
-              ...(scenario === 'gameai' ? { gameBoard: model.gameBoard } : {})
+              ...(scenario === 'gameai' ? { gameBoard: model.gameBoard } : {}),
+              ...(model.networkRoutingMode === 'device-to-device' && (model.mapId === 'companybusiness' || model.mapId === 'campus') ? {
+                customSourceId: model.sourceDevice,
+                customDestinationIds: model.destinationDevices,
+                deliveryMode: model.deliveryMode
+              } : {})
             })
           });
 
@@ -167,7 +180,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
       isMounted = false;
       controller.stopAnimation();
     };
-  }, [scenario, model.mapId, model.seed, model.gameBoard, model.graphSize, model.syntheticSizing, controller.stopAnimation]);
+  }, [scenario, model.mapId, model.seed, model.gameBoard, model.graphSize, model.syntheticSizing, model.networkRoutingMode, model.sourceDevice, model.destinationDevices, model.deliveryMode, controller.stopAnimation]);
 
   // Wrapper for confirmSaveResult to inject controller state
   const confirmSaveResult = () => {
@@ -204,6 +217,14 @@ export function useSimulation(params: { scenario: ScenarioType }) {
     setGraphSize: model.setGraphSize,
     syntheticSizing: model.syntheticSizing,
     updateSyntheticSizing: model.updateSyntheticSizing,
+    networkRoutingMode: model.networkRoutingMode,
+    setNetworkRoutingMode: model.setNetworkRoutingMode,
+    sourceDevice: model.sourceDevice,
+    setSourceDevice: model.setSourceDevice,
+    destinationDevices: model.destinationDevices,
+    setDestinationDevices: model.setDestinationDevices,
+    deliveryMode: model.deliveryMode,
+    setDeliveryMode: model.setDeliveryMode,
 
     // Actions
     handleRun: controller.handleRun,

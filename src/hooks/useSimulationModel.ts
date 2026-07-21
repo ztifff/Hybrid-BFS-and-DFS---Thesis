@@ -44,6 +44,12 @@ export function useSimulationModel(scenario: ScenarioType) {
   const [graphSize, setGraphSize] = useState<'small' | 'medium' | 'large'>('medium');
   const [syntheticSizingByScenario, setSyntheticSizingByScenario] = useState(DEFAULT_SYNTHETIC_SIZING);
 
+  // Network Specific State (Device-to-Device Mode)
+  const [networkRoutingMode, setNetworkRoutingMode] = useState<'default' | 'device-to-device'>('default');
+  const [sourceDevice, setSourceDevice] = useState<string>('sales_pc1');
+  const [destinationDevices, setDestinationDevices] = useState<string[]>(['fin_pc1']);
+  const [deliveryMode, setDeliveryMode] = useState<'anycast' | 'multicast'>('anycast');
+
   const syntheticSizing = syntheticSizingByScenario[scenario];
   const updateSyntheticSizing = useCallback((field: keyof GraphSizing, rawValue: number) => {
     const min = field === 'nodes' ? MIN_SYNTHETIC_NODES[scenario] : 4;
@@ -224,8 +230,12 @@ export function useSimulationModel(scenario: ScenarioType) {
         }
 
         if (scenario === 'gameai') graphParams.set('gameBoard', gameBoard);
+        if (networkRoutingMode === 'device-to-device' && (mapId === 'companybusiness' || mapId === 'campus')) {
+          graphParams.set('customSourceId', sourceDevice);
+          graphParams.set('customDestinationIds', JSON.stringify(destinationDevices));
+        }
 
-        const response = await fetch(`https://backend-1e4y.onrender.com/api/network/graph?${graphParams}`);
+        const response = await fetch(`api/network/graph?${graphParams}`);
         if (!response.ok) throw new Error(`Graph API Error: ${response.statusText}`);
         const json = await response.json();
 
@@ -240,7 +250,34 @@ export function useSimulationModel(scenario: ScenarioType) {
     };
     fetchGraphStructure();
     return () => { isMounted = false; };
-  }, [scenario, mapId, gameBoard, graphSize, seed, syntheticSizing.nodes, syntheticSizing.edges]);
+  }, [scenario, mapId, gameBoard, graphSize, seed, syntheticSizing.nodes, syntheticSizing.edges, networkRoutingMode, sourceDevice, destinationDevices]);
+
+  // Synchronize custom endpoints if the map changes or if they are invalid
+  useEffect(() => {
+    if (networkRoutingMode === 'device-to-device' && currentGraph) {
+      let currentSource = sourceDevice;
+      const validSource = currentGraph.nodes.some(n => n.id === currentSource);
+      const endpoints = currentGraph.nodes.filter(n => mapId === 'campus' ? n.type === 'access_point' : (n.type === 'access_point' || n.type === 'server'));
+      
+      if (!validSource && endpoints.length > 0) {
+        currentSource = endpoints[0].id;
+        setSourceDevice(currentSource);
+      }
+      
+      const validDestinations = destinationDevices.filter(d => currentGraph.nodes.some(n => n.id === d));
+      
+      // Ensure at least 2 destinations are selected (if available) so it doesn't default to empty
+      const availableDests = endpoints.filter(e => e.id !== currentSource && !validDestinations.includes(e.id));
+      const needed = 2 - validDestinations.length;
+      
+      if (needed > 0 && availableDests.length > 0) {
+        const newDests = [...validDestinations, ...availableDests.slice(0, needed).map(e => e.id)];
+        setDestinationDevices(newDests);
+      } else if (validDestinations.length !== destinationDevices.length) {
+        setDestinationDevices(validDestinations);
+      }
+    }
+  }, [currentGraph, networkRoutingMode, sourceDevice, destinationDevices, mapId]);
 
   return {
     scenario,
@@ -249,6 +286,10 @@ export function useSimulationModel(scenario: ScenarioType) {
     mapId, setMapId,
     graphSize, setGraphSize,
     syntheticSizing, updateSyntheticSizing,
+    networkRoutingMode, setNetworkRoutingMode,
+    sourceDevice, setSourceDevice,
+    destinationDevices, setDestinationDevices,
+    deliveryMode, setDeliveryMode,
     
     history, handleDeleteHistory, handleImportHistory, confirmSaveResult, openSaveModal,
     isCurrentSaved, setIsCurrentSaved,

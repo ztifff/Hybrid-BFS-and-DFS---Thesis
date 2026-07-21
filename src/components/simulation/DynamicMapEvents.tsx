@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { DynamicEvent, SimulationResult, AlgorithmStep } from '../types';
+import { DynamicEvent, SimulationResult, AlgorithmStep } from '../../types';
 
 interface Props {
   dynamicEvents: DynamicEvent[];

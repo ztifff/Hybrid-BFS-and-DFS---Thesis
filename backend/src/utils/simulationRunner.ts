@@ -303,10 +303,21 @@ export async function runSimulation(
   gameBoard?: GameAIBoard,
   graphSize: GraphSize = 'medium',
   chessPiece: string = 'knight',
-  sizing?: GraphSizing,
+  activeSizing?: GraphSizing,
+  customSourceId?: string,
+  customDestinationIds?: string[],
+  deliveryMode: 'anycast' | 'multicast' = 'anycast'
 ): Promise<SimulationResult & { meta?: { hasMore: boolean; totalSteps: number; currentOffset: number } }> {
   
-  const graph = buildScenarioGraph(scenario, useRealWorld, gameBoard, mapId, graphSize, dynamicSeed, chessPiece, sizing);
+  const graph = buildScenarioGraph(scenario, useRealWorld, gameBoard, mapId, graphSize, dynamicSeed, chessPiece, activeSizing);
+
+  if (customSourceId) graph.sourceId = customSourceId;
+  if (customDestinationIds && customDestinationIds.length > 0) graph.destinationIds = customDestinationIds;
+
+  if (useRealWorld && mapId === 'campus' && customSourceId) {
+    const { applyCampusACLs } = require('./networkGraph');
+    applyCampusACLs(graph, customSourceId);
+  }
 
 
   let result: {
@@ -337,17 +348,17 @@ export async function runSimulation(
     const pathfinder = new BFSPathfinder();
     pathfinder.seedBlockedNodes(initialBlockedNodes);
     environment.registerObserver(pathfinder);
-    result = await pathfinder.execute(graph, environment, disablePathSevering);
+    result = await pathfinder.execute(graph, environment, disablePathSevering, deliveryMode);
   } else if (algorithm === 'dfs') {
     const pathfinder = new DFSPathfinder();
     pathfinder.seedBlockedNodes(initialBlockedNodes);
     environment.registerObserver(pathfinder);
-    result = await pathfinder.execute(graph, environment, disablePathSevering);
+    result = await pathfinder.execute(graph, environment, disablePathSevering, deliveryMode);
   } else {
     const pathfinder = new HybridPathfinder();
     pathfinder.seedBlockedNodes(initialBlockedNodes);
     environment.registerObserver(pathfinder);
-    result = await pathfinder.execute(graph, environment, disablePathSevering);
+    result = await pathfinder.execute(graph, environment, disablePathSevering, deliveryMode);
   }
   const timeElapsed = Math.max(performance.now() - startTime, 0.001);
   const memoryUsed = estimateMemory(result.nodesExplored, result.maxFrontierSize, algorithm);
@@ -452,11 +463,14 @@ export async function orchestrateSimulation(
   gameBoard: GameAIBoard | undefined,
   graphSize: GraphSize,
   chessPiece: string,
-  activeSizing: GraphSizing | undefined
+  activeSizing: GraphSizing | undefined,
+  customSourceId?: string,
+  customDestinationIds?: string[],
+  deliveryMode?: 'anycast' | 'multicast'
 ) {
-  const bfsRes    = await runSimulation(scenario, 'bfs',    seed, useRealWorld, mapId, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing);
-  const dfsRes    = await runSimulation(scenario, 'dfs',    seed, useRealWorld, mapId, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing);
-  const hybridRes = await runSimulation(scenario, 'hybrid', seed, useRealWorld, mapId, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing);
+  const bfsRes    = await runSimulation(scenario, 'bfs',    seed, useRealWorld, mapId, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing, customSourceId, customDestinationIds, deliveryMode);
+  const dfsRes    = await runSimulation(scenario, 'dfs',    seed, useRealWorld, mapId, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing, customSourceId, customDestinationIds, deliveryMode);
+  const hybridRes = await runSimulation(scenario, 'hybrid', seed, useRealWorld, mapId, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing, customSourceId, customDestinationIds, deliveryMode);
 
   let optimalPathLength = 0;
   if (offset === 0) {

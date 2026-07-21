@@ -1,8 +1,7 @@
 import React from 'react';
-import { SimulationResult, DynamicEvent } from '../types';
-import { getPathOptimality, getMemoryInMB } from './MetricsPanel';
-import { getAdaptabilityScore } from '../utils/metricsHelpers';
-import { ALGORITHMS } from '../config/scenarios';
+import { SimulationResult, DynamicEvent } from '../../types';
+import { getPathOptimality, getMemoryInMB, getAdaptabilityScore } from '../../utils/metricsHelpers';
+import { ALGORITHMS } from '../../config/scenarios';
 
 
 interface Props {

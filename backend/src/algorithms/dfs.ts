@@ -78,7 +78,8 @@ export class DFSPathfinder implements PathfinderObserver {
   public async execute(
     graph: ScenarioGraph,
     environment: SimulationEnvironment,
-    disablePathSevering: boolean = false
+    disablePathSevering: boolean = false,
+    deliveryMode: 'anycast' | 'multicast' = 'anycast'
   ): Promise<DFSResult> {
     const { nodes, edges, sourceId, destinationIds } = graph;
 
@@ -102,6 +103,7 @@ export class DFSPathfinder implements PathfinderObserver {
     parentMap.set(sourceId, null);
 
     let foundDestination: string | null = null;
+    const foundDestinations: string[] = [];
     let lastCurrent: string | null = null;
     let nodesExplored = 0;
     let iteration = 0;
@@ -109,7 +111,9 @@ export class DFSPathfinder implements PathfinderObserver {
     let lastYieldTime = performance.now();
     const severedBlockedNodes = new Set<string>();
 
-    while (stack.length > 0 && !foundDestination && iteration < MAX_TOTAL_STEPS) {
+    while (stack.length > 0 && iteration < MAX_TOTAL_STEPS) {
+      if (deliveryMode === 'anycast' && foundDestinations.length > 0) break;
+      if (deliveryMode === 'multicast' && destSet.size > 0 && foundDestinations.length === destSet.size) break;
       if (stack.length > maxFrontierSize) maxFrontierSize = stack.length;
 
       let didSever = false;
@@ -153,8 +157,9 @@ export class DFSPathfinder implements PathfinderObserver {
             path: reconstructPath(parentMap, rollbackTo),
             current: rollbackTo,
             done: false,
-            foundDestination: null,
-            phaseLabel: `🔙 DFS — Path severed at [${blockedId}]! Backtracking to [${rollbackTo}], cleared ${subtree.length} node(s)`
+            foundDestination: foundDestinations.length > 0 ? foundDestinations[0] : null,
+            foundDestinations: [...foundDestinations],
+            phaseLabel: `🚧 DFS - Dead End at [${blockedId}]! Retreating back to [${rollbackTo}], detached ${subtree.length} nodes`
           };
           steps.push(severStep);
           environment.tick(severStep);
@@ -181,8 +186,9 @@ export class DFSPathfinder implements PathfinderObserver {
             path: reconstructPath(parentMap, lastCurrent ?? sourceId),
             current,
             done: false,
-            foundDestination: null,
-            phaseLabel: `⏳ DFS — Route blocked, diving other branches (wait ${entry.waited + 1}/${MAX_WAIT_STEPS})`
+            foundDestination: foundDestinations.length > 0 ? foundDestinations[0] : null,
+            foundDestinations: [...foundDestinations],
+            phaseLabel: `⏳ DFS - Path blocked, waiting for clearance (${entry.waited + 1}/${MAX_WAIT_STEPS})`
           };
           steps.push(waitStep);
           environment.tick(waitStep);
@@ -208,7 +214,8 @@ export class DFSPathfinder implements PathfinderObserver {
               path: reconstructPath(parentMap, rollbackTo ?? sourceId),
               current: rollbackTo ?? sourceId,
               done: false,
-              foundDestination: null,
+              foundDestination: foundDestinations.length > 0 ? foundDestinations[0] : null,
+              foundDestinations: [...foundDestinations],
               phaseLabel: `🔀 DFS — Wait expired at [${current}], forcing reroute from [${rollbackTo}]`
             };
             steps.push(forceStep);
@@ -233,8 +240,9 @@ export class DFSPathfinder implements PathfinderObserver {
         path: reconstructPath(parentMap, current),
         current,
         done: false,
-        foundDestination: null,
-        phaseLabel: '🎯 DFS — Deep Dive'
+        foundDestination: foundDestinations.length > 0 ? foundDestinations[0] : null,
+        foundDestinations: [...foundDestinations],
+        phaseLabel: '🧗 DFS - Exploring Deepest Path'
       };
       steps.push(step);
       environment.tick(step);
@@ -244,7 +252,15 @@ export class DFSPathfinder implements PathfinderObserver {
         lastYieldTime = performance.now();
       }
 
-      if (destSet.has(current)) { foundDestination = current; break; }
+      if (destSet.has(current) && !foundDestinations.includes(current)) {
+        foundDestinations.push(current);
+        if (deliveryMode === 'anycast') {
+          foundDestination = current;
+          break;
+        } else if (deliveryMode === 'multicast' && foundDestinations.length === destSet.size) {
+          break;
+        }
+      }
 
       const neighbors = (adj.get(current) ?? []).slice().reverse();
       for (const { to } of neighbors) {
@@ -259,7 +275,8 @@ export class DFSPathfinder implements PathfinderObserver {
       }
     }
 
-    const finalPath = foundDestination ? reconstructPath(parentMap, foundDestination) : [];
+    const closestExit = foundDestinations.length > 0 ? foundDestinations[0] : null;
+    const finalPath = closestExit ? reconstructPath(parentMap, closestExit) : [];
     const totalLatency = calcPathLatency(finalPath, edges);
 
     steps.push({
@@ -267,12 +284,13 @@ export class DFSPathfinder implements PathfinderObserver {
       explored: Array.from(visited),
       frontier: [],
       path: finalPath,
-      current: foundDestination ?? lastCurrent ?? sourceId,
+      current: closestExit ?? lastCurrent ?? sourceId,
       done: true,
-      foundDestination,
-      phaseLabel: foundDestination ? '✅ DFS — Path Secured' : '🔄 DFS — All Routes Exhausted'
+      foundDestination: foundDestinations.length > 0 ? foundDestinations[0] : null,
+      foundDestinations: [...foundDestinations],
+      phaseLabel: foundDestinations.length > 0 ? (deliveryMode === 'multicast' && foundDestinations.length === destSet.size ? '🏁 DFS - All Targets Secured' : '🏁 DFS - Target Secured') : '❌ DFS - All Routes Exhausted'
     });
 
-    return { steps, nodesExplored, pathLength: foundDestination ? finalPath.length - 1 : -1, totalLatency, foundDestination, maxFrontierSize };
+    return { steps, nodesExplored, pathLength: foundDestinations.length > 0 ? finalPath.length - 1 : -1, totalLatency, foundDestination: foundDestinations.length > 0 ? foundDestinations[0] : null, maxFrontierSize };
   }
 }

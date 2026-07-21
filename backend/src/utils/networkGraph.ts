@@ -1,6 +1,6 @@
 import { ScenarioGraph, GraphNode, GraphEdge, GraphSize, GraphSizing } from '../types/index';
-import { datacenterNetworkGraph } from '../data/network.datacenter';
-import { as733NetworkGraph } from '../data/network.as733';
+import { companyBusinessNetworkGraph } from '../data/network.companybusiness';
+import { campusNetworkGraph } from '../data/network.campus';
 import { clampInt, fitGraphEdgeCount, resolveSizingValue } from './graphSizing';
 
 const W = 1600; 
@@ -55,16 +55,19 @@ export function buildNetworkGraph(
 ): ScenarioGraph {
   if (useRealWorld) {
     const registry: Record<string, any> = {
-      'datacenter': datacenterNetworkGraph,
-      'as733': as733NetworkGraph
+      'companybusiness': companyBusinessNetworkGraph,
+      'campus': campusNetworkGraph
     };
-    const baseGraph = registry[mapId] || datacenterNetworkGraph;
+    const baseGraph = registry[mapId] || companyBusinessNetworkGraph;
     const rwGraph = { ...(baseGraph as ScenarioGraph) };
     
     let currentSeed = seed;
 
-    // Pick a random source node among the core routers (datacenter)
-    const potentialCores = rwGraph.nodes.filter(n => n.type === 'datacenter');
+    // Pick a random source node (Prioritize ISPs, fallback to core routers)
+    let potentialCores = rwGraph.nodes.filter(n => n.type === 'datacenter');
+    if (potentialCores.length === 0) {
+      potentialCores = rwGraph.nodes.filter(n => n.type === 'building_router');
+    }
     if (potentialCores.length > 0) {
       const coreIndex = Math.floor(seededRandom(currentSeed++) * potentialCores.length);
       rwGraph.sourceId = potentialCores[coreIndex].id;
@@ -167,4 +170,50 @@ export function getNetworkFailureCandidates(graph: ScenarioGraph): string[] {
   }
 
   return candidates;
+}
+
+export function applyCampusACLs(graph: ScenarioGraph, customSourceId: string) {
+  // Scenario A: Boys Block -> AB1 only. Girls Block -> AB2 only.
+  const isBoysBlock = [ 'boys_pc1', 'boys_lap1', 'boys_lap2', 'boys_smart1' ].includes(customSourceId);
+  const isGirlsBlock = [ 'girls_pc1', 'girls_lap1', 'girls_lap2', 'girls_smart1' ].includes(customSourceId);
+  const isYellowZone = [ 'it_pc1', 'it_pc2', 'it_lap1', 'lib_pc1', 'lib_pc2', 'dome_lap1', 'dome_pc1', 'dome_pc2' ].includes(customSourceId);
+
+  if (!isBoysBlock && !isGirlsBlock && !isYellowZone) return;
+
+  if (isBoysBlock) {
+    // Boys can only talk to AB1. Sever edges to AB2, IT, Lib, Dome.
+    graph.edges = graph.edges.filter(e => 
+      !(e.from === 's1_hostel' && e.to === 'ap_girls') && 
+      !(e.from === 'ap_girls' && e.to === 's1_hostel') &&
+      !(e.from === 's0_college' && e.to === 'ap_ab2') &&
+      !(e.from === 'ap_ab2' && e.to === 's0_college') &&
+      !(e.from === 's0_college' && e.to === 'ap_it') &&
+      !(e.from === 'ap_it' && e.to === 's0_college') &&
+      !(e.from === 's0_college' && e.to === 'ap_lib') &&
+      !(e.from === 'ap_lib' && e.to === 's0_college') &&
+      !(e.from === 's0_college' && e.to === 'ap_dome') &&
+      !(e.from === 'ap_dome' && e.to === 's0_college')
+    );
+  } else if (isGirlsBlock) {
+    // Girls can only talk to AB2.
+    graph.edges = graph.edges.filter(e => 
+      !(e.from === 's1_hostel' && e.to === 'ap_boys') && 
+      !(e.from === 'ap_boys' && e.to === 's1_hostel') &&
+      !(e.from === 's0_college' && e.to === 'ap_ab1') &&
+      !(e.from === 'ap_ab1' && e.to === 's0_college') &&
+      !(e.from === 's0_college' && e.to === 'ap_it') &&
+      !(e.from === 'ap_it' && e.to === 's0_college') &&
+      !(e.from === 's0_college' && e.to === 'ap_lib') &&
+      !(e.from === 'ap_lib' && e.to === 's0_college') &&
+      !(e.from === 's0_college' && e.to === 'ap_dome') &&
+      !(e.from === 'ap_dome' && e.to === 's0_college')
+    );
+  } else if (isYellowZone) {
+    // Scenario B: Layer 2 switching on S0. Bypasses router.
+    // Allow communication within Yellow Zone, but block going up to College Router.
+    graph.edges = graph.edges.filter(e => 
+      !(e.from === 's0_college' && e.to === 'college_router') && 
+      !(e.from === 'college_router' && e.to === 's0_college')
+    );
+  }
 }

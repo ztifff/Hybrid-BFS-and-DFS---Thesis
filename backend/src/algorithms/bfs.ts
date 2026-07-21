@@ -77,7 +77,8 @@ export class BFSPathfinder implements PathfinderObserver {
   public async execute(
     graph: ScenarioGraph,
     environment: SimulationEnvironment,
-    disablePathSevering: boolean = false
+    disablePathSevering: boolean = false,
+    deliveryMode: 'anycast' | 'multicast' = 'anycast'
   ): Promise<BFSResult> {
     const { nodes, edges, sourceId, destinationIds } = graph;
 
@@ -103,6 +104,7 @@ export class BFSPathfinder implements PathfinderObserver {
 
     let nodesExplored = 0;
     let foundDestination: string | null = null;
+    const foundDestinations: string[] = [];
     let lastCurrent: string | null = null;
     let iteration = 0;
     let maxFrontierSize = 0;
@@ -110,7 +112,9 @@ export class BFSPathfinder implements PathfinderObserver {
 
     const severedBlockedNodes = new Set<string>();
 
-    while (queue.length > 0 && !foundDestination && iteration < MAX_TOTAL_STEPS) {
+    while (queue.length > 0 && iteration < MAX_TOTAL_STEPS) {
+      if (deliveryMode === 'anycast' && foundDestinations.length > 0) break;
+      if (deliveryMode === 'multicast' && destSet.size > 0 && foundDestinations.length === destSet.size) break;
       if (queue.length > maxFrontierSize) maxFrontierSize = queue.length;
 
       let didSever = false;
@@ -154,7 +158,8 @@ export class BFSPathfinder implements PathfinderObserver {
             path: reconstructPath(parentMap, rollbackTo),
             current: rollbackTo,
             done: false,
-            foundDestination: null,
+            foundDestination: foundDestinations.length > 0 ? foundDestinations[0] : null,
+            foundDestinations: [...foundDestinations],
             phaseLabel: `🚧 BFS - Path severed at [${blockedId}]! Backtracking to [${rollbackTo}], cleared ${subtree.length} node(s)`
           };
           steps.push(severStep);
@@ -182,7 +187,8 @@ export class BFSPathfinder implements PathfinderObserver {
             path: reconstructPath(parentMap, lastCurrent ?? sourceId),
             current,
             done: false,
-            foundDestination: null,
+            foundDestination: foundDestinations.length > 0 ? foundDestinations[0] : null,
+            foundDestinations: [...foundDestinations],
             phaseLabel: `⏳ BFS - Congestion, holding position (${entry.waited + 1}/${MAX_WAIT_STEPS})`
           };
           steps.push(waitStep);
@@ -203,7 +209,8 @@ export class BFSPathfinder implements PathfinderObserver {
         path: reconstructPath(parentMap, current),
         current,
         done: false,
-        foundDestination: null,
+        foundDestination: foundDestinations.length > 0 ? foundDestinations[0] : null,
+        foundDestinations: [...foundDestinations],
         phaseLabel: '📡 BFS - Level-by-Level Broadcast'
       };
       steps.push(step);
@@ -214,9 +221,14 @@ export class BFSPathfinder implements PathfinderObserver {
         lastYieldTime = performance.now();
       }
 
-      if (destSet.has(current)) {
-        foundDestination = current;
-        break;
+      if (destSet.has(current) && !foundDestinations.includes(current)) {
+        foundDestinations.push(current);
+        if (deliveryMode === 'anycast') {
+          foundDestination = current;
+          break;
+        } else if (deliveryMode === 'multicast' && foundDestinations.length === destSet.size) {
+          break;
+        }
       }
 
       const neighbors = adj.get(current) ?? [];
@@ -231,7 +243,8 @@ export class BFSPathfinder implements PathfinderObserver {
       }
     }
 
-    const finalPath = foundDestination ? reconstructPath(parentMap, foundDestination) : [];
+    const closestExit = foundDestinations.length > 0 ? foundDestinations[0] : null;
+    const finalPath = closestExit ? reconstructPath(parentMap, closestExit) : [];
     const totalLatency = calcPathLatency(finalPath, edges);
 
     steps.push({
@@ -239,12 +252,13 @@ export class BFSPathfinder implements PathfinderObserver {
       explored: Array.from(visited),
       frontier: [],
       path: finalPath,
-      current: foundDestination ?? lastCurrent ?? sourceId,
+      current: closestExit ?? lastCurrent ?? sourceId,
       done: true,
-      foundDestination,
-      phaseLabel: foundDestination ? '🏁 BFS - Path Secured' : '❌ BFS - All Routes Exhausted'
+      foundDestination: foundDestinations.length > 0 ? foundDestinations[0] : null,
+      foundDestinations: [...foundDestinations],
+      phaseLabel: foundDestinations.length > 0 ? (deliveryMode === 'multicast' && foundDestinations.length === destSet.size ? '🏁 BFS - All Targets Secured' : '🏁 BFS - Target Secured') : '❌ BFS - All Routes Exhausted'
     });
 
-    return { steps, nodesExplored, pathLength: foundDestination ? finalPath.length - 1 : -1, totalLatency, foundDestination, maxFrontierSize };
+    return { steps, nodesExplored, pathLength: foundDestinations.length > 0 ? finalPath.length - 1 : -1, totalLatency, foundDestination: foundDestinations.length > 0 ? foundDestinations[0] : null, maxFrontierSize };
   }
 }

@@ -11,8 +11,8 @@ interface Props {
 const SCENARIO_MAPS: Record<ScenarioType, { name: string; description: string }[]> = {
   network: [
     { name: '🧪 Synthetic', description: 'A procedurally generated network graph of configurable size. Useful for controlled benchmarking. Nodes represent generic routers and the structure is randomized each session.' },
-    { name: '🏗️ Fat-Tree Datacenter', description: 'A 3-tier hierarchical datacenter topology (Core → Aggregation → Edge → Access Points). Modeled after real hyperscale datacenter networks like those used by Amazon and Google. Provides maximum redundancy and fault-tolerance for load balancing.' },
-    { name: '🌐 AS-733 ISP', description: 'A real-world Internet Service Provider (ISP) topology sourced from the CAIDA AS-733 dataset. It represents the actual peering relationships between Autonomous Systems (AS) across the global internet backbone, making it one of the most complex graphs in the system.' },
+    { name: '🏢 Company Business Network', description: 'A realistic 3-tier hierarchical enterprise network (Core, Distribution, Access) spanning multiple floors and VLANs. Ideal for testing intra-VLAN routing and broadcast containment.' },
+    { name: '🏫 Campus Network', description: 'A university campus network featuring active Access Control Lists (ACLs). Demonstrates strict subnet routing rules where Boys Block (192.168.3.x) can only reach AB1, Girls Block can only reach AB2, and Yellow Zones bypass routers using Layer 2 switching.' },
   ],
   robotics: [
     { name: '🧪 Synthetic', description: 'A generated warehouse grid of adjustable size. Shelf zones, aisles, and delivery bays are randomly placed to simulate varied fulfillment center layouts.' },
@@ -209,8 +209,15 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose }) => {
               <Section title="Map Selector (Above Canvas)">
                 <Item label="Simultaneous Multi-Algorithm Evaluation badge" icon="🔵">Indicates that BFS, DFS, and Hybrid are all running at the same time on the same graph — not sequentially.</Item>
                 <Item label="Dynamic: [description]" icon="⚡">Describes the type of dynamic events that will appear during this scenario's simulation.</Item>
-                <Item label="Map buttons (Synthetic / Fat-Tree / etc.)" icon="🗺️">Switches the active graph map. Synthetic generates a random configurable graph; real-world maps load fixed topology data. See the Map Variants tab for details on each map.</Item>
+                <Item label="Map buttons (Synthetic / Company / Campus)" icon="🗺️">Switches the active graph map. Synthetic generates a random configurable graph; real-world maps load fixed topology data. See the Map Variants tab for details on each map.</Item>
                 {scenario === 'gameai' && <Item label="Game Board (Turkish Draughts / Checkers)" icon="♟️">Switches the game board type. Each has different tile layouts, movement rules, and opponent behavior patterns.</Item>}
+                {scenario === 'network' && (
+                  <>
+                    <Item label="MODE: Default vs Device to Device" icon="🎛️">Toggles between standard broadcast routing to all exits, and specific device-to-device targeted routing (real-world maps only).</Item>
+                    <Item label="SRC & DST Selectors" icon="🎯">When in Device to Device mode, allows you to select exactly which machine is sending data and which machine(s) are receiving it.</Item>
+                    <Item label="Routing Method (Anycast / Multicast)" icon="📡">ANYCAST (Race to First) finishes when any selected destination is reached. MULTICAST (Find All) forces the algorithm to find paths to all selected destinations.</Item>
+                  </>
+                )}
               </Section>
               <Section title="Simulation Control Buttons (Below Canvas)">
                 <Item label="🎲 Reroll Events" icon="">Randomly regenerates the dynamic event schedule (blockages) for the current map. Use this to test a different event pattern without re-running the simulation from scratch.</Item>

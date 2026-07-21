@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { SimulationResult, ScenarioType } from '../types';
-import { getMemoryInMB, getPathOptimality } from './MetricsPanel';
-import { getAdaptabilityScore } from '../utils/metricsHelpers';
+import { getAdaptabilityScore, getMemoryInMB, getPathOptimality } from '../utils/metricsHelpers';
 import { NetworkCanvas } from './NetworkCanvas'; 
 
 export interface HistoryEntry {
@@ -357,7 +356,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
               </tbody>
             </table>
           </div>
-          <div className="xl:col-span-3 h-[340px] xl:h-[340px] w-full bg-[#0a0f1e] rounded-xl border border-gray-800 overflow-hidden shadow-inner relative">
+          <div className="xl:col-span-3 h-[340px] xl:h-[340px] w-full bg-[#0a0f1e] rounded-xl border border-gray-800 overflow-hidden shadow-inner relative flex flex-col">
             {baseGraph && (
               <NetworkCanvas
                 graph={baseGraph}
@@ -372,9 +371,39 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
                 historicalBlockedNodeIds={blockedNodeIds}
                 highlightedNodeId={highlightedNodeId}
                 onDeselect={() => setHighlightedNodeId(null)}
+                autoFit={true}
+                mapId={
+                  baseGraph.nodes.some(n => n.id.includes('boys') || n.id.includes('girls') || n.label?.includes('PC-PT')) 
+                    ? 'campus' 
+                    : baseGraph.nodes.some(n => n.id.toLowerCase().includes('finance') || n.id.toLowerCase().includes('sales')) 
+                      ? 'companybusiness' 
+                      : 'synthetic'
+                }
               />
             )}
           </div>
+          
+          {entry.scenario === 'network' && baseGraph?.nodes.some(n => n.id.includes('boys') || n.label?.includes('PC-PT')) && (
+            <div className="xl:col-span-5 bg-gray-900/60 border border-indigo-900/50 rounded-xl p-4 flex flex-col gap-2 mt-[-10px]">
+              <div className="text-[10px] uppercase tracking-[0.2em] text-indigo-400 font-bold mb-1">
+                Campus Topology Rules Context
+              </div>
+              <div className="text-[11px] text-gray-300 space-y-2 leading-relaxed">
+                <div>
+                  <p className="text-gray-100 font-semibold mb-0.5">1. Routed Traffic with ACLs</p>
+                  <ul className="list-disc pl-5 space-y-0.5 text-gray-400">
+                    <li>Boys Block can ONLY communicate with AB1.</li>
+                    <li>Girls Block can ONLY communicate with AB2.</li>
+                    <li>Packets to unauthorized zones are dropped at routers.</li>
+                  </ul>
+                </div>
+                <div className="pt-2 border-t border-gray-800">
+                  <p className="text-gray-100 font-semibold mb-0.5">2. Local Switched Traffic</p>
+                  <p className="text-gray-400">Yellow Zone shares a single subnet. Traffic flows freely via Layer 2 switching, bypassing ACLs.</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         {winner ? (
           <div className="rounded-xl border border-yellow-500/30 bg-gradient-to-br from-yellow-950/30 via-amber-950/20 to-gray-900/40 p-4 shadow-lg shadow-yellow-900/10">

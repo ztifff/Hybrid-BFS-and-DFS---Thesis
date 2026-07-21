@@ -1,18 +1,19 @@
 import React, { useMemo, useState } from 'react';
 
-import { ScenarioType, GameAIBoard } from '../types';
-import { useSimulation } from '../hooks/useSimulation';
-import { getScenario } from '../config/scenarios';
-import { MAP_REGISTRY } from '../config/mapRegistry';
+import { ScenarioType, GameAIBoard } from '../../types';
+import { useSimulation } from '../../hooks/useSimulation';
+import { getScenario } from '../../config/scenarios';
+import { CiscoTerminal } from '../../components/CiscoTerminal';
+import { MAP_REGISTRY } from '../../config/mapRegistry';
 
-import { NetworkCanvas } from './NetworkCanvas';
+import { NetworkCanvas } from '../../components/NetworkCanvas';
 import { MetricsPanel } from './MetricsPanel';
-import { Legend } from './Legend';
+import { Legend } from '../../components/Legend';
 import { SimulationReport } from './SimulationReport';
-import { HistoryModal } from './HistoryModal';
+import { HistoryModal } from '../../components/HistoryModal';
 import { DynamicMapEvents } from './DynamicMapEvents';
 import { StrategyMapEvents } from './StrategyMapEvents';
-import { HelpModal } from './HelpModal';
+import { HelpModal } from '../../components/HelpModal';
 
 interface Props {
   scenario: ScenarioType;
@@ -47,6 +48,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [dstDropdownOpen, setDstDropdownOpen] = useState(false);
 
   const handleEventClick = (nodeId: string) => {
     setHighlightedNodeId(prev => prev === nodeId ? null : nodeId);
@@ -207,6 +209,103 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   ))}
                 </div>
               )}
+
+              {scenario === 'network' && (sim.mapId === 'companybusiness' || sim.mapId === 'campus') && (
+                <div className="flex flex-col md:flex-row items-center gap-2 justify-center w-full mt-1 bg-gray-900/60 p-2 rounded-xl border border-gray-700/50">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Mode:</span>
+                    <select
+                      value={sim.networkRoutingMode}
+                      onChange={(e) => sim.setNetworkRoutingMode(e.target.value as 'default' | 'device-to-device')}
+                      disabled={sim.isComputing || sim.status === 'running'}
+                      className="bg-gray-800 border border-gray-600 rounded text-xs font-bold text-white px-2 py-1 outline-none focus:border-blue-500 cursor-pointer disabled:opacity-50"
+                    >
+                      <option value="default">Default (ISP Broadcast)</option>
+                      <option value="device-to-device">Device to Device</option>
+                    </select>
+                  </div>
+
+                  {sim.networkRoutingMode === 'device-to-device' && sim.currentGraph && (
+                    <>
+                      <div className="h-4 w-px bg-gray-700 hidden md:block mx-1"></div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] uppercase tracking-widest text-green-400 font-bold">Src:</span>
+                        <select
+                          value={sim.sourceDevice}
+                          onChange={(e) => sim.setSourceDevice(e.target.value)}
+                          disabled={sim.isComputing || sim.status === 'running'}
+                          className="bg-gray-800 border border-green-900 rounded text-xs font-bold text-white px-2 py-1 outline-none focus:border-green-500 cursor-pointer disabled:opacity-50 max-w-[150px] truncate"
+                        >
+                          {sim.currentGraph.nodes
+                            .filter(n => sim.mapId === 'campus' ? n.type === 'access_point' : (n.type === 'access_point' || n.type === 'server'))
+                            .sort((a, b) => a.label.localeCompare(b.label))
+                            .map(n => <option key={`src-${n.id}`} value={n.id}>{n.label.replace('\n', ' - ')}</option>)}
+                        </select>
+                      </div>
+                      
+                      <div className="text-gray-500 hidden md:block">→</div>
+                      
+                      <div className="flex items-center gap-2 relative">
+                        <span className="text-[10px] uppercase tracking-widest text-red-400 font-bold">Dst:</span>
+                        
+                        <div 
+                          className={`bg-gray-800 border ${sim.destinationDevices.length > 0 ? 'border-red-900' : 'border-red-500'} rounded text-xs font-bold text-white px-2 py-1 flex items-center justify-between min-w-[120px] max-w-[150px] ${(sim.isComputing || sim.status === 'running') ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-red-500'}`}
+                          onClick={() => {
+                            if (!sim.isComputing && sim.status !== 'running') {
+                              setDstDropdownOpen(!dstDropdownOpen);
+                            }
+                          }}
+                        >
+                          <span className="truncate">{sim.destinationDevices.length > 0 ? `${sim.destinationDevices.length} Selected` : 'Select Dst...'}</span>
+                          <span className="text-[10px] ml-2">▼</span>
+                        </div>
+
+                        {dstDropdownOpen && (
+                          <>
+                            <div className="fixed inset-0 z-40" onClick={() => setDstDropdownOpen(false)}></div>
+                            <div className="absolute top-full right-0 mt-1 bg-gray-800 border border-gray-600 rounded shadow-xl z-50 min-w-[200px] max-h-[300px] overflow-y-auto">
+                              {sim.currentGraph.nodes
+                                .filter(n => sim.mapId === 'campus' ? n.type === 'access_point' : (n.type === 'access_point' || n.type === 'server'))
+                                .filter(n => n.id !== sim.sourceDevice)
+                                .sort((a, b) => a.label.localeCompare(b.label))
+                                .map(n => (
+                                  <label key={`dst-${n.id}`} className="flex items-center gap-2 px-3 py-2 hover:bg-gray-700 cursor-pointer">
+                                    <input 
+                                      type="checkbox" 
+                                      className="accent-red-500"
+                                      checked={sim.destinationDevices.includes(n.id)}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          sim.setDestinationDevices([...sim.destinationDevices, n.id]);
+                                        } else {
+                                          sim.setDestinationDevices(sim.destinationDevices.filter(id => id !== n.id));
+                                        }
+                                      }}
+                                    />
+                                    <span className="text-xs text-gray-200 whitespace-nowrap">{n.label.replace('\n', ' - ')}</span>
+                                  </label>
+                                ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      
+                      <div className="h-4 w-px bg-gray-700 hidden md:block mx-1"></div>
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={sim.deliveryMode}
+                          onChange={(e) => sim.setDeliveryMode(e.target.value as 'anycast' | 'multicast')}
+                          disabled={sim.isComputing || sim.status === 'running'}
+                          className="bg-gray-800 border border-purple-900/50 rounded text-[10px] uppercase font-bold text-gray-300 px-2 py-1.5 outline-none focus:border-purple-500 cursor-pointer disabled:opacity-50"
+                        >
+                          <option value="anycast">Anycast (Race to first)</option>
+                          <option value="multicast">Multicast (Find all)</option>
+                        </select>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
 
             <div
@@ -223,8 +322,40 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     dynamicEvents={sim.simResults?.hybrid.dynamicEvents || []}
                     highlightedNodeId={highlightedNodeId}
                     onDeselect={() => setHighlightedNodeId(null)}
+                    onNodeClick={(nodeId) => setHighlightedNodeId(prev => prev === nodeId ? null : nodeId)}
                     mapId={sim.mapId}
                   />
+
+                  {scenario === 'network' && (sim.mapId === 'companybusiness' || sim.mapId === 'campus') && highlightedNodeId && (
+                    <CiscoTerminal 
+                      nodeId={highlightedNodeId} 
+                      onClose={() => setHighlightedNodeId(null)} 
+                    />
+                  )}
+
+                  {scenario === 'network' && (sim.mapId === 'companybusiness' || sim.mapId === 'campus') && (
+                    <div className="absolute bottom-4 left-4 z-10 flex flex-col gap-2">
+                      {sim.currentGraph.nodes
+                        .filter(n => ['mlt_sw1', 'main_router', 'college_router', 'hostel_router'].includes(n.id))
+                        .map(n => (
+                          <button
+                            key={`terminal-btn-${n.id}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setHighlightedNodeId(prev => prev === n.id ? null : n.id);
+                            }}
+                            className={`px-3 py-1.5 rounded border font-mono text-xs shadow-md flex items-center gap-2 transition-colors cursor-pointer ${
+                              highlightedNodeId === n.id 
+                                ? 'bg-gray-800 border-green-500 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.2)]' 
+                                : 'bg-gray-900 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+                            }`}
+                          >
+                            <span className="text-[14px]">📟</span>
+                            {n.label ? n.label.split('\n')[0] : n.id} Terminal
+                          </button>
+                        ))}
+                    </div>
+                  )}
       
 
                   {sim.isGraphLoading && (
@@ -347,6 +478,32 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 highlightedNodeId={highlightedNodeId}
               />
             </div>
+
+            {sim.mapId === 'campus' && scenario === 'network' && (
+              <div className="shrink-0 bg-gray-900 border border-indigo-900/50 rounded-xl p-4 flex flex-col gap-2 max-h-[40vh] overflow-y-auto">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-indigo-400 font-bold mb-1">
+                  Campus Topology Rules
+                </div>
+                <div className="text-xs text-gray-300 space-y-3 leading-relaxed">
+                  <div>
+                    <p className="text-gray-100 font-semibold mb-1">1. Routed Traffic with ACLs</p>
+                    <p className="text-gray-400 mb-1">Traffic across subnets hits default gateways where routers apply Access Control Lists (ACLs):</p>
+                    <ul className="list-disc pl-4 space-y-1 text-gray-400">
+                      <li><span className="text-blue-300 font-medium">Boys Block (192.168.3.x)</span> can ONLY communicate with <span className="text-blue-300 font-medium">AB1</span>.</li>
+                      <li><span className="text-pink-300 font-medium">Girls Block (192.168.3.x)</span> can ONLY communicate with <span className="text-pink-300 font-medium">AB2</span>.</li>
+                      <li>Packets to unauthorized zones are dropped at the College Router.</li>
+                    </ul>
+                    <p className="text-gray-500 italic mt-1.5 text-[10px]">Why? This simulates a strict university security policy, intentionally isolating student dormitories to specific academic clusters to prevent unauthorized campus-wide network access.</p>
+                  </div>
+                  
+                  <div className="pt-2 border-t border-gray-800">
+                    <p className="text-gray-100 font-semibold mb-1">2. Local Switched Traffic</p>
+                    <p className="text-gray-400">The <span className="text-yellow-400 font-medium">Yellow Zone (IT, Library, Dome)</span> shares a single subnet (192.168.1.x). Their traffic never touches a router; it flows freely via Layer 2 switching on S0, bypassing all security ACLs.</p>
+                    <p className="text-gray-500 italic mt-1.5 text-[10px]">Why? This demonstrates how devices on the same local network (VLAN) communicate directly and efficiently through switches, avoiding router bottlenecks and firewall restrictions.</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {scenario === 'gameai' && (
               <div className="shrink-0">

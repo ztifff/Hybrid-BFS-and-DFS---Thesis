@@ -1,9 +1,5 @@
 import type { PerformanceMetrics, AlgorithmType, DynamicEvent } from '../types';
 
-/**
- * Canonical Adaptability score used across UI panels and history reports.
- * Output interface: { score: number; label: string; color: string }
- */
 export function getAdaptabilityScore(
   status: 'idle' | 'running' | 'done' | 'paused',
   metrics: PerformanceMetrics | null,
@@ -42,3 +38,24 @@ export function getAdaptabilityScore(
   return { score, label: 'Poor', color: '#ef4444' };
 }
 
+export function getPathOptimality(actualHops: number, optimalHops?: number): { ratio: number; label: string; color: string } {
+  if (!optimalHops || optimalHops <= 0 || actualHops <= 0) return { ratio: 0, label: 'N/A', color: '#64748b' };
+  
+  const ratio = Math.min(1, optimalHops / actualHops); 
+  const percentage = (ratio * 100).toFixed(1);
+  if (ratio >= 0.95) return { ratio, label: `${percentage}%`, color: '#22c55e' };
+  if (ratio >= 0.8) return { ratio, label: `${percentage}%`, color: '#84cc16' };
+  if (ratio >= 0.6) return { ratio, label: `${percentage}%`, color: '#eab308' };
+  return { ratio, label: `${percentage}%`, color: '#ef4444' };
+}
+
+export function getCompletionRate(explored: number, totalNodes?: number): { percentage: number; label: string } {
+  if (!totalNodes || totalNodes === 0) return { percentage: 0, label: '0.0%' };
+  const percentage = Math.min(100, (explored / totalNodes) * 100);
+  return { percentage, label: `${percentage.toFixed(1)}%` };
+}
+
+export function getMemoryInMB(memoryKB: number): string {
+  const memoryMB = memoryKB / 1024;
+  return `${memoryMB.toFixed(3)} MB`;
+}

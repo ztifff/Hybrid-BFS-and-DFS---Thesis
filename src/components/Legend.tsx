@@ -12,14 +12,17 @@ interface LegendItem {
   label: string;
   icon?: string;
   dashed?: boolean;
+  type?: string;
 }
 
 const SCENARIO_NODE_ITEMS: Record<ScenarioType, LegendItem[]> = {
   network: [
-    { color: '#1e40af', label: 'Data Center (Source)',  icon: '🖥️' },
-    { color: '#1d4ed8', label: 'Building / Core Router', icon: '📡' },
-    { color: '#2563eb', label: 'Floor / Edge Switch',    icon: '🔀' },
-    { color: '#3b82f6', label: 'Access Point (Target)', icon: '📶' },
+    { color: '#1e40af', label: 'Core Router / ISP',  icon: '🌐' },
+    { color: '#1d4ed8', label: 'Multilayer Switch', icon: '🎛️' },
+    { color: '#2563eb', label: 'Access / Floor Switch', icon: '🔌' },
+    { color: '#10b981', label: 'Wireless Access Point', icon: '📡' },
+    { color: '#0ea5e9', label: 'End Device (PC/Laptop)', icon: '💻' },
+    { color: '#475569', label: 'Server', icon: '🗄️' },
     { color: '#450a0a', label: 'Failed Component',       icon: '💥' },
   ],
   robotics: [
@@ -55,7 +58,10 @@ const SCENARIO_NODE_ITEMS: Record<ScenarioType, LegendItem[]> = {
 const EDGE_ITEMS: Record<ScenarioType, LegendItem[]> = {
   network: [
     { color: '#60a5fa', label: 'Fiber Optic' },
-    { color: '#fdba74', label: 'Copper / Wireless', dashed: true },
+    { color: '#0f172a', label: 'Copper Straight-Through' },
+    { color: '#0f172a', label: 'Copper Cross-Over', dashed: true },
+    { color: '#dc2626', label: 'Serial / WAN', type: 'serial' },
+    { color: '#06b6d4', label: 'Wireless', dashed: true },
   ],
   robotics: [
     { color: '#c4b5fd', label: 'Robot Path' },
@@ -134,7 +140,11 @@ export const Legend: React.FC<Props> = ({ scenario, mapId }) => {
             {edgeItems.map((item) => (
               <div key={item.label} className="flex items-center gap-2">
                 <svg width="22" height="10" className="flex-shrink-0">
-                  <line x1="0" y1="5" x2="22" y2="5" stroke={item.color} strokeWidth="2" strokeDasharray={item.dashed ? '4,3' : undefined} />
+                  {item.type === 'serial' ? (
+                    <path d="M 0 5 L 7 2 L 15 8 L 22 5" fill="none" stroke={item.color} strokeWidth="2" strokeLinejoin="bevel" />
+                  ) : (
+                    <line x1="0" y1="5" x2="22" y2="5" stroke={item.color} strokeWidth="2" strokeDasharray={item.dashed ? '4,3' : undefined} />
+                  )}
                 </svg>
                 <span className="text-xs text-gray-300 leading-tight">{item.label}</span>
               </div>

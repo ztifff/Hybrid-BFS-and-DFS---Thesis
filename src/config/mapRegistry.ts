@@ -10,8 +10,8 @@ export type ScenarioRegistry = Record<string, MapDefinition[]>;
 export const MAP_REGISTRY: ScenarioRegistry = {
   network: [
     { id: 'synthetic', label: 'Synthetic', icon: '🗺️', isRealWorld: false },
-    { id: 'datacenter', label: 'Fat-Tree Datacenter', icon: '🌐', isRealWorld: true },
-    { id: 'as733', label: 'AS-733 ISP', icon: '🛰️', isRealWorld: true },
+    { id: 'companybusiness', label: 'Company Business Network', icon: '🏢', isRealWorld: true },
+    { id: 'campus', label: 'Campus Network', icon: '🏫', isRealWorld: true },
   ],
   robotics: [
     { id: 'synthetic', label: 'Synthetic', icon: '🗺️', isRealWorld: false },

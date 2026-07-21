@@ -23,8 +23,20 @@ export const getGraphData = (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Scenario type is required.' });
     }
 
+    const customSourceId = req.query.customSourceId as string | undefined;
+    const customDestinationIdsStr = req.query.customDestinationIds as string | undefined;
+    const customDestinationIds = customDestinationIdsStr ? JSON.parse(customDestinationIdsStr) : undefined;
+
     // 2. Pass the seed into the builder as the 6th parameter
     const graph = buildScenarioGraph(scenario, useRealWorld, gameBoard, mode, graphSize, seed, chessPiece, sizing);
+
+    if (customSourceId) graph.sourceId = customSourceId;
+    if (customDestinationIds && customDestinationIds.length > 0) graph.destinationIds = customDestinationIds;
+
+    // Note: We deliberately DO NOT apply Campus ACLs here.
+    // We want the frontend to always render the full physical topology (all edges intact).
+    // The ACLs are enforced purely in the backend simulation algorithm runner (`simulationRunner.ts`),
+    // which severs the edges dynamically in memory before DFS/BFS traverses them.
     
     return res.status(200).json({ data: graph });
   } catch (error) {

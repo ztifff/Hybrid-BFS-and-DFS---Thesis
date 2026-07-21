@@ -77,7 +77,8 @@ export class HybridPathfinder implements PathfinderObserver {
   public async execute(
     graph: ScenarioGraph,
     environment: SimulationEnvironment,
-    disablePathSevering: boolean = false
+    disablePathSevering: boolean = false,
+    deliveryMode: 'anycast' | 'multicast' = 'anycast'
   ): Promise<HybridResult> {
     const { nodes, edges, sourceId, destinationIds } = graph;
 
@@ -105,6 +106,7 @@ export class HybridPathfinder implements PathfinderObserver {
 
     let nodesExplored = 0;
     let foundDestination: string | null = null;
+    const foundDestinations: string[] = [];
     let lastCurrent: string | null = null;
     let iteration = 0;
     let maxFrontierSize = 0;
@@ -121,7 +123,9 @@ export class HybridPathfinder implements PathfinderObserver {
       return 'DFS';
     }
 
-    while (frontier.length > 0 && !foundDestination && iteration < MAX_TOTAL_STEPS) {
+    while (frontier.length > 0 && iteration < MAX_TOTAL_STEPS) {
+      if (deliveryMode === 'anycast' && foundDestinations.length > 0) break;
+      if (deliveryMode === 'multicast' && destSet.size > 0 && foundDestinations.length === destSet.size) break;
       if (frontier.length > maxFrontierSize) maxFrontierSize = frontier.length;
 
       let didSever = false;
@@ -165,8 +169,9 @@ export class HybridPathfinder implements PathfinderObserver {
             path: reconstructPath(parentMap, rollbackTo),
             current: rollbackTo,
             done: false,
-            foundDestination: null,
-            phaseLabel: `🔙 Hybrid — Path severed at [${blockedId}]! Adaptive pivot to [${rollbackTo}], cleared ${subtree.length} node(s), broadcasting BFS scan`
+            foundDestination: foundDestinations.length > 0 ? foundDestinations[0] : null,
+            foundDestinations: [...foundDestinations],
+            phaseLabel: `🚧 HYBRID - Route severed at [${blockedId}]! Falling back to [${rollbackTo}] (${subtree.length} nodes lost)`
           };
           steps.push(severStep);
           environment.tick(severStep);
@@ -179,19 +184,14 @@ export class HybridPathfinder implements PathfinderObserver {
 
       if (didSever) continue;
 
-      const peek = frontier[frontier.length - 1];
-      const strategy = chooseStrategy(peek?.id ?? sourceId);
-      const entry = strategy === 'BFS' ? frontier.shift()! : frontier.pop()!;
+      const strategy = 'Priority';
+      const entry = frontier.pop()!;
       if (!entry) continue;
       const current = entry.id;
 
       if (this.blockedNodes.has(current)) {
         if (entry.waited < MAX_WAIT_STEPS) {
-          if (strategy === 'DFS') {
-            frontier.unshift({ id: current, waited: entry.waited + 1 });
-          } else {
-            frontier.push({ id: current, waited: entry.waited + 1 });
-          }
+          frontier.push({ id: current, waited: entry.waited + 1 });
           iteration++;
           const waitStep: AlgorithmStep = {
             stepIndex: iteration,
@@ -200,8 +200,9 @@ export class HybridPathfinder implements PathfinderObserver {
             path: reconstructPath(parentMap, lastCurrent ?? sourceId),
             current,
             done: false,
-            foundDestination: null,
-            phaseLabel: `⚡ Hybrid — Route blocked, exploring alternatives (wait ${entry.waited + 1}/${MAX_WAIT_STEPS})`
+            foundDestination: foundDestinations.length > 0 ? foundDestinations[0] : null,
+            foundDestinations: [...foundDestinations],
+            phaseLabel: `⏳ HYBRID - Congestion, buffering packet (${entry.waited + 1}/${MAX_WAIT_STEPS})`
           };
           steps.push(waitStep);
           environment.tick(waitStep);
@@ -227,8 +228,9 @@ export class HybridPathfinder implements PathfinderObserver {
               path: reconstructPath(parentMap, rollbackTo ?? sourceId),
               current: rollbackTo ?? sourceId,
               done: false,
-              foundDestination: null,
-              phaseLabel: `🔀 Hybrid — Wait expired at [${current}], adaptive reroute from [${rollbackTo}]`
+              foundDestination: foundDestinations.length > 0 ? foundDestinations[0] : null,
+              foundDestinations: [...foundDestinations],
+              phaseLabel: `🔀 HYBRID — Timeout at [${current}], abandoning path and returning to [${rollbackTo}]`
             };
             steps.push(forceStep);
             environment.tick(forceStep);
@@ -249,8 +251,9 @@ export class HybridPathfinder implements PathfinderObserver {
         path: reconstructPath(parentMap, current),
         current,
         done: false,
-        foundDestination: null,
-        phaseLabel: `⚡ Adaptive ${strategy}`
+        foundDestination: foundDestinations.length > 0 ? foundDestinations[0] : null,
+        foundDestinations: [...foundDestinations],
+        phaseLabel: `🔄 HYBRID - Smart Search`
       };
       steps.push(step);
       environment.tick(step);
@@ -260,25 +263,51 @@ export class HybridPathfinder implements PathfinderObserver {
         lastYieldTime = performance.now();
       }
 
-      if (destSet.has(current)) { foundDestination = current; break; }
+      if (destSet.has(current) && !foundDestinations.includes(current)) {
+        foundDestinations.push(current);
+        if (deliveryMode === 'anycast') {
+          foundDestination = current;
+          break;
+        } else if (deliveryMode === 'multicast' && foundDestinations.length === destSet.size) {
+          break;
+        }
+      }
 
       const neighbors = adj.get(current) ?? [];
-      const orderedNeighbors = strategy === 'DFS' ? [...neighbors].reverse() : neighbors;
+      
+      const getPriority = (currentLvl: number, neighborLvl: number) => {
+        if (currentLvl === 2 && neighborLvl === 3) return 100;
+        if (currentLvl === 2 && neighborLvl === 1) return 10;
+        if (currentLvl === 1 && neighborLvl === 0) return 100;
+        if (currentLvl === 1 && neighborLvl === 2) return 10;
+        if (currentLvl === 0 && neighborLvl === 0) return 100;
+        if (currentLvl === 0 && neighborLvl === 1) return 10;
+        if (currentLvl === 3 && neighborLvl === 3) return 100;
+        if (currentLvl === 3 && neighborLvl === 2) return 10;
+        return 50;
+      };
 
-      for (const { to } of orderedNeighbors) {
+      const currentLvl = nodeMap.get(current)?.level ?? 99;
+      
+      const sortedNeighbors = [...neighbors].sort((a, b) => {
+        const levelA = nodeMap.get(a.to)?.level ?? 99;
+        const levelB = nodeMap.get(b.to)?.level ?? 99;
+        return getPriority(currentLvl, levelA) - getPriority(currentLvl, levelB); 
+      });
+
+      for (const { to } of sortedNeighbors) {
         if (!visited.has(to)) {
           visited.add(to);
-          if (!parentMap.has(to)) {
-            parentMap.set(to, current);
-            if (!childrenMap.has(current)) childrenMap.set(current, []);
-            childrenMap.get(current)!.push(to);
-          }
+          parentMap.set(to, current);
+          if (!childrenMap.has(current)) childrenMap.set(current, []);
+          childrenMap.get(current)!.push(to);
           frontier.push({ id: to, waited: 0 });
         }
       }
     }
 
-    const finalPath = foundDestination ? reconstructPath(parentMap, foundDestination) : [];
+    const closestExit = foundDestinations.length > 0 ? foundDestinations[0] : null;
+    const finalPath = closestExit ? reconstructPath(parentMap, closestExit) : [];
     const totalLatency = calcPathLatency(finalPath, edges);
 
     steps.push({
@@ -286,12 +315,13 @@ export class HybridPathfinder implements PathfinderObserver {
       explored: Array.from(visited),
       frontier: [],
       path: finalPath,
-      current: foundDestination ?? lastCurrent ?? sourceId,
+      current: closestExit ?? lastCurrent ?? sourceId,
       done: true,
-      foundDestination,
-      phaseLabel: foundDestination ? 'o. Hybrid ?" Path Secured' : 'dY", Hybrid ?" All Routes Exhausted'
+      foundDestination: foundDestinations.length > 0 ? foundDestinations[0] : null,
+      foundDestinations: [...foundDestinations],
+      phaseLabel: foundDestinations.length > 0 ? (deliveryMode === 'multicast' && foundDestinations.length === destSet.size ? '🏁 HYBRID - All Targets Secured' : '🏁 HYBRID - Target Secured') : '❌ HYBRID - All Routes Exhausted'
     });
 
-    return { steps, nodesExplored, pathLength: foundDestination ? finalPath.length - 1 : -1, totalLatency, foundDestination, maxFrontierSize };
+    return { steps, nodesExplored, pathLength: foundDestinations.length > 0 ? finalPath.length - 1 : -1, totalLatency, foundDestination: foundDestinations.length > 0 ? foundDestinations[0] : null, maxFrontierSize };
   }
 }

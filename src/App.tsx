@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ScenarioType } from './types';
 import { ScenarioPicker } from './components/ScenarioPicker';
-import { SimulationView } from './components/SimulationView';
+import { SimulationView } from './components/simulation/SimulationView';
 
 export default function App() {
   const [scenario, setScenario] = useState<ScenarioType | null>(null);

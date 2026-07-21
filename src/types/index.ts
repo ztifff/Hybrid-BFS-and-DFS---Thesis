@@ -79,7 +79,7 @@ export interface GraphEdge {
   latency: number; // ms / cost
   label?: string;
   // ✅ Added 'copper' for the datacenter cabling
-  type: 'fiber' | 'ethernet' | 'road' | 'corridor' | 'path' | 'wireless' | 'copper';
+  type: 'fiber' | 'ethernet' | 'road' | 'corridor' | 'path' | 'wireless' | 'copper' | 'serial' | 'copper_straight' | 'copper_crossover';
 }
 
 export interface ScenarioGraph {
@@ -100,6 +100,7 @@ export interface AlgorithmStep {
   current: string | null;   
   done: boolean;
   foundDestination: string | null;
+  foundDestinations?: string[];
   phaseLabel?: string;
 }
 

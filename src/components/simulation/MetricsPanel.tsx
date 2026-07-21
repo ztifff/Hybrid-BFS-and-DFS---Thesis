@@ -1,7 +1,7 @@
 import React from 'react';
-import { AlgorithmType, ScenarioType, SimulationResult, AlgorithmStep } from '../types';
-import { getScenario, ALGORITHMS } from '../config/scenarios';
-import { getAdaptabilityScore } from '../utils/metricsHelpers';
+import { AlgorithmType, ScenarioType, SimulationResult, AlgorithmStep } from '../../types';
+import { getScenario, ALGORITHMS } from '../../config/scenarios';
+import { getAdaptabilityScore, getPathOptimality, getCompletionRate, getMemoryInMB } from '../../utils/metricsHelpers';
 
 interface Props {
   multiResults: { bfs: SimulationResult, dfs: SimulationResult, hybrid: SimulationResult } | null;
@@ -13,31 +13,6 @@ interface Props {
   totalNodes?: number;
   optimalPathLength?: number;
 }
-
-export function getPathOptimality(actualHops: number, optimalHops?: number): { ratio: number; label: string; color: string } {
-  if (!optimalHops || optimalHops <= 0 || actualHops <= 0) return { ratio: 0, label: 'N/A', color: '#64748b' };
-  
-  const ratio = Math.min(1, optimalHops / actualHops); 
-  const percentage = (ratio * 100).toFixed(1);
-  if (ratio >= 0.95) return { ratio, label: `${percentage}%`, color: '#22c55e' };
-  if (ratio >= 0.8) return { ratio, label: `${percentage}%`, color: '#84cc16' };
-  if (ratio >= 0.6) return { ratio, label: `${percentage}%`, color: '#eab308' };
-  return { ratio, label: `${percentage}%`, color: '#ef4444' };
-}
-
-export function getCompletionRate(explored: number, totalNodes?: number): { percentage: number; label: string } {
-  if (!totalNodes || totalNodes === 0) return { percentage: 0, label: '0.0%' };
-  const percentage = Math.min(100, (explored / totalNodes) * 100);
-  return { percentage, label: `${percentage.toFixed(1)}%` };
-}
-
-export function getMemoryInMB(memoryKB: number): string {
-  const memoryMB = memoryKB / 1024;
-  return `${memoryMB.toFixed(3)} MB`;
-}
-
-
-
 export const MetricsPanel: React.FC<Props> = ({
   multiResults,
   activeSteps,
