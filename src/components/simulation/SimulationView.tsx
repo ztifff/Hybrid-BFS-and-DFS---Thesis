@@ -14,6 +14,7 @@ import { HistoryModal } from '../../components/HistoryModal';
 import { DynamicMapEvents } from './DynamicMapEvents';
 import { StrategyMapEvents } from './StrategyMapEvents';
 import { HelpModal } from '../../components/HelpModal';
+import { RobotAssignmentPanel } from './RobotAssignmentPanel';
 
 interface Props {
   scenario: ScenarioType;
@@ -48,6 +49,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  // Network routing DST dropdown state
   const [dstDropdownOpen, setDstDropdownOpen] = useState(false);
 
   const handleEventClick = (nodeId: string) => {
@@ -306,6 +308,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   )}
                 </div>
               )}
+
             </div>
 
             <div
@@ -322,7 +325,11 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     dynamicEvents={sim.simResults?.hybrid.dynamicEvents || []}
                     highlightedNodeId={highlightedNodeId}
                     onDeselect={() => setHighlightedNodeId(null)}
-                    onNodeClick={(nodeId) => setHighlightedNodeId(prev => prev === nodeId ? null : nodeId)}
+                    onNodeClick={(nodeId) => {
+                      if (scenario === 'robotics') {
+                        setHighlightedNodeId(prev => prev === nodeId ? null : nodeId);
+                      }
+                    }}
                     mapId={sim.mapId}
                   />
 
@@ -478,6 +485,16 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 highlightedNodeId={highlightedNodeId}
               />
             </div>
+
+            {scenario === 'robotics' && sim.mapId !== 'synthetic' && sim.currentGraph && (
+              <RobotAssignmentPanel
+                assignments={sim.robotAssignments}
+                setAssignments={sim.setRobotAssignments}
+                depotNodes={sim.currentGraph.nodes.filter(n => n.type === 'depot')}
+                shelfNodes={sim.currentGraph.nodes.filter(n => n.type === 'shelf')}
+                disabled={sim.isComputing || sim.status === 'running'}
+              />
+            )}
 
             {sim.mapId === 'campus' && scenario === 'network' && (
               <div className="shrink-0 bg-gray-900 border border-indigo-900/50 rounded-xl p-4 flex flex-col gap-2 max-h-[40vh] overflow-y-auto">

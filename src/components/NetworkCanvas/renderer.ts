@@ -22,6 +22,7 @@ export interface RenderOptions {
   wasHistoricallyBlocked: Set<string>;
   highlightedNodeId?: string | null;
   sourceId: string;
+  sourceIds?: string[];
   destinationIds: string[];
   visibleAlgos: { bfs: boolean; dfs: boolean; hybrid: boolean };
   sets: {
@@ -30,6 +31,7 @@ export interface RenderOptions {
     hyb: { explored: Set<string>; path: Set<string>; current: string | null };
   };
   activeSteps: { bfs: AlgorithmStep | null; dfs: AlgorithmStep | null; hybrid: AlgorithmStep | null };
+  graph?: import('../../types').ScenarioGraph;
 }
 
 export function renderCanvas(options: RenderOptions) {
@@ -38,7 +40,7 @@ export function renderCanvas(options: RenderOptions) {
     scenario, mapId, isDatacenter, isMassive,
     visibleNodes, visibleEdges, visibleNodeMap,
     activeBlocked, wasHistoricallyBlocked, highlightedNodeId,
-    sourceId, destinationIds, visibleAlgos, sets, activeSteps
+    sourceId, sourceIds, destinationIds, visibleAlgos, sets, activeSteps
   } = options;
 
   const dpr = window.devicePixelRatio || 1;
@@ -278,6 +280,28 @@ export function renderCanvas(options: RenderOptions) {
     ctx.restore();
   }
 
+  // --- Clinic Architectural Walls ---
+  if (scenario === 'robotics' && mapId === 'clinic' && options.graph?.walls) {
+    ctx.save();
+    ctx.strokeStyle = '#334155'; // Slate 700 for blueprint lines
+    ctx.lineWidth = 4 / zoom;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    
+    // Determine the active floor based on the first visible node
+    const activeFloor = visibleNodes.length > 0 ? visibleNodes[0].buildingId : 'L1';
+    
+    options.graph.walls.forEach(wall => {
+      if (wall.level === activeFloor) {
+        ctx.beginPath();
+        ctx.moveTo(sx(wall.x1), sy(wall.y1));
+        ctx.lineTo(sx(wall.x2), sy(wall.y2));
+        ctx.stroke();
+      }
+    });
+    ctx.restore();
+  }
+
   const drawPath = (edge: GraphEdge, x1: number, y1: number, x2: number, y2: number, ox: number = 0, oy: number = 0) => {
     ctx.beginPath();
     if (edge.type === 'serial') {
@@ -390,7 +414,7 @@ export function renderCanvas(options: RenderOptions) {
     const cfg = NODE_CONFIG[node.type] ?? { icon: '🏪', radius: 18, baseColor: '#0e7490' };
     const cx = sx(node.x), cy = sy(node.y);
     const isBlocked = activeBlocked.has(node.id);
-    const isSource = node.id === sourceId;
+    const isSource = node.id === sourceId || (sourceIds && sourceIds.includes(node.id));
     const isDest = destinationIds.includes(node.id);
 
     const currBFS = visibleAlgos.bfs && sets.bfs.current === node.id;
@@ -480,8 +504,10 @@ export function renderCanvas(options: RenderOptions) {
       ctx.fillStyle = getRgba(fillColor, opacity);
       ctx.fill();
       if (!isMassive || isImportant) {
-        ctx.lineWidth = isBlocked ? 2 : 1;
-        ctx.strokeStyle = isBlocked ? (scenario === 'evacuation' ? '#c2410c' : '#ef4444') : '#374151';
+        ctx.lineWidth = isBlocked ? 2 : (isSource || isDest ? 3 : 1);
+        ctx.strokeStyle = isBlocked ? (scenario === 'evacuation' ? '#c2410c' : '#ef4444') : 
+                          isSource ? '#4ade80' : 
+                          isDest ? '#f87171' : '#374151';
         ctx.stroke();
       }
     } else {
@@ -532,39 +558,65 @@ export function renderCanvas(options: RenderOptions) {
           renderedTextPositions.push({ x: screenX, y: screenY, radius: separationThreshold });
         }
       } else if (shouldShowNormalLabel && displayLabel) {
+        let textY = cy;
+        // Collision avoidance for important labels on all scales
+        if (isImportant) {
+          const screenX = (cx * zoom) + pan.x;
+          let screenY = (textY * zoom) + pan.y;
+          let attempts = 0;
+          while (attempts < 5 && renderedTextPositions.some(pos => Math.abs(pos.x - screenX) < 70 && Math.abs(pos.y - screenY) < 25)) {
+            screenY += 20;
+            textY += 20 / zoom;
+            attempts++;
+          }
+          renderedTextPositions.push({ x: screenX, y: screenY, radius: 25 });
+        }
+
         if (isMassive && isImportant) {
           ctx.font = `bold ${16 / zoom}px sans-serif`;
           ctx.strokeStyle = '#0a0f1e';
           ctx.lineWidth = 3 / zoom;
           const labelOffsetY = r + (10 / zoom);
-          ctx.strokeText(displayLabel, cx, cy - labelOffsetY);
+          ctx.strokeText(displayLabel, cx, textY - labelOffsetY);
           ctx.fillStyle = isSource ? '#4ade80' : isDest ? '#f87171' : '#fb923c';
-          ctx.fillText(displayLabel, cx, cy - labelOffsetY);
+          ctx.fillText(displayLabel, cx, textY - labelOffsetY);
         } else if (!isMassive) {
           if (!isDatacenter) {
             const labelSize = (isImportant ? 14 : 12) / zoom;
             ctx.font = `${isImportant ? 'bold ' : ''}${labelSize}px sans-serif`;
+            
             if (scenario === 'gameai') {
               ctx.lineJoin = 'round';
               ctx.lineWidth = 4 / zoom;
               ctx.strokeStyle = '#000000';
               const labelOffsetY = r + (12 / zoom);
-              ctx.strokeText(displayLabel, cx, cy + labelOffsetY);
+              ctx.strokeText(displayLabel, cx, textY + labelOffsetY);
               ctx.fillStyle = isImportant ? '#fb923c' : '#fde68a';
-              ctx.fillText(displayLabel, cx, cy + labelOffsetY);
+              ctx.fillText(displayLabel, cx, textY + labelOffsetY);
             } else {
-              ctx.fillStyle = '#cbd5e1';
+              // Add stroke for readability
+              ctx.lineJoin = 'round';
+              ctx.lineWidth = 3 / zoom;
+              ctx.strokeStyle = '#0a0f1e';
               const labelOffsetY = r + (12 / zoom);
-              ctx.fillText(displayLabel, cx, cy + labelOffsetY);
+              ctx.strokeText(displayLabel, cx, textY + labelOffsetY);
+              
+              // Color sources green, destinations red, other important orange
+              if (isImportant) {
+                ctx.fillStyle = isSource ? '#4ade80' : isDest ? '#f87171' : '#fb923c';
+              } else {
+                ctx.fillStyle = '#cbd5e1';
+              }
+              ctx.fillText(displayLabel, cx, textY + labelOffsetY);
             }
           } else {
             const labelSize = (isImportant ? 12 : 10) / zoom;
-            const labelY = cy + r + (8 / zoom);
+            const labelY = textY + r + (8 / zoom);
             ctx.font = `${labelSize}px sans-serif`;
             ctx.lineWidth = 2 / zoom;
             ctx.strokeStyle = '#0f172a';
             ctx.strokeText(displayLabel, cx, labelY);
-            ctx.fillStyle = '#f8fafc';
+            ctx.fillStyle = isImportant ? (isSource ? '#4ade80' : isDest ? '#f87171' : '#fb923c') : '#f8fafc';
             ctx.fillText(displayLabel, cx, labelY);
           }
         }

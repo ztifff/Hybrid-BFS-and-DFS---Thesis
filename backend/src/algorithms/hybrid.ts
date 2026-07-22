@@ -78,13 +78,12 @@ export class HybridPathfinder implements PathfinderObserver {
     graph: ScenarioGraph,
     environment: SimulationEnvironment,
     disablePathSevering: boolean = false,
-    deliveryMode: 'anycast' | 'multicast' = 'anycast'
+    deliveryMode: 'anycast' | 'multicast' = 'anycast',
+    customRobotAssignments?: { robotId: string; destinations: string[]; priorityDest?: string }[]
   ): Promise<HybridResult> {
     const { nodes, edges, sourceId, destinationIds } = graph;
 
     const nodeMap = new Map(nodes.map(n => [n.id, n]));
-    const destSet = new Set(destinationIds);
-
     const adj = new Map<string, { to: string; latency: number }[]>();
     nodes.forEach(n => adj.set(n.id, []));
     edges.forEach(e => {
@@ -94,69 +93,135 @@ export class HybridPathfinder implements PathfinderObserver {
       adj.get(e.to)!.push({ to: e.from, latency: e.latency });
     });
 
-    const visited = new Set<string>();
-    const parentMap = new Map<string, string | null>();
-    const childrenMap = new Map<string, string[]>();
-    const steps: AlgorithmStep[] = [];
-    const frontier: { id: string; waited: number }[] = [];
+    const sources = graph.sourceIds && graph.sourceIds.length > 0 ? graph.sourceIds : [sourceId];
 
-    frontier.push({ id: sourceId, waited: 0 });
-    visited.add(sourceId);
-    parentMap.set(sourceId, null);
+    interface AgentState {
+      robotId: string;
+      destSet: Set<string>;
+      frontier: { id: string; waited: number }[];
+      visited: Set<string>;
+      parentMap: Map<string, string | null>;
+      childrenMap: Map<string, string[]>;
+      foundDestinations: string[];
+      severedBlockedNodes: Set<string>;
+      lastCurrent: string | null;
+      done: boolean;
+    }
+
+    const agents: AgentState[] = sources.map(srcId => {
+      const assignment = customRobotAssignments?.find(a => a.robotId === srcId);
+      const dests = (assignment && assignment.destinations.length > 0)
+        ? new Set(assignment.destinations)
+        : new Set(destinationIds);
+
+      const parentMap = new Map<string, string | null>();
+      parentMap.set(srcId, null);
+      const visited = new Set<string>([srcId]);
+
+      return {
+        robotId: srcId,
+        destSet: dests,
+        frontier: this.blockedNodes.has(srcId) ? [] : [{ id: srcId, waited: 0 }],
+        visited,
+        parentMap,
+        childrenMap: new Map<string, string[]>(),
+        foundDestinations: [],
+        severedBlockedNodes: new Set<string>(),
+        lastCurrent: srcId,
+        done: false,
+      };
+    });
 
     let nodesExplored = 0;
-    let foundDestination: string | null = null;
-    const foundDestinations: string[] = [];
-    let lastCurrent: string | null = null;
+    const steps: AlgorithmStep[] = [];
     let iteration = 0;
     let maxFrontierSize = 0;
     let lastYieldTime = performance.now();
-    const severedBlockedNodes = new Set<string>();
+    let activeAgentIndex = 0;
+
+    const getAllExplored = () => Array.from(new Set(agents.flatMap(a => Array.from(a.visited))));
+    const getCombinedPath = (activeAgent: AgentState) => {
+      const pathSet = new Set<string>();
+      agents.forEach(a => {
+        a.foundDestinations.forEach(d => {
+          reconstructPath(a.parentMap, d).forEach(n => pathSet.add(n));
+        });
+      });
+      if (activeAgent.lastCurrent) {
+        reconstructPath(activeAgent.parentMap, activeAgent.lastCurrent).forEach(n => pathSet.add(n));
+      }
+      return Array.from(pathSet);
+    };
+    const getAllFoundDestinations = () => Array.from(new Set(agents.flatMap(a => a.foundDestinations)));
 
     function chooseStrategy(current: string): 'BFS' | 'DFS' {
-      const node = nodeMap.get(current);
-      const neighbors = adj.get(current) ?? [];
-      const branchingFactor = neighbors.length;
-      const isHub = node?.level === 1 && branchingFactor > 3;
-      if (isHub) return 'DFS';
-      if (branchingFactor >= 2) return 'BFS';
-      return 'DFS';
+      const isDenselyConnected = (adj.get(current)?.length ?? 0) >= 3;
+      return isDenselyConnected ? 'BFS' : 'DFS';
     }
 
-    while (frontier.length > 0 && iteration < MAX_TOTAL_STEPS) {
-      if (deliveryMode === 'anycast' && foundDestinations.length > 0) break;
-      if (deliveryMode === 'multicast' && destSet.size > 0 && foundDestinations.length === destSet.size) break;
-      if (frontier.length > maxFrontierSize) maxFrontierSize = frontier.length;
+    function computeHeuristic(nodeId: string, agent: AgentState): number {
+      const node = nodeMap.get(nodeId);
+      if (!node) return 0;
+      let minH = Infinity;
+      agent.destSet.forEach(dId => {
+        const destNode = nodeMap.get(dId);
+        if (destNode) {
+          const dist = Math.hypot(node.x - destNode.x, node.y - destNode.y);
+          if (dist < minH) minH = dist;
+        }
+      });
+      return minH === Infinity ? 0 : minH;
+    }
+
+    while (agents.some(a => !a.done) && iteration < MAX_TOTAL_STEPS) {
+      let attempts = 0;
+      while (agents[activeAgentIndex].done && attempts < agents.length) {
+        activeAgentIndex = (activeAgentIndex + 1) % agents.length;
+        attempts++;
+      }
+
+      const agent = agents[activeAgentIndex];
+      if (agent.frontier.length === 0) {
+        agent.done = true;
+        activeAgentIndex = (activeAgentIndex + 1) % agents.length;
+        if (agents.every(a => a.done)) break;
+        continue;
+      }
+
+      const currentTotalFrontier = agents.reduce((sum, a) => sum + a.frontier.length, 0);
+      if (currentTotalFrontier > maxFrontierSize) maxFrontierSize = currentTotalFrontier;
 
       let didSever = false;
       if (!disablePathSevering) {
         for (const blockedId of this.blockedNodes) {
-          if (blockedId === sourceId) continue;
-          if (severedBlockedNodes.has(blockedId)) continue;
-          if (!visited.has(blockedId)) continue;
+          if (sources.includes(blockedId)) continue;
+          if (agent.severedBlockedNodes.has(blockedId)) continue;
+          if (!agent.visited.has(blockedId)) continue;
 
-          severedBlockedNodes.add(blockedId);
+          agent.severedBlockedNodes.add(blockedId);
 
-          const subtree = collectSubtree(blockedId, childrenMap, visited);
+          const subtree = collectSubtree(blockedId, agent.childrenMap, agent.visited);
           const subtreeSet = new Set(subtree);
 
-          for (const id of subtree) visited.delete(id);
+          for (const id of subtree) agent.visited.delete(id);
 
-          for (let i = frontier.length - 1; i >= 0; i--) {
-            if (subtreeSet.has(frontier[i].id)) frontier.splice(i, 1);
+          for (let i = agent.frontier.length - 1; i >= 0; i--) {
+            if (subtreeSet.has(agent.frontier[i].id)) agent.frontier.splice(i, 1);
           }
 
-          const rollbackTo = parentMap.get(blockedId) ?? sourceId;
-          if (!this.blockedNodes.has(rollbackTo)) {
-            visited.delete(rollbackTo);
-            frontier.unshift({ id: rollbackTo, waited: 0 }); 
-          } else if (rollbackTo === sourceId) {
-            visited.delete(sourceId);
-            frontier.unshift({ id: sourceId, waited: 0 });
+          const parent = agent.parentMap.get(blockedId);
+          const rollbackTo = parent === null ? blockedId : (parent ?? agent.robotId);
+
+          if (!this.blockedNodes.has(rollbackTo) && parent !== null) {
+            agent.visited.delete(rollbackTo);
+            agent.frontier.push({ id: rollbackTo, waited: 0 });
+          } else if (parent === null) {
+            agent.visited.delete(blockedId);
+            agent.frontier.push({ id: blockedId, waited: 0 });
           }
 
-          if (lastCurrent && subtreeSet.has(lastCurrent)) {
-            lastCurrent = rollbackTo;
+          if (agent.lastCurrent && subtreeSet.has(agent.lastCurrent)) {
+            agent.lastCurrent = rollbackTo;
           }
 
           iteration++;
@@ -164,96 +229,84 @@ export class HybridPathfinder implements PathfinderObserver {
 
           const severStep: AlgorithmStep = {
             stepIndex: iteration,
-            explored: Array.from(visited),
-            frontier: frontier.map(f => f.id),
-            path: reconstructPath(parentMap, rollbackTo),
+            explored: getAllExplored(),
+            frontier: agents.flatMap(a => a.frontier.map(f => f.id)),
+            path: getCombinedPath(agent),
             current: rollbackTo,
             done: false,
-            foundDestination: foundDestinations.length > 0 ? foundDestinations[0] : null,
-            foundDestinations: [...foundDestinations],
-            phaseLabel: `🚧 HYBRID - Route severed at [${blockedId}]! Falling back to [${rollbackTo}] (${subtree.length} nodes lost)`
+            foundDestination: getAllFoundDestinations()[0] || null,
+            foundDestinations: getAllFoundDestinations(),
+            phaseLabel: `🚧 Hybrid [${agent.robotId}] - Severed at [${blockedId}]! Retreating to [${rollbackTo}]`
           };
           steps.push(severStep);
           environment.tick(severStep);
         }
       }
 
-      for (const id of severedBlockedNodes) {
-        if (!this.blockedNodes.has(id)) severedBlockedNodes.delete(id);
+      for (const id of agent.severedBlockedNodes) {
+        if (!this.blockedNodes.has(id)) agent.severedBlockedNodes.delete(id);
       }
 
-      if (didSever) continue;
+      if (didSever) {
+        activeAgentIndex = (activeAgentIndex + 1) % agents.length;
+        continue;
+      }
 
-      const strategy = 'Priority';
-      const entry = frontier.pop()!;
-      if (!entry) continue;
+      let bestIdx = 0;
+      let bestScore = Infinity;
+      for (let i = 0; i < agent.frontier.length; i++) {
+        const fItem = agent.frontier[i];
+        const strat = chooseStrategy(fItem.id);
+        const h = computeHeuristic(fItem.id, agent);
+        const score = strat === 'BFS' ? h : h * 0.5 - i; 
+        if (score < bestScore) {
+          bestScore = score;
+          bestIdx = i;
+        }
+      }
+
+      const entry = agent.frontier.splice(bestIdx, 1)[0];
       const current = entry.id;
 
       if (this.blockedNodes.has(current)) {
         if (entry.waited < MAX_WAIT_STEPS) {
-          frontier.push({ id: current, waited: entry.waited + 1 });
+          agent.frontier.push({ id: current, waited: entry.waited + 1 });
           iteration++;
           const waitStep: AlgorithmStep = {
             stepIndex: iteration,
-            explored: Array.from(visited),
-            frontier: frontier.map(f => f.id),
-            path: reconstructPath(parentMap, lastCurrent ?? sourceId),
+            explored: getAllExplored(),
+            frontier: agents.flatMap(a => a.frontier.map(f => f.id)),
+            path: getCombinedPath(agent),
             current,
             done: false,
-            foundDestination: foundDestinations.length > 0 ? foundDestinations[0] : null,
-            foundDestinations: [...foundDestinations],
-            phaseLabel: `⏳ HYBRID - Congestion, buffering packet (${entry.waited + 1}/${MAX_WAIT_STEPS})`
+            foundDestination: getAllFoundDestinations()[0] || null,
+            foundDestinations: getAllFoundDestinations(),
+            phaseLabel: `⏳ Hybrid [${agent.robotId}] - Congestion at [${current}], waiting (${entry.waited + 1}/${MAX_WAIT_STEPS})`
           };
           steps.push(waitStep);
           environment.tick(waitStep);
-        } else {
-          if (!severedBlockedNodes.has(current) && visited.has(current)) {
-            const subtree = collectSubtree(current, childrenMap, visited);
-            const subtreeSet = new Set(subtree);
-            for (const id of subtree) visited.delete(id);
-            for (let i = frontier.length - 1; i >= 0; i--) {
-              if (subtreeSet.has(frontier[i].id)) frontier.splice(i, 1);
-            }
-            const rollbackTo = parentMap.get(current) ?? sourceId;
-            if (!this.blockedNodes.has(rollbackTo)) {
-              visited.delete(rollbackTo);
-              frontier.unshift({ id: rollbackTo, waited: 0 }); 
-            }
-            severedBlockedNodes.add(current);
-            iteration++;
-            const forceStep: AlgorithmStep = {
-              stepIndex: iteration,
-              explored: Array.from(visited),
-              frontier: frontier.map(f => f.id),
-              path: reconstructPath(parentMap, rollbackTo ?? sourceId),
-              current: rollbackTo ?? sourceId,
-              done: false,
-              foundDestination: foundDestinations.length > 0 ? foundDestinations[0] : null,
-              foundDestinations: [...foundDestinations],
-              phaseLabel: `🔀 HYBRID — Timeout at [${current}], abandoning path and returning to [${rollbackTo}]`
-            };
-            steps.push(forceStep);
-            environment.tick(forceStep);
-          }
         }
+        activeAgentIndex = (activeAgentIndex + 1) % agents.length;
         continue;
       }
 
-      lastCurrent = current;
+      agent.lastCurrent = current;
       nodesExplored++;
       iteration++;
 
+      const strategy = chooseStrategy(current);
       const now = performance.now();
+
       const step: AlgorithmStep = {
         stepIndex: iteration,
-        explored: Array.from(visited),
-        frontier: frontier.map(f => f.id),
-        path: reconstructPath(parentMap, current),
+        explored: getAllExplored(),
+        frontier: agents.flatMap(a => a.frontier.map(f => f.id)),
+        path: getCombinedPath(agent),
         current,
         done: false,
-        foundDestination: foundDestinations.length > 0 ? foundDestinations[0] : null,
-        foundDestinations: [...foundDestinations],
-        phaseLabel: `🔄 HYBRID - Smart Search`
+        foundDestination: getAllFoundDestinations()[0] || null,
+        foundDestinations: getAllFoundDestinations(),
+        phaseLabel: `🔀 Hybrid [${agent.robotId}] - Dynamic ${strategy} Mode`
       };
       steps.push(step);
       environment.tick(step);
@@ -263,65 +316,59 @@ export class HybridPathfinder implements PathfinderObserver {
         lastYieldTime = performance.now();
       }
 
-      if (destSet.has(current) && !foundDestinations.includes(current)) {
-        foundDestinations.push(current);
+      if (agent.destSet.has(current) && !agent.foundDestinations.includes(current)) {
+        agent.foundDestinations.push(current);
         if (deliveryMode === 'anycast') {
-          foundDestination = current;
-          break;
-        } else if (deliveryMode === 'multicast' && foundDestinations.length === destSet.size) {
-          break;
+          agent.done = true;
+        } else if (deliveryMode === 'multicast' && agent.foundDestinations.length >= agent.destSet.size) {
+          agent.done = true;
         }
       }
 
       const neighbors = adj.get(current) ?? [];
-      
-      const getPriority = (currentLvl: number, neighborLvl: number) => {
-        if (currentLvl === 2 && neighborLvl === 3) return 100;
-        if (currentLvl === 2 && neighborLvl === 1) return 10;
-        if (currentLvl === 1 && neighborLvl === 0) return 100;
-        if (currentLvl === 1 && neighborLvl === 2) return 10;
-        if (currentLvl === 0 && neighborLvl === 0) return 100;
-        if (currentLvl === 0 && neighborLvl === 1) return 10;
-        if (currentLvl === 3 && neighborLvl === 3) return 100;
-        if (currentLvl === 3 && neighborLvl === 2) return 10;
-        return 50;
-      };
-
-      const currentLvl = nodeMap.get(current)?.level ?? 99;
-      
-      const sortedNeighbors = [...neighbors].sort((a, b) => {
-        const levelA = nodeMap.get(a.to)?.level ?? 99;
-        const levelB = nodeMap.get(b.to)?.level ?? 99;
-        return getPriority(currentLvl, levelA) - getPriority(currentLvl, levelB); 
-      });
-
-      for (const { to } of sortedNeighbors) {
-        if (!visited.has(to)) {
-          visited.add(to);
-          parentMap.set(to, current);
-          if (!childrenMap.has(current)) childrenMap.set(current, []);
-          childrenMap.get(current)!.push(to);
-          frontier.push({ id: to, waited: 0 });
+      for (const { to } of neighbors) {
+        if (!agent.visited.has(to)) {
+          agent.visited.add(to);
+          agent.parentMap.set(to, current);
+          if (!agent.childrenMap.has(current)) agent.childrenMap.set(current, []);
+          agent.childrenMap.get(current)!.push(to);
+          agent.frontier.push({ id: to, waited: 0 });
         }
       }
+
+      activeAgentIndex = (activeAgentIndex + 1) % agents.length;
     }
 
-    const closestExit = foundDestinations.length > 0 ? foundDestinations[0] : null;
-    const finalPath = closestExit ? reconstructPath(parentMap, closestExit) : [];
-    const totalLatency = calcPathLatency(finalPath, edges);
+    const allFoundDests = getAllFoundDestinations();
+    const finalPaths: string[][] = [];
+    agents.forEach(a => {
+      a.foundDestinations.forEach(d => {
+        finalPaths.push(reconstructPath(a.parentMap, d));
+      });
+    });
+
+    const combinedFinalPath = Array.from(new Set(finalPaths.flat()));
+    const totalLatency = calcPathLatency(combinedFinalPath, edges);
 
     steps.push({
       stepIndex: iteration,
-      explored: Array.from(visited),
+      explored: getAllExplored(),
       frontier: [],
-      path: finalPath,
-      current: closestExit ?? lastCurrent ?? sourceId,
+      path: combinedFinalPath,
+      current: allFoundDests[0] ?? sources[0],
       done: true,
-      foundDestination: foundDestinations.length > 0 ? foundDestinations[0] : null,
-      foundDestinations: [...foundDestinations],
-      phaseLabel: foundDestinations.length > 0 ? (deliveryMode === 'multicast' && foundDestinations.length === destSet.size ? '🏁 HYBRID - All Targets Secured' : '🏁 HYBRID - Target Secured') : '❌ HYBRID - All Routes Exhausted'
+      foundDestination: allFoundDests[0] ?? null,
+      foundDestinations: allFoundDests,
+      phaseLabel: allFoundDests.length > 0 ? '🏁 Hybrid - All Active Robot Destinations Reached' : '❌ Hybrid - Search Exhausted'
     });
 
-    return { steps, nodesExplored, pathLength: foundDestinations.length > 0 ? finalPath.length - 1 : -1, totalLatency, foundDestination: foundDestinations.length > 0 ? foundDestinations[0] : null, maxFrontierSize };
+    return {
+      steps,
+      nodesExplored,
+      pathLength: allFoundDests.length > 0 ? combinedFinalPath.length - 1 : -1,
+      totalLatency,
+      foundDestination: allFoundDests[0] ?? null,
+      maxFrontierSize
+    };
   }
 }

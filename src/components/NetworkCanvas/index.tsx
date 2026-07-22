@@ -21,12 +21,19 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
 }) => {
   const { nodes, edges, width, height } = graph;
 
+  // Pre-scale massive maps down to ~2000x2000 so the zoom baseline is around 1.0 (to avoid hitting minZoom bounds)
+  const maxMapSize = 2000;
+  const needsPreScale = width > maxMapSize || height > maxMapSize;
+  const preScale = needsPreScale ? Math.min(maxMapSize / width, maxMapSize / height) : 1;
+  const drawnWidth = width * preScale;
+  const drawnHeight = height * preScale;
+
   const {
     containerRef, canvasRef,
     zoom, setZoom, pan, setPan, isDragging, windowDimensions,
     handleWheel, handleMouseDown, handleMouseMove, handleMouseUp, handleMouseLeave,
     handleTouchStart, handleTouchMove, handleTouchEnd, resetZoom, hasDragged
-  } = useCanvasInteraction({ autoFit, width, height, onDeselect, highlightedNodeId });
+  } = useCanvasInteraction({ autoFit, width: drawnWidth, height: drawnHeight, onDeselect, highlightedNodeId });
 
   const { animateTo } = useCanvasAnimation({ setZoom, setPan });
 
@@ -40,21 +47,22 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
 
   // Environment checks
   const isDatacenter = scenario === 'network' && width > 100000;
-  const isLayeredMap = useMemo(() => nodes.some(n => n.buildingId === 'GL' || n.buildingId === 'L2'), [nodes]);
+  const uniqueFloors = useMemo(() => {
+    const floors = new Set<string>();
+    nodes.forEach(n => { if (n.buildingId) floors.add(n.buildingId); });
+    return Array.from(floors).sort();
+  }, [nodes]);
+  const isLayeredMap = (scenario === 'network' && (mapId === 'campus' || mapId === 'companybusiness')) || (scenario === 'robotics' && mapId === 'clinic') || (scenario === 'evacuation' && mapId === 'building');
   const isDenseProcedural = nodes.length > 500 && width <= 100000 && !isLayeredMap && (scenario === 'network' || scenario === 'evacuation');
   const isMassive = nodes.length > 500 || isDenseProcedural;
-
-  const SVG_W = 960;
-  const SVG_H = 680;
-
-  const isSynthetic = width <= 1600 && height <= 1600 || (nodes.length <= 220 && width <= 10000 && height <= 10000);
-  const scale = isSynthetic ? 1 : Math.min(SVG_W / width, SVG_H / height) * 1.05;
 
   const cw = containerRef.current?.getBoundingClientRect().width || windowDimensions.w;
   const ch = containerRef.current?.getBoundingClientRect().height || windowDimensions.h;
 
-  const offsetX = isSynthetic ? (cw / 2) - (width / 2) : (SVG_W - (width * scale)) / 2;
-  const offsetY = isSynthetic ? (ch / 2) - (height / 2) : (SVG_H - (height * scale)) / 2;
+  const scale = preScale;
+
+  const offsetX = (cw - drawnWidth) / 2;
+  const offsetY = (ch - drawnHeight) / 2;
 
   // Process data for renderer
   const sets = useMemo(() => {
@@ -172,10 +180,12 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
       wasHistoricallyBlocked,
       highlightedNodeId,
       sourceId: graph.sourceId,
+      sourceIds: graph.sourceIds,
       destinationIds: graph.destinationIds,
       visibleAlgos,
       sets,
-      activeSteps
+      activeSteps,
+      graph
     });
   }, [
     visibleNodes, visibleEdges, visibleNodeMap, pan, zoom, sets, activeBlocked, 
@@ -248,7 +258,7 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
     >
       <CanvasControls
         zoom={zoom} setZoom={setZoom} resetZoom={resetZoom}
-        isLayeredMap={isLayeredMap} activeFloor={activeFloor} setActiveFloor={setActiveFloor}
+        isLayeredMap={isLayeredMap} activeFloor={activeFloor} setActiveFloor={setActiveFloor} uniqueFloors={uniqueFloors}
         isShowOpen={isShowOpen} setIsShowOpen={setIsShowOpen} visibleAlgos={visibleAlgos} toggleAlgo={toggleAlgo}
         isFollowOpen={isFollowOpen} setIsFollowOpen={setIsFollowOpen} followAlgo={followAlgo} setFollowAlgo={setFollowAlgo}
       />

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { GameAIBoard, GraphSizing, ScenarioGraph, ScenarioType, SimulationResult } from '../types';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { GameAIBoard, GraphSizing, RobotAssignment, ScenarioGraph, ScenarioType, SimulationResult } from '../types';
 import { loadLocalHistory, persistLocalHistory } from '../utils/historyHelpers';
 import { HistoryEntry } from '../components/HistoryModal';
 
@@ -49,6 +49,22 @@ export function useSimulationModel(scenario: ScenarioType) {
   const [sourceDevice, setSourceDevice] = useState<string>('sales_pc1');
   const [destinationDevices, setDestinationDevices] = useState<string[]>(['fin_pc1']);
   const [deliveryMode, setDeliveryMode] = useState<'anycast' | 'multicast'>('anycast');
+
+  // ✅ Multi-Agent Robotics: Per-robot destination assignments
+  const [robotAssignments, setRobotAssignments] = useState<RobotAssignment[]>([]);
+
+  // Derived: sourceDevices and destinationDevices from robotAssignments
+  // IMPORTANT: wrapped in useMemo so they maintain referential stability across renders.
+  // Without this, a new array reference is created on every render, causing useEffect
+  // dependency checks to fire continuously (infinite loop / blinking resync).
+  const sourceDevices = useMemo(
+    () => robotAssignments.map(r => r.robotId),
+    [robotAssignments]
+  );
+  const destinationDevices_robotics = useMemo(
+    () => [...new Set(robotAssignments.flatMap(r => r.destinations))],
+    [robotAssignments]
+  );
 
   const syntheticSizing = syntheticSizingByScenario[scenario];
   const updateSyntheticSizing = useCallback((field: keyof GraphSizing, rawValue: number) => {
@@ -235,7 +251,12 @@ export function useSimulationModel(scenario: ScenarioType) {
           graphParams.set('customDestinationIds', JSON.stringify(destinationDevices));
         }
 
-        const response = await fetch(`https://backend-1e4y.onrender.com/api/network/graph?${graphParams}`);
+        if (scenario === 'robotics') {
+          graphParams.set('customSourceIds', JSON.stringify(sourceDevices));
+          graphParams.set('customDestinationIds', JSON.stringify(destinationDevices_robotics));
+        }
+
+        const response = await fetch(`api/network/graph?${graphParams}`);
         if (!response.ok) throw new Error(`Graph API Error: ${response.statusText}`);
         const json = await response.json();
 
@@ -250,14 +271,27 @@ export function useSimulationModel(scenario: ScenarioType) {
     };
     fetchGraphStructure();
     return () => { isMounted = false; };
-  }, [scenario, mapId, gameBoard, graphSize, seed, syntheticSizing.nodes, syntheticSizing.edges, networkRoutingMode, sourceDevice, destinationDevices]);
-
+  }, [scenario, mapId, gameBoard, graphSize, seed, syntheticSizing.nodes, syntheticSizing.edges, networkRoutingMode, sourceDevice, sourceDevices, destinationDevices, destinationDevices_robotics]);
   // Synchronize custom endpoints if the map changes or if they are invalid
   useEffect(() => {
+    if (scenario === 'robotics' && currentGraph && robotAssignments.length === 0) {
+      // Pick a default robot (source) and at least 2 default destinations from the graph
+      const defaultRobot = currentGraph.sourceIds?.[0] || currentGraph.sourceId || currentGraph.nodes.find(n => n.type === 'depot' || n.id.includes('Robot'))?.id;
+      
+      const defaultDests = currentGraph.destinationIds && currentGraph.destinationIds.length >= 2
+        ? currentGraph.destinationIds.slice(0, 2)
+        : currentGraph.nodes.filter(n => n.type === 'shelf' || n.type === 'delivery_bay' || n.id.includes('nurse') || n.id.includes('air_pressure')).slice(0, 2).map(n => n.id);
+      
+      if (defaultRobot && defaultDests.length > 0) {
+        setRobotAssignments([{ robotId: defaultRobot, destinations: defaultDests }]);
+      }
+    }
+    
     if (networkRoutingMode === 'device-to-device' && currentGraph) {
       let currentSource = sourceDevice;
       const validSource = currentGraph.nodes.some(n => n.id === currentSource);
       const endpoints = currentGraph.nodes.filter(n => mapId === 'campus' ? n.type === 'access_point' : (n.type === 'access_point' || n.type === 'server'));
+
       
       if (!validSource && endpoints.length > 0) {
         currentSource = endpoints[0].id;
@@ -279,6 +313,40 @@ export function useSimulationModel(scenario: ScenarioType) {
     }
   }, [currentGraph, networkRoutingMode, sourceDevice, destinationDevices, mapId]);
 
+  // Synchronize robotics robot assignments if the map changes
+  const roboticsInitializedMap = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (scenario === 'robotics' && mapId !== 'synthetic' && currentGraph) {
+      const depots = currentGraph.nodes.filter(n => n.type === 'depot').map(n => n.id);
+      const shelves = currentGraph.nodes.filter(n => n.type === 'shelf').map(n => n.id);
+
+      if (roboticsInitializedMap.current !== mapId) {
+        // Initial setup for this map — each depot gets its own assignment with no destinations yet
+        const initialAssignments: RobotAssignment[] = depots.map(depotId => ({
+          robotId: depotId,
+          destinations: [],
+        }));
+        setRobotAssignments(initialAssignments);
+        roboticsInitializedMap.current = mapId;
+      } else {
+        // Cleanup: remove depots that no longer exist, remove destinations that no longer exist
+        setRobotAssignments(prev => {
+          const cleaned = prev
+            .filter(a => depots.includes(a.robotId))
+            .map(a => ({
+              ...a,
+              destinations: a.destinations.filter(d => shelves.includes(d)),
+              priorityDest: a.priorityDest && shelves.includes(a.priorityDest) ? a.priorityDest : undefined,
+            }));
+          return JSON.stringify(cleaned) !== JSON.stringify(prev) ? cleaned : prev;
+        });
+      }
+    } else {
+      roboticsInitializedMap.current = null;
+    }
+  }, [currentGraph, scenario, mapId]);
+
   return {
     scenario,
     gameBoard, setGameBoard,
@@ -288,7 +356,15 @@ export function useSimulationModel(scenario: ScenarioType) {
     syntheticSizing, updateSyntheticSizing,
     networkRoutingMode, setNetworkRoutingMode,
     sourceDevice, setSourceDevice,
-    destinationDevices, setDestinationDevices,
+    // Derived robot source IDs (robotics only)
+    sourceDevices,
+    // Scenario-aware: robotics uses derived destinations, all other scenarios use network state
+    destinationDevices: (scenario === 'robotics' && mapId !== 'synthetic')
+      ? destinationDevices_robotics
+      : destinationDevices,
+    setDestinationDevices,
+    // Per-robot assignment state (robotics only)
+    robotAssignments, setRobotAssignments,
     deliveryMode, setDeliveryMode,
     
     history, handleDeleteHistory, handleImportHistory, confirmSaveResult, openSaveModal,
@@ -299,6 +375,7 @@ export function useSimulationModel(scenario: ScenarioType) {
     isSaveModalOpen, setIsSaveModalOpen,
     saveNameInput, setSaveNameInput,
     saveDefaultName, setSaveDefaultName,
+    
 
     currentGraph, isGraphLoading,
     simResults, setSimResults,

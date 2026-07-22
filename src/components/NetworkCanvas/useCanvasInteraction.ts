@@ -45,10 +45,8 @@ export function useCanvasInteraction({ autoFit, width, height, onDeselect, highl
     if (autoFit && containerRef.current && width > 0 && height > 0) {
       const cw = containerRef.current.getBoundingClientRect().width;
       const ch = containerRef.current.getBoundingClientRect().height;
-      if (width > cw || height > ch) {
-        const targetZoom = Math.min(cw / width, ch / height) * 0.95;
-        setZoom(targetZoom);
-      }
+      const targetZoom = Math.min(cw / width, ch / height) * 5.05;
+      setZoom(targetZoom);
     }
   }, [autoFit, width, height, windowDimensions.w, windowDimensions.h]);
 

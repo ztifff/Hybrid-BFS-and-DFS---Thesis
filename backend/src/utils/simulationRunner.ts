@@ -306,13 +306,47 @@ export async function runSimulation(
   activeSizing?: GraphSizing,
   customSourceId?: string,
   customDestinationIds?: string[],
-  deliveryMode: 'anycast' | 'multicast' = 'anycast'
+  deliveryMode: 'anycast' | 'multicast' = 'anycast',
+  customBlockedNodes?: string[],
+  customSourceIds?: string[],
+  customRobotAssignments?: { robotId: string; destinations: string[]; priorityDest?: string }[]
 ): Promise<SimulationResult & { meta?: { hasMore: boolean; totalSteps: number; currentOffset: number } }> {
   
   const graph = buildScenarioGraph(scenario, useRealWorld, gameBoard, mapId, graphSize, dynamicSeed, chessPiece, activeSizing);
 
   if (customSourceId) graph.sourceId = customSourceId;
-  if (customDestinationIds && customDestinationIds.length > 0) graph.destinationIds = customDestinationIds;
+  if (customSourceIds !== undefined) {
+    graph.sourceIds = customSourceIds;
+    if (!customSourceId) graph.sourceId = customSourceIds.length > 0 ? customSourceIds[0] : "";
+  }
+
+  if (customRobotAssignments !== undefined && customRobotAssignments.length > 0) {
+    graph.sourceIds = customRobotAssignments.map(a => a.robotId);
+    const orderedDests: string[] = [];
+    const seen = new Set<string>();
+    for (const assignment of customRobotAssignments) {
+      if (assignment.priorityDest && assignment.destinations.includes(assignment.priorityDest)) {
+        if (!seen.has(assignment.priorityDest)) {
+          orderedDests.push(assignment.priorityDest);
+          seen.add(assignment.priorityDest);
+        }
+      }
+      for (const dest of assignment.destinations) {
+        if (!seen.has(dest)) {
+          orderedDests.push(dest);
+          seen.add(dest);
+        }
+      }
+    }
+    graph.destinationIds = orderedDests;
+    if (customRobotAssignments.length > 0) {
+      graph.sourceId = customRobotAssignments[0].robotId;
+    } else {
+      graph.sourceId = "";
+    }
+  } else if (customDestinationIds !== undefined) {
+    graph.destinationIds = customDestinationIds;
+  }
 
   if (useRealWorld && mapId === 'campus' && customSourceId) {
     const { applyCampusACLs } = require('./networkGraph');
@@ -348,17 +382,17 @@ export async function runSimulation(
     const pathfinder = new BFSPathfinder();
     pathfinder.seedBlockedNodes(initialBlockedNodes);
     environment.registerObserver(pathfinder);
-    result = await pathfinder.execute(graph, environment, disablePathSevering, deliveryMode);
+    result = await pathfinder.execute(graph, environment, disablePathSevering, deliveryMode, customRobotAssignments);
   } else if (algorithm === 'dfs') {
     const pathfinder = new DFSPathfinder();
     pathfinder.seedBlockedNodes(initialBlockedNodes);
     environment.registerObserver(pathfinder);
-    result = await pathfinder.execute(graph, environment, disablePathSevering, deliveryMode);
+    result = await pathfinder.execute(graph, environment, disablePathSevering, deliveryMode, customRobotAssignments);
   } else {
     const pathfinder = new HybridPathfinder();
     pathfinder.seedBlockedNodes(initialBlockedNodes);
     environment.registerObserver(pathfinder);
-    result = await pathfinder.execute(graph, environment, disablePathSevering, deliveryMode);
+    result = await pathfinder.execute(graph, environment, disablePathSevering, deliveryMode, customRobotAssignments);
   }
   const timeElapsed = Math.max(performance.now() - startTime, 0.001);
   const memoryUsed = estimateMemory(result.nodesExplored, result.maxFrontierSize, algorithm);
@@ -466,11 +500,14 @@ export async function orchestrateSimulation(
   activeSizing: GraphSizing | undefined,
   customSourceId?: string,
   customDestinationIds?: string[],
-  deliveryMode?: 'anycast' | 'multicast'
+  deliveryMode?: 'anycast' | 'multicast',
+  customBlockedNodes?: string[],
+  customSourceIds?: string[],
+  customRobotAssignments?: { robotId: string; destinations: string[]; priorityDest?: string }[]
 ) {
-  const bfsRes    = await runSimulation(scenario, 'bfs',    seed, useRealWorld, mapId, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing, customSourceId, customDestinationIds, deliveryMode);
-  const dfsRes    = await runSimulation(scenario, 'dfs',    seed, useRealWorld, mapId, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing, customSourceId, customDestinationIds, deliveryMode);
-  const hybridRes = await runSimulation(scenario, 'hybrid', seed, useRealWorld, mapId, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing, customSourceId, customDestinationIds, deliveryMode);
+  const bfsRes    = await runSimulation(scenario, 'bfs',    seed, useRealWorld, mapId, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing, customSourceId, customDestinationIds, deliveryMode, customBlockedNodes, customSourceIds, customRobotAssignments);
+  const dfsRes    = await runSimulation(scenario, 'dfs',    seed, useRealWorld, mapId, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing, customSourceId, customDestinationIds, deliveryMode, customBlockedNodes, customSourceIds, customRobotAssignments);
+  const hybridRes = await runSimulation(scenario, 'hybrid', seed, useRealWorld, mapId, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing, customSourceId, customDestinationIds, deliveryMode, customBlockedNodes, customSourceIds, customRobotAssignments);
 
   let optimalPathLength = 0;
   if (offset === 0) {

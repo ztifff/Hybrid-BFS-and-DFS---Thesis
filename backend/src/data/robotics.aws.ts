@@ -17,9 +17,9 @@ export const awsWarehouseGraph = {
       "level": 4
     },
     {
-      "id": "dest_dock_1",
-      "label": "Loading Dock 1",
-      "type": "shelf",
+      "id": "depot_secondary",
+      "label": "Secondary Robot Depot",
+      "type": "depot",
       "x": 25000,
       "y": 28000,
       "level": 4
@@ -619,29 +619,29 @@ export const awsWarehouseGraph = {
       "type": "path"
     },
     {
-      "id": "e_back_mw_dest_dock_1",
+      "id": "e_back_mw_depot_secondary",
       "from": "back_mw",
-      "to": "dest_dock_1",
+      "to": "depot_secondary",
       "latency": 15,
       "type": "path"
     },
     {
-      "id": "e_dest_dock_1_back_mw",
-      "from": "dest_dock_1",
+      "id": "e_depot_secondary_back_mw",
+      "from": "depot_secondary",
       "to": "back_mw",
       "latency": 15,
       "type": "path"
     },
     {
-      "id": "e_back_me_dest_dock_1",
+      "id": "e_back_me_depot_secondary",
       "from": "back_me",
-      "to": "dest_dock_1",
+      "to": "depot_secondary",
       "latency": 15,
       "type": "path"
     },
     {
-      "id": "e_dest_dock_1_back_me",
-      "from": "dest_dock_1",
+      "id": "e_depot_secondary_back_me",
+      "from": "depot_secondary",
       "to": "back_me",
       "latency": 15,
       "type": "path"
@@ -720,7 +720,6 @@ export const awsWarehouseGraph = {
   "sourceId": "depot_main",
   "destinationIds": [
     "dest_desk_a",
-    "dest_dock_1",
     "dest_desk_b"
   ],
   "width": 50000,

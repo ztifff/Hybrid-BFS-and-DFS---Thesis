@@ -85,10 +85,12 @@ export interface GraphEdge {
 export interface ScenarioGraph {
   nodes: GraphNode[];
   edges: GraphEdge[];
-  sourceId: string;
+  sourceId: string; // Legacy / Fallback single source
+  sourceIds?: string[]; // ✅ Multi-Agent Support: Multiple starting depots
   destinationIds: string[];
   width: number;
   height: number;
+  walls?: { x1: number; y1: number; x2: number; y2: number; level: string; }[];
 }
 
 // ── Algorithm Step (graph-based) ───────────────────────────────────────────

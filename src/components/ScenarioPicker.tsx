@@ -32,7 +32,7 @@ export const ScenarioPicker: React.FC<Props> = ({
   useEffect(() => {
     const fetchScenarios = async () => {
       try {
-        const response = await fetch('https://backend-1e4y.onrender.com/api/scenarios');
+        const response = await fetch('api/scenarios');
         if (!response.ok) return;
         const json = await response.json();
         if (json.success && Array.isArray(json.data)) {

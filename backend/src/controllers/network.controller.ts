@@ -24,6 +24,8 @@ export const getGraphData = (req: Request, res: Response) => {
     }
 
     const customSourceId = req.query.customSourceId as string | undefined;
+    const customSourceIdsStr = req.query.customSourceIds as string | undefined;
+    const customSourceIds = customSourceIdsStr ? JSON.parse(customSourceIdsStr) : undefined;
     const customDestinationIdsStr = req.query.customDestinationIds as string | undefined;
     const customDestinationIds = customDestinationIdsStr ? JSON.parse(customDestinationIdsStr) : undefined;
 
@@ -31,7 +33,15 @@ export const getGraphData = (req: Request, res: Response) => {
     const graph = buildScenarioGraph(scenario, useRealWorld, gameBoard, mode, graphSize, seed, chessPiece, sizing);
 
     if (customSourceId) graph.sourceId = customSourceId;
-    if (customDestinationIds && customDestinationIds.length > 0) graph.destinationIds = customDestinationIds;
+    if (customSourceIds !== undefined) {
+      graph.sourceIds = customSourceIds;
+      // If a custom list of sources is provided, make sure the singular sourceId 
+      // doesn't default to something outside this list (which would incorrectly render it as active).
+      if (!customSourceId) graph.sourceId = customSourceIds.length > 0 ? customSourceIds[0] : "";
+    }
+    if (customDestinationIds !== undefined) {
+      graph.destinationIds = customDestinationIds;
+    }
 
     // Note: We deliberately DO NOT apply Campus ACLs here.
     // We want the frontend to always render the full physical topology (all edges intact).

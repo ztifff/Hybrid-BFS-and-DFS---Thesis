@@ -82,13 +82,23 @@ export interface GraphEdge {
   type: 'fiber' | 'ethernet' | 'road' | 'corridor' | 'path' | 'wireless' | 'copper' | 'serial' | 'copper_straight' | 'copper_crossover';
 }
 
+// ── Multi-Robot Assignment (Robotics Scenario) ─────────────────────────────
+export interface RobotAssignment {
+  robotId: string;           // depot node id
+  destinations: string[];    // shelf node ids this robot must visit
+  priorityDest?: string;     // if set, visit this destination first (Priority Override)
+}
+
 export interface ScenarioGraph {
   nodes: GraphNode[];
   edges: GraphEdge[];
   sourceId: string;
+  sourceIds?: string[];
   destinationIds: string[];
+  robotAssignments?: RobotAssignment[];
   width: number;
   height: number;
+  walls?: { x1: number; y1: number; x2: number; y2: number; level: string; }[];
 }
 
 // ── Algorithm Step (graph-based) ───────────────────────────────────────────

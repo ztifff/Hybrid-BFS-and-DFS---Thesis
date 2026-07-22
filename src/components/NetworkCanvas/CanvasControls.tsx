@@ -9,6 +9,7 @@ interface CanvasControlsProps {
   isLayeredMap: boolean;
   activeFloor: string;
   setActiveFloor: (floor: string) => void;
+  uniqueFloors?: string[];
   // Show Panel
   isShowOpen: boolean;
   setIsShowOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -23,7 +24,7 @@ interface CanvasControlsProps {
 
 export const CanvasControls: React.FC<CanvasControlsProps> = ({
   zoom, setZoom, resetZoom,
-  isLayeredMap, activeFloor, setActiveFloor,
+  isLayeredMap, activeFloor, setActiveFloor, uniqueFloors = [],
   isShowOpen, setIsShowOpen, visibleAlgos, toggleAlgo,
   isFollowOpen, setIsFollowOpen, followAlgo, setFollowAlgo
 }) => {
@@ -116,10 +117,21 @@ export const CanvasControls: React.FC<CanvasControlsProps> = ({
       </div>
 
       {/* Layered Map Floor Controls */}
-      {isLayeredMap && (
+      {isLayeredMap && uniqueFloors.length > 1 && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-gray-900/90 p-1.5 rounded-xl border border-gray-700 backdrop-blur-sm z-20 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.5)]">
-          <button onClick={() => setActiveFloor('GL')} className={`px-8 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer ${activeFloor === 'GL' ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.5)]' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>GL (Ground)</button>
-          <button onClick={() => setActiveFloor('L2')} className={`px-8 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer ${activeFloor === 'L2' ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.5)]' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>L2 (Second)</button>
+          {uniqueFloors.map(floor => (
+            <button
+              key={floor}
+              onClick={() => setActiveFloor(floor)}
+              className={`px-6 md:px-8 py-2 rounded-lg font-bold text-xs md:text-sm transition-all cursor-pointer ${
+                activeFloor === floor
+                  ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.5)]'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+              }`}
+            >
+              {floor === 'GL' ? 'GL (Ground)' : floor === 'L2' ? 'L2 (Second)' : floor === 'L1' ? 'L1 (First)' : floor}
+            </button>
+          ))}
         </div>
       )}
 

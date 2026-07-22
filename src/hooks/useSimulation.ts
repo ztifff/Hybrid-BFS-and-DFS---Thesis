@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { AlgorithmStep, GameAIBoard, GraphSize, GraphSizing, ScenarioGraph, ScenarioType, SimulationResult } from '../types';
+import { AlgorithmStep, GameAIBoard, GraphSize, GraphSizing, RobotAssignment, ScenarioGraph, ScenarioType, SimulationResult } from '../types';
 import { HistoryEntry } from '../components/HistoryModal';
 import { useSimulationModel } from './useSimulationModel';
 import { useSimulationController } from './useSimulationController';
@@ -51,8 +51,11 @@ export interface SimulationState {
   setNetworkRoutingMode: (mode: 'default' | 'device-to-device') => void;
   sourceDevice: string;
   setSourceDevice: (device: string) => void;
+  sourceDevices: string[];
   destinationDevices: string[];
   setDestinationDevices: (devices: string[]) => void;
+  robotAssignments: RobotAssignment[];
+  setRobotAssignments: (assignments: RobotAssignment[]) => void;
 
   // Actions
   handleRun: () => void;
@@ -111,7 +114,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
         let mergedResults: any = null;
 
         while (keepFetching && isMounted) {
-          const response = await fetch(`https://backend-1e4y.onrender.com/api/simulation/run?offset=${currentOffset}&limit=${limit}`, {
+          const response = await fetch(`api/simulation/run?offset=${currentOffset}&limit=${limit}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -125,6 +128,12 @@ export function useSimulation(params: { scenario: ScenarioType }) {
                 customSourceId: model.sourceDevice,
                 customDestinationIds: model.destinationDevices,
                 deliveryMode: model.deliveryMode
+              } : {}),
+              ...(scenario === 'robotics' ? {
+                customRobotAssignments: model.robotAssignments,
+                customSourceIds: model.sourceDevices,
+                customDestinationIds: model.destinationDevices,
+                deliveryMode: 'multicast'
               } : {})
             })
           });
@@ -180,7 +189,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
       isMounted = false;
       controller.stopAnimation();
     };
-  }, [scenario, model.mapId, model.seed, model.gameBoard, model.graphSize, model.syntheticSizing, model.networkRoutingMode, model.sourceDevice, model.destinationDevices, model.deliveryMode, controller.stopAnimation]);
+  }, [scenario, model.mapId, model.seed, model.gameBoard, model.graphSize, model.syntheticSizing, model.networkRoutingMode, model.sourceDevice, model.destinationDevices, model.deliveryMode,  controller.stopAnimation]);
 
   // Wrapper for confirmSaveResult to inject controller state
   const confirmSaveResult = () => {
@@ -221,8 +230,11 @@ export function useSimulation(params: { scenario: ScenarioType }) {
     setNetworkRoutingMode: model.setNetworkRoutingMode,
     sourceDevice: model.sourceDevice,
     setSourceDevice: model.setSourceDevice,
+    sourceDevices: model.sourceDevices,
     destinationDevices: model.destinationDevices,
     setDestinationDevices: model.setDestinationDevices,
+    robotAssignments: model.robotAssignments,
+    setRobotAssignments: model.setRobotAssignments,
     deliveryMode: model.deliveryMode,
     setDeliveryMode: model.setDeliveryMode,
 
@@ -249,5 +261,6 @@ export function useSimulation(params: { scenario: ScenarioType }) {
     confirmSaveResult,
     openSaveModal: model.openSaveModal,
     handleDeleteHistory: model.handleDeleteHistory,
+    
   };
 }
