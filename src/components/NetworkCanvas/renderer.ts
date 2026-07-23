@@ -32,6 +32,7 @@ export interface RenderOptions {
   };
   activeSteps: { bfs: AlgorithmStep | null; dfs: AlgorithmStep | null; hybrid: AlgorithmStep | null };
   graph?: import('../../types').ScenarioGraph;
+  shelfBoxCounts?: Map<string, number>; // nodeId → remaining box count (0–6) for AWS Warehouse
 }
 
 export function renderCanvas(options: RenderOptions) {
@@ -42,6 +43,11 @@ export function renderCanvas(options: RenderOptions) {
     activeBlocked, wasHistoricallyBlocked, highlightedNodeId,
     sourceId, sourceIds, destinationIds, visibleAlgos, sets, activeSteps
   } = options;
+
+  const currentActiveStep = visibleAlgos.bfs ? activeSteps.bfs
+    : visibleAlgos.hybrid ? activeSteps.hybrid
+    : visibleAlgos.dfs ? activeSteps.dfs
+    : (activeSteps.bfs || activeSteps.hybrid || activeSteps.dfs);
 
   const dpr = window.devicePixelRatio || 1;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -280,23 +286,162 @@ export function renderCanvas(options: RenderOptions) {
     ctx.restore();
   }
 
-  // --- Clinic Architectural Walls ---
-  if (scenario === 'robotics' && mapId === 'clinic' && options.graph?.walls) {
+  // --- Architectural Walls (Clinic & AWS Warehouse) ---
+  if (scenario === 'robotics' && (mapId === 'clinic' || mapId === 'aws' || mapId === 'awsWarehouse') && options.graph?.walls) {
     ctx.save();
     ctx.strokeStyle = '#334155'; // Slate 700 for blueprint lines
     ctx.lineWidth = 4 / zoom;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     
-    // Determine the active floor based on the first visible node
-    const activeFloor = visibleNodes.length > 0 ? visibleNodes[0].buildingId : 'L1';
+    // Determine active floor (or default for single level maps like AWS)
+    const activeFloor = visibleNodes.length > 0 ? (visibleNodes[0].buildingId || 'L1') : 'L1';
     
     options.graph.walls.forEach(wall => {
-      if (wall.level === activeFloor) {
+      if (!wall.level || wall.level === activeFloor || wall.level === 'warehouse' || wall.level === 'all') {
         ctx.beginPath();
         ctx.moveTo(sx(wall.x1), sy(wall.y1));
         ctx.lineTo(sx(wall.x2), sy(wall.y2));
         ctx.stroke();
+      }
+    });
+    ctx.restore();
+  }
+
+  // --- AWS Warehouse Shelf & Packing Desk Box Visualization ---
+  if (scenario === 'robotics' && (mapId === 'aws' || mapId === 'awsWarehouse') && options.shelfBoxCounts) {
+    ctx.save();
+    // Only the 8 main storage shelf nodes in the middle aisles have 6-box racks
+    const AWS_SHELF_NODES = new Set([
+      'shelf_d1','shelf_d2','shelf_e1','shelf_e2','shelf_e3','shelf_e4','shelf_f1','shelf_f2'
+    ]);
+    const PACKING_DESK_NODES = new Set(['dest_desk_a', 'dest_desk_b']);
+
+    const cellW_world = 2500;
+    const cellH_world = 1666.67;
+
+    visibleNodes.forEach(node => {
+      // 1. Storage Shelves (Middle Aisles)
+      if (AWS_SHELF_NODES.has(node.id)) {
+        const initialBoxes = options.shelfBoxCounts!.get(node.id) ?? 6;
+        const pickedUpCount = currentActiveStep?.pickedUpBoxCounts?.[node.id] ?? 0;
+
+        const remainingBoxes = Math.max(0, initialBoxes - pickedUpCount);
+
+        let boxIndex = 0;
+        for (let row = 0; row < 3; row++) {
+          for (let col = 0; col < 2; col++) {
+            boxIndex++;
+            const worldX1 = node.x - 2500 + col * cellW_world;
+            const worldX2 = node.x - 2500 + (col + 1) * cellW_world;
+            const worldY1 = node.y - 2500 + row * cellH_world;
+            const worldY2 = node.y - 2500 + (row + 1) * cellH_world;
+
+            const screenX1 = sx(worldX1);
+            const screenX2 = sx(worldX2);
+            const screenY1 = sy(worldY1);
+            const screenY2 = sy(worldY2);
+
+            const cellW = screenX2 - screenX1;
+            const cellH = screenY2 - screenY1;
+
+            const padX = cellW * 0.15;
+            const padY = cellH * 0.15;
+
+            const bx = screenX1 + padX;
+            const by = screenY1 + padY;
+            const bw = Math.max(1, cellW - 2 * padX);
+            const bh = Math.max(1, cellH - 2 * padY);
+
+            const filled = boxIndex <= remainingBoxes;
+
+            if (filled) {
+              ctx.fillStyle = '#f59e0b'; // Amber / Gold filled box
+              ctx.fillRect(bx, by, bw, bh);
+              ctx.strokeStyle = '#78350f';
+              ctx.lineWidth = Math.max(1, 1.5 / zoom);
+              ctx.strokeRect(bx, by, bw, bh);
+            } else {
+              // Hollow outline for empty cell / picked-up box
+              ctx.strokeStyle = 'rgba(245, 158, 11, 0.3)';
+              ctx.lineWidth = Math.max(0.5, 1 / zoom);
+              ctx.strokeRect(bx, by, bw, bh);
+            }
+          }
+        }
+      }
+
+      // 2. Packing Desks (Mini Storage Grid Below + Live Delivered / Remaining Distinction)
+      if (PACKING_DESK_NODES.has(node.id)) {
+        const requiredCount = options.shelfBoxCounts!.get(node.id) ?? 6;
+        const rawDelivered = currentActiveStep?.deliveredBoxCounts?.[node.id] ?? 0;
+
+        const deliveredCount = Math.min(requiredCount, rawDelivered);
+        const remainingCount = Math.max(0, requiredCount - deliveredCount);
+
+        const isFull = deliveredCount >= requiredCount;
+
+        // Distinction Label (Delivered vs Remaining)
+        const labelText = isFull
+          ? `✅ Delivered: ${deliveredCount} / ${requiredCount} (COMPLETE)`
+          : `📦 Delivered: ${deliveredCount} / ${requiredCount}  |  Remaining: ${remainingCount}`;
+        const labelY = sy(node.y + 1000);
+        ctx.font = `bold ${Math.max(10, 13 / zoom)}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.lineWidth = Math.max(2, 3 / zoom);
+        ctx.strokeStyle = '#090d16';
+        ctx.strokeText(labelText, sx(node.x), labelY);
+        ctx.fillStyle = isFull ? '#4ade80' : '#facc15';
+        ctx.fillText(labelText, sx(node.x), labelY);
+
+        // Mini Storage Rack Grid below packing desk (centered at node.x, y = node.y + 3500)
+        const pCellW = 2000;
+        const pCellH = 1333.33;
+        const gridTopY = node.y + 1600;
+
+        let deskBoxIndex = 0;
+        for (let row = 0; row < 3; row++) {
+          for (let col = 0; col < 2; col++) {
+            deskBoxIndex++;
+            const wX1 = node.x - 2000 + col * pCellW;
+            const wX2 = node.x - 2000 + (col + 1) * pCellW;
+            const wY1 = gridTopY + row * pCellH;
+            const wY2 = gridTopY + (row + 1) * pCellH;
+
+            const sX1 = sx(wX1), sX2 = sx(wX2);
+            const sY1 = sy(wY1), sY2 = sy(wY2);
+
+            const cW = sX2 - sX1;
+            const cH = sY2 - sY1;
+
+            const pX = cW * 0.12;
+            const pY = cH * 0.12;
+
+            const dbx = sX1 + pX;
+            const dby = sY1 + pY;
+            const dbw = Math.max(1, cW - 2 * pX);
+            const dbh = Math.max(1, cH - 2 * pY);
+
+            // Outer cell border
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+            ctx.lineWidth = Math.max(1, 1.2 / zoom);
+            ctx.strokeRect(sX1, sY1, cW, cH);
+
+            const isFilled = deskBoxIndex <= deliveredCount;
+            if (isFilled) {
+              ctx.fillStyle = '#22c55e'; // Green delivered box
+              ctx.fillRect(dbx, dby, dbw, dbh);
+              ctx.strokeStyle = '#14532d';
+              ctx.lineWidth = Math.max(1, 1.5 / zoom);
+              ctx.strokeRect(dbx, dby, dbw, dbh);
+            } else {
+              ctx.strokeStyle = 'rgba(34, 197, 94, 0.25)';
+              ctx.lineWidth = Math.max(0.5, 1 / zoom);
+              ctx.strokeRect(dbx, dby, dbw, dbh);
+            }
+          }
+        }
       }
     });
     ctx.restore();
@@ -634,6 +779,26 @@ export function renderCanvas(options: RenderOptions) {
         displayIcon = mapId === 'dama' ? '🔷' : '🔵';
       }
       ctx.fillText((isBlocked || wasHistoricallyBlocked.has(node.id)) ? blockedIcon : displayIcon, cx, cy);
+
+      // Render carried package badge on active robot node ONLY after picking up from a shelf
+      if (scenario === 'robotics' && (sets.bfs.current === node.id || sets.dfs.current === node.id || sets.hyb.current === node.id)) {
+        const AWS_SHELVES = new Set(['shelf_d1','shelf_d2','shelf_e1','shelf_e2','shelf_e3','shelf_e4','shelf_f1','shelf_f2']);
+        const checkCarrying = (step: AlgorithmStep | null) => {
+          if (!step || !step.path) return false;
+          const currentIdx = step.path.indexOf(node.id);
+          if (currentIdx <= 0) return false;
+          const pathBeforeCurrent = step.path.slice(0, currentIdx + 1);
+          const passedShelf = pathBeforeCurrent.some(id => AWS_SHELVES.has(id));
+          const isAtDeskOrDepot = node.id === 'dest_desk_a' || node.id === 'dest_desk_b' || sourceIds?.includes(node.id) || sourceId === node.id;
+          return passedShelf && !isAtDeskOrDepot;
+        };
+
+        const isCarrying = checkCarrying(activeSteps.bfs) || checkCarrying(activeSteps.dfs) || checkCarrying(activeSteps.hybrid);
+        if (isCarrying) {
+          ctx.font = `${r * 0.9}px sans-serif`;
+          ctx.fillText('📦', cx + r * 0.75, cy - r * 0.75);
+        }
+      }
     }
   });
 
@@ -664,6 +829,29 @@ export function renderCanvas(options: RenderOptions) {
     });
     ctx.restore();
   }
+
+  // Highlight completed packing desks (6/6 delivered) in bright green
+  ['dest_desk_a', 'dest_desk_b'].forEach(deskId => {
+    const requiredCount = options.shelfBoxCounts?.get(deskId) ?? 6;
+    const delCount = currentActiveStep?.deliveredBoxCounts?.[deskId] ?? 0;
+    if (delCount >= requiredCount) {
+      const dNode = visibleNodeMap.get(deskId);
+      if (dNode) {
+        const cx = sx(dNode.x), cy = sy(dNode.y);
+        const cfg = NODE_CONFIG[dNode.type] || NODE_CONFIG['place'];
+        const r = (cfg.radius / scale) * zoom;
+        ctx.save();
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = '#22c55e';
+        ctx.strokeStyle = '#22c55e';
+        ctx.lineWidth = 3 / zoom;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r + 6 / zoom, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+  });
 
   if (highlightedNodeId) {
     const hNode = visibleNodeMap.get(highlightedNodeId);

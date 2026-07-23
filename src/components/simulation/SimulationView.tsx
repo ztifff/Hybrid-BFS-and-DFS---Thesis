@@ -60,6 +60,20 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     () => sim.history.filter((h) => h.scenario === scenario).length,
     [sim.history, scenario]
   );
+
+  // Derive shelf box counts from robot assignments for AWS Warehouse canvas visualization
+  const shelfBoxCounts = useMemo(() => {
+    if (scenario !== 'robotics' || !sim.robotAssignments?.length) return undefined;
+    const map = new Map<string, number>();
+    sim.robotAssignments.forEach(a => {
+      a.destinations.forEach(destId => {
+        const count = a.boxCounts?.[destId] ?? 6;
+        // Use the max count if multiple robots share a destination
+        map.set(destId, Math.max(map.get(destId) ?? 0, count));
+      });
+    });
+    return map;
+  }, [scenario, sim.robotAssignments]);
   const generatedNodeCount = sim.currentGraph?.nodes.length ?? sim.syntheticSizing.nodes;
   const generatedEdgeCount = sim.currentGraph?.edges.length ?? sim.syntheticSizing.edges;
 
@@ -331,6 +345,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                       }
                     }}
                     mapId={sim.mapId}
+                    shelfBoxCounts={shelfBoxCounts}
                   />
 
                   {scenario === 'network' && (sim.mapId === 'companybusiness' || sim.mapId === 'campus') && highlightedNodeId && (

@@ -87,6 +87,7 @@ export interface RobotAssignment {
   robotId: string;           // depot node id
   destinations: string[];    // shelf node ids this robot must visit
   priorityDest?: string;     // if set, visit this destination first (Priority Override)
+  boxCounts?: Record<string, number>; // destId → number of boxes (1–6, default 6)
 }
 
 export interface ScenarioGraph {
@@ -112,6 +113,8 @@ export interface AlgorithmStep {
   foundDestination: string | null;
   foundDestinations?: string[];
   phaseLabel?: string;
+  deliveredBoxCounts?: Record<string, number>; // destId -> count of boxes delivered up to this step
+  pickedUpBoxCounts?: Record<string, number>; // shelfId -> count of boxes picked up up to this step
 }
 
 // ── Performance Metrics ────────────────────────────────────────────────────

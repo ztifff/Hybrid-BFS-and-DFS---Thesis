@@ -104,6 +104,8 @@ export interface AlgorithmStep {
   foundDestination: string | null;
   foundDestinations?: string[];
   phaseLabel?: string;
+  deliveredBoxCounts?: Record<string, number>; // destId -> count of boxes delivered up to this step
+  pickedUpBoxCounts?: Record<string, number>; // shelfId -> count of boxes picked up up to this step
 }
 
 // ── Performance Metrics ────────────────────────────────────────────────────

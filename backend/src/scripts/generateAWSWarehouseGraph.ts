@@ -1,172 +1,78 @@
 import fs from "node:fs";
 import path from "node:path";
+import { awsWarehouseGraph } from "../data/robotics.aws";
 
-interface GraphNode {
-  id: string;
-  label: string;
-  type: string;
-  x: number;
-  y: number;
-  level: number;
+// ── Node positions (from robotics.aws.ts) ──────────────────────────────────
+// shelf_d1 (10000,12000), shelf_d2 (10000,20000)
+// shelf_e1 (20000,12000), shelf_e2 (20000,20000)
+// shelf_e3 (30000,12000), shelf_e4 (30000,20000)
+// shelf_f1 (40000,12000), shelf_f2 (40000,20000)
+// clutter_a (5000,12000), clutter_b (45000,12000)
+// pallet_jack (5000,20000), trash_cans (45000,20000)
+
+// Shelf rack: 5000 wide × 5000 tall, centred on node  →  2 cols × 3 rows
+const HW = 2500; // half-width
+const HH = 2500; // half-height
+
+function makeRackWalls(cx: number, cy: number) {
+  const x1 = cx - HW, x2 = cx + HW;
+  const y1 = cy - HH, y2 = cy + HH;
+  const mx  = cx;                     // vertical centre divider
+  const hy1 = y1 + (HH * 2) / 3;    // 1st horizontal divider
+  const hy2 = y1 + (HH * 4) / 3;    // 2nd horizontal divider
+  return [
+    { x1, y1, x2, y2: y1 },          // top
+    { x1: x2, y1, x2, y2 },           // right
+    { x1, y1: y2, x2, y2 },           // bottom
+    { x1, y1, x2: x1, y2 },           // left
+    { x1, y1: hy1, x2, y2: hy1 },     // h-div 1
+    { x1, y1: hy2, x2, y2: hy2 },     // h-div 2
+    { x1: mx, y1, x2: mx, y2 },       // v-div
+  ].map(w => ({ ...w, level: "warehouse" }));
 }
 
-interface GraphEdge {
-  id: string;
-  from: string;
-  to: string;
-  latency: number;
-  type: string;
+export function generateAWSWarehouseGraph() {
+  const walls = [
+    // ── Outer Perimeter ────────────────────────────────────────────────────
+    { x1: 2000, y1: 1000, x2: 48000, y2: 1000, level: "warehouse" },
+    { x1: 48000, y1: 1000, x2: 48000, y2: 29000, level: "warehouse" },
+    { x1: 48000, y1: 29000, x2: 2000, y2: 29000, level: "warehouse" },
+    { x1: 2000, y1: 29000, x2: 2000, y2: 1000, level: "warehouse" },
+
+    // ── Charging Bay Partition (top centre) ────────────────────────────────
+    { x1: 21000, y1: 1000, x2: 21000, y2: 5000, level: "warehouse" },
+    { x1: 29000, y1: 1000, x2: 29000, y2: 5000, level: "warehouse" },
+    { x1: 21000, y1: 5000, x2: 23500, y2: 5000, level: "warehouse" },
+    { x1: 26500, y1: 5000, x2: 29000, y2: 5000, level: "warehouse" },
+
+    // ── Shelf Racks (only for the main 8 shelf nodes in the middle columns) ───
+    ...makeRackWalls(10000, 12000),   // shelf_d1
+    ...makeRackWalls(10000, 20000),   // shelf_d2
+    ...makeRackWalls(20000, 12000),   // shelf_e1
+    ...makeRackWalls(20000, 20000),   // shelf_e2
+    ...makeRackWalls(30000, 12000),   // shelf_e3
+    ...makeRackWalls(30000, 20000),   // shelf_e4
+    ...makeRackWalls(40000, 12000),   // shelf_f1
+    ...makeRackWalls(40000, 20000),   // shelf_f2
+
+    // ── Packing Desk Enclosures (bottom) ───────────────────────────────────
+    { x1: 8000, y1: 26500, x2: 12000, y2: 26500, level: "warehouse" },
+    { x1: 12000, y1: 26500, x2: 12000, y2: 29000, level: "warehouse" },
+    { x1: 8000, y1: 26500, x2: 8000, y2: 29000, level: "warehouse" },
+
+    { x1: 38000, y1: 26500, x2: 42000, y2: 26500, level: "warehouse" },
+    { x1: 38000, y1: 26500, x2: 38000, y2: 29000, level: "warehouse" },
+    { x1: 42000, y1: 26500, x2: 42000, y2: 29000, level: "warehouse" },
+  ];
+
+  const updatedGraph = { ...awsWarehouseGraph, walls };
+
+  const targetFile = path.join(__dirname, "..", "data", "robotics.aws.ts");
+  fs.writeFileSync(
+    targetFile,
+    `export const awsWarehouseGraph = ${JSON.stringify(updatedGraph, null, 2)};\n`
+  );
+  console.log("✅ AWS Warehouse walls regenerated – shelf racks centred on nodes.");
 }
 
-interface ScenarioGraph {
-  nodes: GraphNode[];
-  edges: GraphEdge[];
-  sourceId: string;
-  destinationIds: string[];
-  width: number;
-  height: number;
-}
-
-function generateFatTreeDatacenter() {
-  // 🌐 GIGANTIC CANVAS: 4,000,000 x 2,000,000
-  const W = 4000000;
-  const H = 2000000;
-  const nodes: GraphNode[] = [];
-  const edges: GraphEdge[] = [];
-
-  function link(from: string, to: string, latency = 2, type = "fiber") {
-    edges.push({ id: `e_${from}_${to}`, from, to, latency, type });
-    edges.push({ id: `e_${to}_${from}`, from: to, to: from, latency, type });
-  }
-
-  const K = 6; 
-  const numCore = Math.pow(K / 2, 2); 
-  const numPods = K; 
-  const aggPerPod = K / 2; 
-  const edgePerPod = K / 2; 
-  const serversPerEdge = K / 2; 
-
-  // 0️⃣ SOURCE NODE
-  nodes.push({
-    id: 'dc_source',
-    label: 'START', 
-    type: 'datacenter', 
-    x: W / 2,
-    y: 100000,
-    level: 0
-  });
-
-  // 1️⃣ CORE ROUTERS
-  const coreNodes: string[] = [];
-  for (let i = 0; i < numCore; i++) {
-    const id = `c${i}`;
-    coreNodes.push(id);
-    nodes.push({
-      id,
-      label: `C${i+1}`, 
-      type: "building_router", 
-      x: (i + 1) * (W / (numCore + 1)),
-      y: 350000,
-      level: 1,
-    });
-    link('dc_source', id, 1, 'fiber');
-  }
-
-  const allAPs: string[] = [];
-  let aggIndexCount = 0;
-  let edgeIndexCount = 0;
-  let serverIndexCount = 1;
-
-  // 2️⃣ PODS
-  for (let p = 0; p < numPods; p++) {
-    const aggNodes: string[] = [];
-    for (let a = 0; a < aggPerPod; a++) {
-      const id = `p${p}_a${a}`;
-      aggNodes.push(id);
-      aggIndexCount++;
-      nodes.push({
-        id,
-        label: `Agg${aggIndexCount}`, 
-        type: "building_router",
-        x: aggIndexCount * (W / 19), 
-        y: 650000,
-        level: 2,
-      });
-
-      const coreStride = Math.floor(numCore / aggPerPod);
-      for (let c = 0; c < coreStride; c++) {
-        const coreIndex = a * coreStride + c;
-        link(id, coreNodes[coreIndex], 5, "fiber");
-      }
-    }
-
-    for (let e = 0; e < edgePerPod; e++) {
-      const id = `p${p}_e${e}`;
-      edgeIndexCount++;
-      const currentEdgeX = edgeIndexCount * (W / 19);
-
-      nodes.push({
-        id,
-        label: `E${edgeIndexCount}`, 
-        type: "floor_router",
-        x: currentEdgeX,
-        y: 950000,
-        level: 3,
-      });
-
-      for (let a = 0; a < aggPerPod; a++) {
-        link(id, aggNodes[a], 3, "ethernet");
-      }
-
-      // 3️⃣ SERVERS (Tier 4)
-      // 🚀 EXTREME VERTICAL STAGGER: Dropping tiers deep to prevent text overlap
-      for (let s = 0; s < serversPerEdge; s++) {
-        const sid = `ap_${p}_${e}_${s}`;
-        allAPs.push(sid);
-        
-        let serverX = currentEdgeX;
-        let serverY = 1250000;
-
-        if (s === 0) {
-            serverX = currentEdgeX - 40000;
-            serverY = 1250000;
-        } else if (s === 1) {
-            serverX = currentEdgeX;
-            serverY = 1550000; // Deep drop
-        } else if (s === 2) {
-            serverX = currentEdgeX + 40000;
-            serverY = 1850000; // Deepest drop
-        }
-
-        nodes.push({
-          id: sid,
-          label: `#${serverIndexCount}`, // 🚀 Micro-label: Just the number
-          type: "access_point",
-          x: serverX,
-          y: serverY,
-          level: 4,
-        });
-        serverIndexCount++;
-        link(sid, id, 1, "ethernet");
-      }
-    }
-  }
-
-  // Pick 8 targets, ensuring they aren't the source
-  const destinationIds = allAPs.slice(-10).slice(0, 8); 
-
-  const graph: ScenarioGraph = {
-    nodes,
-    edges,
-    sourceId: 'dc_source',
-    destinationIds,
-    width: W,
-    height: H
-  };
-
-  const outFile = path.join(process.cwd(), "src", "data", "network.datacenter.ts");
-  fs.writeFileSync(outFile, `export const datacenterNetworkGraph = ${JSON.stringify(graph, null, 2)};`);
-  console.log(`✅ EPIC DATACENTER REGENERATED!`);
-}
-
-generateFatTreeDatacenter();
+generateAWSWarehouseGraph();

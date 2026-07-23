@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { GraphNode, RobotAssignment } from "../../types";
 
 interface Props {
@@ -35,7 +35,11 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
       const hasIt = a.destinations.includes(shelfId);
       const newDests = hasIt ? a.destinations.filter(d => d !== shelfId) : [...a.destinations, shelfId];
       const newPriority = (hasIt && a.priorityDest === shelfId) ? undefined : a.priorityDest;
-      return { ...a, destinations: newDests, priorityDest: newPriority };
+      // Initialize box count to 6 when selecting a new destination
+      const newBoxCounts = { ...(a.boxCounts ?? {}) };
+      if (!hasIt) newBoxCounts[shelfId] = 6;
+      else delete newBoxCounts[shelfId];
+      return { ...a, destinations: newDests, priorityDest: newPriority, boxCounts: newBoxCounts };
     }));
   };
 
@@ -43,6 +47,13 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
     setAssignments(assignments.map(a => {
       if (a.robotId !== robotId) return a;
       return { ...a, priorityDest: a.priorityDest === shelfId ? undefined : shelfId };
+    }));
+  };
+
+  const setBoxCount = (robotId: string, shelfId: string, count: number) => {
+    setAssignments(assignments.map(a => {
+      if (a.robotId !== robotId) return a;
+      return { ...a, boxCounts: { ...(a.boxCounts ?? {}), [shelfId]: Math.min(6, Math.max(1, count)) } };
     }));
   };
 
@@ -61,6 +72,9 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
   const unassignedDepots = depotNodes.filter(d => !assignments.some(a => a.robotId === d.id));
 
   const totalDests = assignments.reduce((sum, a) => sum + a.destinations.length, 0);
+  const totalBoxes = assignments.reduce((sum, a) =>
+    sum + a.destinations.reduce((s, d) => s + (a.boxCounts?.[d] ?? 6), 0), 0
+  );
   const activeAssignment = assignments.find(a => a.robotId === activeRobotId);
 
   // Summary button shown in sidebar
@@ -86,7 +100,7 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
             Robot Assignments
           </div>
           <div className="text-[10px] text-gray-400 mt-0.5">
-            {assignments.length} robot{assignments.length !== 1 ? "s" : ""} · {totalDests} destination{totalDests !== 1 ? "s" : ""}
+            {assignments.length} robot{assignments.length !== 1 ? "s" : ""} · {totalDests} destination{totalDests !== 1 ? "s" : ""} · 📦 {totalBoxes} box{totalBoxes !== 1 ? "es" : ""}
           </div>
         </div>
       </div>
@@ -247,7 +261,7 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
                             return (
                               <div
                                 key={shelf.id}
-                                className={`flex items-center gap-3 px-3 py-2 rounded-lg border transition-all ${
+                                className={`flex flex-col gap-1.5 px-3 py-2 rounded-lg border transition-all ${
                                   isPriority
                                     ? "bg-amber-900/25 border-amber-500/50"
                                     : isSelected
@@ -258,44 +272,80 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
                                   if (!disabled) toggleDestination(activeAssignment.robotId, shelf.id);
                                 }}
                               >
-                                {/* Checkbox */}
-                                <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
-                                  isSelected
-                                    ? "bg-blue-500 border-blue-500"
-                                    : "border-gray-600"
-                                }`}>
-                                  {isSelected && <span className="text-white text-[10px] leading-none">✓</span>}
+                                {/* Top row: checkbox + label + priority */}
+                                <div className="flex items-center gap-3">
+                                  {/* Checkbox */}
+                                  <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                                    isSelected
+                                      ? "bg-blue-500 border-blue-500"
+                                      : "border-gray-600"
+                                  }`}>
+                                    {isSelected && <span className="text-white text-[10px] leading-none">✓</span>}
+                                  </div>
+
+                                  {/* Label */}
+                                  <span className={`flex-1 text-xs font-medium ${
+                                    isPriority ? "text-amber-200" : isSelected ? "text-blue-200" : "text-gray-300"
+                                  }`}>
+                                    {shelf.label.replace(/\n/g, " ")}
+                                  </span>
+
+                                  {/* Priority toggle */}
+                                  {isSelected && !disabled && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        togglePriority(activeAssignment.robotId, shelf.id);
+                                      }}
+                                      title={isPriority ? "Remove priority" : "Set as priority — visited first"}
+                                      className={`shrink-0 text-sm transition-colors cursor-pointer px-1 rounded ${
+                                        isPriority
+                                          ? "text-amber-400 hover:text-gray-400"
+                                          : "text-gray-600 hover:text-amber-400"
+                                      }`}
+                                    >
+                                      {isPriority ? "⭐" : "☆"}
+                                    </button>
+                                  )}
+
+                                  {isPriority && (
+                                    <span className="text-[9px] text-amber-400 uppercase tracking-wider font-bold shrink-0">
+                                      Priority
+                                    </span>
+                                  )}
                                 </div>
 
-                                {/* Label */}
-                                <span className={`flex-1 text-xs font-medium ${
-                                  isPriority ? "text-amber-200" : isSelected ? "text-blue-200" : "text-gray-300"
-                                }`}>
-                                  {shelf.label.replace(/\n/g, " ")}
-                                </span>
-
-                                {/* Priority toggle — only shows if selected */}
-                                {isSelected && !disabled && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      togglePriority(activeAssignment.robotId, shelf.id);
-                                    }}
-                                    title={isPriority ? "Remove priority" : "Set as priority — visited first"}
-                                    className={`shrink-0 text-sm transition-colors cursor-pointer px-1 rounded ${
-                                      isPriority
-                                        ? "text-amber-400 hover:text-gray-400"
-                                        : "text-gray-600 hover:text-amber-400"
-                                    }`}
+                                {/* Box count row — only when selected */}
+                                {isSelected && (
+                                  <div
+                                    className="flex items-center gap-2 pl-7"
+                                    onClick={(e) => e.stopPropagation()}
                                   >
-                                    {isPriority ? "⭐" : "☆"}
-                                  </button>
-                                )}
-
-                                {isPriority && (
-                                  <span className="text-[9px] text-amber-400 uppercase tracking-wider font-bold shrink-0">
-                                    Priority
-                                  </span>
+                                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">📦 Boxes:</span>
+                                    <div className="flex items-center gap-1">
+                                      {Array.from({ length: 6 }, (_, i) => {
+                                        const boxNum = i + 1;
+                                        const currentCount = activeAssignment.boxCounts?.[shelf.id] ?? 6;
+                                        const isFilled = boxNum <= currentCount;
+                                        return (
+                                          <button
+                                            key={boxNum}
+                                            disabled={disabled}
+                                            onClick={() => setBoxCount(activeAssignment.robotId, shelf.id, boxNum)}
+                                            title={`Set ${boxNum} box${boxNum !== 1 ? 'es' : ''}`}
+                                            className={`text-base leading-none transition-all cursor-pointer hover:scale-110 disabled:cursor-not-allowed ${
+                                              isFilled ? 'text-amber-400' : 'text-gray-600'
+                                            }`}
+                                          >
+                                            {isFilled ? '📦' : '□'}
+                                          </button>
+                                        );
+                                      })}
+                                      <span className="text-[10px] text-gray-400 ml-1">
+                                        {activeAssignment.boxCounts?.[shelf.id] ?? 6}/6
+                                      </span>
+                                    </div>
+                                  </div>
                                 )}
                               </div>
                             );
@@ -310,7 +360,7 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
             {/* Footer */}
             <div className="flex items-center justify-between px-5 py-3 border-t border-gray-800 bg-[#0a0f1e] shrink-0">
               <div className="text-xs text-gray-500">
-                {assignments.length} robot{assignments.length !== 1 ? "s" : ""} · {totalDests} destination{totalDests !== 1 ? "s" : ""} configured
+                {assignments.length} robot{assignments.length !== 1 ? "s" : ""} · {totalDests} destination{totalDests !== 1 ? "s" : ""} · 📦 {totalBoxes} box{totalBoxes !== 1 ? "es" : ""} configured
               </div>
               <button
                 onClick={() => setIsOpen(false)}

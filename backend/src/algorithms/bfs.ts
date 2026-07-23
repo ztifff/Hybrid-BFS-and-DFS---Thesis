@@ -79,9 +79,10 @@ export class BFSPathfinder implements PathfinderObserver {
     environment: SimulationEnvironment,
     disablePathSevering: boolean = false,
     deliveryMode: 'anycast' | 'multicast' = 'anycast',
-    customRobotAssignments?: { robotId: string; destinations: string[]; priorityDest?: string }[]
+    customRobotAssignments?: { robotId: string; destinations: string[]; priorityDest?: string; boxCounts?: Record<string, number> }[]
   ): Promise<BFSResult> {
     const { nodes, edges, sourceId, destinationIds } = graph;
+    const isAWSWarehouse = nodes.some(n => n.id === 'dest_desk_a') || nodes.some(n => n.id === 'shelf_e1');
 
     const adj = new Map<string, { to: string; latency: number }[]>();
     nodes.forEach((n) => adj.set(n.id, []));
@@ -97,6 +98,10 @@ export class BFSPathfinder implements PathfinderObserver {
     interface AgentState {
       robotId: string;
       destSet: Set<string>;
+      requiredBoxes: Record<string, number>; // destId → boxes required
+      deliveredBoxes: Record<string, number>; // destId → boxes delivered so far
+      pickedUpBoxes: Record<string, number>; // shelfId → boxes picked up so far
+      hasCargo: boolean; // true if robot is carrying a box from a shelf
       queue: { id: string; waited: number }[];
       visited: Set<string>;
       parentMap: Map<string, string | null>;
@@ -113,6 +118,12 @@ export class BFSPathfinder implements PathfinderObserver {
         ? new Set(assignment.destinations)
         : new Set(destinationIds);
 
+      // Build required boxes map (default 6 for AWS Warehouse packing desks, 1 otherwise)
+      const requiredBoxes: Record<string, number> = {};
+      dests.forEach(destId => {
+        requiredBoxes[destId] = (assignment?.boxCounts?.[destId] ?? (isAWSWarehouse ? 6 : 1));
+      });
+
       const parentMap = new Map<string, string | null>();
       parentMap.set(srcId, null);
       const visited = new Set<string>([srcId]);
@@ -120,6 +131,10 @@ export class BFSPathfinder implements PathfinderObserver {
       return {
         robotId: srcId,
         destSet: dests,
+        requiredBoxes,
+        deliveredBoxes: {},
+        pickedUpBoxes: {},
+        hasCargo: false,
         queue: this.blockedNodes.has(srcId) ? [] : [{ id: srcId, waited: 0 }],
         visited,
         parentMap,
@@ -139,6 +154,24 @@ export class BFSPathfinder implements PathfinderObserver {
     let activeAgentIndex = 0;
 
     const getAllExplored = () => Array.from(new Set(agents.flatMap(a => Array.from(a.visited))));
+    const getAllDeliveredBoxCounts = (): Record<string, number> => {
+      const result: Record<string, number> = {};
+      agents.forEach(a => {
+        Object.entries(a.deliveredBoxes).forEach(([destId, count]) => {
+          result[destId] = (result[destId] ?? 0) + count;
+        });
+      });
+      return result;
+    };
+    const getAllPickedUpBoxCounts = (): Record<string, number> => {
+      const result: Record<string, number> = {};
+      agents.forEach(a => {
+        Object.entries(a.pickedUpBoxes).forEach(([shelfId, count]) => {
+          result[shelfId] = (result[shelfId] ?? 0) + count;
+        });
+      });
+      return result;
+    };
     const getCombinedPath = (activeAgent: AgentState) => {
       const pathSet = new Set<string>();
       agents.forEach(a => {
@@ -162,10 +195,29 @@ export class BFSPathfinder implements PathfinderObserver {
 
       const agent = agents[activeAgentIndex];
       if (agent.queue.length === 0) {
-        agent.done = true;
-        activeAgentIndex = (activeAgentIndex + 1) % agents.length;
-        if (agents.every(a => a.done)) break;
-        continue;
+        if (!isAWSWarehouse) {
+          agent.done = true;
+          activeAgentIndex = (activeAgentIndex + 1) % agents.length;
+          if (agents.every(a => a.done)) break;
+          continue;
+        }
+        const allDelivered = Array.from(agent.destSet).every(
+          d => (agent.deliveredBoxes[d] ?? 0) >= (agent.requiredBoxes[d] ?? 1)
+        );
+        if (allDelivered || deliveryMode === 'anycast') {
+          agent.done = true;
+          activeAgentIndex = (activeAgentIndex + 1) % agents.length;
+          if (agents.every(a => a.done)) break;
+          continue;
+        } else {
+          // Re-initialize queue to continue search for remaining unsatisfied destinations
+          agent.visited.clear();
+          agent.visited.add(agent.robotId);
+          agent.parentMap.clear();
+          agent.parentMap.set(agent.robotId, null);
+          agent.childrenMap.clear();
+          agent.queue = [{ id: agent.robotId, waited: 0 }];
+        }
       }
 
       const currentTotalFrontier = agents.reduce((sum, a) => sum + a.queue.length, 0);
@@ -216,7 +268,9 @@ export class BFSPathfinder implements PathfinderObserver {
             done: false,
             foundDestination: getAllFoundDestinations()[0] || null,
             foundDestinations: getAllFoundDestinations(),
-            phaseLabel: `🚧 BFS [${agent.robotId}] - Severed at [${blockedId}]! Rollback to [${rollbackTo}]`
+            phaseLabel: `🚧 BFS [${agent.robotId}] - Severed at [${blockedId}]! Rollback to [${rollbackTo}]`,
+            deliveredBoxCounts: getAllDeliveredBoxCounts(),
+            pickedUpBoxCounts: getAllPickedUpBoxCounts()
           };
           steps.push(severStep);
           environment.tick(severStep);
@@ -248,7 +302,9 @@ export class BFSPathfinder implements PathfinderObserver {
             done: false,
             foundDestination: getAllFoundDestinations()[0] || null,
             foundDestinations: getAllFoundDestinations(),
-            phaseLabel: `⏳ BFS [${agent.robotId}] - Congestion at [${current}], waiting (${entry.waited + 1}/${MAX_WAIT_STEPS})`
+            phaseLabel: `⏳ BFS [${agent.robotId}] - Congestion at [${current}], waiting (${entry.waited + 1}/${MAX_WAIT_STEPS})`,
+            deliveredBoxCounts: getAllDeliveredBoxCounts(),
+            pickedUpBoxCounts: getAllPickedUpBoxCounts()
           };
           steps.push(waitStep);
           environment.tick(waitStep);
@@ -271,7 +327,9 @@ export class BFSPathfinder implements PathfinderObserver {
         done: false,
         foundDestination: getAllFoundDestinations()[0] || null,
         foundDestinations: getAllFoundDestinations(),
-        phaseLabel: `📡 BFS [${agent.robotId}] - Expanding Level`
+        phaseLabel: `📡 BFS [${agent.robotId}] - Expanding Level`,
+        deliveredBoxCounts: getAllDeliveredBoxCounts(),
+        pickedUpBoxCounts: getAllPickedUpBoxCounts()
       };
       steps.push(step);
       environment.tick(step);
@@ -281,12 +339,62 @@ export class BFSPathfinder implements PathfinderObserver {
         lastYieldTime = performance.now();
       }
 
-      if (agent.destSet.has(current) && !agent.foundDestinations.includes(current)) {
-        agent.foundDestinations.push(current);
-        if (deliveryMode === 'anycast') {
-          agent.done = true;
-        } else if (deliveryMode === 'multicast' && agent.foundDestinations.length >= agent.destSet.size) {
-          agent.done = true;
+      if (isAWSWarehouse) {
+        const STORAGE_SHELVES = new Set(['shelf_d1','shelf_d2','shelf_e1','shelf_e2','shelf_e3','shelf_e4','shelf_f1','shelf_f2','clutter_a','clutter_b','pallet_jack','trash_cans']);
+
+        // Phase 1: Seeking a box from a storage shelf (when robot does NOT have cargo)
+        if (!agent.hasCargo && STORAGE_SHELVES.has(current)) {
+          agent.hasCargo = true; // Robot picks up 1 box!
+          agent.pickedUpBoxes[current] = (agent.pickedUpBoxes[current] ?? 0) + 1; // Increment shelf pickup count
+
+          // Reset search tree from this shelf to navigate towards packing desks
+          agent.visited.clear();
+          agent.visited.add(current);
+          agent.parentMap.clear();
+          agent.parentMap.set(current, null);
+          agent.childrenMap.clear();
+          agent.queue = [{ id: current, waited: 0 }];
+        }
+        // Phase 2: Seeking a packing desk to deliver cargo (when robot HAS cargo)
+        else if (agent.hasCargo && (agent.destSet.has(current) || current === 'dest_desk_a' || current === 'dest_desk_b')) {
+          const required = agent.requiredBoxes[current] ?? 6;
+          const currentDelivered = agent.deliveredBoxes[current] ?? 0;
+
+          if (currentDelivered < required) {
+            agent.deliveredBoxes[current] = currentDelivered + 1;
+            agent.hasCargo = false; // Unloaded cargo into desk!
+
+            if (agent.deliveredBoxes[current] >= required && !agent.foundDestinations.includes(current)) {
+              agent.foundDestinations.push(current);
+            }
+          }
+
+          const allDelivered = Array.from(agent.destSet).every(
+            d => (agent.deliveredBoxes[d] ?? 0) >= (agent.requiredBoxes[d] ?? 1)
+          );
+
+          if (allDelivered || deliveryMode === 'anycast') {
+            agent.done = true;
+          } else {
+            // Reset search tree from packing desk to navigate towards storage shelves
+            agent.visited.clear();
+            agent.visited.add(current);
+            agent.parentMap.clear();
+            agent.parentMap.set(current, null);
+            agent.childrenMap.clear();
+            agent.queue = [{ id: current, waited: 0 }];
+          }
+        }
+      } else {
+        // Standard pathfinding for non-AWS scenarios
+        if (agent.destSet.has(current)) {
+          if (!agent.foundDestinations.includes(current)) {
+            agent.foundDestinations.push(current);
+          }
+          const allFound = Array.from(agent.destSet).every(d => agent.visited.has(d));
+          if (deliveryMode === 'anycast' || allFound) {
+            agent.done = true;
+          }
         }
       }
 
@@ -324,7 +432,9 @@ export class BFSPathfinder implements PathfinderObserver {
       done: true,
       foundDestination: allFoundDests[0] ?? null,
       foundDestinations: allFoundDests,
-      phaseLabel: allFoundDests.length > 0 ? '🏁 BFS - All Active Robot Destinations Reached' : '❌ BFS - Search Exhausted'
+      phaseLabel: allFoundDests.length > 0 ? '🏁 BFS - All Active Robot Destinations Reached' : '❌ BFS - Search Exhausted',
+      deliveredBoxCounts: getAllDeliveredBoxCounts(),
+      pickedUpBoxCounts: getAllPickedUpBoxCounts()
     });
 
     return {

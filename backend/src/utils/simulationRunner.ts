@@ -309,7 +309,7 @@ export async function runSimulation(
   deliveryMode: 'anycast' | 'multicast' = 'anycast',
   customBlockedNodes?: string[],
   customSourceIds?: string[],
-  customRobotAssignments?: { robotId: string; destinations: string[]; priorityDest?: string }[]
+  customRobotAssignments?: { robotId: string; destinations: string[]; priorityDest?: string; boxCounts?: Record<string, number> }[]
 ): Promise<SimulationResult & { meta?: { hasMore: boolean; totalSteps: number; currentOffset: number } }> {
   
   const graph = buildScenarioGraph(scenario, useRealWorld, gameBoard, mapId, graphSize, dynamicSeed, chessPiece, activeSizing);
@@ -376,7 +376,7 @@ export async function runSimulation(
   const environment = new SimulationEnvironment(dynamicEvents, onStepProgress);
 
   const startTime = performance.now();
-  const disablePathSevering = scenario === 'gameai';
+  const disablePathSevering = scenario === 'gameai' || scenario === 'robotics';
 
   if (algorithm === 'bfs') {
     const pathfinder = new BFSPathfinder();
@@ -503,7 +503,7 @@ export async function orchestrateSimulation(
   deliveryMode?: 'anycast' | 'multicast',
   customBlockedNodes?: string[],
   customSourceIds?: string[],
-  customRobotAssignments?: { robotId: string; destinations: string[]; priorityDest?: string }[]
+  customRobotAssignments?: { robotId: string; destinations: string[]; priorityDest?: string; boxCounts?: Record<string, number> }[]
 ) {
   const bfsRes    = await runSimulation(scenario, 'bfs',    seed, useRealWorld, mapId, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing, customSourceId, customDestinationIds, deliveryMode, customBlockedNodes, customSourceIds, customRobotAssignments);
   const dfsRes    = await runSimulation(scenario, 'dfs',    seed, useRealWorld, mapId, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing, customSourceId, customDestinationIds, deliveryMode, customBlockedNodes, customSourceIds, customRobotAssignments);

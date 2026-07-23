@@ -12,6 +12,7 @@ export interface NetworkCanvasProps {
   onNodeClick?: (nodeId: string) => void;
   mapId?: string;
   autoFit?: boolean;
+  shelfBoxCounts?: Map<string, number>; // nodeId → box count for AWS Warehouse shelf visualization
 }
 
 export const NODE_CONFIG: Record<string, { icon: string; radius: number; baseColor: string }> = {

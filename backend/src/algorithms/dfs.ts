@@ -80,9 +80,10 @@ export class DFSPathfinder implements PathfinderObserver {
     environment: SimulationEnvironment,
     disablePathSevering: boolean = false,
     deliveryMode: 'anycast' | 'multicast' = 'anycast',
-    customRobotAssignments?: { robotId: string; destinations: string[]; priorityDest?: string }[]
+    customRobotAssignments?: { robotId: string; destinations: string[]; priorityDest?: string; boxCounts?: Record<string, number> }[]
   ): Promise<DFSResult> {
     const { nodes, edges, sourceId, destinationIds } = graph;
+    const isAWSWarehouse = nodes.some(n => n.id === 'dest_desk_a') || nodes.some(n => n.id === 'shelf_e1');
 
     const adj = new Map<string, { to: string; latency: number }[]>();
     nodes.forEach((n) => adj.set(n.id, []));
@@ -98,6 +99,10 @@ export class DFSPathfinder implements PathfinderObserver {
     interface AgentState {
       robotId: string;
       destSet: Set<string>;
+      requiredBoxes: Record<string, number>;
+      deliveredBoxes: Record<string, number>;
+      pickedUpBoxes: Record<string, number>;
+      hasCargo: boolean;
       stack: { id: string; waited: number }[];
       visited: Set<string>;
       parentMap: Map<string, string | null>;
@@ -114,6 +119,11 @@ export class DFSPathfinder implements PathfinderObserver {
         ? new Set(assignment.destinations)
         : new Set(destinationIds);
 
+      const requiredBoxes: Record<string, number> = {};
+      dests.forEach(destId => {
+        requiredBoxes[destId] = (assignment?.boxCounts?.[destId] ?? (isAWSWarehouse ? 6 : 1));
+      });
+
       const parentMap = new Map<string, string | null>();
       parentMap.set(srcId, null);
       const visited = new Set<string>();
@@ -121,6 +131,10 @@ export class DFSPathfinder implements PathfinderObserver {
       return {
         robotId: srcId,
         destSet: dests,
+        requiredBoxes,
+        deliveredBoxes: {},
+        pickedUpBoxes: {},
+        hasCargo: false,
         stack: this.blockedNodes.has(srcId) ? [] : [{ id: srcId, waited: 0 }],
         visited,
         parentMap,
@@ -140,6 +154,24 @@ export class DFSPathfinder implements PathfinderObserver {
     let activeAgentIndex = 0;
 
     const getAllExplored = () => Array.from(new Set(agents.flatMap(a => Array.from(a.visited))));
+    const getAllDeliveredBoxCounts = (): Record<string, number> => {
+      const result: Record<string, number> = {};
+      agents.forEach(a => {
+        Object.entries(a.deliveredBoxes).forEach(([destId, count]) => {
+          result[destId] = (result[destId] ?? 0) + count;
+        });
+      });
+      return result;
+    };
+    const getAllPickedUpBoxCounts = (): Record<string, number> => {
+      const result: Record<string, number> = {};
+      agents.forEach(a => {
+        Object.entries(a.pickedUpBoxes).forEach(([shelfId, count]) => {
+          result[shelfId] = (result[shelfId] ?? 0) + count;
+        });
+      });
+      return result;
+    };
     const getCombinedPath = (activeAgent: AgentState) => {
       const pathSet = new Set<string>();
       agents.forEach(a => {
@@ -163,10 +195,27 @@ export class DFSPathfinder implements PathfinderObserver {
 
       const agent = agents[activeAgentIndex];
       if (agent.stack.length === 0) {
-        agent.done = true;
-        activeAgentIndex = (activeAgentIndex + 1) % agents.length;
-        if (agents.every(a => a.done)) break;
-        continue;
+        if (!isAWSWarehouse) {
+          agent.done = true;
+          activeAgentIndex = (activeAgentIndex + 1) % agents.length;
+          if (agents.every(a => a.done)) break;
+          continue;
+        }
+        const allDelivered = Array.from(agent.destSet).every(
+          d => (agent.deliveredBoxes[d] ?? 0) >= (agent.requiredBoxes[d] ?? 1)
+        );
+        if (allDelivered || deliveryMode === 'anycast') {
+          agent.done = true;
+          activeAgentIndex = (activeAgentIndex + 1) % agents.length;
+          if (agents.every(a => a.done)) break;
+          continue;
+        } else {
+          agent.visited.clear();
+          agent.parentMap.clear();
+          agent.parentMap.set(agent.robotId, null);
+          agent.childrenMap.clear();
+          agent.stack = [{ id: agent.robotId, waited: 0 }];
+        }
       }
 
       const currentTotalFrontier = agents.reduce((sum, a) => sum + a.stack.length, 0);
@@ -308,7 +357,9 @@ export class DFSPathfinder implements PathfinderObserver {
         done: false,
         foundDestination: getAllFoundDestinations()[0] || null,
         foundDestinations: getAllFoundDestinations(),
-        phaseLabel: `🧗 DFS [${agent.robotId}] - Exploring Deep Path`
+        phaseLabel: `🧗 DFS [${agent.robotId}] - Exploring Deep Path`,
+        deliveredBoxCounts: getAllDeliveredBoxCounts(),
+        pickedUpBoxCounts: getAllPickedUpBoxCounts()
       };
       steps.push(step);
       environment.tick(step);
@@ -318,12 +369,58 @@ export class DFSPathfinder implements PathfinderObserver {
         lastYieldTime = performance.now();
       }
 
-      if (agent.destSet.has(current) && !agent.foundDestinations.includes(current)) {
-        agent.foundDestinations.push(current);
-        if (deliveryMode === 'anycast') {
-          agent.done = true;
-        } else if (deliveryMode === 'multicast' && agent.foundDestinations.length >= agent.destSet.size) {
-          agent.done = true;
+      if (isAWSWarehouse) {
+        const STORAGE_SHELVES = new Set(['shelf_d1','shelf_d2','shelf_e1','shelf_e2','shelf_e3','shelf_e4','shelf_f1','shelf_f2','clutter_a','clutter_b','pallet_jack','trash_cans']);
+
+        if (!agent.hasCargo && STORAGE_SHELVES.has(current)) {
+          agent.hasCargo = true;
+          agent.pickedUpBoxes[current] = (agent.pickedUpBoxes[current] ?? 0) + 1;
+
+          agent.visited.clear();
+          agent.visited.add(current);
+          agent.parentMap.clear();
+          agent.parentMap.set(current, null);
+          agent.childrenMap.clear();
+          agent.stack = [{ id: current, waited: 0 }];
+        }
+        else if (agent.hasCargo && (agent.destSet.has(current) || current === 'dest_desk_a' || current === 'dest_desk_b')) {
+          const required = agent.requiredBoxes[current] ?? 6;
+          const currentDelivered = agent.deliveredBoxes[current] ?? 0;
+
+          if (currentDelivered < required) {
+            agent.deliveredBoxes[current] = currentDelivered + 1;
+            agent.hasCargo = false;
+
+            if (agent.deliveredBoxes[current] >= required && !agent.foundDestinations.includes(current)) {
+              agent.foundDestinations.push(current);
+            }
+          }
+
+          const allDelivered = Array.from(agent.destSet).every(
+            d => (agent.deliveredBoxes[d] ?? 0) >= (agent.requiredBoxes[d] ?? 1)
+          );
+
+          if (allDelivered || deliveryMode === 'anycast') {
+            agent.done = true;
+          } else {
+            agent.visited.clear();
+            agent.visited.add(current);
+            agent.parentMap.clear();
+            agent.parentMap.set(current, null);
+            agent.childrenMap.clear();
+            agent.stack = [{ id: current, waited: 0 }];
+          }
+        }
+      } else {
+        // Standard pathfinding for non-AWS scenarios
+        if (agent.destSet.has(current)) {
+          if (!agent.foundDestinations.includes(current)) {
+            agent.foundDestinations.push(current);
+          }
+          const allFound = Array.from(agent.destSet).every(d => agent.visited.has(d));
+          if (deliveryMode === 'anycast' || allFound) {
+            agent.done = true;
+          }
         }
       }
 
@@ -362,7 +459,9 @@ export class DFSPathfinder implements PathfinderObserver {
       done: true,
       foundDestination: allFoundDests[0] ?? null,
       foundDestinations: allFoundDests,
-      phaseLabel: allFoundDests.length > 0 ? '🏁 DFS - All Active Robot Destinations Reached' : '❌ DFS - Search Exhausted'
+      phaseLabel: allFoundDests.length > 0 ? '🏁 DFS - All Active Robot Destinations Reached' : '❌ DFS - Search Exhausted',
+      deliveredBoxCounts: getAllDeliveredBoxCounts(),
+      pickedUpBoxCounts: getAllPickedUpBoxCounts()
     });
 
     return {

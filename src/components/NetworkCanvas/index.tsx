@@ -18,6 +18,7 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
   onNodeClick,
   mapId,
   autoFit,
+  shelfBoxCounts,
 }) => {
   const { nodes, edges, width, height } = graph;
 
@@ -185,7 +186,8 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
       visibleAlgos,
       sets,
       activeSteps,
-      graph
+      graph,
+      shelfBoxCounts
     });
   }, [
     visibleNodes, visibleEdges, visibleNodeMap, pan, zoom, sets, activeBlocked, 

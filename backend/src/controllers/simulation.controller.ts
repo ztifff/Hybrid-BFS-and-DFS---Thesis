@@ -20,7 +20,7 @@ export class SimulationController {
         customDestinationIds?: string[];
         deliveryMode?: 'anycast' | 'multicast';
         customBlockedNodes?: string[];
-        customRobotAssignments?: { robotId: string; destinations: string[]; priorityDest?: string }[];
+        customRobotAssignments?: { robotId: string; destinations: string[]; priorityDest?: string; boxCounts?: Record<string, number> }[];
       };
 
       const offset = Number(req.query.offset || 0);

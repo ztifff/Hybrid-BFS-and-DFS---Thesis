@@ -79,9 +79,10 @@ export class HybridPathfinder implements PathfinderObserver {
     environment: SimulationEnvironment,
     disablePathSevering: boolean = false,
     deliveryMode: 'anycast' | 'multicast' = 'anycast',
-    customRobotAssignments?: { robotId: string; destinations: string[]; priorityDest?: string }[]
+    customRobotAssignments?: { robotId: string; destinations: string[]; priorityDest?: string; boxCounts?: Record<string, number> }[]
   ): Promise<HybridResult> {
     const { nodes, edges, sourceId, destinationIds } = graph;
+    const isAWSWarehouse = nodes.some(n => n.id === 'dest_desk_a') || nodes.some(n => n.id === 'shelf_e1');
 
     const nodeMap = new Map(nodes.map(n => [n.id, n]));
     const adj = new Map<string, { to: string; latency: number }[]>();
@@ -98,6 +99,10 @@ export class HybridPathfinder implements PathfinderObserver {
     interface AgentState {
       robotId: string;
       destSet: Set<string>;
+      requiredBoxes: Record<string, number>; // destId → boxes required
+      deliveredBoxes: Record<string, number>; // destId → boxes delivered so far
+      pickedUpBoxes: Record<string, number>; // shelfId → boxes picked up so far
+      hasCargo: boolean; // true if robot is carrying a box from a shelf
       frontier: { id: string; waited: number }[];
       visited: Set<string>;
       parentMap: Map<string, string | null>;
@@ -114,6 +119,11 @@ export class HybridPathfinder implements PathfinderObserver {
         ? new Set(assignment.destinations)
         : new Set(destinationIds);
 
+      const requiredBoxes: Record<string, number> = {};
+      dests.forEach(destId => {
+        requiredBoxes[destId] = (assignment?.boxCounts?.[destId] ?? (isAWSWarehouse ? 6 : 1));
+      });
+
       const parentMap = new Map<string, string | null>();
       parentMap.set(srcId, null);
       const visited = new Set<string>([srcId]);
@@ -121,6 +131,10 @@ export class HybridPathfinder implements PathfinderObserver {
       return {
         robotId: srcId,
         destSet: dests,
+        requiredBoxes,
+        deliveredBoxes: {},
+        pickedUpBoxes: {},
+        hasCargo: false,
         frontier: this.blockedNodes.has(srcId) ? [] : [{ id: srcId, waited: 0 }],
         visited,
         parentMap,
@@ -140,6 +154,24 @@ export class HybridPathfinder implements PathfinderObserver {
     let activeAgentIndex = 0;
 
     const getAllExplored = () => Array.from(new Set(agents.flatMap(a => Array.from(a.visited))));
+    const getAllDeliveredBoxCounts = (): Record<string, number> => {
+      const result: Record<string, number> = {};
+      agents.forEach(a => {
+        Object.entries(a.deliveredBoxes).forEach(([destId, count]) => {
+          result[destId] = (result[destId] ?? 0) + count;
+        });
+      });
+      return result;
+    };
+    const getAllPickedUpBoxCounts = (): Record<string, number> => {
+      const result: Record<string, number> = {};
+      agents.forEach(a => {
+        Object.entries(a.pickedUpBoxes).forEach(([shelfId, count]) => {
+          result[shelfId] = (result[shelfId] ?? 0) + count;
+        });
+      });
+      return result;
+    };
     const getCombinedPath = (activeAgent: AgentState) => {
       const pathSet = new Set<string>();
       agents.forEach(a => {
@@ -162,11 +194,26 @@ export class HybridPathfinder implements PathfinderObserver {
     function computeHeuristic(nodeId: string, agent: AgentState): number {
       const node = nodeMap.get(nodeId);
       if (!node) return 0;
+
+      let targetIds: string[] = [];
+      if (isAWSWarehouse) {
+        const STORAGE_SHELVES = ['shelf_d1','shelf_d2','shelf_e1','shelf_e2','shelf_e3','shelf_e4','shelf_f1','shelf_f2','clutter_a','clutter_b','pallet_jack','trash_cans'];
+        if (!agent.hasCargo) {
+          targetIds = STORAGE_SHELVES.filter(s => (agent.pickedUpBoxes[s] ?? 0) < 6);
+          if (targetIds.length === 0) targetIds = STORAGE_SHELVES;
+        } else {
+          targetIds = Array.from(agent.destSet).filter(d => (agent.deliveredBoxes[d] ?? 0) < (agent.requiredBoxes[d] ?? 6));
+          if (targetIds.length === 0) targetIds = Array.from(agent.destSet);
+        }
+      } else {
+        targetIds = Array.from(agent.destSet);
+      }
+
       let minH = Infinity;
-      agent.destSet.forEach(dId => {
-        const destNode = nodeMap.get(dId);
-        if (destNode) {
-          const dist = Math.hypot(node.x - destNode.x, node.y - destNode.y);
+      targetIds.forEach(tId => {
+        const tNode = nodeMap.get(tId);
+        if (tNode) {
+          const dist = Math.hypot(node.x - tNode.x, node.y - tNode.y);
           if (dist < minH) minH = dist;
         }
       });
@@ -182,10 +229,27 @@ export class HybridPathfinder implements PathfinderObserver {
 
       const agent = agents[activeAgentIndex];
       if (agent.frontier.length === 0) {
-        agent.done = true;
-        activeAgentIndex = (activeAgentIndex + 1) % agents.length;
-        if (agents.every(a => a.done)) break;
-        continue;
+        if (!isAWSWarehouse) {
+          agent.done = true;
+          activeAgentIndex = (activeAgentIndex + 1) % agents.length;
+          if (agents.every(a => a.done)) break;
+          continue;
+        }
+        const allDelivered = Array.from(agent.destSet).every(
+          d => (agent.deliveredBoxes[d] ?? 0) >= (agent.requiredBoxes[d] ?? 1)
+        );
+        if (allDelivered || deliveryMode === 'anycast') {
+          agent.done = true;
+          activeAgentIndex = (activeAgentIndex + 1) % agents.length;
+          if (agents.every(a => a.done)) break;
+          continue;
+        } else {
+          agent.visited.clear();
+          agent.parentMap.clear();
+          agent.parentMap.set(agent.robotId, null);
+          agent.childrenMap.clear();
+          agent.frontier = [{ id: agent.robotId, waited: 0 }];
+        }
       }
 
       const currentTotalFrontier = agents.reduce((sum, a) => sum + a.frontier.length, 0);
@@ -306,7 +370,9 @@ export class HybridPathfinder implements PathfinderObserver {
         done: false,
         foundDestination: getAllFoundDestinations()[0] || null,
         foundDestinations: getAllFoundDestinations(),
-        phaseLabel: `🔀 Hybrid [${agent.robotId}] - Dynamic ${strategy} Mode`
+        phaseLabel: `🔀 Hybrid [${agent.robotId}] - Dynamic ${strategy} Mode`,
+        deliveredBoxCounts: getAllDeliveredBoxCounts(),
+        pickedUpBoxCounts: getAllPickedUpBoxCounts()
       };
       steps.push(step);
       environment.tick(step);
@@ -316,12 +382,58 @@ export class HybridPathfinder implements PathfinderObserver {
         lastYieldTime = performance.now();
       }
 
-      if (agent.destSet.has(current) && !agent.foundDestinations.includes(current)) {
-        agent.foundDestinations.push(current);
-        if (deliveryMode === 'anycast') {
-          agent.done = true;
-        } else if (deliveryMode === 'multicast' && agent.foundDestinations.length >= agent.destSet.size) {
-          agent.done = true;
+      if (isAWSWarehouse) {
+        const STORAGE_SHELVES = new Set(['shelf_d1','shelf_d2','shelf_e1','shelf_e2','shelf_e3','shelf_e4','shelf_f1','shelf_f2','clutter_a','clutter_b','pallet_jack','trash_cans']);
+
+        if (!agent.hasCargo && STORAGE_SHELVES.has(current)) {
+          agent.hasCargo = true;
+          agent.pickedUpBoxes[current] = (agent.pickedUpBoxes[current] ?? 0) + 1;
+
+          agent.visited.clear();
+          agent.visited.add(current);
+          agent.parentMap.clear();
+          agent.parentMap.set(current, null);
+          agent.childrenMap.clear();
+          agent.frontier = [{ id: current, waited: 0 }];
+        }
+        else if (agent.hasCargo && (agent.destSet.has(current) || current === 'dest_desk_a' || current === 'dest_desk_b')) {
+          const required = agent.requiredBoxes[current] ?? 6;
+          const currentDelivered = agent.deliveredBoxes[current] ?? 0;
+
+          if (currentDelivered < required) {
+            agent.deliveredBoxes[current] = currentDelivered + 1;
+            agent.hasCargo = false;
+
+            if (agent.deliveredBoxes[current] >= required && !agent.foundDestinations.includes(current)) {
+              agent.foundDestinations.push(current);
+            }
+          }
+
+          const allDelivered = Array.from(agent.destSet).every(
+            d => (agent.deliveredBoxes[d] ?? 0) >= (agent.requiredBoxes[d] ?? 1)
+          );
+
+          if (allDelivered || deliveryMode === 'anycast') {
+            agent.done = true;
+          } else {
+            agent.visited.clear();
+            agent.visited.add(current);
+            agent.parentMap.clear();
+            agent.parentMap.set(current, null);
+            agent.childrenMap.clear();
+            agent.frontier = [{ id: current, waited: 0 }];
+          }
+        }
+      } else {
+        // Standard pathfinding for non-AWS scenarios
+        if (agent.destSet.has(current)) {
+          if (!agent.foundDestinations.includes(current)) {
+            agent.foundDestinations.push(current);
+          }
+          const allFound = Array.from(agent.destSet).every(d => agent.visited.has(d));
+          if (deliveryMode === 'anycast' || allFound) {
+            agent.done = true;
+          }
         }
       }
 
@@ -359,7 +471,9 @@ export class HybridPathfinder implements PathfinderObserver {
       done: true,
       foundDestination: allFoundDests[0] ?? null,
       foundDestinations: allFoundDests,
-      phaseLabel: allFoundDests.length > 0 ? '🏁 Hybrid - All Active Robot Destinations Reached' : '❌ Hybrid - Search Exhausted'
+      phaseLabel: allFoundDests.length > 0 ? '🏁 Hybrid - All Active Robot Destinations Reached' : '❌ Hybrid - Search Exhausted',
+      deliveredBoxCounts: getAllDeliveredBoxCounts(),
+      pickedUpBoxCounts: getAllPickedUpBoxCounts()
     });
 
     return {
