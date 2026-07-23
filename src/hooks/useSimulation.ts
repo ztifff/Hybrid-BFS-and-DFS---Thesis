@@ -165,7 +165,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
           model.setSimResults({ ...mergedResults });
           model.setBfsResult({ pathLength: optimalPathLength });
 
-          const isDone = !results.bfs.meta?.hasMore;
+          const isDone = !results.bfs.meta?.hasMore && !results.dfs.meta?.hasMore && !results.hybrid.meta?.hasMore;
           
           if (isDone || maxStepsInChunk === 0) {
             keepFetching = false;

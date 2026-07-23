@@ -7,6 +7,7 @@ interface Props {
   depotNodes: GraphNode[];
   shelfNodes: GraphNode[];
   disabled?: boolean;
+  mapId?: string;
 }
 
 export const RobotAssignmentPanel: React.FC<Props> = ({
@@ -15,9 +16,12 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
   depotNodes,
   shelfNodes,
   disabled = false,
+  mapId,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeRobotId, setActiveRobotId] = useState<string | null>(null);
+
+  const isAWSWarehouse = mapId === 'aws' || mapId === 'awsWarehouse';
 
   const getRobotLabel = (robotId: string) => {
     const node = depotNodes.find(n => n.id === robotId);
@@ -99,8 +103,9 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
           <div className="text-[10px] uppercase tracking-[0.18em] text-green-400 font-bold">
             Robot Assignments
           </div>
-          <div className="text-[10px] text-gray-400 mt-0.5">
-            {assignments.length} robot{assignments.length !== 1 ? "s" : ""} · {totalDests} destination{totalDests !== 1 ? "s" : ""} · 📦 {totalBoxes} box{totalBoxes !== 1 ? "es" : ""}
+          <div className="text-[11px] text-gray-400 font-medium">
+            {assignments.length} robot{assignments.length !== 1 ? "s" : ""} · {totalDests} dest{totalDests !== 1 ? "s" : ""}
+            {isAWSWarehouse ? ` · 📦 ${totalBoxes} boxes` : ""}
           </div>
         </div>
       </div>
@@ -315,8 +320,8 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
                                   )}
                                 </div>
 
-                                {/* Box count row — only when selected */}
-                                {isSelected && (
+                                {/* Box count row — only when selected and on AWS Warehouse map */}
+                                {isSelected && isAWSWarehouse && (
                                   <div
                                     className="flex items-center gap-2 pl-7"
                                     onClick={(e) => e.stopPropagation()}
@@ -360,7 +365,8 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
             {/* Footer */}
             <div className="flex items-center justify-between px-5 py-3 border-t border-gray-800 bg-[#0a0f1e] shrink-0">
               <div className="text-xs text-gray-500">
-                {assignments.length} robot{assignments.length !== 1 ? "s" : ""} · {totalDests} destination{totalDests !== 1 ? "s" : ""} · 📦 {totalBoxes} box{totalBoxes !== 1 ? "es" : ""} configured
+                {assignments.length} robot{assignments.length !== 1 ? "s" : ""} · {totalDests} destination{totalDests !== 1 ? "s" : ""}
+                {isAWSWarehouse ? ` · 📦 ${totalBoxes} box${totalBoxes !== 1 ? "es" : ""} configured` : ""}
               </div>
               <button
                 onClick={() => setIsOpen(false)}

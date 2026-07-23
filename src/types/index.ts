@@ -115,6 +115,8 @@ export interface AlgorithmStep {
   phaseLabel?: string;
   deliveredBoxCounts?: Record<string, number>; // destId -> count of boxes delivered up to this step
   pickedUpBoxCounts?: Record<string, number>; // shelfId -> count of boxes picked up up to this step
+  activeRobotId?: string;                     // robotId taking turn in this step
+  robotPositions?: Record<string, string>;   // robotId -> current node id map for all robots
 }
 
 // ── Performance Metrics ────────────────────────────────────────────────────

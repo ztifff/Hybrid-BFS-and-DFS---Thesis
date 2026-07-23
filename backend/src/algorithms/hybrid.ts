@@ -110,6 +110,7 @@ export class HybridPathfinder implements PathfinderObserver {
       foundDestinations: string[];
       severedBlockedNodes: Set<string>;
       lastCurrent: string | null;
+      priorityDest?: string;
       done: boolean;
     }
 
@@ -142,6 +143,7 @@ export class HybridPathfinder implements PathfinderObserver {
         foundDestinations: [],
         severedBlockedNodes: new Set<string>(),
         lastCurrent: srcId,
+        priorityDest: assignment?.priorityDest,
         done: false,
       };
     });
@@ -172,6 +174,13 @@ export class HybridPathfinder implements PathfinderObserver {
       });
       return result;
     };
+    const getRobotPositions = (): Record<string, string> => {
+      const result: Record<string, string> = {};
+      agents.forEach(a => {
+        result[a.robotId] = a.lastCurrent || a.robotId;
+      });
+      return result;
+    };
     const getCombinedPath = (activeAgent: AgentState) => {
       const pathSet = new Set<string>();
       agents.forEach(a => {
@@ -191,34 +200,16 @@ export class HybridPathfinder implements PathfinderObserver {
       return isDenselyConnected ? 'BFS' : 'DFS';
     }
 
-    function computeHeuristic(nodeId: string, agent: AgentState): number {
-      const node = nodeMap.get(nodeId);
-      if (!node) return 0;
-
-      let targetIds: string[] = [];
-      if (isAWSWarehouse) {
-        const STORAGE_SHELVES = ['shelf_d1','shelf_d2','shelf_e1','shelf_e2','shelf_e3','shelf_e4','shelf_f1','shelf_f2','clutter_a','clutter_b','pallet_jack','trash_cans'];
-        if (!agent.hasCargo) {
-          targetIds = STORAGE_SHELVES.filter(s => (agent.pickedUpBoxes[s] ?? 0) < 6);
-          if (targetIds.length === 0) targetIds = STORAGE_SHELVES;
-        } else {
-          targetIds = Array.from(agent.destSet).filter(d => (agent.deliveredBoxes[d] ?? 0) < (agent.requiredBoxes[d] ?? 6));
-          if (targetIds.length === 0) targetIds = Array.from(agent.destSet);
+      const getActiveDestinations = (ag: AgentState): Set<string> => {
+        if (ag.priorityDest && ag.destSet.has(ag.priorityDest)) {
+          const req = ag.requiredBoxes[ag.priorityDest] ?? (isAWSWarehouse ? 6 : 1);
+          const del = ag.deliveredBoxes[ag.priorityDest] ?? (ag.foundDestinations.includes(ag.priorityDest) ? 1 : 0);
+          if (del < req) {
+            return new Set([ag.priorityDest]);
+          }
         }
-      } else {
-        targetIds = Array.from(agent.destSet);
-      }
-
-      let minH = Infinity;
-      targetIds.forEach(tId => {
-        const tNode = nodeMap.get(tId);
-        if (tNode) {
-          const dist = Math.hypot(node.x - tNode.x, node.y - tNode.y);
-          if (dist < minH) minH = dist;
-        }
-      });
-      return minH === Infinity ? 0 : minH;
-    }
+        return ag.destSet;
+      };
 
     while (agents.some(a => !a.done) && iteration < MAX_TOTAL_STEPS) {
       let attempts = 0;
@@ -236,19 +227,24 @@ export class HybridPathfinder implements PathfinderObserver {
           continue;
         }
         const allDelivered = Array.from(agent.destSet).every(
-          d => (agent.deliveredBoxes[d] ?? 0) >= (agent.requiredBoxes[d] ?? 1)
+          d => (agent.deliveredBoxes[d] ?? 0) >= (agent.requiredBoxes[d] ?? 6)
         );
-        if (allDelivered || deliveryMode === 'anycast') {
+        if (allDelivered) {
           agent.done = true;
           activeAgentIndex = (activeAgentIndex + 1) % agents.length;
           if (agents.every(a => a.done)) break;
           continue;
         } else {
+          // Re-initialize frontier from last known valid position (agent.lastCurrent), NOT robot start!
+          const restartNode = (agent.lastCurrent && !this.blockedNodes.has(agent.lastCurrent))
+            ? agent.lastCurrent
+            : agent.robotId;
+
           agent.visited.clear();
           agent.parentMap.clear();
-          agent.parentMap.set(agent.robotId, null);
+          agent.parentMap.set(restartNode, null);
           agent.childrenMap.clear();
-          agent.frontier = [{ id: agent.robotId, waited: 0 }];
+          agent.frontier = [{ id: restartNode, waited: 0 }];
         }
       }
 
@@ -300,7 +296,11 @@ export class HybridPathfinder implements PathfinderObserver {
             done: false,
             foundDestination: getAllFoundDestinations()[0] || null,
             foundDestinations: getAllFoundDestinations(),
-            phaseLabel: `🚧 Hybrid [${agent.robotId}] - Severed at [${blockedId}]! Retreating to [${rollbackTo}]`
+            phaseLabel: `🚧 HYBRID [${agent.robotId}] - Severed at [${blockedId}]! Rollback to [${rollbackTo}]`,
+            deliveredBoxCounts: getAllDeliveredBoxCounts(),
+            pickedUpBoxCounts: getAllPickedUpBoxCounts(),
+            activeRobotId: agent.robotId,
+            robotPositions: getRobotPositions()
           };
           steps.push(severStep);
           environment.tick(severStep);
@@ -316,20 +316,7 @@ export class HybridPathfinder implements PathfinderObserver {
         continue;
       }
 
-      let bestIdx = 0;
-      let bestScore = Infinity;
-      for (let i = 0; i < agent.frontier.length; i++) {
-        const fItem = agent.frontier[i];
-        const strat = chooseStrategy(fItem.id);
-        const h = computeHeuristic(fItem.id, agent);
-        const score = strat === 'BFS' ? h : h * 0.5 - i; 
-        if (score < bestScore) {
-          bestScore = score;
-          bestIdx = i;
-        }
-      }
-
-      const entry = agent.frontier.splice(bestIdx, 1)[0];
+      const entry = agent.frontier.shift()!;
       const current = entry.id;
 
       if (this.blockedNodes.has(current)) {
@@ -349,12 +336,85 @@ export class HybridPathfinder implements PathfinderObserver {
           };
           steps.push(waitStep);
           environment.tick(waitStep);
+        } else {
+          // Reroute from last valid position (agent.lastCurrent), NOT robot start!
+          const restartNode = (agent.lastCurrent && !this.blockedNodes.has(agent.lastCurrent))
+            ? agent.lastCurrent
+            : agent.robotId;
+
+          agent.visited.clear();
+          agent.parentMap.clear();
+          agent.parentMap.set(restartNode, null);
+          agent.childrenMap.clear();
+          agent.frontier = [{ id: restartNode, waited: 0 }];
         }
         activeAgentIndex = (activeAgentIndex + 1) % agents.length;
         continue;
       }
 
       agent.lastCurrent = current;
+
+      let resetHappened = false;
+
+      if (isAWSWarehouse) {
+        const STORAGE_SHELVES = new Set(['shelf_a1','shelf_a2','shelf_b1','shelf_b2','shelf_d1','shelf_d2','shelf_e1','shelf_e2','shelf_e3','shelf_e4','shelf_f1','shelf_f2']);
+
+        if (!agent.hasCargo && STORAGE_SHELVES.has(current) && (agent.pickedUpBoxes[current] ?? 0) < 6) {
+          agent.hasCargo = true;
+          agent.pickedUpBoxes[current] = (agent.pickedUpBoxes[current] ?? 0) + 1;
+
+          agent.visited.clear();
+          agent.visited.add(current);
+          agent.parentMap.clear();
+          agent.parentMap.set(current, null);
+          agent.childrenMap.clear();
+          agent.frontier = [{ id: current, waited: 0 }];
+          resetHappened = true;
+        }
+        else if (agent.hasCargo && getActiveDestinations(agent).has(current)) {
+          const required = agent.requiredBoxes[current] ?? 6;
+          const currentDelivered = agent.deliveredBoxes[current] ?? 0;
+
+          if (currentDelivered < required) {
+            agent.deliveredBoxes[current] = currentDelivered + 1;
+            agent.hasCargo = false;
+
+            if (agent.deliveredBoxes[current] >= required && !agent.foundDestinations.includes(current)) {
+              agent.foundDestinations.push(current);
+            }
+
+            const allDelivered = Array.from(agent.destSet).every(
+              d => (agent.deliveredBoxes[d] ?? 0) >= (agent.requiredBoxes[d] ?? 6)
+            );
+
+            if (allDelivered) {
+              agent.done = true;
+            } else {
+              agent.visited.clear();
+              agent.visited.add(current);
+              agent.parentMap.clear();
+              agent.parentMap.set(current, null);
+              agent.childrenMap.clear();
+              agent.frontier = [{ id: current, waited: 0 }];
+              resetHappened = true;
+            }
+          }
+          // If desk is full, pass through keeping hasCargo = true
+        }
+      } else {
+        // Standard pathfinding for non-AWS scenarios
+        const activeDests = getActiveDestinations(agent);
+        if (activeDests.has(current)) {
+          if (!agent.foundDestinations.includes(current)) {
+            agent.foundDestinations.push(current);
+          }
+          const allFound = Array.from(agent.destSet).every(d => agent.foundDestinations.includes(d));
+          if (deliveryMode === 'anycast' || allFound) {
+            agent.done = true;
+          }
+        }
+      }
+
       nodesExplored++;
       iteration++;
 
@@ -370,9 +430,11 @@ export class HybridPathfinder implements PathfinderObserver {
         done: false,
         foundDestination: getAllFoundDestinations()[0] || null,
         foundDestinations: getAllFoundDestinations(),
-        phaseLabel: `🔀 Hybrid [${agent.robotId}] - Dynamic ${strategy} Mode`,
+        phaseLabel: `🔀 HYBRID [${agent.robotId}] - Mode: ${strategy}`,
         deliveredBoxCounts: getAllDeliveredBoxCounts(),
-        pickedUpBoxCounts: getAllPickedUpBoxCounts()
+        pickedUpBoxCounts: getAllPickedUpBoxCounts(),
+        activeRobotId: agent.robotId,
+        robotPositions: getRobotPositions()
       };
       steps.push(step);
       environment.tick(step);
@@ -382,69 +444,26 @@ export class HybridPathfinder implements PathfinderObserver {
         lastYieldTime = performance.now();
       }
 
-      if (isAWSWarehouse) {
-        const STORAGE_SHELVES = new Set(['shelf_d1','shelf_d2','shelf_e1','shelf_e2','shelf_e3','shelf_e4','shelf_f1','shelf_f2','clutter_a','clutter_b','pallet_jack','trash_cans']);
+      // Only expand neighbors when no pickup/delivery reset happened this iteration.
+      if (!resetHappened) {
+        const neighbors = adj.get(current) ?? [];
+        const strategy = chooseStrategy(current);
+        for (const { to } of neighbors) {
+          if (!agent.visited.has(to)) {
+            agent.visited.add(to);
+            agent.parentMap.set(to, current);
+            if (!agent.childrenMap.has(current)) agent.childrenMap.set(current, []);
+            agent.childrenMap.get(current)!.push(to);
 
-        if (!agent.hasCargo && STORAGE_SHELVES.has(current)) {
-          agent.hasCargo = true;
-          agent.pickedUpBoxes[current] = (agent.pickedUpBoxes[current] ?? 0) + 1;
-
-          agent.visited.clear();
-          agent.visited.add(current);
-          agent.parentMap.clear();
-          agent.parentMap.set(current, null);
-          agent.childrenMap.clear();
-          agent.frontier = [{ id: current, waited: 0 }];
-        }
-        else if (agent.hasCargo && (agent.destSet.has(current) || current === 'dest_desk_a' || current === 'dest_desk_b')) {
-          const required = agent.requiredBoxes[current] ?? 6;
-          const currentDelivered = agent.deliveredBoxes[current] ?? 0;
-
-          if (currentDelivered < required) {
-            agent.deliveredBoxes[current] = currentDelivered + 1;
-            agent.hasCargo = false;
-
-            if (agent.deliveredBoxes[current] >= required && !agent.foundDestinations.includes(current)) {
-              agent.foundDestinations.push(current);
+            // Uninformed Hybrid Strategy:
+            // - BFS mode (degree >= 3): Queue order (push to back)
+            // - DFS mode (degree < 3): Stack order (unshift to front)
+            if (strategy === 'BFS') {
+              agent.frontier.push({ id: to, waited: 0 });
+            } else {
+              agent.frontier.unshift({ id: to, waited: 0 });
             }
           }
-
-          const allDelivered = Array.from(agent.destSet).every(
-            d => (agent.deliveredBoxes[d] ?? 0) >= (agent.requiredBoxes[d] ?? 1)
-          );
-
-          if (allDelivered || deliveryMode === 'anycast') {
-            agent.done = true;
-          } else {
-            agent.visited.clear();
-            agent.visited.add(current);
-            agent.parentMap.clear();
-            agent.parentMap.set(current, null);
-            agent.childrenMap.clear();
-            agent.frontier = [{ id: current, waited: 0 }];
-          }
-        }
-      } else {
-        // Standard pathfinding for non-AWS scenarios
-        if (agent.destSet.has(current)) {
-          if (!agent.foundDestinations.includes(current)) {
-            agent.foundDestinations.push(current);
-          }
-          const allFound = Array.from(agent.destSet).every(d => agent.visited.has(d));
-          if (deliveryMode === 'anycast' || allFound) {
-            agent.done = true;
-          }
-        }
-      }
-
-      const neighbors = adj.get(current) ?? [];
-      for (const { to } of neighbors) {
-        if (!agent.visited.has(to)) {
-          agent.visited.add(to);
-          agent.parentMap.set(to, current);
-          if (!agent.childrenMap.has(current)) agent.childrenMap.set(current, []);
-          agent.childrenMap.get(current)!.push(to);
-          agent.frontier.push({ id: to, waited: 0 });
         }
       }
 
@@ -471,9 +490,10 @@ export class HybridPathfinder implements PathfinderObserver {
       done: true,
       foundDestination: allFoundDests[0] ?? null,
       foundDestinations: allFoundDests,
-      phaseLabel: allFoundDests.length > 0 ? '🏁 Hybrid - All Active Robot Destinations Reached' : '❌ Hybrid - Search Exhausted',
+      phaseLabel: allFoundDests.length > 0 ? '🏁 HYBRID - All Active Robot Destinations Reached' : '❌ HYBRID - Search Exhausted',
       deliveredBoxCounts: getAllDeliveredBoxCounts(),
-      pickedUpBoxCounts: getAllPickedUpBoxCounts()
+      pickedUpBoxCounts: getAllPickedUpBoxCounts(),
+      robotPositions: getRobotPositions()
     });
 
     return {

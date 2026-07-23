@@ -33,6 +33,8 @@ export interface RenderOptions {
   activeSteps: { bfs: AlgorithmStep | null; dfs: AlgorithmStep | null; hybrid: AlgorithmStep | null };
   graph?: import('../../types').ScenarioGraph;
   shelfBoxCounts?: Map<string, number>; // nodeId → remaining box count (0–6) for AWS Warehouse
+  robotAssignments?: import('../../types').RobotAssignment[]; // per-robot rack allocation
+  followAlgo?: 'bfs' | 'dfs' | 'hybrid' | null;
 }
 
 export function renderCanvas(options: RenderOptions) {
@@ -41,13 +43,29 @@ export function renderCanvas(options: RenderOptions) {
     scenario, mapId, isDatacenter, isMassive,
     visibleNodes, visibleEdges, visibleNodeMap,
     activeBlocked, wasHistoricallyBlocked, highlightedNodeId,
-    sourceId, sourceIds, destinationIds, visibleAlgos, sets, activeSteps
+    sourceId, sourceIds, destinationIds, visibleAlgos, sets, activeSteps, followAlgo,
+    robotAssignments
   } = options;
 
-  const currentActiveStep = visibleAlgos.bfs ? activeSteps.bfs
-    : visibleAlgos.hybrid ? activeSteps.hybrid
-    : visibleAlgos.dfs ? activeSteps.dfs
-    : (activeSteps.bfs || activeSteps.hybrid || activeSteps.dfs);
+  const visibleCount = [visibleAlgos.bfs, visibleAlgos.dfs, visibleAlgos.hybrid].filter(Boolean).length;
+  const isSimultaneousMode = visibleCount > 1;
+
+  // Determine active step based on active follow selection or single active tab
+  const currentActiveStep = (followAlgo === 'dfs' && activeSteps.dfs) ? activeSteps.dfs
+    : (followAlgo === 'hybrid' && activeSteps.hybrid) ? activeSteps.hybrid
+    : (followAlgo === 'bfs' && activeSteps.bfs) ? activeSteps.bfs
+    : (visibleAlgos.hybrid && !visibleAlgos.bfs && !visibleAlgos.dfs) ? activeSteps.hybrid
+    : (visibleAlgos.dfs && !visibleAlgos.bfs && !visibleAlgos.hybrid) ? activeSteps.dfs
+    : (visibleAlgos.bfs && !visibleAlgos.dfs && !visibleAlgos.hybrid) ? activeSteps.bfs
+    : (activeSteps.hybrid || activeSteps.bfs || activeSteps.dfs);
+
+  const getCombinedDelivered = (nodeId: string): number => {
+    let max = 0;
+    if (visibleAlgos.bfs && activeSteps.bfs?.deliveredBoxCounts?.[nodeId]) max = Math.max(max, activeSteps.bfs.deliveredBoxCounts[nodeId]);
+    if (visibleAlgos.dfs && activeSteps.dfs?.deliveredBoxCounts?.[nodeId]) max = Math.max(max, activeSteps.dfs.deliveredBoxCounts[nodeId]);
+    if (visibleAlgos.hybrid && activeSteps.hybrid?.deliveredBoxCounts?.[nodeId]) max = Math.max(max, activeSteps.hybrid.deliveredBoxCounts[nodeId]);
+    return max;
+  };
 
   const dpr = window.devicePixelRatio || 1;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -313,9 +331,9 @@ export function renderCanvas(options: RenderOptions) {
     ctx.save();
     // Only the 8 main storage shelf nodes in the middle aisles have 6-box racks
     const AWS_SHELF_NODES = new Set([
-      'shelf_d1','shelf_d2','shelf_e1','shelf_e2','shelf_e3','shelf_e4','shelf_f1','shelf_f2'
+      'shelf_a1','shelf_a2','shelf_b1','shelf_b2','shelf_d1','shelf_d2','shelf_e1','shelf_e2','shelf_e3','shelf_e4','shelf_f1','shelf_f2'
     ]);
-    const PACKING_DESK_NODES = new Set(['dest_desk_a', 'dest_desk_b']);
+    const PACKING_DESK_NODES = new Set(['dest_desk_a', 'dest_desk_b', 'clutter_a', 'clutter_b', 'pallet_jack', 'trash_cans']);
 
     const cellW_world = 2500;
     const cellH_world = 1666.67;
@@ -323,10 +341,9 @@ export function renderCanvas(options: RenderOptions) {
     visibleNodes.forEach(node => {
       // 1. Storage Shelves (Middle Aisles)
       if (AWS_SHELF_NODES.has(node.id)) {
-        const initialBoxes = options.shelfBoxCounts!.get(node.id) ?? 6;
-        const pickedUpCount = currentActiveStep?.pickedUpBoxCounts?.[node.id] ?? 0;
-
-        const remainingBoxes = Math.max(0, initialBoxes - pickedUpCount);
+        const bfsPicked = activeSteps.bfs?.pickedUpBoxCounts?.[node.id] ?? 0;
+        const dfsPicked = activeSteps.dfs?.pickedUpBoxCounts?.[node.id] ?? 0;
+        const hybPicked = activeSteps.hybrid?.pickedUpBoxCounts?.[node.id] ?? 0;
 
         let boxIndex = 0;
         for (let row = 0; row < 3; row++) {
@@ -345,103 +362,238 @@ export function renderCanvas(options: RenderOptions) {
             const cellW = screenX2 - screenX1;
             const cellH = screenY2 - screenY1;
 
-            const padX = cellW * 0.15;
-            const padY = cellH * 0.15;
+            const padX = cellW * 0.12;
+            const padY = cellH * 0.12;
 
             const bx = screenX1 + padX;
             const by = screenY1 + padY;
             const bw = Math.max(1, cellW - 2 * padX);
             const bh = Math.max(1, cellH - 2 * padY);
 
-            const filled = boxIndex <= remainingBoxes;
+            // Outer slot cell frame
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = Math.max(0.5, 1 / zoom);
+            ctx.strokeRect(bx, by, bw, bh);
 
-            if (filled) {
-              ctx.fillStyle = '#f59e0b'; // Amber / Gold filled box
-              ctx.fillRect(bx, by, bw, bh);
-              ctx.strokeStyle = '#78350f';
-              ctx.lineWidth = Math.max(1, 1.5 / zoom);
-              ctx.strokeRect(bx, by, bw, bh);
-            } else {
-              // Hollow outline for empty cell / picked-up box
-              ctx.strokeStyle = 'rgba(245, 158, 11, 0.3)';
-              ctx.lineWidth = Math.max(0.5, 1 / zoom);
-              ctx.strokeRect(bx, by, bw, bh);
-            }
+            // Multi-color layered pillars for BFS (Green), DFS (Purple), and HYBRID (Orange)
+            const algosInSlot = [
+              { key: 'bfs', color: '#22c55e', stroke: '#14532d', remaining: boxIndex <= (6 - bfsPicked), visible: visibleAlgos.bfs },
+              { key: 'dfs', color: '#a855f7', stroke: '#581c87', remaining: boxIndex <= (6 - dfsPicked), visible: visibleAlgos.dfs },
+              { key: 'hybrid', color: '#f97316', stroke: '#7c2d12', remaining: boxIndex <= (6 - hybPicked), visible: visibleAlgos.hybrid }
+            ].filter(a => a.visible || isSimultaneousMode);
+
+            const numPillars = algosInSlot.length || 1;
+            const pillarGap = Math.max(0.5, 1 / zoom);
+            const pillarW = (bw - (numPillars - 1) * pillarGap) / numPillars;
+
+            algosInSlot.forEach((algo, idx) => {
+              const px = bx + idx * (pillarW + pillarGap);
+              const py = by;
+              const pw = Math.max(1, pillarW);
+              const ph = bh;
+
+              if (algo.remaining) {
+                ctx.fillStyle = algo.color;
+                ctx.fillRect(px, py, pw, ph);
+                ctx.strokeStyle = algo.stroke;
+                ctx.lineWidth = Math.max(0.5, 1 / zoom);
+                ctx.strokeRect(px, py, pw, ph);
+              } else {
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+                ctx.lineWidth = Math.max(0.5, 0.8 / zoom);
+                ctx.strokeRect(px, py, pw, ph);
+              }
+            });
           }
         }
       }
 
-      // 2. Packing Desks (Mini Storage Grid Below + Live Delivered / Remaining Distinction)
+      // 2. Packing Desks (3 Independent Mini Storage Grids Below for BFS, DFS, and HYBRID)
       if (PACKING_DESK_NODES.has(node.id)) {
         const requiredCount = options.shelfBoxCounts!.get(node.id) ?? 6;
-        const rawDelivered = currentActiveStep?.deliveredBoxCounts?.[node.id] ?? 0;
 
-        const deliveredCount = Math.min(requiredCount, rawDelivered);
-        const remainingCount = Math.max(0, requiredCount - deliveredCount);
+        const algos = [
+          {
+            id: 'bfs',
+            name: 'BFS',
+            color: '#4ade80',
+            fillColor: '#22c55e',
+            strokeColor: '#14532d',
+            emptyStroke: 'rgba(34, 197, 94, 0.35)',
+            xOffset: -4600,
+            delivered: activeSteps.bfs?.deliveredBoxCounts?.[node.id] ?? 0
+          },
+          {
+            id: 'dfs',
+            name: 'DFS',
+            color: '#c084fc',
+            fillColor: '#a855f7',
+            strokeColor: '#581c87',
+            emptyStroke: 'rgba(168, 85, 247, 0.35)',
+            xOffset: 0,
+            delivered: activeSteps.dfs?.deliveredBoxCounts?.[node.id] ?? 0
+          },
+          {
+            id: 'hybrid',
+            name: 'HYBRID',
+            color: '#fb923c',
+            fillColor: '#f97316',
+            strokeColor: '#7c2d12',
+            emptyStroke: 'rgba(249, 115, 22, 0.35)',
+            xOffset: 4600,
+            delivered: activeSteps.hybrid?.deliveredBoxCounts?.[node.id] ?? 0
+          }
+        ];
 
-        const isFull = deliveredCount >= requiredCount;
+        const isLeftSideNode = node.x <= 6000;
+        const isRightSideNode = node.x >= 44000;
+        const isSideNode = isLeftSideNode || isRightSideNode;
 
-        // Distinction Label (Delivered vs Remaining)
-        const labelText = isFull
-          ? `✅ Delivered: ${deliveredCount} / ${requiredCount} (COMPLETE)`
-          : `📦 Delivered: ${deliveredCount} / ${requiredCount}  |  Remaining: ${remainingCount}`;
-        const labelY = sy(node.y + 1000);
-        ctx.font = `bold ${Math.max(10, 13 / zoom)}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'bottom';
-        ctx.lineWidth = Math.max(2, 3 / zoom);
-        ctx.strokeStyle = '#090d16';
-        ctx.strokeText(labelText, sx(node.x), labelY);
-        ctx.fillStyle = isFull ? '#4ade80' : '#facc15';
-        ctx.fillText(labelText, sx(node.x), labelY);
+        const baseCenterX = isLeftSideNode ? 1700 : isRightSideNode ? 48300 : node.x;
 
-        // Mini Storage Rack Grid below packing desk (centered at node.x, y = node.y + 3500)
-        const pCellW = 2000;
-        const pCellH = 1333.33;
-        const gridTopY = node.y + 1600;
+        // Determine number of assigned robot racks
+        const assignedRobots = (robotAssignments ?? []).filter(a =>
+          a.destinations.includes(node.id)
+        );
 
-        let deskBoxIndex = 0;
-        for (let row = 0; row < 3; row++) {
-          for (let col = 0; col < 2; col++) {
-            deskBoxIndex++;
-            const wX1 = node.x - 2000 + col * pCellW;
-            const wX2 = node.x - 2000 + (col + 1) * pCellW;
-            const wY1 = gridTopY + row * pCellH;
-            const wY2 = gridTopY + (row + 1) * pCellH;
+        // Hide storage grids when destination is not selected for any active robot
+        if (assignedRobots.length === 0) return;
 
-            const sX1 = sx(wX1), sX2 = sx(wX2);
-            const sY1 = sy(wY1), sY2 = sy(wY2);
+        const numRacks = assignedRobots.length;
 
-            const cW = sX2 - sX1;
-            const cH = sY2 - sY1;
+        // Side destination nodes use 3 columns x 2 rows (rotated landscape); Bottom desks use 2 columns x 3 rows (portrait)
+        const gridCols = isSideNode ? 3 : 2;
+        const gridRows = isSideNode ? 2 : 3;
+        const pCellW = isSideNode ? 1000 : 1400;
+        const pCellH = 950;
+        const rackGap = 400;
+        const rackSpanX = (gridCols * pCellW + 600); // 3600 units horizontal shift per robot rack
 
-            const pX = cW * 0.12;
-            const pY = cH * 0.12;
+        algos.forEach(algo => {
+          const isAlgoVisible = visibleAlgos[algo.id as keyof typeof visibleAlgos];
+          if (!isAlgoVisible && !isSimultaneousMode) return;
 
-            const dbx = sX1 + pX;
-            const dby = sY1 + pY;
-            const dbw = Math.max(1, cW - 2 * pX);
-            const dbh = Math.max(1, cH - 2 * pY);
+          let centerX = baseCenterX;
+          let gridBaseY = node.y;
 
-            // Outer cell border
-            ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
-            ctx.lineWidth = Math.max(1, 1.2 / zoom);
-            ctx.strokeRect(sX1, sY1, cW, cH);
+          if (isSideNode) {
+            const algoYOffset = isSimultaneousMode
+              ? (algo.id === 'bfs' ? -2800 : algo.id === 'dfs' ? 0 : 2800)
+              : 0;
+            gridBaseY = node.y + algoYOffset;
+          } else {
+            centerX = baseCenterX + (isSimultaneousMode ? algo.xOffset : 0);
+          }
 
-            const isFilled = deskBoxIndex <= deliveredCount;
-            if (isFilled) {
-              ctx.fillStyle = '#22c55e'; // Green delivered box
-              ctx.fillRect(dbx, dby, dbw, dbh);
-              ctx.strokeStyle = '#14532d';
-              ctx.lineWidth = Math.max(1, 1.5 / zoom);
-              ctx.strokeRect(dbx, dby, dbw, dbh);
-            } else {
-              ctx.strokeStyle = 'rgba(34, 197, 94, 0.25)';
+          const delCount = Math.min(requiredCount, algo.delivered);
+          const isFull = delCount >= requiredCount;
+
+          // Header Label (e.g. "BFS: 4/12")
+          const labelY = sy(isSideNode ? gridBaseY - 200 : node.y + 1100);
+          ctx.font = `bold ${Math.max(9, 11 / zoom)}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.lineWidth = Math.max(2, 2.5 / zoom);
+          ctx.strokeStyle = '#090d16';
+
+          const labelText = isFull ? `✅ ${algo.name} (${requiredCount}/${requiredCount})` : `${algo.name}: ${delCount}/${requiredCount}`;
+          ctx.strokeText(labelText, sx(centerX), labelY);
+          ctx.fillStyle = isFull ? '#4ade80' : algo.color;
+          ctx.fillText(labelText, sx(centerX), labelY);
+
+          // Build per-robot rack allocation: each robot owns one rack (6 cells each)
+          const rackAllocations: { allocated: number; robotDelivered: number }[] = [];
+          let cumulativeFill = delCount;
+          assignedRobots.forEach(robot => {
+            const robotAlloc = robot.boxCounts?.[node.id] ?? 6;
+            const robotFill = Math.min(robotAlloc, Math.max(0, cumulativeFill));
+            rackAllocations.push({ allocated: robotAlloc, robotDelivered: robotFill });
+            cumulativeFill -= robotAlloc;
+          });
+
+          for (let rackIdx = 0; rackIdx < numRacks; rackIdx++) {
+            // For side nodes, extend robot racks (R1, R2, R3...) horizontally
+            const rackCenterX = isSideNode
+              ? (isLeftSideNode ? baseCenterX - rackIdx * rackSpanX : baseCenterX + rackIdx * rackSpanX)
+              : centerX;
+            const gridTopY = isSideNode
+              ? gridBaseY + 100
+              : node.y + 1500 + rackIdx * (gridRows * pCellH + rackGap);
+
+            // Rack label (R1, R2, ...)
+            if (rackAllocations.length > 1) {
+              const rackLabelY = sy(gridTopY - 300);
+              ctx.font = `bold ${Math.max(7, 9 / zoom)}px sans-serif`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'bottom';
+              ctx.fillStyle = 'rgba(200, 200, 220, 0.7)';
+              ctx.fillText(`R${rackIdx + 1}`, sx(rackCenterX), rackLabelY);
+            }
+
+            const rack = rackAllocations[rackIdx];
+            const rackCapacity = rack ? rack.allocated : 6;
+            const rackFilled = rack ? rack.robotDelivered : Math.max(0, delCount - rackIdx * 6);
+
+            let cellIdx = 0;
+            for (let row = 0; row < gridRows; row++) {
+              for (let col = 0; col < gridCols; col++) {
+                cellIdx++;
+                if (cellIdx > rackCapacity) break;
+
+                const halfGridW = (gridCols / 2) * pCellW;
+                const wX1 = rackCenterX - halfGridW + col * pCellW;
+                const wX2 = rackCenterX - halfGridW + (col + 1) * pCellW;
+                const wY1 = gridTopY + row * pCellH;
+                const wY2 = gridTopY + (row + 1) * pCellH;
+
+                const sX1 = sx(wX1), sX2 = sx(wX2);
+                const sY1 = sy(wY1), sY2 = sy(wY2);
+
+                const cW = sX2 - sX1;
+                const cH = sY2 - sY1;
+
+                const pX = cW * 0.12;
+                const pY = cH * 0.12;
+
+                const dbx = sX1 + pX;
+                const dby = sY1 + pY;
+                const dbw = Math.max(1, cW - 2 * pX);
+                const dbh = Math.max(1, cH - 2 * pY);
+
+                // Outer cell border
+                ctx.strokeStyle = algo.emptyStroke;
+                ctx.lineWidth = Math.max(1, 1.2 / zoom);
+                ctx.strokeRect(sX1, sY1, cW, cH);
+
+                const isFilled = cellIdx <= rackFilled;
+                if (isFilled) {
+                  ctx.fillStyle = algo.fillColor;
+                  ctx.fillRect(dbx, dby, dbw, dbh);
+                  ctx.strokeStyle = algo.strokeColor;
+                  ctx.lineWidth = Math.max(1, 1.5 / zoom);
+                  ctx.strokeRect(dbx, dby, dbw, dbh);
+                } else {
+                  ctx.strokeStyle = algo.emptyStroke;
+                  ctx.lineWidth = Math.max(0.5, 1 / zoom);
+                  ctx.strokeRect(dbx, dby, dbw, dbh);
+                }
+              }
+            }
+
+            // Draw subtle rack separator line between racks
+            if (rackIdx < numRacks - 1) {
+              const sepY = sy(gridTopY + 3 * pCellH + rackGap / 2);
+              ctx.beginPath();
+              ctx.strokeStyle = 'rgba(100, 120, 180, 0.25)';
               ctx.lineWidth = Math.max(0.5, 1 / zoom);
-              ctx.strokeRect(dbx, dby, dbw, dbh);
+              ctx.setLineDash([3, 3]);
+              ctx.moveTo(sx(centerX - pCellW * 1.2), sepY);
+              ctx.lineTo(sx(centerX + pCellW * 1.2), sepY);
+              ctx.stroke();
+              ctx.setLineDash([]);
             }
           }
-        }
+        });
       }
     });
     ctx.restore();
@@ -782,14 +934,14 @@ export function renderCanvas(options: RenderOptions) {
 
       // Render carried package badge on active robot node ONLY after picking up from a shelf
       if (scenario === 'robotics' && (sets.bfs.current === node.id || sets.dfs.current === node.id || sets.hyb.current === node.id)) {
-        const AWS_SHELVES = new Set(['shelf_d1','shelf_d2','shelf_e1','shelf_e2','shelf_e3','shelf_e4','shelf_f1','shelf_f2']);
+        const AWS_SHELVES = new Set(['shelf_a1','shelf_a2','shelf_b1','shelf_b2','shelf_d1','shelf_d2','shelf_e1','shelf_e2','shelf_e3','shelf_e4','shelf_f1','shelf_f2']);
         const checkCarrying = (step: AlgorithmStep | null) => {
           if (!step || !step.path) return false;
           const currentIdx = step.path.indexOf(node.id);
           if (currentIdx <= 0) return false;
           const pathBeforeCurrent = step.path.slice(0, currentIdx + 1);
           const passedShelf = pathBeforeCurrent.some(id => AWS_SHELVES.has(id));
-          const isAtDeskOrDepot = node.id === 'dest_desk_a' || node.id === 'dest_desk_b' || sourceIds?.includes(node.id) || sourceId === node.id;
+          const isAtDeskOrDepot = destinationIds.includes(node.id) || sourceIds?.includes(node.id) || sourceId === node.id;
           return passedShelf && !isAtDeskOrDepot;
         };
 
@@ -831,9 +983,11 @@ export function renderCanvas(options: RenderOptions) {
   }
 
   // Highlight completed packing desks (6/6 delivered) in bright green
-  ['dest_desk_a', 'dest_desk_b'].forEach(deskId => {
+  destinationIds.forEach(deskId => {
     const requiredCount = options.shelfBoxCounts?.get(deskId) ?? 6;
-    const delCount = currentActiveStep?.deliveredBoxCounts?.[deskId] ?? 0;
+    const delCount = isSimultaneousMode
+      ? getCombinedDelivered(deskId)
+      : (currentActiveStep?.deliveredBoxCounts?.[deskId] ?? 0);
     if (delCount >= requiredCount) {
       const dNode = visibleNodeMap.get(deskId);
       if (dNode) {

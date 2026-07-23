@@ -450,7 +450,18 @@ export async function runSimulation(
 
   const exitIndex = result.foundDestination ? graph.destinationIds.indexOf(result.foundDestination) : null;
   const totalGraphNodes = graph.nodes.length || 1;
-  const completionRate = Math.min(100, (result.nodesExplored / totalGraphNodes) * 100);
+  
+  const isAWSWarehouse = graph.nodes.some(n => n.id === 'dest_desk_a') || graph.nodes.some(n => n.id === 'shelf_e1');
+  let completionRate = 0;
+  if (isAWSWarehouse) {
+    const lastStep = result.steps[result.steps.length - 1];
+    const totalDelivered = lastStep?.deliveredBoxCounts
+      ? Object.values(lastStep.deliveredBoxCounts).reduce((a, b) => a + b, 0)
+      : 0;
+    completionRate = Math.min(100, (totalDelivered / 12) * 100);
+  } else {
+    completionRate = result.foundDestination !== null ? 100 : Math.min(100, (result.nodesExplored / totalGraphNodes) * 100);
+  }
 
   const metrics: PerformanceMetrics = {
     nodesExplored: result.nodesExplored,

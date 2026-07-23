@@ -90,17 +90,19 @@ export function buildRoboticsGraph(
 }
 
     
-    // Grab all real-world shelves
-    const potentialExits = rwGraph.nodes.filter(n => n.type === 'shelf');
-    if (potentialExits.length > 0) {
-      let currentSeed = seed;
-      const shuffled = [...potentialExits];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(seededRandom(currentSeed++) * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    // Grab all real-world shelves if destinationIds is not explicitly provided
+    if (!rwGraph.destinationIds || rwGraph.destinationIds.length === 0) {
+      const potentialExits = rwGraph.nodes.filter(n => n.type === 'shelf');
+      if (potentialExits.length > 0) {
+        let currentSeed = seed;
+        const shuffled = [...potentialExits];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(seededRandom(currentSeed++) * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        const numExits = Math.floor(seededRandom(currentSeed) * 4) + 2; 
+        rwGraph.destinationIds = shuffled.slice(0, numExits).map(n => n.id);
       }
-      const numExits = Math.floor(seededRandom(currentSeed) * 4) + 2; 
-      rwGraph.destinationIds = shuffled.slice(0, numExits).map(n => n.id);
     }
     return rwGraph;
   }

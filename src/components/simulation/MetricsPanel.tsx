@@ -44,11 +44,19 @@ export const MetricsPanel: React.FC<Props> = ({
         ? { score: 0, label: '-', color: '#64748b' } 
         : getAdaptabilityScore(status, resultData?.metrics || null, algoId, multiResults?.hybrid.dynamicEvents);
       
-      const completion = isStart 
-        ? { percentage: 0, label: '0.0%' }
-        : (status === 'done' && resultData && resultData.metrics.completionRate !== undefined) 
-          ? { percentage: resultData.metrics.completionRate, label: `${resultData.metrics.completionRate.toFixed(1)}%` }
-          : getCompletionRate(exploredCount, totalNodes);
+      const hasDeliveredCounts = stepData?.deliveredBoxCounts !== undefined;
+      let completion = { percentage: 0, label: '0.0%' };
+      if (!isStart) {
+        if (hasDeliveredCounts && stepData?.deliveredBoxCounts) {
+          const totalDelivered = Object.values(stepData.deliveredBoxCounts).reduce((a, b) => a + b, 0);
+          const pct = Math.min(100, (totalDelivered / 12) * 100);
+          completion = { percentage: pct, label: `${pct.toFixed(1)}%` };
+        } else if (status === 'done' && resultData && resultData.metrics.completionRate !== undefined) {
+          completion = { percentage: resultData.metrics.completionRate, label: `${resultData.metrics.completionRate.toFixed(1)}%` };
+        } else {
+          completion = getCompletionRate(exploredCount, totalNodes);
+        }
+      }
 
       const displayMemory = isStart 
         ? '0.0 KB' 

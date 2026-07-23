@@ -1,4 +1,4 @@
-import { AlgorithmStep, ScenarioGraph, ScenarioType, DynamicEvent } from '../../types';
+import { AlgorithmStep, ScenarioGraph, ScenarioType, DynamicEvent, RobotAssignment } from '../../types';
 
 export interface NetworkCanvasProps {
   graph: ScenarioGraph;
@@ -13,6 +13,7 @@ export interface NetworkCanvasProps {
   mapId?: string;
   autoFit?: boolean;
   shelfBoxCounts?: Map<string, number>; // nodeId → box count for AWS Warehouse shelf visualization
+  robotAssignments?: RobotAssignment[];  // per-robot rack allocation for AWS Warehouse
 }
 
 export const NODE_CONFIG: Record<string, { icon: string; radius: number; baseColor: string }> = {

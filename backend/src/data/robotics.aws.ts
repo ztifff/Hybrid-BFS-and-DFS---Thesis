@@ -5,7 +5,71 @@ export const awsWarehouseGraph = {
       "label": "Robot Charging Station\n(Start)",
       "type": "depot",
       "x": 25000,
-      "y": 3000,
+      "y": -1500,
+      "level": 0
+    },
+    {
+      "id": "top_w",
+      "label": "Top Aisle (West)",
+      "type": "zone",
+      "x": 10000,
+      "y": 1000,
+      "level": 0
+    },
+    {
+      "id": "top_mw",
+      "label": "Top Aisle (Mid-West)",
+      "type": "zone",
+      "x": 20000,
+      "y": 1000,
+      "level": 0
+    },
+    {
+      "id": "top_me",
+      "label": "Top Aisle (Mid-East)",
+      "type": "zone",
+      "x": 30000,
+      "y": 1000,
+      "level": 0
+    },
+    {
+      "id": "top_e",
+      "label": "Top Aisle (East)",
+      "type": "zone",
+      "x": 40000,
+      "y": 1000,
+      "level": 0
+    },
+    {
+      "id": "shelf_a1",
+      "label": "Shelf A1 (Electronics)",
+      "type": "aisle",
+      "x": 10000,
+      "y": 4000,
+      "level": 0
+    },
+    {
+      "id": "shelf_a2",
+      "label": "Shelf A2 (Apparel)",
+      "type": "aisle",
+      "x": 20000,
+      "y": 4000,
+      "level": 0
+    },
+    {
+      "id": "shelf_b1",
+      "label": "Shelf B1 (Home & Kitchen)",
+      "type": "aisle",
+      "x": 30000,
+      "y": 4000,
+      "level": 0
+    },
+    {
+      "id": "shelf_b2",
+      "label": "Shelf B2 (Books & Media)",
+      "type": "aisle",
+      "x": 40000,
+      "y": 4000,
       "level": 0
     },
     {
@@ -195,7 +259,7 @@ export const awsWarehouseGraph = {
     {
       "id": "clutter_a",
       "label": "Clutter Zone A",
-      "type": "zone",
+      "type": "shelf",
       "x": 5000,
       "y": 12000,
       "level": 1
@@ -203,7 +267,7 @@ export const awsWarehouseGraph = {
     {
       "id": "clutter_b",
       "label": "Clutter Zone B",
-      "type": "zone",
+      "type": "shelf",
       "x": 45000,
       "y": 12000,
       "level": 1
@@ -211,7 +275,7 @@ export const awsWarehouseGraph = {
     {
       "id": "pallet_jack",
       "label": "Parked Pallet Jack",
-      "type": "zone",
+      "type": "shelf",
       "x": 5000,
       "y": 20000,
       "level": 2
@@ -219,7 +283,7 @@ export const awsWarehouseGraph = {
     {
       "id": "trash_cans",
       "label": "Trash Can Area",
-      "type": "zone",
+      "type": "shelf",
       "x": 45000,
       "y": 20000,
       "level": 2
@@ -227,30 +291,184 @@ export const awsWarehouseGraph = {
   ],
   "edges": [
     {
-      "id": "e_depot_main_front_mw",
+      "id": "e_depot_main_top_mw",
       "from": "depot_main",
+      "to": "top_mw",
+      "latency": 15,
+      "type": "path"
+    },
+    {
+      "id": "e_top_mw_depot_main",
+      "from": "top_mw",
+      "to": "depot_main",
+      "latency": 15,
+      "type": "path"
+    },
+    {
+      "id": "e_depot_main_top_me",
+      "from": "depot_main",
+      "to": "top_me",
+      "latency": 15,
+      "type": "path"
+    },
+    {
+      "id": "e_top_me_depot_main",
+      "from": "top_me",
+      "to": "depot_main",
+      "latency": 15,
+      "type": "path"
+    },
+    {
+      "id": "e_top_w_top_mw",
+      "from": "top_w",
+      "to": "top_mw",
+      "latency": 20,
+      "type": "path"
+    },
+    {
+      "id": "e_top_mw_top_w",
+      "from": "top_mw",
+      "to": "top_w",
+      "latency": 20,
+      "type": "path"
+    },
+    {
+      "id": "e_top_mw_top_me",
+      "from": "top_mw",
+      "to": "top_me",
+      "latency": 20,
+      "type": "path"
+    },
+    {
+      "id": "e_top_me_top_mw",
+      "from": "top_me",
+      "to": "top_mw",
+      "latency": 20,
+      "type": "path"
+    },
+    {
+      "id": "e_top_me_top_e",
+      "from": "top_me",
+      "to": "top_e",
+      "latency": 20,
+      "type": "path"
+    },
+    {
+      "id": "e_top_e_top_me",
+      "from": "top_e",
+      "to": "top_me",
+      "latency": 20,
+      "type": "path"
+    },
+    {
+      "id": "e_top_w_shelf_a1",
+      "from": "top_w",
+      "to": "shelf_a1",
+      "latency": 15,
+      "type": "path"
+    },
+    {
+      "id": "e_shelf_a1_top_w",
+      "from": "shelf_a1",
+      "to": "top_w",
+      "latency": 15,
+      "type": "path"
+    },
+    {
+      "id": "e_shelf_a1_front_w",
+      "from": "shelf_a1",
+      "to": "front_w",
+      "latency": 15,
+      "type": "path"
+    },
+    {
+      "id": "e_front_w_shelf_a1",
+      "from": "front_w",
+      "to": "shelf_a1",
+      "latency": 15,
+      "type": "path"
+    },
+    {
+      "id": "e_top_mw_shelf_a2",
+      "from": "top_mw",
+      "to": "shelf_a2",
+      "latency": 15,
+      "type": "path"
+    },
+    {
+      "id": "e_shelf_a2_top_mw",
+      "from": "shelf_a2",
+      "to": "top_mw",
+      "latency": 15,
+      "type": "path"
+    },
+    {
+      "id": "e_shelf_a2_front_mw",
+      "from": "shelf_a2",
       "to": "front_mw",
       "latency": 15,
       "type": "path"
     },
     {
-      "id": "e_front_mw_depot_main",
+      "id": "e_front_mw_shelf_a2",
       "from": "front_mw",
-      "to": "depot_main",
+      "to": "shelf_a2",
       "latency": 15,
       "type": "path"
     },
     {
-      "id": "e_depot_main_front_me",
-      "from": "depot_main",
+      "id": "e_top_me_shelf_b1",
+      "from": "top_me",
+      "to": "shelf_b1",
+      "latency": 15,
+      "type": "path"
+    },
+    {
+      "id": "e_shelf_b1_top_me",
+      "from": "shelf_b1",
+      "to": "top_me",
+      "latency": 15,
+      "type": "path"
+    },
+    {
+      "id": "e_shelf_b1_front_me",
+      "from": "shelf_b1",
       "to": "front_me",
       "latency": 15,
       "type": "path"
     },
     {
-      "id": "e_front_me_depot_main",
+      "id": "e_front_me_shelf_b1",
       "from": "front_me",
-      "to": "depot_main",
+      "to": "shelf_b1",
+      "latency": 15,
+      "type": "path"
+    },
+    {
+      "id": "e_top_e_shelf_b2",
+      "from": "top_e",
+      "to": "shelf_b2",
+      "latency": 15,
+      "type": "path"
+    },
+    {
+      "id": "e_shelf_b2_top_e",
+      "from": "shelf_b2",
+      "to": "top_e",
+      "latency": 15,
+      "type": "path"
+    },
+    {
+      "id": "e_shelf_b2_front_e",
+      "from": "shelf_b2",
+      "to": "front_e",
+      "latency": 15,
+      "type": "path"
+    },
+    {
+      "id": "e_front_e_shelf_b2",
+      "from": "front_e",
+      "to": "shelf_b2",
       "latency": 15,
       "type": "path"
     },
@@ -720,65 +938,265 @@ export const awsWarehouseGraph = {
   "sourceId": "depot_main",
   "destinationIds": [
     "dest_desk_a",
-    "dest_desk_b"
+    "dest_desk_b",
+    "clutter_a",
+    "clutter_b",
+    "pallet_jack",
+    "trash_cans"
   ],
   "width": 50000,
-  "height": 30000,
+  "height": 33000,
   "walls": [
     {
-      "x1": 2000,
-      "y1": 1000,
-      "x2": 48000,
-      "y2": 1000,
+      "x1": 3500,
+      "y1": -3000,
+      "x2": 46500,
+      "y2": -3000,
       "level": "warehouse"
     },
     {
-      "x1": 48000,
-      "y1": 1000,
-      "x2": 48000,
+      "x1": 46500,
+      "y1": -3000,
+      "x2": 46500,
       "y2": 29000,
       "level": "warehouse"
     },
     {
-      "x1": 48000,
+      "x1": 46500,
       "y1": 29000,
-      "x2": 2000,
+      "x2": 3500,
       "y2": 29000,
       "level": "warehouse"
     },
     {
-      "x1": 2000,
+      "x1": 3500,
       "y1": 29000,
-      "x2": 2000,
-      "y2": 1000,
+      "x2": 3500,
+      "y2": -3000,
       "level": "warehouse"
     },
     {
       "x1": 21000,
-      "y1": 1000,
+      "y1": -3000,
       "x2": 21000,
-      "y2": 5000,
+      "y2": 1000,
       "level": "warehouse"
     },
     {
       "x1": 29000,
-      "y1": 1000,
+      "y1": -3000,
       "x2": 29000,
-      "y2": 5000,
+      "y2": 1000,
       "level": "warehouse"
     },
     {
       "x1": 21000,
-      "y1": 5000,
+      "y1": 1000,
       "x2": 23500,
-      "y2": 5000,
+      "y2": 1000,
       "level": "warehouse"
     },
     {
       "x1": 26500,
-      "y1": 5000,
+      "y1": 1000,
       "x2": 29000,
-      "y2": 5000,
+      "y2": 1000,
+      "level": "warehouse"
+    },
+    {
+      "x1": 7500,
+      "y1": 1500,
+      "x2": 12500,
+      "y2": 1500,
+      "level": "warehouse"
+    },
+    {
+      "x1": 12500,
+      "y1": 1500,
+      "x2": 12500,
+      "y2": 6500,
+      "level": "warehouse"
+    },
+    {
+      "x1": 7500,
+      "y1": 6500,
+      "x2": 12500,
+      "y2": 6500,
+      "level": "warehouse"
+    },
+    {
+      "x1": 7500,
+      "y1": 1500,
+      "x2": 7500,
+      "y2": 6500,
+      "level": "warehouse"
+    },
+    {
+      "x1": 7500,
+      "y1": 3166.6666666666665,
+      "x2": 12500,
+      "y2": 3166.6666666666665,
+      "level": "warehouse"
+    },
+    {
+      "x1": 7500,
+      "y1": 4833.333333333333,
+      "x2": 12500,
+      "y2": 4833.333333333333,
+      "level": "warehouse"
+    },
+    {
+      "x1": 10000,
+      "y1": 1500,
+      "x2": 10000,
+      "y2": 6500,
+      "level": "warehouse"
+    },
+    {
+      "x1": 17500,
+      "y1": 1500,
+      "x2": 22500,
+      "y2": 1500,
+      "level": "warehouse"
+    },
+    {
+      "x1": 22500,
+      "y1": 1500,
+      "x2": 22500,
+      "y2": 6500,
+      "level": "warehouse"
+    },
+    {
+      "x1": 17500,
+      "y1": 6500,
+      "x2": 22500,
+      "y2": 6500,
+      "level": "warehouse"
+    },
+    {
+      "x1": 17500,
+      "y1": 1500,
+      "x2": 17500,
+      "y2": 6500,
+      "level": "warehouse"
+    },
+    {
+      "x1": 17500,
+      "y1": 3166.6666666666665,
+      "x2": 22500,
+      "y2": 3166.6666666666665,
+      "level": "warehouse"
+    },
+    {
+      "x1": 17500,
+      "y1": 4833.333333333333,
+      "x2": 22500,
+      "y2": 4833.333333333333,
+      "level": "warehouse"
+    },
+    {
+      "x1": 20000,
+      "y1": 1500,
+      "x2": 20000,
+      "y2": 6500,
+      "level": "warehouse"
+    },
+    {
+      "x1": 27500,
+      "y1": 1500,
+      "x2": 32500,
+      "y2": 1500,
+      "level": "warehouse"
+    },
+    {
+      "x1": 32500,
+      "y1": 1500,
+      "x2": 32500,
+      "y2": 6500,
+      "level": "warehouse"
+    },
+    {
+      "x1": 27500,
+      "y1": 6500,
+      "x2": 32500,
+      "y2": 6500,
+      "level": "warehouse"
+    },
+    {
+      "x1": 27500,
+      "y1": 1500,
+      "x2": 27500,
+      "y2": 6500,
+      "level": "warehouse"
+    },
+    {
+      "x1": 27500,
+      "y1": 3166.6666666666665,
+      "x2": 32500,
+      "y2": 3166.6666666666665,
+      "level": "warehouse"
+    },
+    {
+      "x1": 27500,
+      "y1": 4833.333333333333,
+      "x2": 32500,
+      "y2": 4833.333333333333,
+      "level": "warehouse"
+    },
+    {
+      "x1": 30000,
+      "y1": 1500,
+      "x2": 30000,
+      "y2": 6500,
+      "level": "warehouse"
+    },
+    {
+      "x1": 37500,
+      "y1": 1500,
+      "x2": 42500,
+      "y2": 1500,
+      "level": "warehouse"
+    },
+    {
+      "x1": 42500,
+      "y1": 1500,
+      "x2": 42500,
+      "y2": 6500,
+      "level": "warehouse"
+    },
+    {
+      "x1": 37500,
+      "y1": 6500,
+      "x2": 42500,
+      "y2": 6500,
+      "level": "warehouse"
+    },
+    {
+      "x1": 37500,
+      "y1": 1500,
+      "x2": 37500,
+      "y2": 6500,
+      "level": "warehouse"
+    },
+    {
+      "x1": 37500,
+      "y1": 3166.6666666666665,
+      "x2": 42500,
+      "y2": 3166.6666666666665,
+      "level": "warehouse"
+    },
+    {
+      "x1": 37500,
+      "y1": 4833.333333333333,
+      "x2": 42500,
+      "y2": 4833.333333333333,
+      "level": "warehouse"
+    },
+    {
+      "x1": 40000,
+      "y1": 1500,
+      "x2": 40000,
+      "y2": 6500,
       "level": "warehouse"
     },
     {

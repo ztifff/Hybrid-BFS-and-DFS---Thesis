@@ -15,6 +15,7 @@ import { DynamicMapEvents } from './DynamicMapEvents';
 import { StrategyMapEvents } from './StrategyMapEvents';
 import { HelpModal } from '../../components/HelpModal';
 import { RobotAssignmentPanel } from './RobotAssignmentPanel';
+import { RobotLiveStatusPanel } from './RobotLiveStatusPanel';
 
 interface Props {
   scenario: ScenarioType;
@@ -68,8 +69,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     sim.robotAssignments.forEach(a => {
       a.destinations.forEach(destId => {
         const count = a.boxCounts?.[destId] ?? 6;
-        // Use the max count if multiple robots share a destination
-        map.set(destId, Math.max(map.get(destId) ?? 0, count));
+        // Sum total required boxes across all robots assigned to this destination
+        map.set(destId, (map.get(destId) ?? 0) + count);
       });
     });
     return map;
@@ -346,6 +347,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     }}
                     mapId={sim.mapId}
                     shelfBoxCounts={shelfBoxCounts}
+                    robotAssignments={sim.robotAssignments}
                   />
 
                   {scenario === 'network' && (sim.mapId === 'companybusiness' || sim.mapId === 'campus') && highlightedNodeId && (
@@ -502,13 +504,24 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             </div>
 
             {scenario === 'robotics' && sim.mapId !== 'synthetic' && sim.currentGraph && (
-              <RobotAssignmentPanel
-                assignments={sim.robotAssignments}
-                setAssignments={sim.setRobotAssignments}
-                depotNodes={sim.currentGraph.nodes.filter(n => n.type === 'depot')}
-                shelfNodes={sim.currentGraph.nodes.filter(n => n.type === 'shelf')}
-                disabled={sim.isComputing || sim.status === 'running'}
-              />
+              <>
+                <RobotAssignmentPanel
+                  assignments={sim.robotAssignments}
+                  setAssignments={sim.setRobotAssignments}
+                  depotNodes={sim.currentGraph.nodes.filter(n => n.type === 'depot')}
+                  shelfNodes={sim.currentGraph.nodes.filter(n => n.type === 'shelf')}
+                  disabled={sim.isComputing || sim.status === 'running'}
+                  mapId={sim.mapId}
+                />
+
+                <RobotLiveStatusPanel
+                  assignments={sim.robotAssignments}
+                  activeSteps={sim.activeSteps}
+                  graphNodes={sim.currentGraph.nodes}
+                  onRobotClick={(nodeId) => setHighlightedNodeId(nodeId)}
+                  mapId={sim.mapId}
+                />
+              </>
             )}
 
             {sim.mapId === 'campus' && scenario === 'network' && (

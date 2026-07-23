@@ -19,6 +19,7 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
   mapId,
   autoFit,
   shelfBoxCounts,
+  robotAssignments,
 }) => {
   const { nodes, edges, width, height } = graph;
 
@@ -113,7 +114,7 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
     const node = nodes.find(n => n.id === highlightedNodeId);
     if (!node) return;
 
-    if (isLayeredMap && node.buildingId && (node.buildingId === 'GL' || node.buildingId === 'L2')) {
+    if (isLayeredMap && node.buildingId) {
       setActiveFloor(node.buildingId);
     }
 
@@ -138,6 +139,10 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
     if (!currentNodeId) return;
     const node = nodes.find(n => n.id === currentNodeId);
     if (!node) return;
+
+    if (isLayeredMap && node.buildingId) {
+      setActiveFloor(node.buildingId);
+    }
 
     const nodeScreenX = (node.x * scale) + offsetX;
     const nodeScreenY = (node.y * scale) + offsetY;
@@ -187,13 +192,15 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
       sets,
       activeSteps,
       graph,
-      shelfBoxCounts
+      shelfBoxCounts,
+      robotAssignments,
+      followAlgo
     });
   }, [
     visibleNodes, visibleEdges, visibleNodeMap, pan, zoom, sets, activeBlocked, 
     width, height, scenario, isMassive, isDatacenter, scale, offsetX, offsetY, 
     windowDimensions, highlightedNodeId, visibleAlgos, mapId, wasHistoricallyBlocked,
-    graph.sourceId, graph.destinationIds, activeSteps, canvasRef
+    graph.sourceId, graph.destinationIds, activeSteps, followAlgo, canvasRef
   ]);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
