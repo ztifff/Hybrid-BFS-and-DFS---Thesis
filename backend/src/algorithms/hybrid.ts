@@ -83,6 +83,7 @@ export class HybridPathfinder implements PathfinderObserver {
   ): Promise<HybridResult> {
     const { nodes, edges, sourceId, destinationIds } = graph;
     const isAWSWarehouse = nodes.some(n => n.id === 'dest_desk_a') || nodes.some(n => n.id === 'shelf_e1');
+    const isRoboticsMap = isAWSWarehouse || nodes.some(n => n.id.startsWith('shelf_'));
 
     const nodeMap = new Map(nodes.map(n => [n.id, n]));
     const adj = new Map<string, { to: string; latency: number }[]>();
@@ -200,16 +201,16 @@ export class HybridPathfinder implements PathfinderObserver {
       return isDenselyConnected ? 'BFS' : 'DFS';
     }
 
-      const getActiveDestinations = (ag: AgentState): Set<string> => {
-        if (ag.priorityDest && ag.destSet.has(ag.priorityDest)) {
-          const req = ag.requiredBoxes[ag.priorityDest] ?? (isAWSWarehouse ? 6 : 1);
-          const del = ag.deliveredBoxes[ag.priorityDest] ?? (ag.foundDestinations.includes(ag.priorityDest) ? 1 : 0);
-          if (del < req) {
-            return new Set([ag.priorityDest]);
-          }
+    const getActiveDestinations = (ag: AgentState): Set<string> => {
+      if (ag.priorityDest && ag.destSet.has(ag.priorityDest)) {
+        const req = ag.requiredBoxes[ag.priorityDest] ?? (isAWSWarehouse ? 6 : 1);
+        const del = ag.deliveredBoxes[ag.priorityDest] ?? (ag.foundDestinations.includes(ag.priorityDest) ? 1 : 0);
+        if (del < req) {
+          return new Set([ag.priorityDest]);
         }
-        return ag.destSet;
-      };
+      }
+      return ag.destSet;
+    };
 
     while (agents.some(a => !a.done) && iteration < MAX_TOTAL_STEPS) {
       let attempts = 0;
@@ -220,7 +221,7 @@ export class HybridPathfinder implements PathfinderObserver {
 
       const agent = agents[activeAgentIndex];
       if (agent.frontier.length === 0) {
-        if (!isAWSWarehouse) {
+        if (!isRoboticsMap) {
           agent.done = true;
           activeAgentIndex = (activeAgentIndex + 1) % agents.length;
           if (agents.every(a => a.done)) break;
@@ -356,10 +357,11 @@ export class HybridPathfinder implements PathfinderObserver {
 
       let resetHappened = false;
 
-      if (isAWSWarehouse) {
+      if (isRoboticsMap) {
         const STORAGE_SHELVES = new Set(['shelf_a1','shelf_a2','shelf_b1','shelf_b2','shelf_d1','shelf_d2','shelf_e1','shelf_e2','shelf_e3','shelf_e4','shelf_f1','shelf_f2']);
+        const isStorageShelf = (id: string) => STORAGE_SHELVES.has(id) || (id.startsWith('shelf_') && !id.startsWith('dest_'));
 
-        if (!agent.hasCargo && STORAGE_SHELVES.has(current) && (agent.pickedUpBoxes[current] ?? 0) < 6) {
+        if (!agent.hasCargo && isStorageShelf(current) && (agent.pickedUpBoxes[current] ?? 0) < 6) {
           agent.hasCargo = true;
           agent.pickedUpBoxes[current] = (agent.pickedUpBoxes[current] ?? 0) + 1;
 

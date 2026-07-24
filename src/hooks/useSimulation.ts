@@ -189,7 +189,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
       isMounted = false;
       controller.stopAnimation();
     };
-  }, [scenario, model.mapId, model.seed, model.gameBoard, model.graphSize, model.syntheticSizing, model.networkRoutingMode, model.sourceDevice, model.destinationDevices, model.deliveryMode,  controller.stopAnimation]);
+  }, [scenario, model.mapId, model.seed, model.gameBoard, model.graphSize, model.syntheticSizing, model.networkRoutingMode, model.sourceDevice, model.destinationDevices, model.deliveryMode, JSON.stringify(model.robotAssignments), controller.stopAnimation]);
 
   // Wrapper for confirmSaveResult to inject controller state
   const confirmSaveResult = () => {

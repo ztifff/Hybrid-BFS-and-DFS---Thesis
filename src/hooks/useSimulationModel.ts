@@ -51,7 +51,9 @@ export function useSimulationModel(scenario: ScenarioType) {
   const [deliveryMode, setDeliveryMode] = useState<'anycast' | 'multicast'>('anycast');
 
   // ✅ Multi-Agent Robotics: Per-robot destination assignments
-  const [robotAssignments, setRobotAssignments] = useState<RobotAssignment[]>([]);
+  const [robotAssignments, setRobotAssignments] = useState<RobotAssignment[]>([
+    { robotId: 'depot', destinations: ['dest_finish_1', 'dest_finish_2'], boxCounts: { 'dest_finish_1': 6, 'dest_finish_2': 6 } }
+  ]);
 
   // Derived: sourceDevices and destinationDevices from robotAssignments
   // IMPORTANT: wrapped in useMemo so they maintain referential stability across renders.
@@ -71,13 +73,28 @@ export function useSimulationModel(scenario: ScenarioType) {
     const min = field === 'nodes' ? MIN_SYNTHETIC_NODES[scenario] : 4;
     const max = field === 'nodes' ? MAX_SYNTHETIC_NODES[scenario] : 1600;
 
-    setSyntheticSizingByScenario((previous) => ({
-      ...previous,
-      [scenario]: {
-        ...previous[scenario],
-        [field]: clampSizing(rawValue, min, max),
-      },
-    }));
+    setSyntheticSizingByScenario((previous) => {
+      const current = previous[scenario];
+      const nextVal = clampSizing(rawValue, min, max);
+      let nextNodes = current.nodes;
+      let nextEdges = current.edges;
+
+      if (field === 'nodes') {
+        nextNodes = nextVal;
+        // Auto-adjust links when nodes increase so grid connectivity stays dense
+        nextEdges = Math.max(current.edges, Math.round(nextVal * 1.1));
+      } else {
+        nextEdges = nextVal;
+      }
+
+      return {
+        ...previous,
+        [scenario]: {
+          nodes: nextNodes,
+          edges: nextEdges,
+        },
+      };
+    });
   }, [scenario]);
 
   const handleRerollEvents = () => {
@@ -317,16 +334,33 @@ export function useSimulationModel(scenario: ScenarioType) {
   const roboticsInitializedMap = useRef<string | null>(null);
 
   useEffect(() => {
-    if (scenario === 'robotics' && mapId !== 'synthetic' && currentGraph) {
+    if (scenario === 'robotics' && currentGraph) {
       const depots = currentGraph.nodes.filter(n => n.type === 'depot').map(n => n.id);
-      const shelves = currentGraph.nodes.filter(n => n.type === 'shelf').map(n => n.id);
+      const destNodes = currentGraph.nodes.filter(n => n.type === 'shelf' || n.id.startsWith('dest_')).map(n => n.id);
 
-      if (roboticsInitializedMap.current !== mapId) {
-        // Initial setup for this map — each depot gets its own assignment with no destinations yet
-        const initialAssignments: RobotAssignment[] = depots.map(depotId => ({
-          robotId: depotId,
-          destinations: [],
-        }));
+      if (mapId === 'synthetic') {
+        const finishNodes = currentGraph.nodes.filter(n => n.id.startsWith('dest_')).map(n => n.id);
+        const boxCounts: Record<string, number> = {};
+        finishNodes.forEach(d => boxCounts[d] = 6);
+        const updatedAssignment: RobotAssignment[] = [{
+          robotId: depots[0] || 'depot',
+          destinations: finishNodes,
+          boxCounts
+        }];
+        setRobotAssignments(prev => JSON.stringify(prev) !== JSON.stringify(updatedAssignment) ? updatedAssignment : prev);
+        roboticsInitializedMap.current = mapId;
+      } else if (roboticsInitializedMap.current !== mapId) {
+        // Initial setup for AWS / Clinic map
+        const initialAssignments: RobotAssignment[] = depots.map((depotId, idx) => {
+          const defaultDests = idx === 0 ? destNodes.slice(0, 2) : [];
+          const boxCounts: Record<string, number> = {};
+          defaultDests.forEach(d => boxCounts[d] = 6);
+          return {
+            robotId: depotId,
+            destinations: defaultDests,
+            boxCounts
+          };
+        });
         setRobotAssignments(initialAssignments);
         roboticsInitializedMap.current = mapId;
       } else {
@@ -336,8 +370,8 @@ export function useSimulationModel(scenario: ScenarioType) {
             .filter(a => depots.includes(a.robotId))
             .map(a => ({
               ...a,
-              destinations: a.destinations.filter(d => shelves.includes(d)),
-              priorityDest: a.priorityDest && shelves.includes(a.priorityDest) ? a.priorityDest : undefined,
+              destinations: a.destinations.filter(d => destNodes.includes(d)),
+              priorityDest: a.priorityDest && destNodes.includes(a.priorityDest) ? a.priorityDest : undefined,
             }));
           return JSON.stringify(cleaned) !== JSON.stringify(prev) ? cleaned : prev;
         });

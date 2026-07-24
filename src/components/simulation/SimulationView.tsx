@@ -503,24 +503,26 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               />
             </div>
 
-            {scenario === 'robotics' && sim.mapId !== 'synthetic' && sim.currentGraph && (
+            {scenario === 'robotics' && sim.currentGraph && (
               <>
                 <RobotAssignmentPanel
                   assignments={sim.robotAssignments}
                   setAssignments={sim.setRobotAssignments}
                   depotNodes={sim.currentGraph.nodes.filter(n => n.type === 'depot')}
-                  shelfNodes={sim.currentGraph.nodes.filter(n => n.type === 'shelf')}
+                  shelfNodes={sim.currentGraph.nodes.filter(n => n.type === 'shelf' || n.id.startsWith('dest_'))}
                   disabled={sim.isComputing || sim.status === 'running'}
                   mapId={sim.mapId}
                 />
 
-                <RobotLiveStatusPanel
-                  assignments={sim.robotAssignments}
-                  activeSteps={sim.activeSteps}
-                  graphNodes={sim.currentGraph.nodes}
-                  onRobotClick={(nodeId) => setHighlightedNodeId(nodeId)}
-                  mapId={sim.mapId}
-                />
+                {sim.mapId !== 'clinic' && (
+                  <RobotLiveStatusPanel
+                    assignments={sim.robotAssignments}
+                    activeSteps={sim.activeSteps}
+                    graphNodes={sim.currentGraph.nodes}
+                    onRobotClick={(nodeId) => setHighlightedNodeId(nodeId)}
+                    mapId={sim.mapId}
+                  />
+                )}
               </>
             )}
 

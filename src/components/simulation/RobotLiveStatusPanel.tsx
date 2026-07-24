@@ -32,7 +32,7 @@ export const RobotLiveStatusPanel: React.FC<Props> = ({
 
   if (!assignments || assignments.length === 0) return null;
 
-  const isAWSWarehouse = mapId === 'aws' || mapId === 'awsWarehouse';
+  const isBoxDeliveryMap = mapId === 'aws' || mapId === 'awsWarehouse' || mapId === 'synthetic';
   const activeStep = activeSteps[selectedAlgo] ?? activeSteps.bfs ?? activeSteps.hybrid ?? activeSteps.dfs;
   const nodeMap = new Map(graphNodes.map(n => [n.id, n.label.replace(/\n/g, ' ')]));
   const theme = ALGO_CONFIG[selectedAlgo];
@@ -81,7 +81,7 @@ export const RobotLiveStatusPanel: React.FC<Props> = ({
           let totalRequired = 0;
           let totalDelivered = 0;
 
-          if (isAWSWarehouse) {
+          if (isBoxDeliveryMap) {
             /* total boxes this robot is responsible for */
             assignment.destinations.forEach(d => {
               totalRequired += assignment.boxCounts?.[d] ?? 6;
@@ -169,15 +169,17 @@ export const RobotLiveStatusPanel: React.FC<Props> = ({
                 </span>
               </div>
 
-              {/* Assigned destinations list for Clinic / non-AWS maps */}
-              {!isAWSWarehouse && assignment.destinations.length > 0 && (
+              {/* Assigned destinations list */}
+              {assignment.destinations.length > 0 && (
                 <div className="mt-1 pt-1.5 border-t border-gray-800/60 space-y-1">
                   <div className="text-[9px] uppercase tracking-wider text-gray-500 font-bold">
                     Assigned Destinations:
                   </div>
                   {assignment.destinations.map(destId => {
                     const destName = nodeMap.get(destId) ?? destId;
-                    const isReached = activeStep?.foundDestinations?.includes(destId) || (activeStep?.deliveredBoxCounts?.[destId] ?? 0) > 0;
+                    const required = assignment.boxCounts?.[destId] ?? (isBoxDeliveryMap ? 6 : 1);
+                    const delivered = activeStep?.deliveredBoxCounts?.[destId] ?? 0;
+                    const isReached = isBoxDeliveryMap ? delivered >= required : (activeStep?.foundDestinations?.includes(destId) || delivered > 0);
                     const isCurrent = locId === destId;
 
                     return (
@@ -190,7 +192,7 @@ export const RobotLiveStatusPanel: React.FC<Props> = ({
                         <span className={`text-[9px] font-bold shrink-0 ${
                           isReached ? 'text-emerald-400' : isCurrent ? 'text-blue-400' : 'text-gray-500'
                         }`}>
-                          {isReached ? 'Reached' : isCurrent ? 'Arrived' : 'Pending'}
+                          {isBoxDeliveryMap ? `${delivered}/${required}` : (isReached ? 'Reached' : isCurrent ? 'Arrived' : 'Pending')}
                         </span>
                       </div>
                     );

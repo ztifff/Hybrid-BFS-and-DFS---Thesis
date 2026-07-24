@@ -321,28 +321,39 @@ export async function runSimulation(
   }
 
   if (customRobotAssignments !== undefined && customRobotAssignments.length > 0) {
-    graph.sourceIds = customRobotAssignments.map(a => a.robotId);
-    const orderedDests: string[] = [];
-    const seen = new Set<string>();
-    for (const assignment of customRobotAssignments) {
-      if (assignment.priorityDest && assignment.destinations.includes(assignment.priorityDest)) {
-        if (!seen.has(assignment.priorityDest)) {
-          orderedDests.push(assignment.priorityDest);
-          seen.add(assignment.priorityDest);
+    const validNodeIds = new Set(graph.nodes.map(n => n.id));
+    const cleanedAssignments = customRobotAssignments
+      .filter(a => validNodeIds.has(a.robotId))
+      .map(a => ({
+        ...a,
+        destinations: a.destinations.filter(d => validNodeIds.has(d)),
+        priorityDest: a.priorityDest && validNodeIds.has(a.priorityDest) ? a.priorityDest : undefined
+      }));
+
+    const validAssignmentsWithDests = cleanedAssignments.filter(a => a.destinations.length > 0);
+
+    if (validAssignmentsWithDests.length > 0) {
+      graph.sourceIds = validAssignmentsWithDests.map(a => a.robotId);
+      const orderedDests: string[] = [];
+      const seen = new Set<string>();
+      for (const assignment of validAssignmentsWithDests) {
+        if (assignment.priorityDest && assignment.destinations.includes(assignment.priorityDest)) {
+          if (!seen.has(assignment.priorityDest)) {
+            orderedDests.push(assignment.priorityDest);
+            seen.add(assignment.priorityDest);
+          }
+        }
+        for (const dest of assignment.destinations) {
+          if (!seen.has(dest)) {
+            orderedDests.push(dest);
+            seen.add(dest);
+          }
         }
       }
-      for (const dest of assignment.destinations) {
-        if (!seen.has(dest)) {
-          orderedDests.push(dest);
-          seen.add(dest);
-        }
+      if (orderedDests.length > 0) {
+        graph.destinationIds = orderedDests;
       }
-    }
-    graph.destinationIds = orderedDests;
-    if (customRobotAssignments.length > 0) {
-      graph.sourceId = customRobotAssignments[0].robotId;
-    } else {
-      graph.sourceId = "";
+      graph.sourceId = validAssignmentsWithDests[0].robotId;
     }
   } else if (customDestinationIds !== undefined) {
     graph.destinationIds = customDestinationIds;
@@ -525,7 +536,7 @@ export async function orchestrateSimulation(
     const env = new SimulationEnvironment([]);
     const pathfinder = new BFSPathfinder();
     const optimalResult = await pathfinder.execute(hybridRes.graph, env, false);
-    optimalPathLength = optimalResult.pathLength;
+    optimalPathLength = bfsRes.metrics?.pathLength || optimalResult.pathLength;
   }
 
   const recordId = Math.random().toString(36).substring(7);

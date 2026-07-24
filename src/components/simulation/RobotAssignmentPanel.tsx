@@ -199,7 +199,7 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
                 </div>
 
                 {/* Inactive robots */}
-                {!disabled && unassignedDepots.length > 0 && (
+                {!disabled && mapId !== 'synthetic' && unassignedDepots.length > 0 && (
                   <div className="border-t border-gray-800 p-2">
                     <div className="text-[9px] uppercase tracking-widest text-gray-600 font-bold mb-1 px-1">
                       Inactive
@@ -320,8 +320,8 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
                                   )}
                                 </div>
 
-                                {/* Box count row — only when selected and on AWS Warehouse map */}
-                                {isSelected && isAWSWarehouse && (
+                                {/* Box count row — show for AWS Warehouse and Synthetic maps */}
+                                {isSelected && mapId !== 'clinic' && (
                                   <div
                                     className="flex items-center gap-2 pl-7"
                                     onClick={(e) => e.stopPropagation()}

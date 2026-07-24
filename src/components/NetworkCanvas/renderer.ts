@@ -327,9 +327,8 @@ export function renderCanvas(options: RenderOptions) {
   }
 
   // --- AWS Warehouse Shelf & Packing Desk Box Visualization ---
-  if (scenario === 'robotics' && (mapId === 'aws' || mapId === 'awsWarehouse') && options.shelfBoxCounts) {
+  if (scenario === 'robotics' && options.shelfBoxCounts) {
     ctx.save();
-    // Only the 8 main storage shelf nodes in the middle aisles have 6-box racks
     const AWS_SHELF_NODES = new Set([
       'shelf_a1','shelf_a2','shelf_b1','shelf_b2','shelf_d1','shelf_d2','shelf_e1','shelf_e2','shelf_e3','shelf_e4','shelf_f1','shelf_f2'
     ]);
@@ -339,8 +338,9 @@ export function renderCanvas(options: RenderOptions) {
     const cellH_world = 1666.67;
 
     visibleNodes.forEach(node => {
-      // 1. Storage Shelves (Middle Aisles)
-      if (AWS_SHELF_NODES.has(node.id)) {
+      const isStorageShelf = AWS_SHELF_NODES.has(node.id) || (node.id.startsWith('shelf_') && !node.id.startsWith('dest_'));
+      // 1. Storage Shelves
+      if (isStorageShelf) {
         const bfsPicked = activeSteps.bfs?.pickedUpBoxCounts?.[node.id] ?? 0;
         const dfsPicked = activeSteps.dfs?.pickedUpBoxCounts?.[node.id] ?? 0;
         const hybPicked = activeSteps.hybrid?.pickedUpBoxCounts?.[node.id] ?? 0;
@@ -408,8 +408,9 @@ export function renderCanvas(options: RenderOptions) {
         }
       }
 
-      // 2. Packing Desks (3 Independent Mini Storage Grids Below for BFS, DFS, and HYBRID)
-      if (PACKING_DESK_NODES.has(node.id)) {
+      // 2. Packing Desks & Synthetic Destinations
+      const isDestinationNode = PACKING_DESK_NODES.has(node.id) || node.id.startsWith('dest_');
+      if (isDestinationNode) {
         const requiredCount = options.shelfBoxCounts!.get(node.id) ?? 6;
 
         const algos = [
@@ -420,7 +421,7 @@ export function renderCanvas(options: RenderOptions) {
             fillColor: '#22c55e',
             strokeColor: '#14532d',
             emptyStroke: 'rgba(34, 197, 94, 0.35)',
-            xOffset: -4600,
+            xOffset: -2500,
             delivered: activeSteps.bfs?.deliveredBoxCounts?.[node.id] ?? 0
           },
           {
@@ -440,13 +441,15 @@ export function renderCanvas(options: RenderOptions) {
             fillColor: '#f97316',
             strokeColor: '#7c2d12',
             emptyStroke: 'rgba(249, 115, 22, 0.35)',
-            xOffset: 4600,
+            xOffset: 2500,
             delivered: activeSteps.hybrid?.deliveredBoxCounts?.[node.id] ?? 0
           }
         ];
 
-        const isLeftSideNode = node.x <= 6000;
-        const isRightSideNode = node.x >= 44000;
+        const isSyntheticDest = node.id.startsWith('dest_finish_');
+        const isAWSMap = options.mapId === 'aws' || options.mapId === 'awsWarehouse';
+        const isLeftSideNode = isAWSMap && !isSyntheticDest && node.x <= 6000;
+        const isRightSideNode = isAWSMap && !isSyntheticDest && node.x >= 44000;
         const isSideNode = isLeftSideNode || isRightSideNode;
 
         const baseCenterX = isLeftSideNode ? 1700 : isRightSideNode ? 48300 : node.x;
@@ -464,8 +467,8 @@ export function renderCanvas(options: RenderOptions) {
         // Side destination nodes use 3 columns x 2 rows (rotated landscape); Bottom desks use 2 columns x 3 rows (portrait)
         const gridCols = isSideNode ? 3 : 2;
         const gridRows = isSideNode ? 2 : 3;
-        const pCellW = isSideNode ? 1000 : 1400;
-        const pCellH = 950;
+        const pCellW = isSideNode ? 1000 : 1100;
+        const pCellH = 800;
         const rackGap = 400;
         const rackSpanX = (gridCols * pCellW + 600); // 3600 units horizontal shift per robot rack
 
@@ -934,13 +937,13 @@ export function renderCanvas(options: RenderOptions) {
 
       // Render carried package badge on active robot node ONLY after picking up from a shelf
       if (scenario === 'robotics' && (sets.bfs.current === node.id || sets.dfs.current === node.id || sets.hyb.current === node.id)) {
-        const AWS_SHELVES = new Set(['shelf_a1','shelf_a2','shelf_b1','shelf_b2','shelf_d1','shelf_d2','shelf_e1','shelf_e2','shelf_e3','shelf_e4','shelf_f1','shelf_f2']);
+        const isShelfNode = (id: string) => id.startsWith('shelf_') && !id.startsWith('dest_');
         const checkCarrying = (step: AlgorithmStep | null) => {
           if (!step || !step.path) return false;
           const currentIdx = step.path.indexOf(node.id);
           if (currentIdx <= 0) return false;
           const pathBeforeCurrent = step.path.slice(0, currentIdx + 1);
-          const passedShelf = pathBeforeCurrent.some(id => AWS_SHELVES.has(id));
+          const passedShelf = pathBeforeCurrent.some(id => isShelfNode(id));
           const isAtDeskOrDepot = destinationIds.includes(node.id) || sourceIds?.includes(node.id) || sourceId === node.id;
           return passedShelf && !isAtDeskOrDepot;
         };

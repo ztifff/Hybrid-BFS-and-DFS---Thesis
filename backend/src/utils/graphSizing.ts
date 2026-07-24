@@ -60,6 +60,9 @@ function reachesDestinations(graph: ScenarioGraph, edges: GraphEdge[]): boolean 
     if (adj.has(edge.from) && nodeIds.has(edge.to)) {
       adj.get(edge.from)!.push(edge.to);
     }
+    if (adj.has(edge.to) && nodeIds.has(edge.from)) {
+      adj.get(edge.to)!.push(edge.from);
+    }
   });
 
   const visited = new Set<string>([graph.sourceId]);

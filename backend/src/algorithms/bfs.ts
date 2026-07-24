@@ -28,7 +28,6 @@ function reconstructPath(parentMap: Map<string, string | null>, nodeId: string):
   return path;
 }
 
-// Full-subtree descendant finder using childrenMap
 function collectSubtree(
   blockedId: string,
   childrenMap: Map<string, string[]>,
@@ -83,6 +82,7 @@ export class BFSPathfinder implements PathfinderObserver {
   ): Promise<BFSResult> {
     const { nodes, edges, sourceId, destinationIds } = graph;
     const isAWSWarehouse = nodes.some(n => n.id === 'dest_desk_a') || nodes.some(n => n.id === 'shelf_e1');
+    const isRoboticsMap = isAWSWarehouse || nodes.some(n => n.id.startsWith('shelf_'));
 
     const adj = new Map<string, { to: string; latency: number }[]>();
     nodes.forEach((n) => adj.set(n.id, []));
@@ -204,7 +204,7 @@ export class BFSPathfinder implements PathfinderObserver {
 
       const agent = agents[activeAgentIndex];
       if (agent.queue.length === 0) {
-        if (!isAWSWarehouse) {
+        if (!isRoboticsMap) {
           agent.done = true;
           activeAgentIndex = (activeAgentIndex + 1) % agents.length;
           if (agents.every(a => a.done)) break;
@@ -357,11 +357,12 @@ export class BFSPathfinder implements PathfinderObserver {
         return ag.destSet;
       };
 
-      if (isAWSWarehouse) {
+      if (isRoboticsMap) {
         const STORAGE_SHELVES = new Set(['shelf_a1','shelf_a2','shelf_b1','shelf_b2','shelf_d1','shelf_d2','shelf_e1','shelf_e2','shelf_e3','shelf_e4','shelf_f1','shelf_f2']);
+        const isStorageShelf = (id: string) => STORAGE_SHELVES.has(id) || (id.startsWith('shelf_') && !id.startsWith('dest_'));
 
         // Phase 1: Seeking a box from an available storage shelf (shelf has remaining boxes < 6)
-        if (!agent.hasCargo && STORAGE_SHELVES.has(current) && (agent.pickedUpBoxes[current] ?? 0) < 6) {
+        if (!agent.hasCargo && isStorageShelf(current) && (agent.pickedUpBoxes[current] ?? 0) < 6) {
           agent.hasCargo = true; // Robot picks up 1 box!
           agent.pickedUpBoxes[current] = (agent.pickedUpBoxes[current] ?? 0) + 1;
 
