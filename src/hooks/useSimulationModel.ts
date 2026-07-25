@@ -273,7 +273,7 @@ export function useSimulationModel(scenario: ScenarioType) {
           graphParams.set('customDestinationIds', JSON.stringify(destinationDevices_robotics));
         }
 
-        const response = await fetch(`api/network/graph?${graphParams}`);
+        const response = await fetch(`https://backend-1e4y.onrender.com/api/network/graph?${graphParams}`);
         if (!response.ok) throw new Error(`Graph API Error: ${response.statusText}`);
         const json = await response.json();
 
@@ -338,29 +338,19 @@ export function useSimulationModel(scenario: ScenarioType) {
       const depots = currentGraph.nodes.filter(n => n.type === 'depot').map(n => n.id);
       const destNodes = currentGraph.nodes.filter(n => n.type === 'shelf' || n.id.startsWith('dest_')).map(n => n.id);
 
-      if (mapId === 'synthetic') {
-        const finishNodes = currentGraph.nodes.filter(n => n.id.startsWith('dest_')).map(n => n.id);
+      if (roboticsInitializedMap.current !== mapId) {
+        // Initial setup for this map (Synthetic, AWS, or Clinic)
+        const defaultDests = mapId === 'synthetic'
+          ? currentGraph.nodes.filter(n => n.id.startsWith('dest_')).map(n => n.id)
+          : destNodes.slice(0, 2);
         const boxCounts: Record<string, number> = {};
-        finishNodes.forEach(d => boxCounts[d] = 6);
-        const updatedAssignment: RobotAssignment[] = [{
-          robotId: depots[0] || 'depot',
-          destinations: finishNodes,
-          boxCounts
-        }];
-        setRobotAssignments(prev => JSON.stringify(prev) !== JSON.stringify(updatedAssignment) ? updatedAssignment : prev);
-        roboticsInitializedMap.current = mapId;
-      } else if (roboticsInitializedMap.current !== mapId) {
-        // Initial setup for AWS / Clinic map
-        const initialAssignments: RobotAssignment[] = depots.map((depotId, idx) => {
-          const defaultDests = idx === 0 ? destNodes.slice(0, 2) : [];
-          const boxCounts: Record<string, number> = {};
-          defaultDests.forEach(d => boxCounts[d] = 6);
-          return {
-            robotId: depotId,
-            destinations: defaultDests,
-            boxCounts
-          };
-        });
+        defaultDests.forEach(d => boxCounts[d] = 6);
+
+        const initialAssignments: RobotAssignment[] = depots.map((depotId, idx) => ({
+          robotId: depotId,
+          destinations: idx === 0 ? defaultDests : [],
+          boxCounts: idx === 0 ? boxCounts : {}
+        }));
         setRobotAssignments(initialAssignments);
         roboticsInitializedMap.current = mapId;
       } else {

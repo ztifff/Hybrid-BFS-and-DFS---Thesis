@@ -35,6 +35,7 @@ export interface RenderOptions {
   shelfBoxCounts?: Map<string, number>; // nodeId → remaining box count (0–6) for AWS Warehouse
   robotAssignments?: import('../../types').RobotAssignment[]; // per-robot rack allocation
   followAlgo?: 'bfs' | 'dfs' | 'hybrid' | null;
+  disableSimultaneousMode?: boolean;
 }
 
 export function renderCanvas(options: RenderOptions) {
@@ -48,7 +49,7 @@ export function renderCanvas(options: RenderOptions) {
   } = options;
 
   const visibleCount = [visibleAlgos.bfs, visibleAlgos.dfs, visibleAlgos.hybrid].filter(Boolean).length;
-  const isSimultaneousMode = visibleCount > 1;
+  const isSimultaneousMode = !options.disableSimultaneousMode && visibleCount > 1;
 
   // Determine active step based on active follow selection or single active tab
   const currentActiveStep = (followAlgo === 'dfs' && activeSteps.dfs) ? activeSteps.dfs
@@ -455,14 +456,13 @@ export function renderCanvas(options: RenderOptions) {
         const baseCenterX = isLeftSideNode ? 1700 : isRightSideNode ? 48300 : node.x;
 
         // Determine number of assigned robot racks
-        const assignedRobots = (robotAssignments ?? []).filter(a =>
-          a.destinations.includes(node.id)
-        );
+        const assignedRobots = (robotAssignments && robotAssignments.length > 0)
+          ? robotAssignments.filter(a => a.destinations.includes(node.id))
+          : [{ robotId: 'depot', destinations: [node.id], boxCounts: { [node.id]: 6 } }];
 
-        // Hide storage grids when destination is not selected for any active robot
-        if (assignedRobots.length === 0) return;
+        if (robotAssignments && robotAssignments.length > 0 && assignedRobots.length === 0) return;
 
-        const numRacks = assignedRobots.length;
+        const numRacks = Math.max(1, assignedRobots.length);
 
         // Side destination nodes use 3 columns x 2 rows (rotated landscape); Bottom desks use 2 columns x 3 rows (portrait)
         const gridCols = isSideNode ? 3 : 2;

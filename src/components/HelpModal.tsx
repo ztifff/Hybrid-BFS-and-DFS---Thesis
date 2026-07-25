@@ -15,7 +15,7 @@ const SCENARIO_MAPS: Record<ScenarioType, { name: string; description: string }[
     { name: '🏫 Campus Network', description: 'A university campus network featuring active Access Control Lists (ACLs). Demonstrates strict subnet routing rules where Boys Block (192.168.3.x) can only reach AB1, Girls Block can only reach AB2, and Yellow Zones bypass routers using Layer 2 switching.' },
   ],
   robotics: [
-    { name: '🧪 Synthetic', description: 'A generated warehouse grid of adjustable size. Shelf zones, aisles, and delivery bays are randomly placed to simulate varied fulfillment center layouts.' },
+    { name: '🧪 Synthetic', description: 'A generated warehouse grid layout that dynamically expands horizontally with up to 18 finish line exit destinations as node density increases. Features 3D storage shelf box pillars and 3D delivery storage grids.' },
     { name: '🏭 AWS Warehouse', description: 'Inspired by Amazon Fulfillment Center layouts. Features a Central Depot (source), multiple shelf zones organized in rows, and Delivery Bay targets. Shelf-blocking events simulate real robot-shelf collision events.' },
     { name: '🏥 Clinic Building', description: 'Models a multi-room clinic or hospital floor. Narrow corridors and many dead-end rooms make this a prime test for DFS trap sensitivity and Hybrid backtracking.' },
   ],
@@ -275,17 +275,23 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose }) => {
                   </div>
                 ))}
               </Section>
-              {scenario !== 'gameai' ? (
-                <Section title="Dynamic Size Adjuster (Synthetic Maps only)">
-                  <Item label="Nodes" icon="🔢">Controls how many nodes are generated in the synthetic graph. More nodes = more complex topology = harder pathfinding challenge.</Item>
-                  <Item label="Links" icon="🔗">Controls how many edge connections exist between nodes. More links = more alternative routes available = easier for BFS to find shortest paths.</Item>
-                  <Item label="Generated X nodes / Y links" icon="📋">Displays the actual counts after generation (may differ slightly from requested values due to validity constraints).</Item>
-                </Section>
-              ) : (
-                <Section title="Dynamic Board Scaling">
-                  <Item label="Auto-Expansion" icon="📐">The game board dynamically expands its grid size when more than 20 nodes/pieces are added, automatically adjusting based on the array of the board.</Item>
-                </Section>
-              )}
+                {scenario === 'robotics' && (
+                  <Section title="Multi-Robot Fleet & Delivery Assignments (Robotics Scenario)">
+                    <Item label="🤖 Robot Delivery Assignments" icon="⚙️">Assign specific finish line exits (Finish Line 1..18), packing desks, or clutter zones to active robots. Supports setting priority destinations (visited first ⭐) and configuring cargo box counts (1 to 6 boxes per destination).</Item>
+                    <Item label="📊 Robot Fleet Status (Sidebar)" icon="🤖">Real-time status tracking showing total cargo box delivery progress (e.g. 48/48 boxes, 100%), progress bars color-coded by algorithm, active robot location, live task badge (Loading 📦, Unloading 🚚, Blocked ⏳, In Transit 🚚), and per-destination box progress.</Item>
+                  </Section>
+                )}
+                {scenario !== 'gameai' ? (
+                  <Section title="Dynamic Size Adjuster (Synthetic Maps only)">
+                    <Item label="Nodes" icon="🔢">Controls how many nodes are generated in the synthetic graph. On Synthetic Robotics maps, increasing nodes automatically expands the layout horizontally with up to 18 finish line exit destinations.</Item>
+                    <Item label="Links" icon="🔗">Controls edge connectivity. Link counts automatically scale with node density to ensure dense graphs remain 100% pathable and connected.</Item>
+                    <Item label="Generated X nodes / Y links" icon="📋">Displays actual generated node and edge counts after structure generation.</Item>
+                  </Section>
+                ) : (
+                  <Section title="Dynamic Board Scaling">
+                    <Item label="Auto-Expansion" icon="📐">The game board dynamically expands its grid size when more than 20 nodes/pieces are added, automatically adjusting based on the array of the board.</Item>
+                  </Section>
+                )}
             </>
           )}
 

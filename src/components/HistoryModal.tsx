@@ -211,6 +211,20 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
       entry.simResult?.steps?.length || 0
     );
 
+    // Build shelfBoxCounts for AWS warehouse box visualization.
+    // For packing desks: set capacity to 6 (the renderer uses this as requiredCount
+    // and compares algo.delivered from step data against it to show filled/empty cells).
+    const shelfBoxCounts = (() => {
+      const counts = new Map<string, number>();
+      if (entry.scenario !== 'robotics' || !baseGraph) return counts;
+      
+      const allDestIds = baseGraph.destinationIds || [];
+      allDestIds.forEach(nodeId => {
+        counts.set(nodeId, 6); // Always 6 boxes capacity per destination
+      });
+      
+      return counts;
+    })();
     type AlgoData = NonNullable<ReturnType<typeof getData>>;
     const algoEntries: { key: AlgorithmKey; label: string; color: string; data: AlgoData }[] = [
       ...(bfs && bfs.success ? [{ key: 'bfs' as AlgorithmKey, label: 'BFS', color: '#4ade80', data: bfs }] : []),
@@ -372,12 +386,25 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
                 highlightedNodeId={highlightedNodeId}
                 onDeselect={() => setHighlightedNodeId(null)}
                 autoFit={true}
+                shelfBoxCounts={shelfBoxCounts}
+                disableSimultaneousMode={true}
                 mapId={
                   baseGraph.nodes.some(n => n.id.includes('boys') || n.id.includes('girls') || n.label?.includes('PC-PT')) 
                     ? 'campus' 
                     : baseGraph.nodes.some(n => n.id.toLowerCase().includes('finance') || n.id.toLowerCase().includes('sales')) 
                       ? 'companybusiness' 
-                      : 'synthetic'
+                      : baseGraph.nodes.some(n => n.id.includes('nurse') || n.id.includes('air_pressure') || n.buildingId === 'clinic' || n.buildingId === 'L1' || n.buildingId === 'L2')
+                        ? 'clinic'
+                        : baseGraph.nodes.some(n => n.id.includes('shelf_f') || n.id.includes('dest_desk_a') || n.id.includes('shelf_m'))
+                          ? 'awsWarehouse'
+                          : 'synthetic'
+                }
+                robotAssignments={
+                  baseGraph.nodes.filter(n => n.type === 'depot').map(d => ({
+                    robotId: d.id,
+                    destinations: baseGraph.nodes.filter(n => n.id.startsWith('dest_') || n.type === 'shelf').map(n => n.id),
+                    boxCounts: baseGraph.nodes.filter(n => n.id.startsWith('dest_') || n.type === 'shelf').reduce((acc, n) => ({ ...acc, [n.id]: 6 }), {})
+                  }))
                 }
               />
             )}
