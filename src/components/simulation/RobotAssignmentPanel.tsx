@@ -21,7 +21,7 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [activeRobotId, setActiveRobotId] = useState<string | null>(null);
 
-  const isAWSWarehouse = mapId === 'aws' || mapId === 'awsWarehouse';
+  const isBoxDeliveryMap = mapId === 'aws' || mapId === 'awsWarehouse' || mapId === 'synthetic';
 
   const getRobotLabel = (robotId: string) => {
     const node = depotNodes.find(n => n.id === robotId);
@@ -105,7 +105,7 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
           </div>
           <div className="text-[11px] text-gray-400 font-medium">
             {assignments.length} robot{assignments.length !== 1 ? "s" : ""} · {totalDests} dest{totalDests !== 1 ? "s" : ""}
-            {isAWSWarehouse ? ` · 📦 ${totalBoxes} boxes` : ""}
+            {isBoxDeliveryMap ? ` · 📦 ${totalBoxes} boxes` : ""}
           </div>
         </div>
       </div>
@@ -366,7 +366,7 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
             <div className="flex items-center justify-between px-5 py-3 border-t border-gray-800 bg-[#0a0f1e] shrink-0">
               <div className="text-xs text-gray-500">
                 {assignments.length} robot{assignments.length !== 1 ? "s" : ""} · {totalDests} destination{totalDests !== 1 ? "s" : ""}
-                {isAWSWarehouse ? ` · 📦 ${totalBoxes} box${totalBoxes !== 1 ? "es" : ""} configured` : ""}
+                {isBoxDeliveryMap ? ` · 📦 ${totalBoxes} box${totalBoxes !== 1 ? "es" : ""} configured` : ""}
               </div>
               <button
                 onClick={() => setIsOpen(false)}

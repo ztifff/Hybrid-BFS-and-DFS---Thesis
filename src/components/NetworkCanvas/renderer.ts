@@ -472,70 +472,59 @@ export function renderCanvas(options: RenderOptions) {
         const rackGap = 400;
         const rackSpanX = (gridCols * pCellW + 600); // 3600 units horizontal shift per robot rack
 
-        algos.forEach(algo => {
-          const isAlgoVisible = visibleAlgos[algo.id as keyof typeof visibleAlgos];
-          if (!isAlgoVisible && !isSimultaneousMode) return;
+        // When disableSimultaneousMode, render a single combined delivery view instead of per-algo racks
+        if (options.disableSimultaneousMode) {
+          const totalDelivered = Math.min(requiredCount,
+            (activeSteps.bfs?.deliveredBoxCounts?.[node.id] ?? 0) +
+            (activeSteps.dfs?.deliveredBoxCounts?.[node.id] ?? 0) +
+            (activeSteps.hybrid?.deliveredBoxCounts?.[node.id] ?? 0)
+          );
+          const isFull = totalDelivered >= requiredCount;
 
-          let centerX = baseCenterX;
-          let gridBaseY = node.y;
-
-          if (isSideNode) {
-            const algoYOffset = isSimultaneousMode
-              ? (algo.id === 'bfs' ? -2800 : algo.id === 'dfs' ? 0 : 2800)
-              : 0;
-            gridBaseY = node.y + algoYOffset;
-          } else {
-            centerX = baseCenterX + (isSimultaneousMode ? algo.xOffset : 0);
-          }
-
-          const delCount = Math.min(requiredCount, algo.delivered);
-          const isFull = delCount >= requiredCount;
-
-          // Header Label (e.g. "BFS: 4/12")
-          const labelY = sy(isSideNode ? gridBaseY - 200 : node.y + 1100);
+          // Header Label: "Delivered: 12/12"
+          const labelY = sy(node.y + 1100);
           ctx.font = `bold ${Math.max(9, 11 / zoom)}px sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'bottom';
           ctx.lineWidth = Math.max(2, 2.5 / zoom);
           ctx.strokeStyle = '#090d16';
+          const labelText = isFull ? `✅ Delivered (${requiredCount}/${requiredCount})` : `Delivered: ${totalDelivered}/${requiredCount}`;
+          ctx.strokeText(labelText, sx(baseCenterX), labelY);
+          ctx.fillStyle = isFull ? '#4ade80' : '#fb923c';
+          ctx.fillText(labelText, sx(baseCenterX), labelY);
 
-          const labelText = isFull ? `✅ ${algo.name} (${requiredCount}/${requiredCount})` : `${algo.name}: ${delCount}/${requiredCount}`;
-          ctx.strokeText(labelText, sx(centerX), labelY);
-          ctx.fillStyle = isFull ? '#4ade80' : algo.color;
-          ctx.fillText(labelText, sx(centerX), labelY);
+          // Build single combined rack
+          const combinedFill = totalDelivered;
+          const assignedRobotsCombined = (robotAssignments && robotAssignments.length > 0)
+            ? robotAssignments.filter(a => a.destinations.includes(node.id))
+            : [{ robotId: 'depot', destinations: [node.id], boxCounts: { [node.id]: 6 } }];
+          const numRacksCombined = Math.max(1, assignedRobotsCombined.length);
 
-          // Build per-robot rack allocation: each robot owns one rack (6 cells each)
           const rackAllocations: { allocated: number; robotDelivered: number }[] = [];
-          let cumulativeFill = delCount;
-          assignedRobots.forEach(robot => {
+          let cumulativeFill = combinedFill;
+          assignedRobotsCombined.forEach(robot => {
             const robotAlloc = robot.boxCounts?.[node.id] ?? 6;
             const robotFill = Math.min(robotAlloc, Math.max(0, cumulativeFill));
             rackAllocations.push({ allocated: robotAlloc, robotDelivered: robotFill });
             cumulativeFill -= robotAlloc;
           });
 
-          for (let rackIdx = 0; rackIdx < numRacks; rackIdx++) {
-            // For side nodes, extend robot racks (R1, R2, R3...) horizontally
-            const rackCenterX = isSideNode
-              ? (isLeftSideNode ? baseCenterX - rackIdx * rackSpanX : baseCenterX + rackIdx * rackSpanX)
-              : centerX;
-            const gridTopY = isSideNode
-              ? gridBaseY + 100
-              : node.y + 1500 + rackIdx * (gridRows * pCellH + rackGap);
+          for (let rackIdx = 0; rackIdx < numRacksCombined; rackIdx++) {
+            const centerX = baseCenterX;
+            const gridTopY = node.y + 1500 + rackIdx * (gridRows * pCellH + rackGap);
 
-            // Rack label (R1, R2, ...)
             if (rackAllocations.length > 1) {
               const rackLabelY = sy(gridTopY - 300);
               ctx.font = `bold ${Math.max(7, 9 / zoom)}px sans-serif`;
               ctx.textAlign = 'center';
               ctx.textBaseline = 'bottom';
               ctx.fillStyle = 'rgba(200, 200, 220, 0.7)';
-              ctx.fillText(`R${rackIdx + 1}`, sx(rackCenterX), rackLabelY);
+              ctx.fillText(`R${rackIdx + 1}`, sx(centerX), rackLabelY);
             }
 
             const rack = rackAllocations[rackIdx];
             const rackCapacity = rack ? rack.allocated : 6;
-            const rackFilled = rack ? rack.robotDelivered : Math.max(0, delCount - rackIdx * 6);
+            const rackFilled = rack ? rack.robotDelivered : Math.max(0, combinedFill - rackIdx * 6);
 
             let cellIdx = 0;
             for (let row = 0; row < gridRows; row++) {
@@ -544,14 +533,13 @@ export function renderCanvas(options: RenderOptions) {
                 if (cellIdx > rackCapacity) break;
 
                 const halfGridW = (gridCols / 2) * pCellW;
-                const wX1 = rackCenterX - halfGridW + col * pCellW;
-                const wX2 = rackCenterX - halfGridW + (col + 1) * pCellW;
+                const wX1 = centerX - halfGridW + col * pCellW;
+                const wX2 = centerX - halfGridW + (col + 1) * pCellW;
                 const wY1 = gridTopY + row * pCellH;
                 const wY2 = gridTopY + (row + 1) * pCellH;
 
                 const sX1 = sx(wX1), sX2 = sx(wX2);
                 const sY1 = sy(wY1), sY2 = sy(wY2);
-
                 const cW = sX2 - sX1;
                 const cH = sY2 - sY1;
 
@@ -563,28 +551,26 @@ export function renderCanvas(options: RenderOptions) {
                 const dbw = Math.max(1, cW - 2 * pX);
                 const dbh = Math.max(1, cH - 2 * pY);
 
-                // Outer cell border
-                ctx.strokeStyle = algo.emptyStroke;
+                ctx.strokeStyle = 'rgba(249, 115, 22, 0.35)';
                 ctx.lineWidth = Math.max(1, 1.2 / zoom);
                 ctx.strokeRect(sX1, sY1, cW, cH);
 
                 const isFilled = cellIdx <= rackFilled;
                 if (isFilled) {
-                  ctx.fillStyle = algo.fillColor;
+                  ctx.fillStyle = '#f97316';
                   ctx.fillRect(dbx, dby, dbw, dbh);
-                  ctx.strokeStyle = algo.strokeColor;
+                  ctx.strokeStyle = '#7c2d12';
                   ctx.lineWidth = Math.max(1, 1.5 / zoom);
                   ctx.strokeRect(dbx, dby, dbw, dbh);
                 } else {
-                  ctx.strokeStyle = algo.emptyStroke;
+                  ctx.strokeStyle = 'rgba(249, 115, 22, 0.35)';
                   ctx.lineWidth = Math.max(0.5, 1 / zoom);
                   ctx.strokeRect(dbx, dby, dbw, dbh);
                 }
               }
             }
 
-            // Draw subtle rack separator line between racks
-            if (rackIdx < numRacks - 1) {
+            if (rackIdx < numRacksCombined - 1) {
               const sepY = sy(gridTopY + 3 * pCellH + rackGap / 2);
               ctx.beginPath();
               ctx.strokeStyle = 'rgba(100, 120, 180, 0.25)';
@@ -596,7 +582,133 @@ export function renderCanvas(options: RenderOptions) {
               ctx.setLineDash([]);
             }
           }
-        });
+        } else {
+          algos.forEach(algo => {
+            const isAlgoVisible = visibleAlgos[algo.id as keyof typeof visibleAlgos];
+            if (!isAlgoVisible && !isSimultaneousMode) return;
+
+            let centerX = baseCenterX;
+            let gridBaseY = node.y;
+
+            if (isSideNode) {
+              const algoYOffset = isSimultaneousMode
+                ? (algo.id === 'bfs' ? -2800 : algo.id === 'dfs' ? 0 : 2800)
+                : 0;
+              gridBaseY = node.y + algoYOffset;
+            } else {
+              centerX = baseCenterX + (isSimultaneousMode ? algo.xOffset : 0);
+            }
+
+            const delCount = Math.min(requiredCount, algo.delivered);
+            const isFull = delCount >= requiredCount;
+
+            // Header Label (e.g. "BFS: 4/12")
+            const labelY = sy(isSideNode ? gridBaseY - 200 : node.y + 1100);
+            ctx.font = `bold ${Math.max(9, 11 / zoom)}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.lineWidth = Math.max(2, 2.5 / zoom);
+            ctx.strokeStyle = '#090d16';
+
+            const labelText = isFull ? `✅ ${algo.name} (${requiredCount}/${requiredCount})` : `${algo.name}: ${delCount}/${requiredCount}`;
+            ctx.strokeText(labelText, sx(centerX), labelY);
+            ctx.fillStyle = isFull ? '#4ade80' : algo.color;
+            ctx.fillText(labelText, sx(centerX), labelY);
+
+            // Build per-robot rack allocation: each robot owns one rack (6 cells each)
+            const rackAllocations: { allocated: number; robotDelivered: number }[] = [];
+            let cumulativeFill = delCount;
+            assignedRobots.forEach(robot => {
+              const robotAlloc = robot.boxCounts?.[node.id] ?? 6;
+              const robotFill = Math.min(robotAlloc, Math.max(0, cumulativeFill));
+              rackAllocations.push({ allocated: robotAlloc, robotDelivered: robotFill });
+              cumulativeFill -= robotAlloc;
+            });
+
+            for (let rackIdx = 0; rackIdx < numRacks; rackIdx++) {
+              // For side nodes, extend robot racks (R1, R2, R3...) horizontally
+              const rackCenterX = isSideNode
+                ? (isLeftSideNode ? baseCenterX - rackIdx * rackSpanX : baseCenterX + rackIdx * rackSpanX)
+                : centerX;
+              const gridTopY = isSideNode
+                ? gridBaseY + 100
+                : node.y + 1500 + rackIdx * (gridRows * pCellH + rackGap);
+
+              // Rack label (R1, R2, ...)
+              if (rackAllocations.length > 1) {
+                const rackLabelY = sy(gridTopY - 300);
+                ctx.font = `bold ${Math.max(7, 9 / zoom)}px sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                ctx.fillStyle = 'rgba(200, 200, 220, 0.7)';
+                ctx.fillText(`R${rackIdx + 1}`, sx(rackCenterX), rackLabelY);
+              }
+
+              const rack = rackAllocations[rackIdx];
+              const rackCapacity = rack ? rack.allocated : 6;
+              const rackFilled = rack ? rack.robotDelivered : Math.max(0, delCount - rackIdx * 6);
+
+              let cellIdx = 0;
+              for (let row = 0; row < gridRows; row++) {
+                for (let col = 0; col < gridCols; col++) {
+                  cellIdx++;
+                  if (cellIdx > rackCapacity) break;
+
+                  const halfGridW = (gridCols / 2) * pCellW;
+                  const wX1 = rackCenterX - halfGridW + col * pCellW;
+                  const wX2 = rackCenterX - halfGridW + (col + 1) * pCellW;
+                  const wY1 = gridTopY + row * pCellH;
+                  const wY2 = gridTopY + (row + 1) * pCellH;
+
+                  const sX1 = sx(wX1), sX2 = sx(wX2);
+                  const sY1 = sy(wY1), sY2 = sy(wY2);
+
+                  const cW = sX2 - sX1;
+                  const cH = sY2 - sY1;
+
+                  const pX = cW * 0.12;
+                  const pY = cH * 0.12;
+
+                  const dbx = sX1 + pX;
+                  const dby = sY1 + pY;
+                  const dbw = Math.max(1, cW - 2 * pX);
+                  const dbh = Math.max(1, cH - 2 * pY);
+
+                  // Outer cell border
+                  ctx.strokeStyle = algo.emptyStroke;
+                  ctx.lineWidth = Math.max(1, 1.2 / zoom);
+                  ctx.strokeRect(sX1, sY1, cW, cH);
+
+                  const isFilled = cellIdx <= rackFilled;
+                  if (isFilled) {
+                    ctx.fillStyle = algo.fillColor;
+                    ctx.fillRect(dbx, dby, dbw, dbh);
+                    ctx.strokeStyle = algo.strokeColor;
+                    ctx.lineWidth = Math.max(1, 1.5 / zoom);
+                    ctx.strokeRect(dbx, dby, dbw, dbh);
+                  } else {
+                    ctx.strokeStyle = algo.emptyStroke;
+                    ctx.lineWidth = Math.max(0.5, 1 / zoom);
+                    ctx.strokeRect(dbx, dby, dbw, dbh);
+                  }
+                }
+              }
+
+              // Draw subtle rack separator line between racks
+              if (rackIdx < numRacks - 1) {
+                const sepY = sy(gridTopY + 3 * pCellH + rackGap / 2);
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(100, 120, 180, 0.25)';
+                ctx.lineWidth = Math.max(0.5, 1 / zoom);
+                ctx.setLineDash([3, 3]);
+                ctx.moveTo(sx(centerX - pCellW * 1.2), sepY);
+                ctx.lineTo(sx(centerX + pCellW * 1.2), sepY);
+                ctx.stroke();
+                ctx.setLineDash([]);
+              }
+            }
+          });
+        }
       }
     });
     ctx.restore();

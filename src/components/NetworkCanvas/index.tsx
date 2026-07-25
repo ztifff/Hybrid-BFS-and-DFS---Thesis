@@ -20,7 +20,6 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
   autoFit,
   shelfBoxCounts,
   robotAssignments,
-  disableSimultaneousMode,
 }) => {
   const { nodes, edges, width, height } = graph;
 
