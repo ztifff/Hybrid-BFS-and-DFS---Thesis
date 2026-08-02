@@ -80,6 +80,10 @@ export interface SimulationState {
   confirmSaveResult: () => void;
   openSaveModal: () => void;
   handleDeleteHistory: (ids: string[]) => void;
+
+  // Evacuation: user-selectable start point
+  evacuationSourceId: string | null;
+  setEvacuationSourceId: (id: string | null | ((prev: string | null) => string | null)) => void;
 }
 
 export type Status = 'idle' | 'running' | 'done' | 'paused';
@@ -103,6 +107,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
         model.setIsComputing(true);
         model.setIsCurrentSaved(false);
         model.setCurrentSavedId(null);
+        model.setBfsResult(null);
         controller.setStatus('idle');
 
         controller.setStepIndex(0);
@@ -114,7 +119,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
         let mergedResults: any = null;
 
         while (keepFetching && isMounted) {
-          const response = await fetch(`https://backend-1e4y.onrender.com/api/simulation/run?offset=${currentOffset}&limit=${limit}`, {
+          const response = await fetch(`api/simulation/run?offset=${currentOffset}&limit=${limit}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -124,7 +129,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
               graphSize: model.graphSize,
               ...(model.mapId === 'synthetic' ? { sizing: model.syntheticSizing } : {}),
               ...(scenario === 'gameai' ? { gameBoard: model.gameBoard } : {}),
-              ...(model.networkRoutingMode === 'device-to-device' && (model.mapId === 'companybusiness' || model.mapId === 'campus') ? {
+              ...(model.networkRoutingMode === 'device-to-device' ? {
                 customSourceId: model.sourceDevice,
                 customDestinationIds: model.destinationDevices,
                 deliveryMode: model.deliveryMode
@@ -134,6 +139,9 @@ export function useSimulation(params: { scenario: ScenarioType }) {
                 customSourceIds: model.sourceDevices,
                 customDestinationIds: model.destinationDevices,
                 deliveryMode: 'multicast'
+              } : {}),
+              ...(scenario === 'evacuation' && model.evacuationSourceId ? {
+                customSourceId: model.evacuationSourceId
               } : {})
             })
           });
@@ -163,7 +171,9 @@ export function useSimulation(params: { scenario: ScenarioType }) {
           );
 
           model.setSimResults({ ...mergedResults });
-          model.setBfsResult({ pathLength: optimalPathLength });
+          if (optimalPathLength !== undefined && optimalPathLength > 0) {
+            model.setBfsResult({ pathLength: optimalPathLength });
+          }
 
           const isDone = !results.bfs.meta?.hasMore && !results.dfs.meta?.hasMore && !results.hybrid.meta?.hasMore;
           
@@ -189,7 +199,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
       isMounted = false;
       controller.stopAnimation();
     };
-  }, [scenario, model.mapId, model.seed, model.gameBoard, model.graphSize, model.syntheticSizing, model.networkRoutingMode, model.sourceDevice, model.destinationDevices, model.deliveryMode, JSON.stringify(model.robotAssignments), controller.stopAnimation]);
+  }, [scenario, model.mapId, model.seed, model.gameBoard, model.graphSize, model.syntheticSizing, model.networkRoutingMode, model.sourceDevice, model.destinationDevices, model.deliveryMode, model.evacuationSourceId, JSON.stringify(model.robotAssignments), controller.stopAnimation]);
 
   // Wrapper for confirmSaveResult to inject controller state
   const confirmSaveResult = () => {
@@ -261,6 +271,10 @@ export function useSimulation(params: { scenario: ScenarioType }) {
     confirmSaveResult,
     openSaveModal: model.openSaveModal,
     handleDeleteHistory: model.handleDeleteHistory,
+
+    // Evacuation: user-selectable start point (city + building maps)
+    evacuationSourceId: model.evacuationSourceId,
+    setEvacuationSourceId: model.setEvacuationSourceId,
     
   };
 }

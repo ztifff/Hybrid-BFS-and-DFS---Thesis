@@ -50,6 +50,13 @@ export function useSimulationModel(scenario: ScenarioType) {
   const [destinationDevices, setDestinationDevices] = useState<string[]>(['fin_pc1']);
   const [deliveryMode, setDeliveryMode] = useState<'anycast' | 'multicast'>('anycast');
 
+  // Evacuation: user-selectable starting room (applies to 'city' and 'building' maps)
+  const [evacuationSourceId, setEvacuationSourceId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setEvacuationSourceId(null);
+  }, [mapId, scenario]);
+
   // ✅ Multi-Agent Robotics: Per-robot destination assignments
   const [robotAssignments, setRobotAssignments] = useState<RobotAssignment[]>([
     { robotId: 'depot', destinations: ['dest_finish_1', 'dest_finish_2'], boxCounts: { 'dest_finish_1': 6, 'dest_finish_2': 6 } }
@@ -81,8 +88,9 @@ export function useSimulationModel(scenario: ScenarioType) {
 
       if (field === 'nodes') {
         nextNodes = nextVal;
-        // Auto-adjust links when nodes increase so grid connectivity stays dense
-        nextEdges = Math.max(current.edges, Math.round(nextVal * 1.1));
+        // Auto-adjust links when nodes increase so the target edge count keeps up with the expanded graph.
+        // Use a minimum increment so the links value updates instead of staying stalled at the previous edge target.
+        nextEdges = Math.max(current.edges + 1, Math.round(nextVal * 1.1));
       } else {
         nextEdges = nextVal;
       }
@@ -263,7 +271,7 @@ export function useSimulationModel(scenario: ScenarioType) {
         }
 
         if (scenario === 'gameai') graphParams.set('gameBoard', gameBoard);
-        if (networkRoutingMode === 'device-to-device' && (mapId === 'companybusiness' || mapId === 'campus')) {
+        if (networkRoutingMode === 'device-to-device') {
           graphParams.set('customSourceId', sourceDevice);
           graphParams.set('customDestinationIds', JSON.stringify(destinationDevices));
         }
@@ -273,7 +281,12 @@ export function useSimulationModel(scenario: ScenarioType) {
           graphParams.set('customDestinationIds', JSON.stringify(destinationDevices_robotics));
         }
 
-        const response = await fetch(`https://backend-1e4y.onrender.com/api/network/graph?${graphParams}`);
+        // Evacuation: pass user-selected starting room as customSourceId
+        if (scenario === 'evacuation' && evacuationSourceId) {
+          graphParams.set('customSourceId', evacuationSourceId);
+        }
+
+        const response = await fetch(`api/network/graph?${graphParams}`);
         if (!response.ok) throw new Error(`Graph API Error: ${response.statusText}`);
         const json = await response.json();
 
@@ -288,7 +301,7 @@ export function useSimulationModel(scenario: ScenarioType) {
     };
     fetchGraphStructure();
     return () => { isMounted = false; };
-  }, [scenario, mapId, gameBoard, graphSize, seed, syntheticSizing.nodes, syntheticSizing.edges, networkRoutingMode, sourceDevice, sourceDevices, destinationDevices, destinationDevices_robotics]);
+  }, [scenario, mapId, gameBoard, graphSize, seed, syntheticSizing.nodes, syntheticSizing.edges, networkRoutingMode, sourceDevice, sourceDevices, destinationDevices, destinationDevices_robotics, evacuationSourceId]);
   // Synchronize custom endpoints if the map changes or if they are invalid
   useEffect(() => {
     if (scenario === 'robotics' && currentGraph && robotAssignments.length === 0) {
@@ -405,6 +418,7 @@ export function useSimulationModel(scenario: ScenarioType) {
     simResults, setSimResults,
     bfsResult, setBfsResult,
     isComputing, setIsComputing,
-    totalSteps
+    totalSteps,
+    evacuationSourceId, setEvacuationSourceId,
   };
 }

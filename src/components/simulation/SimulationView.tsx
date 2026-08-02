@@ -37,9 +37,9 @@ const MIN_SYNTHETIC_NODES: Record<ScenarioType, number> = {
 
 const MAX_SYNTHETIC_NODES: Record<ScenarioType, number> = {
   network: 220,
-  robotics: 220,
+  robotics: 217,
   traffic: 220,
-  evacuation: 220,
+  evacuation: 144,
   gameai: 220,
 };
 
@@ -52,6 +52,9 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   // Network routing DST dropdown state
   const [dstDropdownOpen, setDstDropdownOpen] = useState(false);
+
+  // Evacuation: is this a real-world map that supports custom start point selection?
+  const isEvacuationRealWorld = scenario === 'evacuation' && (sim.mapId === 'city' || sim.mapId === 'building');
 
   const handleEventClick = (nodeId: string) => {
     setHighlightedNodeId(prev => prev === nodeId ? null : nodeId);
@@ -227,7 +230,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 </div>
               )}
 
-              {scenario === 'network' && (sim.mapId === 'companybusiness' || sim.mapId === 'campus') && (
+              {scenario === 'network' && (
                 <div className="flex flex-col md:flex-row items-center gap-2 justify-center w-full mt-1 bg-gray-900/60 p-2 rounded-xl border border-gray-700/50">
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Mode:</span>
@@ -323,6 +326,43 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   )}
                 </div>
               )}
+              {scenario === 'evacuation' && sim.currentGraph && (
+                <div className="flex flex-col md:flex-row items-center gap-2 justify-center w-full mt-1 bg-gray-900/60 p-2 rounded-xl border border-gray-700/50">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] uppercase tracking-widest text-emerald-400 font-bold flex items-center gap-1">
+                      <span>🔥</span> STARTING POINT (SRC):
+                    </span>
+                    <select
+                      value={sim.evacuationSourceId || sim.currentGraph.sourceId || ''}
+                      onChange={(e) => sim.setEvacuationSourceId(e.target.value)}
+                      disabled={sim.isComputing || sim.status === 'running'}
+                      className="bg-gray-800 border border-emerald-800 rounded text-xs font-bold text-white px-3 py-1 outline-none focus:border-emerald-500 cursor-pointer disabled:opacity-50 max-w-[260px] md:max-w-[320px] truncate"
+                    >
+                      {sim.currentGraph.nodes
+                        .filter(n => n.type === 'place' || n.type === 'origin' || n.type === 'room')
+                        .sort((a, b) => {
+                          if (a.buildingId !== b.buildingId) return (a.buildingId || '').localeCompare(b.buildingId || '');
+                          return (a.label || a.id).localeCompare(b.label || b.id);
+                        })
+                        .map(n => (
+                          <option key={`evac-src-${n.id}`} value={n.id}>
+                            {n.buildingId ? `[${n.buildingId}] ` : ''}{n.label ? n.label.replace('\n', ' - ') : n.id}
+                          </option>
+                        ))}
+                    </select>
+                    {sim.evacuationSourceId && (
+                      <button
+                        onClick={() => sim.setEvacuationSourceId(null)}
+                        disabled={sim.isComputing || sim.status === 'running'}
+                        className="text-[11px] text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 border border-gray-600 px-2 py-1 rounded cursor-pointer transition-colors"
+                        title="Reset to default starting room"
+                      >
+                        Reset Default
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
 
             </div>
 
@@ -343,6 +383,13 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     onNodeClick={(nodeId) => {
                       if (scenario === 'robotics') {
                         setHighlightedNodeId(prev => prev === nodeId ? null : nodeId);
+                      }
+                      // Evacuation: clicking a place/origin/room node sets it as the new start
+                      if (isEvacuationRealWorld && !sim.isComputing) {
+                        const node = sim.currentGraph?.nodes.find(n => n.id === nodeId);
+                        if (node && (node.type === 'place' || node.type === 'origin' || node.type === 'room')) {
+                          sim.setEvacuationSourceId(prev => prev === nodeId ? null : nodeId);
+                        }
                       }
                     }}
                     mapId={sim.mapId}
@@ -514,7 +561,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   mapId={sim.mapId}
                 />
 
-                {sim.mapId !== 'clinic' && (
                   <RobotLiveStatusPanel
                     assignments={sim.robotAssignments}
                     activeSteps={sim.activeSteps}
@@ -522,7 +568,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     onRobotClick={(nodeId) => setHighlightedNodeId(nodeId)}
                     mapId={sim.mapId}
                   />
-                )}
               </>
             )}
 

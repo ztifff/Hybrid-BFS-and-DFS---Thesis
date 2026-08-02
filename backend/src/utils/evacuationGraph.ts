@@ -1,6 +1,7 @@
 import { ScenarioGraph, GraphNode, GraphEdge, GraphSize, GraphSizing } from '../types/index';
 import { buildingEvacuationGraph } from '../data/evacuation.building';
-import { emergencyRoutingGraph } from '../data/traffic.emergency';
+import { clemensBuildingGraph } from '../data/evacuation.clemens';
+import { ayalaMallBuildingGraph } from '../data/evacuation.ayala';
 import { clampInt, fitGraphEdgeCount, resolveSizingValue } from './graphSizing';
 
 const W = 1600;
@@ -14,40 +15,35 @@ function seededRandom(seed: number) {
 const SIZE_CONFIG = {
   small: { floors: 3, roomsPerFloor: 3 },
   medium: { floors: 4, roomsPerFloor: 4 },
-  large: { floors: 5, roomsPerFloor: 5 },
+  large: { floors: 5, roomsPerFloor: 5 }
 };
 
 function resolveEvacuationShape(targetNodes: number, fallback: typeof SIZE_CONFIG.medium, hasSizing: boolean) {
-  const fallbackExitCount = fallback.floors > 3 ? 3 : 2;
-
   if (!hasSizing) {
     return {
       floors: fallback.floors,
-      exitCount: fallbackExitCount,
+      exitCount: fallback.floors > 3 ? 3 : 2,
       roomsByFloor: Array.from({ length: fallback.floors }, () => fallback.roomsPerFloor),
-      corridorOnlyByFloor: Array.from({ length: fallback.floors }, () => 0),
+      corridorOnlyByFloor: Array.from({ length: fallback.floors }, () => 1),
     };
   }
 
-  let floors = clampInt(Math.sqrt(targetNodes / 2), 2, 10);
-  let exitCount = targetNodes > 28 ? 3 : 2;
+  const floors = clampInt(Math.round(Math.sqrt(targetNodes / 4)), 2, 8);
+  const exitCount = clampInt(Math.round(floors / 2), 1, 4);
 
-  while (exitCount + (floors * 4) > targetNodes && floors > 2) floors--;
-  if (exitCount + (floors * 4) > targetNodes) exitCount = 2;
+  let remainingNodes = Math.max(0, targetNodes - exitCount - (floors * 2));
+  const nodesPerFloor = Math.floor(remainingNodes / floors);
+  const extraNodes = remainingNodes % floors;
 
-  const roomsByFloor = Array.from({ length: floors }, () => 1);
-  const corridorOnlyByFloor = Array.from({ length: floors }, () => 0);
-  let remaining = targetNodes - exitCount - (floors * 2) - (floors * 2);
-  let floorIndex = 0;
+  const roomsByFloor: number[] = [];
+  const corridorOnlyByFloor: number[] = [];
 
-  while (remaining >= 2) {
-    roomsByFloor[floorIndex % floors]++;
-    remaining -= 2;
-    floorIndex++;
-  }
-
-  if (remaining === 1) {
-    corridorOnlyByFloor[floorIndex % floors]++;
+  for (let floorIndex = 0; floorIndex < floors; floorIndex++) {
+    const floorBudget = nodesPerFloor + (floorIndex < extraNodes ? 1 : 0);
+    const roomCount = Math.max(1, Math.floor(floorBudget * 0.7));
+    const corridorCount = Math.max(1, floorBudget - roomCount);
+    roomsByFloor.push(roomCount);
+    corridorOnlyByFloor.push(corridorCount);
   }
 
   return { floors, exitCount, roomsByFloor, corridorOnlyByFloor };
@@ -62,10 +58,11 @@ export function buildEvacuationGraph(
 ): ScenarioGraph {
   if (useRealWorld) {
     const registry: Record<string, any> = {
-      'city': emergencyRoutingGraph,
+      'city': ayalaMallBuildingGraph,
+      'ayala': ayalaMallBuildingGraph,
       'building': buildingEvacuationGraph
     };
-    const baseGraph = registry[mapId || 'building'] || buildingEvacuationGraph;
+    const baseGraph = registry[mapId || 'city'] || ayalaMallBuildingGraph;
     const rwGraph = { ...(baseGraph as ScenarioGraph) };
 
     const startZones = rwGraph.nodes.filter((node: any) => node.type === 'origin' || node.type === 'room');
@@ -78,114 +75,183 @@ export function buildEvacuationGraph(
     return rwGraph;
   }
 
+  // ── Synthetic Clemens Hall Multi-Floor Building Graph (Dynamic Sizing) ──────────
+  const CW = 58000;
+  const CH = 36000;
+
+  const fallback = SIZE_CONFIG[graphSize];
+  const fallbackNodes = 45;
+  const targetNodes = resolveSizingValue(sizing?.nodes, fallbackNodes, 10, 220);
+
+  // ── Explicit Floor Addition Rule ──────────────────────────────────────────
+  // Base building has 2 floors (L1, L2).
+  // Every ~35 additional nodes adds 1 floor, up to 5 floors max:
+  //   10 – 35 nodes  ➔ 2 Floors (L1, L2)
+  //   36 – 70 nodes  ➔ 3 Floors (L1, L2, L3)
+  //   71 – 105 nodes ➔ 4 Floors (L1..L4)
+  //   106+ nodes     ➔ 5 Floors (L1..L5)
+  let numFloors = 2;
+  if (targetNodes > 105) numFloors = 5;
+  else if (targetNodes > 70) numFloors = 4;
+  else if (targetNodes > 35) numFloors = 3;
+
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
-  const fallback = SIZE_CONFIG[graphSize];
-  const fallbackExitCount = fallback.floors > 3 ? 3 : 2;
-  const fallbackNodes = fallbackExitCount + (fallback.floors * (2 + (fallback.roomsPerFloor * 2)));
-  const targetNodes = resolveSizingValue(sizing?.nodes, fallbackNodes, 10, 220);
-  const config = resolveEvacuationShape(targetNodes, fallback, Boolean(sizing));
+  const startZones: GraphNode[] = [];
 
-  const floorHeight = (H - 200) / config.floors;
-  const maxCorridors = Math.max(
-    ...config.roomsByFloor.map((roomCount, index) => roomCount + (config.corridorOnlyByFloor[index] ?? 0)),
-    1
-  );
-  const roomSpacing = (W - 400) / (maxCorridors + 1);
-
+  // Ground Exits (L1) - 4 fixed exit nodes
   const exits = [
-    { id: 'exit_L', label: 'West Exit', x: 150 },
-    { id: 'exit_R', label: 'East Exit', x: W - 150 },
+    { id: 'exit_south_main', label: 'Main Entrance (South Exit)', x: 29000, y: 36000 },
+    { id: 'exit_north_gate', label: 'North Gate Exit',             x: 29000, y:     0 },
+    { id: 'exit_west_fire',  label: 'West Fire Exit (Ground)',    x:     0, y: 17000 },
+    { id: 'exit_east_fire',  label: 'East Fire Exit (Ground)',    x: 58000, y: 17000 },
   ];
 
-  if (config.exitCount > 2) {
-    exits.push({ id: 'exit_M', label: 'Main Lobby', x: W / 2 });
-  }
-
-  exits.forEach((exit) => {
+  exits.forEach(exit => {
     nodes.push({
       id: exit.id,
       label: exit.label,
       type: 'emergency_exit',
       x: exit.x,
-      y: H - 50,
-      level: 0,
-      buildingId: 'ground',
+      y: exit.y,
+      level: 1,
+      buildingId: 'L1',
     });
   });
 
-  const startZones: GraphNode[] = [];
-  const firstFloorCorridors: string[] = [];
+  const spineCols = [10000, 16000, 22000, 29000, 36000, 42000, 48000];
 
-  for (let f = 1; f <= config.floors; f++) {
-    const yPos = H - 50 - (f * floorHeight);
-    const stairL = `stair_L_F${f}`;
-    const stairR = `stair_R_F${f}`;
+  // First pass: Build fixed structural backbone for each floor (5 vertical + 7 spine = 12 nodes per floor)
+  for (let f = 1; f <= numFloors; f++) {
+    const bId = `L${f}`;
 
-    nodes.push({ id: stairL, label: `West Stair F${f}`, type: 'stairwell', x: 150, y: yPos, level: f, buildingId: 'bldg' });
-    nodes.push({ id: stairR, label: `East Stair F${f}`, type: 'stairwell', x: W - 150, y: yPos, level: f, buildingId: 'bldg' });
+    // Vertical Access System Nodes (5 per floor)
+    const stairW = `stair_w_${f}`;
+    const stairE = `stair_e_${f}`;
+    const stairM = `stair_main_${f}`;
+    const elevN  = `elev_n_${f}`;
+    const elevS  = `elev_s_${f}`;
 
+    nodes.push({ id: stairW, label: `West Fire Stairs (${bId})`, type: 'stairwell', x:  4000, y: 12000, level: f, buildingId: bId });
+    nodes.push({ id: stairE, label: `East Fire Stairs (${bId})`, type: 'stairwell', x: 56000, y: 12000, level: f, buildingId: bId });
+    nodes.push({ id: stairM, label: `Main Staircase (${bId})`,   type: 'stairwell', x: 29000, y: 22000, level: f, buildingId: bId });
+    nodes.push({ id: elevN,  label: `North Elevator (${bId})`,   type: 'stairwell', x: 16000, y:  8000, level: f, buildingId: bId });
+    nodes.push({ id: elevS,  label: `South Elevator (${bId})`,   type: 'stairwell', x: 42000, y: 26000, level: f, buildingId: bId });
+
+    // Connect vertical nodes between floors
     if (f === 1) {
-      edges.push({ id: `${stairL}-exit_L`, from: stairL, to: 'exit_L', latency: 5, label: '5s', type: 'path' });
-      edges.push({ id: `${stairR}-exit_R`, from: stairR, to: 'exit_R', latency: 5, label: '5s', type: 'path' });
+      edges.push({ id: `e_stair_w_exit_${f}`, from: stairW, to: 'exit_west_fire',  latency: 3, label: '3s', type: 'corridor' });
+      edges.push({ id: `e_stair_e_exit_${f}`, from: stairE, to: 'exit_east_fire',  latency: 3, label: '3s', type: 'corridor' });
+      edges.push({ id: `e_stair_m_exit_${f}`, from: stairM, to: 'exit_south_main', latency: 4, label: '4s', type: 'corridor' });
     } else {
-      edges.push({ id: `${stairL}-stair_L_F${f - 1}`, from: stairL, to: `stair_L_F${f - 1}`, latency: 15, label: '15s', type: 'path' });
-      edges.push({ id: `${stairR}-stair_R_F${f - 1}`, from: stairR, to: `stair_R_F${f - 1}`, latency: 15, label: '15s', type: 'path' });
+      edges.push({ id: `e_stair_w_dn_${f}`, from: stairW, to: `stair_w_${f - 1}`, latency: 12, label: '12s', type: 'corridor' });
+      edges.push({ id: `e_stair_e_dn_${f}`, from: stairE, to: `stair_e_${f - 1}`, latency: 12, label: '12s', type: 'corridor' });
+      edges.push({ id: `e_stair_m_dn_${f}`, from: stairM, to: `stair_main_${f - 1}`, latency: 10, label: '10s', type: 'corridor' });
+      edges.push({ id: `e_elev_n_dn_${f}`,  from: elevN,  to: `elev_n_${f - 1}`,  latency: 6,  label: '6s',  type: 'corridor' });
+      edges.push({ id: `e_elev_s_dn_${f}`,  from: elevS,  to: `elev_s_${f - 1}`,  latency: 6,  label: '6s',  type: 'corridor' });
     }
 
-    let prevCorr = stairL;
-    const roomCount = config.roomsByFloor[f - 1] ?? 1;
-    const corridorCount = roomCount + (config.corridorOnlyByFloor[f - 1] ?? 0);
+    // Spine Corridor Nodes (7 per floor)
+    let prevSpine: string | null = null;
+    spineCols.forEach((xPos, idx) => {
+      const sId = `l${f}_spine_${idx}`;
+      nodes.push({ id: sId, label: `${bId} Main Hall ${idx + 1}`, type: 'corridor', x: xPos, y: 17000, level: f, buildingId: bId });
 
-    for (let r = 1; r <= corridorCount; r++) {
-      const corrId = `corr_${r}_F${f}`;
-      const xPos = 150 + (r * roomSpacing);
-
-      nodes.push({ id: corrId, label: `Corridor ${f}0${r}`, type: 'corridor', x: xPos, y: yPos, level: f, buildingId: 'bldg' });
-      if (f === 1) firstFloorCorridors.push(corrId);
-
-      edges.push({ id: `${prevCorr}-${corrId}`, from: prevCorr, to: corrId, latency: 4, label: '4s', type: 'corridor' });
-      edges.push({ id: `${corrId}-${prevCorr}`, from: corrId, to: prevCorr, latency: 4, label: '4s', type: 'corridor' });
-      prevCorr = corrId;
-
-      if (r <= roomCount) {
-        const roomId = `room_${r}_F${f}`;
-        const roomNode: GraphNode = {
-          id: roomId,
-          label: `Room ${f}0${r}`,
-          type: 'place',
-          x: xPos,
-          y: yPos - 60,
-          level: f + 1,
-          buildingId: 'bldg',
-        };
-
-        nodes.push(roomNode);
-        edges.push({ id: `${corrId}-${roomId}`, from: corrId, to: roomId, latency: 3, label: '3s', type: 'path' });
-        edges.push({ id: `${roomId}-${corrId}`, from: roomId, to: corrId, latency: 3, label: '3s', type: 'path' });
-
-        if (f > 1) startZones.push(roomNode);
+      if (prevSpine) {
+        edges.push({ id: `e_${prevSpine}_${sId}`, from: prevSpine, to: sId, latency: 4, label: '4s', type: 'corridor' });
+        edges.push({ id: `e_${sId}_${prevSpine}`, from: sId, to: prevSpine, latency: 4, label: '4s', type: 'corridor' });
       }
+      prevSpine = sId;
+
+      if (xPos === 10000) edges.push({ id: `e_${sId}_stairw`, from: sId, to: stairW, latency: 5, label: '5s', type: 'corridor' });
+      if (xPos === 48000) edges.push({ id: `e_${sId}_staire`, from: sId, to: stairE, latency: 5, label: '5s', type: 'corridor' });
+      if (xPos === 29000) edges.push({ id: `e_${sId}_stairm`, from: sId, to: stairM, latency: 4, label: '4s', type: 'corridor' });
+    });
+  }
+
+  // Second pass: Calculate remaining node budget and fill up rooms/hallways precisely
+  const fixedNodesCount = nodes.length; // 4 exits + (numFloors * 12)
+  let remainingBudget = Math.max(0, targetNodes - fixedNodesCount);
+
+  // Available room slots per floor (up to 4 north rooms + 4 south rooms = 8 room slots per floor)
+  const roomSlots = [
+    { side: 'north', x: 10000, corrY:  8000, roomY:  3000, labelSuffix: '01' },
+    { side: 'north', x: 22000, corrY:  8000, roomY:  3000, labelSuffix: '02' },
+    { side: 'north', x: 36000, corrY:  8000, roomY:  3000, labelSuffix: '03' },
+    { side: 'north', x: 48000, corrY:  8000, roomY:  3000, labelSuffix: '04' },
+    { side: 'south', x: 10000, corrY: 26000, roomY: 31000, labelSuffix: '05' },
+    { side: 'south', x: 22000, corrY: 26000, roomY: 31000, labelSuffix: '06' },
+    { side: 'south', x: 36000, corrY: 26000, roomY: 31000, labelSuffix: '07' },
+    { side: 'south', x: 48000, corrY: 26000, roomY: 31000, labelSuffix: '08' },
+  ];
+
+  // Fill rooms in round-robin fashion across floors & slots to match remainingBudget exactly
+  let slotIdx = 0;
+  let floorIdx = 1;
+
+  while (remainingBudget > 0 && floorIdx <= numFloors) {
+    const bId = `L${floorIdx}`;
+    const slot = roomSlots[slotIdx];
+
+    // Try to add a pair: 1 Corridor node + 1 Room node (2 nodes) if budget >= 2
+    // If budget == 1, add 1 Corridor node
+    const corrId = `l${floorIdx}_${slot.side}_c_${slotIdx}`;
+    nodes.push({
+      id: corrId,
+      label: `${bId} ${slot.side === 'north' ? 'North' : 'South'} Hall ${slotIdx + 1}`,
+      type: 'corridor',
+      x: slot.x,
+      y: slot.corrY,
+      level: floorIdx,
+      buildingId: bId,
+    });
+    remainingBudget--;
+
+    // Connect corridor node to spine
+    const spineMatch = `l${floorIdx}_spine_${spineCols.indexOf(slot.x)}`;
+    if (nodes.some(n => n.id === spineMatch)) {
+      edges.push({ id: `e_${corrId}_${spineMatch}`, from: corrId, to: spineMatch, latency: 5, label: '5s', type: 'corridor' });
+      edges.push({ id: `e_${spineMatch}_${corrId}`, from: spineMatch, to: corrId, latency: 5, label: '5s', type: 'corridor' });
     }
 
-    edges.push({ id: `${prevCorr}-${stairR}`, from: prevCorr, to: stairR, latency: 4, label: '4s', type: 'corridor' });
-    edges.push({ id: `${stairR}-${prevCorr}`, from: stairR, to: prevCorr, latency: 4, label: '4s', type: 'corridor' });
+    if (remainingBudget > 0) {
+      const roomId = `l${floorIdx}_room_${slot.labelSuffix}`;
+      const roomNode: GraphNode = {
+        id: roomId,
+        label: `Room ${floorIdx}${slot.labelSuffix}`,
+        type: 'place',
+        x: slot.x,
+        y: slot.roomY,
+        level: floorIdx,
+        buildingId: bId,
+      };
+      nodes.push(roomNode);
+      remainingBudget--;
+
+      edges.push({ id: `e_${roomId}_${corrId}`, from: roomId, to: corrId, latency: 3, label: '3s', type: 'corridor' });
+      edges.push({ id: `e_${corrId}_${roomId}`, from: corrId, to: roomId, latency: 3, label: '3s', type: 'corridor' });
+
+      if (floorIdx > 1) startZones.push(roomNode);
+    }
+
+    // Advance slot index and floor index
+    slotIdx++;
+    if (slotIdx >= roomSlots.length) {
+      slotIdx = 0;
+      floorIdx++;
+    }
   }
 
-  if (config.exitCount > 2 && firstFloorCorridors.length > 0) {
-    const lobby = firstFloorCorridors[Math.floor(firstFloorCorridors.length / 2)];
-    edges.push({ id: `${lobby}-exit_M`, from: lobby, to: 'exit_M', latency: 5, label: '5s', type: 'path' });
-  }
+  const startIdx = Math.floor(seededRandom(seed) * (startZones.length || 1));
+  const destinationIds = exits.map(e => e.id);
 
-  const startIdx = Math.floor(seededRandom(seed) * startZones.length);
-  const destinationIds = exits.map((exit) => exit.id);
   const graph = {
     nodes,
     edges,
-    sourceId: startZones[startIdx]?.id ?? nodes[0].id,
+    sourceId: startZones[startIdx]?.id ?? (nodes.find(n => n.type === 'place')?.id || nodes[0].id),
     destinationIds,
-    width: W,
-    height: H,
+    width: CW,
+    height: CH,
   };
 
   return fitGraphEdgeCount(

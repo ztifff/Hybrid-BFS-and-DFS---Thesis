@@ -1,6 +1,9 @@
 import { GraphNode, GraphEdge, ScenarioType, AlgorithmStep } from '../../types';
 import { NODE_CONFIG, EDGE_CONFIG } from './types';
 import { ALGORITHMS } from '../../config/scenarios';
+import { drawClemensFloorPlan } from './clemensFloorPlan';
+import { drawAyalaFloorPlan } from './ayalaFloorPlan';
+
 
 export interface RenderOptions {
   ctx: CanvasRenderingContext2D;
@@ -325,6 +328,15 @@ export function renderCanvas(options: RenderOptions) {
       }
     });
     ctx.restore();
+  }
+
+  // --- Ayala Malls Solenad (Nuvali) & Clemens Hall (Synthetic) Architectural Floor Plans ---
+  if (scenario === 'evacuation') {
+    if (mapId === 'city' || mapId === 'ayala') {
+      drawAyalaFloorPlan(ctx, sx, sy, zoom, visibleNodes);
+    } else if (mapId === 'synthetic') {
+      drawClemensFloorPlan(ctx, sx, sy, zoom, visibleNodes);
+    }
   }
 
   // --- AWS Warehouse Shelf & Packing Desk Box Visualization ---
@@ -857,7 +869,7 @@ export function renderCanvas(options: RenderOptions) {
     
     const BLOCKED_ICONS: Record<string, string> = {
       traffic:    '\uD83D\uDEAB', 
-      evacuation: '\uD83D\uDD25', 
+      evacuation: '⛔', 
       robotics:   '\uD83D\uDEA7', 
       network:    '\uD83D\uDCA5', 
       gameai:     mapId === 'dama' ? '\uD83D\uDD3B' : '\uD83D\uDD34', 
@@ -865,7 +877,7 @@ export function renderCanvas(options: RenderOptions) {
     const blockedIcon = BLOCKED_ICONS[scenario] ?? '\uD83D\uDCA5';
 
     if (isBlocked) { 
-      fillColor = scenario === 'evacuation' ? '#c2410c' : '#dc2626'; 
+      fillColor = scenario === 'evacuation' ? '#3f1212' : '#dc2626'; 
       opacity = 1; 
     } else if (wasHistoricallyBlocked.has(node.id)) { 
       fillColor = scenario === 'evacuation' ? '#ea580c' : '#ef4444'; 
@@ -883,7 +895,7 @@ export function renderCanvas(options: RenderOptions) {
     if (isBlocked && (isMassive || isDatacenter)) {
       ctx.beginPath();
       ctx.arc(cx, cy, r + (isDatacenter ? 4 : 2.5), 0, Math.PI * 2);
-      ctx.strokeStyle = scenario === 'evacuation' ? 'rgba(194, 65, 12, 0.7)' : 'rgba(239, 68, 68, 0.7)';
+      ctx.strokeStyle = scenario === 'evacuation' ? 'rgba(127, 29, 29, 0.7)' : 'rgba(239, 68, 68, 0.7)';
       ctx.lineWidth = isDatacenter ? 1.5 : 1;
       ctx.stroke();
     }
@@ -917,7 +929,7 @@ export function renderCanvas(options: RenderOptions) {
       ctx.fill();
       if (!isMassive || isImportant) {
         ctx.lineWidth = isBlocked ? 2 : (isSource || isDest ? 3 : 1);
-        ctx.strokeStyle = isBlocked ? (scenario === 'evacuation' ? '#c2410c' : '#ef4444') : 
+        ctx.strokeStyle = isBlocked ? (scenario === 'evacuation' ? '#7f1d1d' : '#ef4444') : 
                           isSource ? '#4ade80' : 
                           isDest ? '#f87171' : '#374151';
         ctx.stroke();
@@ -944,7 +956,7 @@ export function renderCanvas(options: RenderOptions) {
     const isKnownPlace = displayLabel && !isGenericLink;
     const shouldShowStreetLabel = isMassive && isKnownPlace && zoom >= 1.5;
     const shouldShowNormalLabel = (!isMassive && isKnownPlace) || isImportant;
-    const textAlpha = isImportant ? 1 : Math.max(0, Math.min(1, (zoom - 0.6) * 2.5));
+    const textAlpha = isImportant ? 1 : Math.max(0, Math.min(1, (zoom - 0.4) * 3));
 
     if (textAlpha > 0) {
       ctx.save();
@@ -994,7 +1006,7 @@ export function renderCanvas(options: RenderOptions) {
           ctx.fillText(displayLabel, cx, textY - labelOffsetY);
         } else if (!isMassive) {
           if (!isDatacenter) {
-            const labelSize = (isImportant ? 14 : 12) / zoom;
+            const labelSize = (isImportant ? 18 : 15) / zoom;
             ctx.font = `${isImportant ? 'bold ' : ''}${labelSize}px sans-serif`;
             
             if (scenario === 'gameai') {

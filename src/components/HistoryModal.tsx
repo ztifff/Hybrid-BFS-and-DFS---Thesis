@@ -393,11 +393,17 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
                     ? 'campus' 
                     : baseGraph.nodes.some(n => n.id.toLowerCase().includes('finance') || n.id.toLowerCase().includes('sales')) 
                       ? 'companybusiness' 
-                      : baseGraph.nodes.some(n => n.id.includes('nurse') || n.id.includes('air_pressure') || n.buildingId === 'clinic' || n.buildingId === 'L1' || n.buildingId === 'L2')
-                        ? 'clinic'
-                        : baseGraph.nodes.some(n => n.id.includes('shelf_f') || n.id.includes('dest_desk_a') || n.id.includes('shelf_m'))
-                          ? 'awsWarehouse'
-                          : 'synthetic'
+                      : baseGraph.nodes.some(n => n.id.includes('exit_south_main') || n.id.includes('stair_main_') || n.id.includes('l1_spine') || n.id.includes('elev_n_'))
+                        ? 'synthetic'
+                        : baseGraph.nodes.some(n => n.id.includes('lv_hapchan') || n.id.includes('s_bacolod') || n.id.includes('th_w') || n.label?.includes('Kuya J'))
+                          ? 'city'
+                          : baseGraph.nodes.some(n => n.buildingId === 'GL' || n.id.toLowerCase().includes('supermarket') || n.id.toLowerCase().includes('atrium') || n.id.toLowerCase().includes('dept_store'))
+                            ? 'building'
+                            : baseGraph.nodes.some(n => n.id.includes('nurse') || n.id.includes('air_pressure') || n.buildingId === 'clinic')
+                              ? 'clinic'
+                              : baseGraph.nodes.some(n => n.id.includes('shelf_f') || n.id.includes('dest_desk_a') || n.id.includes('shelf_m'))
+                                ? 'awsWarehouse'
+                                : 'synthetic'
                 }
                 robotAssignments={
                   baseGraph.nodes.filter(n => n.type === 'depot').map(d => ({

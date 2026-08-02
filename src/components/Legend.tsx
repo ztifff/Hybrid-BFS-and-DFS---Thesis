@@ -45,7 +45,7 @@ const SCENARIO_NODE_ITEMS: Record<ScenarioType, LegendItem[]> = {
     { color: '#dc2626', label: 'Corridor',                  icon: '🚶' },
     { color: '#ef4444', label: 'Stairwell',                 icon: '🪜' },
     { color: '#0e7490', label: 'Real-World Place',          icon: '🏬' },
-    { color: '#c2410c', label: 'Fire Blocked',              icon: '🔥' },
+    { color: '#7f1d1d', label: 'Route Blocked',              icon: '⛔' },
   ],
   gameai: [
     { color: '#9333ea', label: 'Strategy Planner (Source)', icon: '🔵' },

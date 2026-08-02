@@ -129,7 +129,7 @@ export const CanvasControls: React.FC<CanvasControlsProps> = ({
                   : 'text-gray-400 hover:text-white hover:bg-gray-800'
               }`}
             >
-              {floor === 'GL' ? 'GL (Ground)' : floor === 'L2' ? 'L2 (Second)' : floor === 'L1' ? 'L1 (First)' : floor}
+              {floor === 'GL' ? 'GL (Ground)' : floor === 'L2' ? 'L2 (Second)' : floor === 'L3' ? 'L3 (Third)' : floor === 'L1' ? 'L1 (First)' : floor}
             </button>
           ))}
         </div>

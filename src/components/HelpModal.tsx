@@ -26,7 +26,7 @@ const SCENARIO_MAPS: Record<ScenarioType, { name: string; description: string }[
   evacuation: [
     { name: '🧪 Synthetic', description: 'A generated floor plan with corridors, stairwells, and emergency exits placed randomly. Used to test evacuation logic in generalized building structures.' },
     { name: '🏬 SM City Santa Rosa', description: 'Based on the multi-level layout of SM City Santa Rosa mall (Laguna, Philippines). Contains two floors (Ground Level & Level 2) with real-world stairwells, corridors, and emergency exit placement.' },
-    { name: '🏙️ City Emergency Grid', description: 'A larger city-scale evacuation grid. Models an urban area with multiple interconnected buildings, street corridors, and distributed exit points.' },
+    { name: '🛍️ Ayala Malls Solenad Nuvali (Atrium)', description: 'A multi-level outdoor lifestyle center layout based on Ayala Malls Solenad Nuvali (Atrium) in Santa Rosa, Laguna. Features 2 levels (Ground Level & Level 2).' },
   ],
   gameai: [
     { name: '🔵 Turkish Draughts (Dama)', description: 'An 8×8 Dama board using tan/dark-brown alternating squares. All squares are playable. The Strategy Planner (🔷) navigates from the bottom to the King Row at the top while avoiding dynamically-placed opponent pieces (🔻).' },
@@ -51,9 +51,10 @@ const SCENARIO_DYNAMIC_EVENTS: Record<ScenarioType, { event: string; icon: strin
     { event: 'Reopened / Signal Restored / Flow Restored', icon: '✅', cause: 'A failed traffic signal is repaired and normal flow resumes.', resolution: 'The intersection node is unblocked. Flow through that road junction resumes for future path planning.' },
   ],
   evacuation: [
-    { event: 'Fire Outbreak / Exit Blocked', icon: '🔥', cause: 'A fire breaks out in a corridor, stairwell, or room, making it impassable for evacuees.', resolution: 'The node turns dark orange and is permanently blocked for the remainder of the simulation. Algorithms must find fire-free routes to the nearest Emergency Exit (🚪). This directly tests BFS\'s safety advantage — it always finds the absolute shortest fire-free path.' },
-    { event: 'Fire Spreads Rapidly / Smoke Fills Corridor', icon: '🔥', cause: 'An Area-of-Effect (AoE) event that blocks a cluster of connected rooms and corridors.', resolution: 'Algorithms must avoid large contaminated areas.' },
-    { event: 'Fire Extinguished / Contained', icon: '🟢', cause: 'Emergency responders extinguish the fire.', resolution: 'The area becomes safe and traversable again.' },
+    { event: 'Debris / Exit Blocked', icon: '🧱', cause: 'A corridor, stairwell, exit, or room node becomes blocked by debris or obstruction, making it impassable for evacuees.', resolution: 'The node turns dark orange and remains blocked until a clear event restores it. Algorithms must reroute to the nearest emergency exit around the blocked node.' },
+    { event: 'Smoke / Blind Zone', icon: '💨', cause: 'Smoke or contamination spreads through connected corridors and rooms, blocking a cluster of nodes.', resolution: 'Algorithms must avoid the contaminated area while finding a safe evacuation path.' },
+    { event: 'Indoor Tenant Fire Spreads', icon: '🔥', cause: 'A tenant fire spreads inside the building and blocks nearby rooms and corridors.', resolution: 'The fire event later clears or is contained, allowing previously blocked nodes to become traversable again.' },
+    { event: 'Cleared / Contained / Restored', icon: '✅', cause: 'A previously blocked node or area is cleared or the hazard is contained.', resolution: 'The node becomes traversable again. Algorithms can resume using that path for future evacuation routing.' },
   ],
   gameai: [
     { event: 'Opponent Piece Deployed / Opponent Attacks', icon: '🔴', cause: 'An opponent piece is placed on a board square ahead of the Strategy Planner\'s path, blocking that tile.', resolution: 'The Strategy Planner must reroute around the piece. The Strategy Map Events panel shows which algorithms were UNAFFECTED (not in their path) vs. PATH SEVERED (directly blocked). The piece remains until it retreats.' },
@@ -213,9 +214,15 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose }) => {
                 {scenario === 'gameai' && <Item label="Game Board (Turkish Draughts / Checkers)" icon="♟️">Switches the game board type. Each has different tile layouts, movement rules, and opponent behavior patterns.</Item>}
                 {scenario === 'network' && (
                   <>
-                    <Item label="MODE: Default vs Device to Device" icon="🎛️">Toggles between standard broadcast routing to all exits, and specific device-to-device targeted routing (real-world maps only).</Item>
-                    <Item label="SRC & DST Selectors" icon="🎯">When in Device to Device mode, allows you to select exactly which machine is sending data and which machine(s) are receiving it.</Item>
-                    <Item label="Routing Method (Anycast / Multicast)" icon="📡">ANYCAST (Race to First) finishes when any selected destination is reached. MULTICAST (Find All) forces the algorithm to find paths to all selected destinations.</Item>
+                    <Item label="MODE: Default vs Device to Device" icon="🎛️">
+                      Select the routing style for the active network map:
+                      <ul className="list-disc list-inside mt-2 text-gray-300">
+                        <li><strong>Default (ISP Broadcast)</strong>: uses standard broadcast-style routing and evaluates how the network behaves when traffic is sent broadly across the topology.</li>
+                        <li><strong>Device to Device</strong>: enables the source and destination selectors so you can choose a specific source machine and one or more target machines for targeted routing.</li>
+                      </ul>
+                    </Item>
+                    <Item label="SRC & DST Selectors" icon="🎯">When in Device to Device mode, select the exact source machine and one or more destinations. This lets you compare algorithm routing for a specific pair or group of network devices.</Item>
+                    <Item label="Routing Method (Anycast / Multicast)" icon="📡">ANYCAST (Race to First) stops when the first selected destination is reached. MULTICAST (Find All) continues until all selected destinations have been found.</Item>
                   </>
                 )}
               </Section>
@@ -288,8 +295,9 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose }) => {
                     <Item label="Generated X nodes / Y links" icon="📋">Displays actual generated node and edge counts after structure generation.</Item>
                   </Section>
                 ) : (
-                  <Section title="Dynamic Board Scaling">
-                    <Item label="Auto-Expansion" icon="📐">The game board dynamically expands its grid size when more than 20 nodes/pieces are added, automatically adjusting based on the array of the board.</Item>
+                  <Section title="Dynamic Board Scaling (Game AI)">
+                    <Item label="Grid Snapping" icon="📐">Because a game board must remain a perfect grid (e.g. 7x7 = 49 squares, or 8x8 = 64 squares), increasing the Nodes slider by even a single value might cause the board to jump to the next valid grid dimension. The total generated nodes shown below the slider will exactly equal the squares on the board plus 1 (for the spawning Strategy AI node).</Item>
+                    <Item label="Fixed Links" icon="🔗">Game boards strictly adhere to the movement rules of the game (e.g. orthogonal slides in Dama, or diagonal jumps in Checkers). Therefore, the Links slider input is ignored for Game AI scenarios, and the graph will always generate exactly the mathematically valid number of links for that board size.</Item>
                   </Section>
                 )}
             </>

@@ -153,20 +153,14 @@ export function buildGameAIGraph(
     spawnNode.y = entryNodeObject.y;
   }
 
-  return fitGraphEdgeCount({
+  return {
     nodes,
     edges,
     sourceId: 'spawn',
     destinationIds,
     width: W,
     height: H
-  }, sizing?.edges, seed, {
-    edgeType: 'path',
-    labelUnit: ' move',
-    latencyBase: 1,
-    latencySpread: 3,
-    maxEdges: (boardDim * boardDim) * 16
-  });
+  };
 }
 
 // ── Turkish Draughts (Dama) board ────────────────────────────────────────────
@@ -235,17 +229,6 @@ function buildDamaBoard(
         if (from < to) addTwoWayEdge(from, to, 1, 'wireless', 'capture jump');
       }
 
-      // King sliding moves: orthogonal range 3+ (representing dama king power)
-      for (let dist = 3; dist < size; dist++) {
-        const kingDirections: [number, number][] = [[0,dist],[0,-dist],[dist,0],[-dist,0]];
-        for (const [dc, dr] of kingDirections) {
-          const nc = col + dc;
-          const nr = row + dr;
-          if (nc < 0 || nc >= size || nr < 0 || nr >= size) continue;
-          const to = `dama_${files[nc]}${nr + 1}`;
-          if (from < to) addTwoWayEdge(from, to, 2, 'path', 'king slide');
-        }
-      }
     }
   }
 }

@@ -29,9 +29,6 @@ interface ScenarioGraph {
 }
 
 function generateMassiveSMRosaMap() {
-  // ✅ GARGANTUAN CANVAS: 60000 x 35000
-  // Every node is spaced at least 4000-5000 units apart relative to this grid
-  // to absolutely guarantee labels will not overlap when zoomed out.
   const W = 60000;
   const H = 35000;
   const edges: GraphEdge[] = [];

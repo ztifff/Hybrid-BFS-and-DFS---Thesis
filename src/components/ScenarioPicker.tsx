@@ -19,6 +19,15 @@ interface Props {
   onStart: () => void;
 }
 
+const makeHexWithAlpha = (color: string, alpha: number) => {
+  if (!color.startsWith('#')) return color;
+  const hex = color.slice(1);
+  const normalized = hex.length === 3 ? hex.split('').map((c) => c + c).join('') : hex;
+  if (normalized.length !== 6) return color;
+  const alphaHex = Math.round(alpha * 255).toString(16).padStart(2, '0');
+  return `#${normalized}${alphaHex}`;
+};
+
 export const ScenarioPicker: React.FC<Props> = ({
   selectedScenario,
   onSelectScenario,
@@ -32,7 +41,7 @@ export const ScenarioPicker: React.FC<Props> = ({
   useEffect(() => {
     const fetchScenarios = async () => {
       try {
-        const response = await fetch('https://backend-1e4y.onrender.com/api/scenarios');
+        const response = await fetch('api/scenarios');
         if (!response.ok) return;
         const json = await response.json();
         if (json.success && Array.isArray(json.data)) {
@@ -52,6 +61,7 @@ export const ScenarioPicker: React.FC<Props> = ({
 
   const activeScenarioConfig = scenarios.find((s) => s.id === selectedScenario);
   const canStart = selectedScenario !== null && !isLoading;
+  const [isButtonHovered, setIsButtonHovered] = useState(false);
 
   return (
     <div className="flex flex-col h-full bg-gray-950 p-6 rounded-none border border-gray-800 shadow-2xl relative overflow-hidden">
@@ -178,13 +188,22 @@ export const ScenarioPicker: React.FC<Props> = ({
         <button
           onClick={onStart}
           disabled={!canStart}
-          className={`
-            relative overflow-hidden w-full py-4 font-mono font-bold text-sm tracking-widest uppercase transition-all duration-300 border
-            ${canStart
-                ? 'bg-blue-900/20 text-blue-400 border-blue-500/50 hover:bg-blue-900/40 hover:text-blue-300 hover:border-blue-400 hover:-translate-y-0.5 shadow-[0_0_15px_rgba(37,99,235,0.15)]'
-                : 'bg-gray-900 text-gray-600 cursor-not-allowed border-gray-800'
-            }
-          `}
+          onMouseEnter={() => setIsButtonHovered(true)}
+          onMouseLeave={() => setIsButtonHovered(false)}
+          className="relative overflow-hidden w-full py-4 font-mono font-bold text-sm tracking-widest uppercase transition-all duration-300 border"
+          style={(() => {
+            const activeColor = activeScenarioConfig?.color || '#2563eb';
+            const activeBg = makeHexWithAlpha(activeColor, canStart ? (isButtonHovered ? 0.24 : 0.16) : 0.06);
+            const borderColor = canStart ? makeHexWithAlpha(activeColor, isButtonHovered ? 0.7 : 0.5) : '#374151';
+            const textColor = canStart ? activeColor : '#9ca3af';
+            const boxShadow = canStart ? `0 0 20px ${makeHexWithAlpha(activeColor, isButtonHovered ? 0.2 : 0.15)}` : undefined;
+            return {
+              backgroundColor: activeBg,
+              borderColor,
+              color: textColor,
+              boxShadow,
+            };
+          })()}
         >
           {canStart ? (
             <span className="flex items-center justify-center gap-3">
@@ -206,7 +225,7 @@ export const ScenarioPicker: React.FC<Props> = ({
           <button onClick={() => setIsPrivacyOpen(true)} className="hover:text-blue-400 transition-colors uppercase tracking-widest">Privacy Policy</button>
         </div>
         <div className="mt-2 sm:mt-0 text-gray-600 tracking-widest">
-          ACADEMIC THESIS PROTOTYPE © {new Date().getFullYear()}
+          ACADEMIC THESIS SYSTEM © {new Date().getFullYear()}
         </div>
       </footer>
 

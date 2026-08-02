@@ -36,9 +36,15 @@ export const MetricsPanel: React.FC<Props> = ({
 
       const exploredCount = (stepIndex === 0) ? 0 : (status === 'done' && resultData ? resultData.metrics.nodesExplored : (stepData?.explored.length || 0));
       
-      const actualDistance = (stepIndex === 0) ? 0 : (status === 'done' && resultData ? resultData.metrics.pathLength : Math.max(0, (stepData?.path.length || 1) - 1));
-      
-      const optimality = isStart ? { ratio: 0, label: 'N/A', color: '#64748b' } : getPathOptimality(actualDistance, optimalPathLength);
+      const actualDistance = (stepIndex === 0)
+        ? 0
+        : (status === 'done' && resultData
+            ? resultData.metrics.pathLength
+            : Math.max(0, (stepData?.path.length || 0) - 1));
+
+      const optimality = (actualDistance > 0 && optimalPathLength && optimalPathLength > 0)
+        ? getPathOptimality(actualDistance, optimalPathLength)
+        : { ratio: 0, label: 'N/A', color: '#64748b' };
       
       const adaptability = isStart 
         ? { score: 0, label: '-', color: '#64748b' } 

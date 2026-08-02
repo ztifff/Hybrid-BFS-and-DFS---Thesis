@@ -25,7 +25,7 @@ export const MAP_REGISTRY: ScenarioRegistry = {
   evacuation: [
     { id: 'synthetic', label: 'Synthetic', icon: '🗺️', isRealWorld: false },
     { id: 'building', label: 'SM City Santa Rosa', icon: '🏢', isRealWorld: true },
-    { id: 'city', label: 'City Emergency Grid', icon: '🚦', isRealWorld: true },
+    { id: 'city', label: 'Ayala Malls Solenad Nuvali (Atrium)', icon: '🛍️', isRealWorld: true },
   ],
   gameai: [
     { id: 'synthetic', label: 'Synthetic', icon: '🗺️', isRealWorld: false },

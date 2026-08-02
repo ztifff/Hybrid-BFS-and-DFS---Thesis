@@ -11,6 +11,11 @@ const SIZE_CONFIG = {
   large: { cols: 9, rows: 7 }
 };
 
+function seededRandom(seed: number) {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
 export function buildTrafficGraph(
   useRealWorld: boolean = false, 
   graphSize: GraphSize = 'medium',
@@ -24,12 +29,17 @@ export function buildTrafficGraph(
     };
     return (registry[mapId || 'cabuyao'] || cabuyaoTrafficGraph) as ScenarioGraph;
   }
+
+  let currentSeed = seed;
+  const rand = () => seededRandom(currentSeed++);
+
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
   const config = SIZE_CONFIG[graphSize];
+  
   const targetNodes = resolveSizingValue(sizing?.nodes, config.cols * config.rows, 9, 220);
   const cols = sizing
-    ? Math.min(targetNodes, Math.max(3, Math.round(Math.sqrt(targetNodes * 1.25))))
+    ? Math.min(targetNodes, Math.max(3, Math.round(Math.sqrt(targetNodes * 1.3))))
     : config.cols;
   const rows = sizing ? Math.ceil(targetNodes / cols) : config.rows;
 
@@ -38,44 +48,107 @@ export function buildTrafficGraph(
   const hasNode = (r: number, c: number) => r >= 0 && c >= 0 && c < cols && (r * cols + c) < targetNodes;
   const nodeId = (r: number, c: number) => `int_${r}_${c}`;
 
+  // 1. Generate Intersections with Jitter for Organic Layout
+  const maxJitterX = cellW * 0.35;
+  const maxJitterY = cellH * 0.35;
+
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       if (!hasNode(r, c)) continue;
 
+      // Add organic jitter, but keep perimeter nodes slightly more aligned
+      const isPerimeter = r === 0 || c === 0 || r === rows - 1 || c === cols - 1;
+      const jitterX = isPerimeter ? (rand() * 2 - 1) * maxJitterX * 0.3 : (rand() * 2 - 1) * maxJitterX;
+      const jitterY = isPerimeter ? (rand() * 2 - 1) * maxJitterY * 0.3 : (rand() * 2 - 1) * maxJitterY;
+
+      const mainAvenueCol = Math.floor(cols / 2);
+      const mainBoulevardRow = Math.floor(rows / 2);
+      const isMajorArtery = c === mainAvenueCol || r === mainBoulevardRow;
+      const isStreet = !isMajorArtery && rand() > 0.3;
+
       const id = nodeId(r, c);
       nodes.push({
         id,
-        label: `Block ${r}-${c}`,
-        type: 'intersection',
-        x: 100 + (c * cellW),
-        y: 100 + (r * cellH),
+        label: isStreet ? `Street ${r}-${c}` : `Inter ${r}-${c}`,
+        type: isStreet ? 'street' : 'intersection',
+        x: Math.round(100 + (c * cellW) + jitterX),
+        y: Math.round(100 + (r * cellH) + jitterY),
         level: 1,
         buildingId: 'city'
       });
+    }
+  }
 
+  // 2. Determine Major Arteries (Avenues & Boulevards)
+  const mainAvenueCol = Math.floor(cols / 2);
+  const mainBoulevardRow = Math.floor(rows / 2);
+
+  // 3. Generate Roads (Edges)
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (!hasNode(r, c)) continue;
+      const id = nodeId(r, c);
+
+      // Horizontal connection (Street)
       if (hasNode(r, c - 1)) {
-        edges.push({ id: `${nodeId(r, c-1)}-${id}`, from: nodeId(r, c-1), to: id, latency: 3, label: '3m', type: 'road' });
+        const isBoulevard = r === mainBoulevardRow;
+        // Randomly drop 15% of minor streets to create realistic blocks/cul-de-sacs
+        if (isBoulevard || rand() > 0.15) {
+          const latency = isBoulevard ? 2 : 4 + Math.floor(rand() * 3);
+          const label = isBoulevard ? `${latency}m Blvd` : `${latency}m St`;
+          edges.push({ id: `${nodeId(r, c-1)}-${id}`, from: nodeId(r, c-1), to: id, latency, label, type: 'road' });
+        }
       }
 
+      // Vertical connection (Avenue)
       if (hasNode(r - 1, c)) {
-        edges.push({ id: `${nodeId(r-1, c)}-${id}`, from: nodeId(r-1, c), to: id, latency: 4, label: '4m', type: 'road' });
+        const isAvenue = c === mainAvenueCol;
+        if (isAvenue || rand() > 0.15) {
+          const latency = isAvenue ? 2 : 4 + Math.floor(rand() * 3);
+          const label = isAvenue ? `${latency}m Ave` : `${latency}m St`;
+          edges.push({ id: `${nodeId(r-1, c)}-${id}`, from: nodeId(r-1, c), to: id, latency, label, type: 'road' });
+        }
       }
     }
   }
 
-  for (let i = 0; i < Math.min(rows, cols) - 1; i++) {
-    if (!hasNode(i, i) || !hasNode(i + 1, i + 1)) continue;
+  // 4. Winding Highway (Expressway)
+  // Instead of a perfect diagonal, make a highway that snakes organically through the city
+  let hwyR = 0;
+  let hwyC = 0;
+  const highwayNodes = [nodeId(hwyR, hwyC)];
+  while (hwyR < rows - 1 || hwyC < cols - 1) {
+    if (hwyR === rows - 1) hwyC++;
+    else if (hwyC === cols - 1) hwyR++;
+    else {
+      // Move right or down randomly to create a jagged diagonal path
+      if (rand() > 0.5) hwyC++;
+      else hwyR++;
+    }
+    if (hasNode(hwyR, hwyC)) {
+      highwayNodes.push(nodeId(hwyR, hwyC));
+    }
+  }
+
+  for (let i = 0; i < highwayNodes.length - 1; i++) {
     edges.push({ 
       id: `hwy_${i}`, 
-      from: nodeId(i, i), 
-      to: nodeId(i+1, i+1), 
+      from: highwayNodes[i], 
+      to: highwayNodes[i+1], 
       latency: 1, 
       label: '1m HWY', 
       type: 'road' 
     });
   }
 
+  // 5. Source and Destinations
   const sourceId = nodeId(0, 0);
+  const sourceNode = nodes.find(n => n.id === sourceId);
+  if (sourceNode) {
+    sourceNode.type = 'origin';
+    sourceNode.label = 'City Center';
+  }
+
   const lastIndex = targetNodes - 1;
   const lastRow = Math.floor(lastIndex / cols);
   const lastCol = lastIndex % cols;
@@ -83,6 +156,7 @@ export function buildTrafficGraph(
   const rightColumnNodes = Array.from({ length: rows }, (_, r) => nodeId(r, cols - 1)).filter((id) =>
     nodes.some((node) => node.id === id)
   );
+  
   const destinationIds = Array.from(new Set([
     nodeId(lastRow, lastCol),
     bottomRowNodes[Math.floor(bottomRowNodes.length / 2)],
@@ -91,7 +165,10 @@ export function buildTrafficGraph(
 
   destinationIds.forEach(id => {
     const n = nodes.find(n => n.id === id);
-    if (n) { n.type = 'highway'; n.label = 'City Exit'; }
+    if (n) { 
+      n.type = 'highway'; 
+      n.label = 'City Exit'; 
+    }
   });
 
   return fitGraphEdgeCount(
@@ -103,5 +180,5 @@ export function buildTrafficGraph(
 }
 
 export function getTrafficClosureCandidates(graph: ScenarioGraph): string[] {
-  return graph.nodes.filter(n => n.type === 'intersection').map(n => n.id);
+  return graph.nodes.filter(n => n.type === 'intersection' || n.type === 'street').map(n => n.id);
 }

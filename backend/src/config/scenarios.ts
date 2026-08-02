@@ -54,7 +54,7 @@ export const SCENARIOS: ScenarioConfig[] = [
     name: 'Emergency Evacuation',
     icon: '🔥',
     description:
-      'People evacuate a multi-story office building to reach ground-floor emergency exits. The building has stairwells, corridors and fire doors. Fire spreads dynamically, cutting off corridors and forcing alternate escape routes.',
+      'People evacuate a multi-story building to reach ground-floor emergency exits. The building has stairwells, corridors and fire doors. Fire spreads dynamically, cutting off corridors and forcing alternate escape routes.',
     dynamicDescription: 'Fire spreads and blocks corridors in real-time',
     sourceLabel: 'Evacuation Zone',
     destinationLabel: 'Emergency Exit',

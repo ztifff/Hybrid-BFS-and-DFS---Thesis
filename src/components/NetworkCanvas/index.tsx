@@ -39,7 +39,7 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
 
   const { animateTo } = useCanvasAnimation({ setZoom, setPan });
 
-  const [activeFloor, setActiveFloor] = useState<string>('L2');
+  const [activeFloor, setActiveFloor] = useState<string>('L1');
   const [followAlgo, setFollowAlgo] = useState<'bfs' | 'dfs' | 'hybrid' | null>(null);
   const [visibleAlgos, setVisibleAlgos] = useState({ bfs: true, dfs: true, hybrid: true });
   const [isShowOpen, setIsShowOpen] = useState(false);
@@ -54,7 +54,15 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
     nodes.forEach(n => { if (n.buildingId) floors.add(n.buildingId); });
     return Array.from(floors).sort();
   }, [nodes]);
-  const isLayeredMap = (scenario === 'network' && (mapId === 'campus' || mapId === 'companybusiness')) || (scenario === 'robotics' && mapId === 'clinic') || (scenario === 'evacuation' && mapId === 'building');
+
+  // Reset active floor to first available floor when the map changes
+  useEffect(() => {
+    if (uniqueFloors.length > 0 && !uniqueFloors.includes(activeFloor)) {
+      setActiveFloor(uniqueFloors[0]);
+    }
+  }, [uniqueFloors]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const isLayeredMap = (scenario === 'network' && (mapId === 'campus' || mapId === 'companybusiness')) || (scenario === 'robotics' && mapId === 'clinic') || (scenario === 'evacuation' && (mapId === 'building' || mapId === 'city' || mapId === 'synthetic'));
   const isDenseProcedural = nodes.length > 500 && width <= 100000 && !isLayeredMap && (scenario === 'network' || scenario === 'evacuation');
   const isMassive = nodes.length > 500 || isDenseProcedural;
 

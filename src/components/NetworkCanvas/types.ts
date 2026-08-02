@@ -18,15 +18,15 @@ export interface NetworkCanvasProps {
 }
 
 export const NODE_CONFIG: Record<string, { icon: string; radius: number; baseColor: string }> = {
-  datacenter:      { icon: '🖥️',  radius: 28, baseColor: '#16a34a' }, 
-  building_router: { icon: '📡',  radius: 22, baseColor: '#1d4ed8' },
-  router:          { icon: '📡',  radius: 22, baseColor: '#1d4ed8' },
-  floor_router:    { icon: '🔀',  radius: 17, baseColor: '#2563eb' },
-  switch:          { icon: '🔀',  radius: 17, baseColor: '#2563eb' },
+  datacenter:      { icon: '🌐',  radius: 28, baseColor: '#1e40af' }, 
+  building_router: { icon: '🌐',  radius: 22, baseColor: '#1e40af' },
+  router:          { icon: '🌐',  radius: 22, baseColor: '#1e40af' },
+  floor_router:    { icon: '🎛️',  radius: 17, baseColor: '#1d4ed8' },
+  switch:          { icon: '🔌',  radius: 17, baseColor: '#2563eb' },
   access_point:    { icon: '💻',  radius: 14, baseColor: '#0ea5e9' }, 
   server:          { icon: '🗄️',  radius: 16, baseColor: '#475569' }, 
   wireless_ap:     { icon: '📡',  radius: 15, baseColor: '#10b981' },
-  failed:          { icon: '💀',  radius: 17, baseColor: '#7f1d1d' },
+  failed:          { icon: '💥',  radius: 17, baseColor: '#450a0a' },
   depot:           { icon: '🏭', radius: 28, baseColor: '#92400e' },
   zone:            { icon: '📦', radius: 22, baseColor: '#b45309' },
   aisle:           { icon: '🔧', radius: 17, baseColor: '#d97706' },

@@ -128,8 +128,13 @@ function generateDynamicEvents(
       aoeLabels = [{ block: '🚗 Major Accident', clear: '🚚 Cleared' }, { block: '⚠️ Congestion Cascade', clear: '✅ Flow Restored' }];
       break;
     case 'evacuation':
-      standardLabels = [{ block: '🔥 Fire Outbreak', clear: '✅ Fire Extinguished' }, { block: '🚪 Exit Blocked', clear: '🚪 Exit Cleared' }];
-      aoeLabels = [{ block: '🔥 Fire Spreads Rapidly', clear: '✅ Fire Contained' }, { block: '💨 Smoke Fills Corridor', clear: '✅ Ventilation Restored' }];
+      standardLabels = [
+        { block: '🧱 Debris', clear: '🟢 Steps Cleared' }, 
+        { block: '🔒 Shutter Lockout / Trapped Exit', clear: '🔓 Shutter Raised' },
+        { block: '💥 Glass Facade Shatter', clear: '✅ Aisle Swept' },
+        { block: '💨 Smoke / Blind Zone', clear: '✅ Exhaust Fans Active' }, 
+        { block: '🔥 Indoor Tenant Fire Spreads', clear: '✅ Sprinklers Activated' }
+      ];
       break;
     case 'gameai':
       standardLabels = [{ block: 'Opponent Piece Deployed', clear: 'Opponent Retreats' }, { block: 'Opponent Attacks', clear: 'Opponent Moves Away' }];
@@ -387,7 +392,7 @@ export async function runSimulation(
   const environment = new SimulationEnvironment(dynamicEvents, onStepProgress);
 
   const startTime = performance.now();
-  const disablePathSevering = scenario === 'gameai' || scenario === 'robotics';
+  const disablePathSevering = scenario === 'gameai' || scenario === 'robotics' || scenario === 'evacuation';
 
   if (algorithm === 'bfs') {
     const pathfinder = new BFSPathfinder();
@@ -536,7 +541,7 @@ export async function orchestrateSimulation(
     const env = new SimulationEnvironment([]);
     const pathfinder = new BFSPathfinder();
     const optimalResult = await pathfinder.execute(hybridRes.graph, env, false);
-    optimalPathLength = bfsRes.metrics?.pathLength || optimalResult.pathLength;
+    optimalPathLength = optimalResult.pathLength;
   }
 
   const recordId = Math.random().toString(36).substring(7);
