@@ -8,7 +8,7 @@
  * All drawing uses sx()/sy() transforms already applied via ctx.setTransform in renderer.ts.
  */
 
-import { GraphNode } from '../../types';
+import { GraphNode } from '../../../../../types';
 
 // ─── Architectural Constants ──────────────────────────────────────────────────
 

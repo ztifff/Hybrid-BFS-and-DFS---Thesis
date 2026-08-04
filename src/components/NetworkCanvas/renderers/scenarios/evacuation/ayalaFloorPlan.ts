@@ -13,7 +13,7 @@
  *   South   → x:25000, y:35000
  */
 
-import { GraphNode } from '../../types';
+import { GraphNode } from '../../../../../types';
 
 const W = 50000;
 const H = 37000;
