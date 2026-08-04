@@ -105,7 +105,8 @@ export class RoboticsRenderer extends BaseRenderer {
 
         const isDestinationNode = PACKING_DESK_NODES.has(node.id) || node.id.startsWith('dest_');
         if (isDestinationNode) {
-          const requiredCount = options.shelfBoxCounts!.get(node.id) ?? 6;
+          const requiredCount = options.shelfBoxCounts!.get(node.id);
+          if (!requiredCount) return; // Skip if this destination is not selected
 
           const algos = [
             {
@@ -147,20 +148,55 @@ export class RoboticsRenderer extends BaseRenderer {
             return false;
           });
 
-          const totalWidthWorld = 2000 * activeAlgos.length;
-          const startX = node.x - (totalWidthWorld / 2) + 1000;
+          // Layout settings
+          const isLeftSide = node.id === 'clutter_a' || node.id === 'pallet_jack';
+          const isRightSide = node.id === 'clutter_b' || node.id === 'trash_cans';
+          const isSideNode = isLeftSide || isRightSide;
+          
+          const cols = 3;
+          const rows = Math.ceil(requiredCount / 3);
+          
+          const algoSpacing = 2400; // Distance between algorithm blocks
+          const slotSizeWorldW = 2400;
+          const slotSizeWorldH = 1600;
+          const slotScreenSizeW = slotSizeWorldW * scale;
+          const slotScreenSizeH = slotSizeWorldH * scale;
+
+          let startX = 0;
+          let startY = 0;
+
+          if (isSideNode) {
+            // Stack vertically
+            const totalHeightWorld = algoSpacing * activeAlgos.length;
+            startX = isLeftSide ? node.x - 3000 : node.x + 3000;
+            startY = node.y - (totalHeightWorld / 2) + (algoSpacing / 2);
+          } else {
+            // Stack horizontally below (for Finish Lines, Packing Desks, etc.)
+            const totalWidthWorld = algoSpacing * activeAlgos.length;
+            startX = node.x - (totalWidthWorld / 2) + (algoSpacing / 2);
+            startY = node.y + 2000; // Offset below
+          }
 
           activeAlgos.forEach((algo, idx) => {
-            const currentX = startX + (idx * 2000);
-            const slotSizeWorld = 1600;
-            const slotScreenSize = slotSizeWorld * scale;
-            const screenX = this.sx(currentX, options) - slotScreenSize / 2;
-            const screenY = this.sy(node.y + 2000, options) - slotScreenSize / 2;
+            const currentX = isSideNode ? startX : startX + (idx * algoSpacing);
+            const currentY = isSideNode ? startY + (idx * algoSpacing) : startY;
+            
+            const screenX = this.sx(currentX, options) - slotScreenSizeW / 2;
+            const screenY = this.sy(currentY, options) - slotScreenSizeH / 2;
+
+            // Draw algorithm label above the boxes
+            ctx.fillStyle = algo.fillColor;
+            ctx.font = `bold ${Math.max(10, 14 / zoom)}px monospace`;
+            ctx.textAlign = 'center';
+            // Slight adjustment to label position if side node to align nicely
+            ctx.fillText(algo.name, screenX + slotScreenSizeW / 2, screenY - (10 / zoom));
 
             for (let i = 0; i < requiredCount; i++) {
-              const px = screenX + (i % 3) * (slotScreenSize / 3);
-              const py = screenY + Math.floor(i / 3) * (slotScreenSize / 3);
-              const pSize = (slotScreenSize / 3) * 0.8;
+              const px = screenX + (i % cols) * (slotScreenSizeW / cols);
+              const py = screenY + Math.floor(i / cols) * (slotScreenSizeH / rows);
+              
+              // Make the boxes a bit bigger by using a larger percentage of the cell
+              const pSize = Math.min(slotScreenSizeW / cols, slotScreenSizeH / rows) * 0.9;
 
               if (i < algo.delivered) {
                 ctx.fillStyle = algo.fillColor;

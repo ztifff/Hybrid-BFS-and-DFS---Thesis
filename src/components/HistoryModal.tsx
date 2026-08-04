@@ -399,7 +399,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
                           ? 'city'
                           : baseGraph.nodes.some(n => n.buildingId === 'GL' || n.id.toLowerCase().includes('supermarket') || n.id.toLowerCase().includes('atrium') || n.id.toLowerCase().includes('dept_store'))
                             ? 'building'
-                            : baseGraph.nodes.some(n => n.id.includes('nurse') || n.id.includes('air_pressure') || n.buildingId === 'clinic')
+                            : baseGraph.nodes.some(n => n.label?.includes('nurse') || n.label?.includes('air_pressure') || n.buildingId === 'L1' || n.buildingId === 'clinic')
                               ? 'clinic'
                               : baseGraph.nodes.some(n => n.id.includes('shelf_f') || n.id.includes('dest_desk_a') || n.id.includes('shelf_m'))
                                 ? 'awsWarehouse'
