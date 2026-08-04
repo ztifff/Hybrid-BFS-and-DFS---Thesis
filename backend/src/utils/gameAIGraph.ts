@@ -27,10 +27,10 @@ export function buildGameAIGraph(
   const edges: GraphEdge[] = [];
   const fallbackBoardDim = BOARD_SIZE[graphSize];
 
-  // Both Dama and Checkers use all squares for node count purposes here
+  // Dama uses all board squares + one spawn node; Checkers uses playable dark squares + spawn + portal.
   const fallbackNodes = board === 'checkers'
-    ? Math.floor((fallbackBoardDim * fallbackBoardDim) / 2) + 2
-    : (fallbackBoardDim * fallbackBoardDim) + 2;
+    ? Math.ceil((fallbackBoardDim * fallbackBoardDim) / 2) + 2
+    : (fallbackBoardDim * fallbackBoardDim) + 1;
   const targetNodes = resolveSizingValue(sizing?.nodes, fallbackNodes, 18, 220);
   let boardDim = fallbackBoardDim;
   let auxiliaryNodeCount = 0;
@@ -38,13 +38,13 @@ export function buildGameAIGraph(
   if (sizing) {
     if (board === 'checkers') {
       boardDim = clampInt(Math.sqrt((targetNodes - 2) * 2), 4, 12);
-      while (Math.floor((boardDim * boardDim) / 2) + 2 > targetNodes && boardDim > 4) boardDim--;
-      auxiliaryNodeCount = targetNodes - (Math.floor((boardDim * boardDim) / 2) + 2);
+      while (Math.ceil((boardDim * boardDim) / 2) + 2 > targetNodes && boardDim > 4) boardDim--;
+      auxiliaryNodeCount = targetNodes - (Math.ceil((boardDim * boardDim) / 2) + 2);
     } else {
-      // dama uses all squares
-      boardDim = clampInt(Math.sqrt(targetNodes - 2), 4, 12);
-      while ((boardDim * boardDim) + 2 > targetNodes && boardDim > 4) boardDim--;
-      auxiliaryNodeCount = targetNodes - ((boardDim * boardDim) + 2);
+      // Dama uses all squares plus one spawn node.
+      boardDim = clampInt(Math.sqrt(targetNodes - 1), 4, 12);
+      while ((boardDim * boardDim) + 1 > targetNodes && boardDim > 4) boardDim--;
+      auxiliaryNodeCount = targetNodes - ((boardDim * boardDim) + 1);
     }
   }
 

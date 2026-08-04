@@ -44,8 +44,8 @@ const STAIRWELLS = [
 
 // Elevator positions
 const ELEVATORS = [
-  { cx: 16000, cy: 8250,  label: 'ELEV' },  // North Elevator Bank
-  { cx: 42000, cy: 25750, label: 'ELEV' },  // South Elevator Bank
+  { cx: 16000, cy: 3000,  label: 'ELEV' },  // North Elevator Bank
+  { cx: 42000, cy: 31000, label: 'ELEV' },  // South Elevator Bank
 ];
 
 // Emergency exit positions (on the building perimeter)

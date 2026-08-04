@@ -1,9 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 
 import { ScenarioType, GameAIBoard } from '../../types';
 import { useSimulation } from '../../hooks/useSimulation';
 import { getScenario } from '../../config/scenarios';
-import { CiscoTerminal } from '../../components/CiscoTerminal';
+import { CiscoTerminal } from '../NetworkCanvas/renderers/scenarios/network/CiscoTerminal';
 import { MAP_REGISTRY } from '../../config/mapRegistry';
 
 import { NetworkCanvas } from '../../components/NetworkCanvas';
@@ -52,6 +52,20 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   // Network routing DST dropdown state
   const [dstDropdownOpen, setDstDropdownOpen] = useState(false);
+  const [localNodesInput, setLocalNodesInput] = useState<string>(sim.syntheticSizing.nodes.toString());
+  const [localEdgesInput, setLocalEdgesInput] = useState<string>(sim.syntheticSizing.edges.toString());
+
+  useEffect(() => {
+    const actualNodes = sim.currentGraph?.nodes.length ?? sim.syntheticSizing.nodes;
+    setLocalNodesInput(actualNodes.toString());
+  }, [sim.syntheticSizing.nodes, sim.currentGraph?.nodes.length]);
+
+  useEffect(() => {
+    const actualEdges = sim.currentGraph 
+      ? Math.floor(sim.currentGraph.edges.filter(e => e.type !== 'wireless').length / 2) 
+      : sim.syntheticSizing.edges;
+    setLocalEdgesInput(actualEdges.toString());
+  }, [sim.syntheticSizing.edges, sim.currentGraph?.edges.length]);
 
   // Evacuation: is this a real-world map that supports custom start point selection?
   const isEvacuationRealWorld = scenario === 'evacuation' && (sim.mapId === 'city' || sim.mapId === 'building');
@@ -79,7 +93,12 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     return map;
   }, [scenario, sim.robotAssignments]);
   const generatedNodeCount = sim.currentGraph?.nodes.length ?? sim.syntheticSizing.nodes;
-  const generatedEdgeCount = sim.currentGraph?.edges.length ?? sim.syntheticSizing.edges;
+  // Divide the edges length by 2 to show the number of physical undirected links (lines) drawn on the canvas,
+  // since the backend models every physical link as two bidirectional directed edges (A->B and B->A).
+  // We explicitly exclude 'wireless' edges (like capture jumps in Game AI) from this visual count.
+  const generatedEdgeCount = sim.currentGraph 
+    ? Math.floor(sim.currentGraph.edges.filter(e => e.type !== 'wireless').length / 2) 
+    : sim.syntheticSizing.edges;
 
   return (
     <>
@@ -623,9 +642,16 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         type="number"
                         min={MIN_SYNTHETIC_NODES[scenario]}
                         max={MAX_SYNTHETIC_NODES[scenario]}
-                        value={sim.syntheticSizing.nodes}
-                        onChange={(event) => {
-                          if (event.target.value !== '') sim.updateSyntheticSizing('nodes', Number(event.target.value));
+                        value={localNodesInput}
+                        onChange={(event) => setLocalNodesInput(event.target.value)}
+                        onBlur={() => {
+                          if (localNodesInput !== '') sim.updateSyntheticSizing('nodes', Number(localNodesInput));
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && localNodesInput !== '') {
+                            sim.updateSyntheticSizing('nodes', Number(localNodesInput));
+                            (e.target as HTMLInputElement).blur();
+                          }
                         }}
                         disabled={sim.isComputing || sim.isGraphLoading}
                         /* Tailwind magic to completely hide the ugly default browser arrows */
@@ -660,9 +686,16 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         type="number"
                         min={4}
                         max={1600}
-                        value={sim.syntheticSizing.edges}
-                        onChange={(event) => {
-                          if (event.target.value !== '') sim.updateSyntheticSizing('edges', Number(event.target.value));
+                        value={localEdgesInput}
+                        onChange={(event) => setLocalEdgesInput(event.target.value)}
+                        onBlur={() => {
+                          if (localEdgesInput !== '') sim.updateSyntheticSizing('edges', Number(localEdgesInput));
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && localEdgesInput !== '') {
+                            sim.updateSyntheticSizing('edges', Number(localEdgesInput));
+                            (e.target as HTMLInputElement).blur();
+                          }
                         }}
                         disabled={sim.isComputing || sim.isGraphLoading}
                         className="w-10 bg-transparent py-1 text-center text-xs font-bold text-teal-300 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 m-0"

@@ -13,24 +13,16 @@ const DEFAULT_SYNTHETIC_SIZING: Record<ScenarioType, GraphSizing> = {
   network: { nodes: 28, edges: 44 },
   robotics: { nodes: 56, edges: 63 },
   traffic: { nodes: 36, edges: 65 },
-  evacuation: { nodes: 43, edges: 81 },
-  gameai: { nodes: 66, edges: 339 },
-};
-
-const MIN_SYNTHETIC_NODES: Record<ScenarioType, number> = {
-  network: 7,
-  robotics: 10,
-  traffic: 9,
-  evacuation: 10,
-  gameai: 18,
+  evacuation: { nodes: 60, edges: 49 },
+  gameai: { nodes: 66, edges: 120 },
 };
 
 const MAX_SYNTHETIC_NODES: Record<ScenarioType, number> = {
   network: 220,
-  robotics: 220,
+  robotics: 217,
   traffic: 220,
-  evacuation: 220,
-  gameai: 220,
+  evacuation: 144,
+  gameai: 145,
 };
 
 const clampSizing = (value: number, min: number, max: number) =>
@@ -77,7 +69,10 @@ export function useSimulationModel(scenario: ScenarioType) {
 
   const syntheticSizing = syntheticSizingByScenario[scenario];
   const updateSyntheticSizing = useCallback((field: keyof GraphSizing, rawValue: number) => {
-    const min = field === 'nodes' ? MIN_SYNTHETIC_NODES[scenario] : 4;
+    // We set min to 0 here to allow the user to freely type single digits (like '2' for '200')
+    // without the input instantly locking to the minimum (e.g. 7). The backend generators 
+    // will safely clamp the final value to the actual scenario minimums anyway.
+    const min = 0;
     const max = field === 'nodes' ? MAX_SYNTHETIC_NODES[scenario] : 1600;
 
     setSyntheticSizingByScenario((previous) => {
@@ -265,7 +260,7 @@ export function useSimulationModel(scenario: ScenarioType) {
           seed: seed.toString()
         });
 
-        if (mapId === 'synthetic') {
+        if (mapId === 'synthetic' && scenario !== 'gameai') {
           graphParams.set('targetNodes', String(syntheticSizing.nodes));
           graphParams.set('targetEdges', String(syntheticSizing.edges));
         }

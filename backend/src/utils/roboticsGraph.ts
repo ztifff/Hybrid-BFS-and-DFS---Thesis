@@ -11,6 +11,11 @@ function seededRandom(seed: number) {
   return x - Math.floor(x);
 }
 
+function addTwoWayEdge(edges: GraphEdge[], from: string, to: string, latency: number, label: string) {
+  edges.push({ id: `${from}-${to}`, from, to, latency, label, type: 'path' });
+  edges.push({ id: `${to}-${from}`, from: to, to: from, latency, label, type: 'path' });
+}
+
 const SIZE_CONFIG = {
   small: { aisles: 3, shelvesPerAisle: 2 },
   medium: { aisles: 5, shelvesPerAisle: 3 },
@@ -111,11 +116,11 @@ export function buildRoboticsGraph(
     nodes.push({ id: topId, label: `North Entry ${i}`, type: 'zone', x: topX, y: 5000, level: 1, buildingId: 'warehouse' });
     
     // Connect Depot to North Entry
-    edges.push({ id: `depot-${topId}`, from: 'depot', to: topId, latency: 2, label: '2m', type: 'path' });
+    addTwoWayEdge(edges, 'depot', topId, 2, '2m');
 
     // Link North entry nodes horizontally
     if (i > 1) {
-      edges.push({ id: `top_hw_${i-1}-${topId}`, from: `top_hw_${i-1}`, to: topId, latency: 1, label: '1m', type: 'path' });
+      addTwoWayEdge(edges, `top_hw_${i-1}`, topId, 1, '1m');
     }
   }
 
@@ -135,7 +140,7 @@ export function buildRoboticsGraph(
       const shelfId = `shelf_${a}_${s}`;
       const yPos = 5000 + (s * shelfSpacing);
       nodes.push({ id: shelfId, label: `Shelf ${a}-${s}`, type: 'aisle', x: startX, y: yPos, level: 2, buildingId: 'warehouse' });
-      edges.push({ id: `${prevId}-${shelfId}`, from: prevId, to: shelfId, latency: 2, label: '2m', type: 'path' });
+      addTwoWayEdge(edges, prevId, shelfId, 2, '2m');
       prevId = shelfId;
     }
 
@@ -143,17 +148,18 @@ export function buildRoboticsGraph(
     const finishId = `dest_finish_${a}`;
     destIds.push(finishId);
     nodes.push({ id: finishId, label: `Finish Line ${a}`, type: 'shelf', x: startX, y: finishY, level: 3, buildingId: 'warehouse' });
-    edges.push({ id: `${prevId}-${finishId}`, from: prevId, to: finishId, latency: 2, label: '2m', type: 'path' });
+    addTwoWayEdge(edges, prevId, finishId, 2, '2m');
 
     // Link bottom finish line nodes horizontally
     if (a > 1) {
-      edges.push({ id: `dest_finish_${a-1}-${finishId}`, from: `dest_finish_${a-1}`, to: finishId, latency: 1, label: '1m', type: 'path' });
+      addTwoWayEdge(edges, `dest_finish_${a-1}`, finishId, 1, '1m');
     }
   }
 
   const predefinedExitIds = destIds.length >= 2 ? destIds.slice(0, 2) : destIds;
 
-  const requestedLinks = sizing?.edges !== undefined ? Math.max(sizing.edges, edges.length) : edges.length;
+  // The UI sends undirected link requested limits. Since we use bidirectional edges, multiply by 2.
+  const requestedLinks = sizing?.edges !== undefined ? Math.max(sizing.edges * 2, edges.length) : edges.length;
 
   return fitGraphEdgeCount(
     {

@@ -135,8 +135,8 @@ export function buildEvacuationGraph(
     nodes.push({ id: stairW, label: `West Fire Stairs (${bId})`, type: 'stairwell', x:  4000, y: 12000, level: f, buildingId: bId });
     nodes.push({ id: stairE, label: `East Fire Stairs (${bId})`, type: 'stairwell', x: 56000, y: 12000, level: f, buildingId: bId });
     nodes.push({ id: stairM, label: `Main Staircase (${bId})`,   type: 'stairwell', x: 29000, y: 22000, level: f, buildingId: bId });
-    nodes.push({ id: elevN,  label: `North Elevator (${bId})`,   type: 'stairwell', x: 16000, y:  8000, level: f, buildingId: bId });
-    nodes.push({ id: elevS,  label: `South Elevator (${bId})`,   type: 'stairwell', x: 42000, y: 26000, level: f, buildingId: bId });
+    nodes.push({ id: elevN,  label: `North Elevator (${bId})`,   type: 'stairwell', x: 16000, y:  3000, level: f, buildingId: bId });
+    nodes.push({ id: elevS,  label: `South Elevator (${bId})`,   type: 'stairwell', x: 42000, y: 31000, level: f, buildingId: bId });
 
     // Connect vertical nodes between floors
     if (f === 1) {
@@ -163,9 +163,32 @@ export function buildEvacuationGraph(
       }
       prevSpine = sId;
 
-      if (xPos === 10000) edges.push({ id: `e_${sId}_stairw`, from: sId, to: stairW, latency: 5, label: '5s', type: 'corridor' });
-      if (xPos === 48000) edges.push({ id: `e_${sId}_staire`, from: sId, to: stairE, latency: 5, label: '5s', type: 'corridor' });
-      if (xPos === 29000) edges.push({ id: `e_${sId}_stairm`, from: sId, to: stairM, latency: 4, label: '4s', type: 'corridor' });
+      if (xPos === 10000) {
+        edges.push({ id: `e_${sId}_stairw`, from: sId, to: stairW, latency: 5, label: '5s', type: 'corridor' });
+        edges.push({ id: `e_stairw_${sId}`, from: stairW, to: sId, latency: 5, label: '5s', type: 'corridor' });
+      }
+      if (xPos === 48000) {
+        edges.push({ id: `e_${sId}_staire`, from: sId, to: stairE, latency: 5, label: '5s', type: 'corridor' });
+        edges.push({ id: `e_staire_${sId}`, from: stairE, to: sId, latency: 5, label: '5s', type: 'corridor' });
+      }
+      if (xPos === 29000) {
+        edges.push({ id: `e_${sId}_stairm`, from: sId, to: stairM, latency: 4, label: '4s', type: 'corridor' });
+        edges.push({ id: `e_stairm_${sId}`, from: stairM, to: sId, latency: 4, label: '4s', type: 'corridor' });
+        
+        // Connect the North Gate Exit on Floor 1 to this central spine node
+        if (f === 1) {
+          edges.push({ id: `e_${sId}_exitn`, from: sId, to: 'exit_north_gate', latency: 4, label: '4s', type: 'corridor' });
+          edges.push({ id: `e_exitn_${sId}`, from: 'exit_north_gate', to: sId, latency: 4, label: '4s', type: 'corridor' });
+        }
+      }
+      if (xPos === 16000) {
+        edges.push({ id: `e_${sId}_elevn`, from: sId, to: elevN, latency: 4, label: '4s', type: 'corridor' });
+        edges.push({ id: `e_elevn_${sId}`, from: elevN, to: sId, latency: 4, label: '4s', type: 'corridor' });
+      }
+      if (xPos === 42000) {
+        edges.push({ id: `e_${sId}_elevs`, from: sId, to: elevS, latency: 4, label: '4s', type: 'corridor' });
+        edges.push({ id: `e_elevs_${sId}`, from: elevS, to: sId, latency: 4, label: '4s', type: 'corridor' });
+      }
     });
   }
 
@@ -256,7 +279,7 @@ export function buildEvacuationGraph(
 
   return fitGraphEdgeCount(
     graph,
-    sizing?.edges,
+    sizing?.edges ? sizing.edges * 2 : undefined,
     seed,
     { edgeType: 'corridor', labelUnit: 's', latencyBase: 2, latencySpread: 5, maxEdges: targetNodes * 10 }
   );
