@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ScenarioType } from '../types';
 
 interface Props {
@@ -96,6 +97,7 @@ const Item: React.FC<{ label: string; icon?: string; children: React.ReactNode }
 // ── Main Component ─────────────────────────────────────────────────────────────
 export const HelpModal: React.FC<Props> = ({ scenario, onClose }) => {
   const [tab, setTab] = useState<TabId>('metrics');
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const maps = SCENARIO_MAPS[scenario];
   const events = SCENARIO_DYNAMIC_EVENTS[scenario];
 
@@ -104,7 +106,7 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose }) => {
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-[#0d1224] border border-gray-700 rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh]">
+      <div className="glass-panel rounded-2xl shadow-glow-blue w-full max-w-2xl flex flex-col max-h-[90vh] fade-in">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700 shrink-0">
           <div>
@@ -136,6 +138,68 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose }) => {
 
         {/* Body */}
         <div className="overflow-y-auto flex-1 px-5 py-4" style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}>
+
+          {/* Visual Guide Header(s) */}
+          {(() => {
+            const folder = {
+              network: 'Network Routing',
+              robotics: 'Robotics Warehouse',
+              traffic: 'Road Traffic',
+              evacuation: 'Emergency Evacuation',
+              gameai: 'Game AI Pathfinding',
+            }[scenario];
+            const base = `/help-images/${folder}`;
+            
+            let images: string[] = [];
+            if (tab === 'metrics') images = [`${base}/Metrics.png`];
+            if (tab === 'legend') images = [`${base}/Legend.png`];
+            if (tab === 'canvas') {
+              images = scenario === 'evacuation' 
+                ? [`${base}/CanvasControl.png`, `${base}/StartingPoint.png`]
+                : [`${base}/CanvasControl.png`];
+            }
+            if (tab === 'buttons') {
+              if (scenario === 'network') images = [`${base}/SimulationControl.png`, `${base}/Mode1.png`, `${base}/Mode2.png`, `${base}/Mode3.png`];
+              else if (scenario === 'robotics') images = [`${base}/SimulationControl.png`, `${base}/RobotAssign.png`, `${base}/RobotAssign1.png`, `${base}/RobotFleetStatus.png`];
+              else images = [`${base}/SimulationControl.png`];
+            }
+            if (tab === 'maps') {
+              images = scenario === 'network'
+                ? [`${base}/MapVariants.png`, `${base}/DynamicSizeAdjuster.png`, `${base}/CampusRules.png`]
+                : [`${base}/MapVariants.png`, `${base}/DynamicSizeAdjuster.png`];
+            }
+            if (tab === 'results') {
+              images = scenario === 'evacuation'
+                ? [`${base}/Reults.png`, `${base}/History.png`]
+                : [`${base}/Results.png`, `${base}/History.png`];
+            }
+            if (tab === 'events') {
+              images = scenario === 'gameai'
+                ? [`${base}/DynamicMapEvents.png`, `${base}/StrategyMapEvents.png`]
+                : [`${base}/DynamicMapEvents.png`];
+            }
+
+            if (images.length === 0) return null;
+
+            return (
+              <div className="mb-6 flex flex-col gap-4">
+                {images.map(src => (
+                  <div key={src} className="rounded-xl overflow-hidden shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-white/10 bg-[#0a0f1e]/80 flex items-center justify-center p-3">
+                    <img 
+                      src={src}
+                      alt={`${tab} visual guide`}
+                      className="max-w-full h-auto max-h-72 object-contain rounded-md cursor-zoom-in transition-transform hover:scale-[1.02]"
+                      onClick={() => setZoomedImage(src)}
+                      onError={(e) => {
+                        // gracefully hide if image is missing
+                        (e.target as HTMLImageElement).parentElement!.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
 
           {/* ── LIVE METRICS ── */}
           {tab === 'metrics' && (
@@ -197,8 +261,8 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose }) => {
                 <Item label="Zoom: X.Xx display">Shows your current zoom level. Scroll your mouse wheel over the canvas for smooth zoom-in/out at the cursor position.</Item>
               </Section>
               {scenario === 'evacuation' && (
-                <Section title="Floor Switcher (Bottom-Center — SM Map only)">
-                  <Item label="GL (Ground) / L2 (Second)" icon="🏢">Switches between the Ground Level and Level 2 views of the SM City Santa Rosa map. Algorithms run across both floors simultaneously via stairwells.</Item>
+                <Section title="Floor Switcher (Bottom-Center)">
+                  <Item label="GL (Ground) / L2 (Second)" icon="🏢">Switches between the Ground Level and Level 2 and other floors views of the map. Algorithms run across both floors simultaneously via stairwells.</Item>
                 </Section>
               )}
             </>
@@ -337,6 +401,21 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose }) => {
           </button>
         </div>
       </div>
+      
+      {/* Zoom Lightbox */}
+      {zoomedImage && typeof document !== 'undefined' && createPortal(
+        <div 
+          className="fixed inset-0 z-[200] overflow-y-auto bg-black/90 backdrop-blur-md cursor-zoom-out flex p-4 sm:p-10"
+          onClick={() => setZoomedImage(null)}
+        >
+          <img 
+            src={zoomedImage} 
+            alt="Zoomed visual guide" 
+            className="m-auto w-auto h-auto max-w-none rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)]"
+          />
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

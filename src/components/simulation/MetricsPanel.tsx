@@ -110,28 +110,28 @@ export const MetricsPanel: React.FC<Props> = ({
   };
 
   return (
-    <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 space-y-4">
+    <div className="glass-panel rounded-xl p-4 space-y-4 fade-in hover:shadow-glow-blue transition-shadow duration-500">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold" style={{ color: sc.color }}>
+        <span className="text-xs font-bold uppercase tracking-widest drop-shadow-md" style={{ color: sc.color }}>
           {sc.icon} {sc.name}
         </span>
-        <span className="text-xs text-gray-500 font-mono">Step {stepIndex} / {totalSteps}</span>
+        <span className="text-xs text-gray-400 font-mono">Step {stepIndex} / {totalSteps}</span>
       </div>
 
       <div>
-        <div className="w-full bg-gray-800 rounded-full h-2">
-          <div className="h-2 rounded-full bg-blue-500 transition-all duration-200" style={{ width: `${progress}%` }} />
+        <div className="w-full bg-black/40 rounded-full h-2 shadow-inner border border-white/5">
+          <div className="h-2 rounded-full bg-blue-500 transition-all duration-200 shadow-glow-blue" style={{ width: `${progress}%` }} />
         </div>
       </div>
 
-      <div className="grid grid-cols-3 bg-gray-800/50 rounded-lg p-2 border border-gray-700/50">
+      <div className="grid grid-cols-3 bg-black/30 rounded-lg p-2 border border-white/5 shadow-inner">
           {renderAlgoColumn('bfs', 'BFS')}
           {renderAlgoColumn('dfs', 'DFS')}
           {renderAlgoColumn('hybrid', 'HYBRID')}
       </div>
 
       {status === 'done' && multiResults && (
-        <div className="text-center text-xs text-green-400 bg-green-900/20 border border-green-500/30 p-2 rounded-lg">
+        <div className="text-center text-xs text-green-400 bg-green-900/20 border border-green-500/30 p-2 rounded-lg shadow-glow-green">
           ✅ Simulation Complete. See Final Report below.
         </div>
       )}

@@ -16,6 +16,7 @@ import { StrategyMapEvents } from './StrategyMapEvents';
 import { HelpModal } from '../../components/HelpModal';
 import { RobotAssignmentPanel } from './RobotAssignmentPanel';
 import { RobotLiveStatusPanel } from './RobotLiveStatusPanel';
+import { ResizableSidebar } from '../layout/ResizableSidebar';
 
 interface Props {
   scenario: ScenarioType;
@@ -102,39 +103,44 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
   return (
     <>
-      {isHelpOpen && <HelpModal scenario={scenario} onClose={() => setIsHelpOpen(false)} />}
-      <div className="min-h-screen lg:h-screen w-full max-w-[100vw] bg-[#0a0f1e] text-white flex flex-col relative z-0 lg:overflow-hidden">
-        <header className="border-b border-gray-800 px-3 md:px-6 py-2.5 md:py-3 flex items-center justify-between bg-[#0d1224] shrink-0 relative gap-2 w-full max-w-full">
+      <div className="min-h-screen lg:h-screen w-full max-w-[100vw] bg-transparent text-white flex flex-col relative z-0 lg:overflow-hidden fade-in">
+        {/* Help Modal */}
+        {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} scenario={scenario} />}
+        <header className="glass-panel border-b-0 border-white/5 px-3 md:px-6 py-2.5 md:py-3 flex items-center justify-between shrink-0 relative z-10 gap-2 w-full max-w-full">
           <div className="flex items-center gap-2 sm:gap-4 relative z-10 shrink-0">
             <button
               onClick={onBack}
-              className="text-gray-400 hover:text-white transition-colors text-sm flex items-center gap-1 cursor-pointer shrink-0"
+              className="px-3 py-2 text-gray-400 hover:text-white flex items-center gap-2 transition-all hover:bg-white/5 rounded-lg text-sm font-bold whitespace-nowrap active:scale-95"
             >
-              ← <span className="hidden sm:inline">Back</span>
+              <span className="opacity-70 text-lg">←</span> <span className="hidden sm:inline tracking-wider">Back</span>
             </button>
+            <div className="h-6 w-px bg-white/10 hidden sm:block mx-1"></div>
+            <div className="flex items-center gap-3 bg-[#0a0f1e]/80 px-5 py-2.5 rounded-xl border border-white/10 shadow-inner">
+              <span className="text-2xl drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">{sc?.icon}</span>
+              <h1 className="font-bold text-base md:text-lg text-white tracking-widest drop-shadow-md whitespace-nowrap">{sc?.name}</h1>
+            </div>
 
-            <div className="h-5 w-px bg-gray-700 hidden sm:block" />
-
-            <div className="text-sm flex items-center gap-3 shrink-0">
-              <span className="text-xl hidden lg:inline">{sc.icon}</span>
-              <span className="font-bold text-white hidden lg:inline">{sc.name}</span>
-              <span className="text-gray-500 hidden lg:inline">·</span>
-              <div className="flex items-center gap-2 text-xs font-bold bg-[#111827] border border-gray-700 rounded-md px-3 py-1.5 shadow-inner">
-                <span className="text-green-400">BFS</span>
-                <span className="text-gray-600">|</span>
-                <span className="text-purple-400">DFS</span>
-                <span className="text-gray-600">|</span>
-                <span className="text-orange-400">Hybrid</span>
-              </div>
+            {/* Algorithm Legend / Indicator */}
+            <div className="hidden lg:flex items-center gap-4 ml-4 px-4 py-1.5 bg-black/40 rounded-full border border-white/5 text-[10px] font-bold tracking-widest uppercase">
+              <span className="text-green-400 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]">
+                <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]"></span> BFS
+              </span>
+              <span className="text-gray-600">|</span>
+              <span className="text-purple-400 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(192,132,252,0.5)]">
+                <span className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)]"></span> DFS
+              </span>
+              <span className="text-gray-600">|</span>
+              <span className="text-orange-400 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(251,146,60,0.5)]">
+                <span className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]"></span> Hybrid
+              </span>
             </div>
           </div>
-
-          <div className="z-20 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 shrink-0 ml-auto md:ml-0 flex items-center justify-center">
-            <button
+          
+          <div className="flex items-center gap-3 shrink-0 relative z-10 ml-auto">
+            <button 
               onClick={() => sim.setIsHistoryModalOpen(true)}
-              className="px-2.5 sm:px-5 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-full text-xs font-bold text-white shadow-md transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer"
+              className="w-8 h-8 md:w-auto md:h-auto md:px-4 md:py-1.5 rounded-full md:rounded-lg glass-panel text-gray-200 hover:text-white text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer hover:-translate-y-0.5 active:scale-[0.98] shadow-md hover:shadow-glow-blue hover:border-blue-500/50"
             >
-              🗄️
               <span className="hidden sm:inline">Result History</span>
               <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full leading-none">
                 {scenarioHistoryCount}
@@ -146,7 +152,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             <button
               onClick={() => setIsHelpOpen(true)}
               title="Help & Guide"
-              className="w-8 h-8 md:w-auto md:h-auto md:px-4 md:py-1.5 rounded-full md:rounded-md bg-[#0a0f1e] border text-gray-200 hover:text-white text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+              className="w-8 h-8 md:w-auto md:h-auto md:px-4 md:py-1.5 rounded-full md:rounded-lg glass-panel text-gray-200 hover:text-white text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer hover:-translate-y-0.5 active:scale-[0.98]"
               style={{
                 borderColor: `${sc?.color}60`,
                 boxShadow: `0 0 12px ${sc?.color}20, inset 0 0 8px ${sc?.color}10`,
@@ -163,9 +169,14 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         </header>
 
         <div className="flex flex-col lg:flex-row flex-1 lg:min-h-0 overflow-y-auto lg:overflow-hidden">
-          <aside
-            className="w-full lg:w-80 flex-shrink-0 border-b lg:border-b-0 lg:border-r border-gray-800 p-4 flex flex-col gap-4 overflow-y-auto lg:max-h-[calc(100vh-theme(spacing.20))]"
-            style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}
+          <ResizableSidebar
+            side="left"
+            storageKey="sim_left_panel"
+            defaultWidth={320}
+            minWidth={260}
+            maxWidth={450}
+            className="border-b lg:border-b-0 lg:border-r border-gray-800 lg:max-h-[calc(100vh-theme(spacing.20))] bg-[#0a0f1e]/50 backdrop-blur-sm"
+            innerClassName="p-4 flex flex-col gap-4"
           >
             {sim.simResults && !sim.isComputing && sim.currentGraph ? (
               <MetricsPanel
@@ -186,7 +197,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             )}
 
             <Legend scenario={scenario} mapId={sim.mapId} />
-          </aside>
+          </ResizableSidebar>
 
           <main className="flex-1 flex flex-col items-center justify-start p-4 w-full relative lg:overflow-hidden min-h-0">
             <div className="mb-1 flex flex-col items-center gap-1.5 w-full shrink-0">
@@ -466,84 +477,112 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             </div>
 
             <div className="mt-2 flex items-center gap-2 flex-wrap justify-center w-full shrink-0">
-              <button
-                onClick={sim.handleRerollEvents}
-                disabled={sim.status === 'running'}
-                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-amber-500 border border-gray-600 rounded-md font-bold text-sm transition-colors flex items-center gap-2 shadow-sm cursor-pointer disabled:opacity-50"
-              >
-                🎲 Reroll Events
-              </button>
+              {(() => {
+                const baseBtnClass = "px-2.5 xl:px-4 py-1.5 xl:py-2 rounded-lg text-xs xl:text-sm font-semibold transition-all duration-300 ease-out transform active:scale-[0.97] cursor-pointer disabled:opacity-30 disabled:pointer-events-none disabled:transform-none flex items-center gap-1.5 xl:gap-2 shadow-md hover:shadow-lg hover:-translate-y-0.5 flex-1 sm:flex-none justify-center whitespace-nowrap";
+                
+                let scenarioBtnClass = `${baseBtnClass} bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600`;
+                if (scenario === 'network') {
+                  scenarioBtnClass = `${baseBtnClass} bg-blue-900/40 text-blue-300 hover:bg-blue-600 hover:text-white border border-blue-800 hover:border-blue-500 hover:shadow-blue-900/50`;
+                } else if (scenario === 'robotics') {
+                  scenarioBtnClass = `${baseBtnClass} bg-orange-900/40 text-orange-300 hover:bg-orange-600 hover:text-white border border-orange-800 hover:border-orange-500 hover:shadow-orange-900/50`;
+                } else if (scenario === 'traffic') {
+                  scenarioBtnClass = `${baseBtnClass} bg-emerald-900/40 text-emerald-300 hover:bg-emerald-600 hover:text-white border border-emerald-800 hover:border-emerald-500 hover:shadow-emerald-900/50`;
+                } else if (scenario === 'evacuation') {
+                  scenarioBtnClass = `${baseBtnClass} bg-red-900/40 text-red-300 hover:bg-red-600 hover:text-white border border-red-800 hover:border-red-500 hover:shadow-red-900/50`;
+                } else if (scenario === 'gameai') {
+                  scenarioBtnClass = `${baseBtnClass} bg-purple-900/40 text-purple-300 hover:bg-purple-600 hover:text-white border border-purple-800 hover:border-purple-500 hover:shadow-purple-900/50`;
+                }
 
-              <button
-                disabled={sim.isComputing || sim.isGraphLoading}
-                onClick={sim.handleReset}
-                className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none"
-              >
-                🔄 Reset
-              </button>
+                const primaryBtnClass = "px-4 xl:px-6 py-1.5 xl:py-2 rounded-lg font-bold text-xs xl:text-sm transition-all duration-300 ease-out transform active:scale-[0.97] cursor-pointer disabled:opacity-30 disabled:pointer-events-none disabled:transform-none flex items-center justify-center gap-1.5 xl:gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex-1 sm:flex-none whitespace-nowrap";
 
-              <button
-                disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex === 0}
-                onClick={sim.handleStepBackward}
-                className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none"
-              >
-                ⏪ Back
-              </button>
+                return (
+                  <>
+                    <button
+                      onClick={sim.handleRerollEvents}
+                      disabled={sim.status === 'running'}
+                      className={scenarioBtnClass}
+                    >
+                      🎲 Reroll Events
+                    </button>
 
-              {sim.status === 'running' ? (
-                <button
-                  disabled={sim.isComputing || sim.isGraphLoading}
-                  onClick={sim.handlePause}
-                  className="px-6 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer hover:bg-red-500 disabled:opacity-30 flex-1 sm:flex-none bg-red-600 text-white shadow-lg shadow-red-900/20"
-                >
-                  ⏸️ Pause
-                </button>
-              ) : sim.status === 'paused' ? (
-                <button
-                  disabled={sim.isComputing || sim.isGraphLoading}
-                  onClick={sim.handleResume}
-                  className="px-6 py-2 rounded-lg font-bold text-sm transition-all cursor-pointer hover:bg-green-500 disabled:opacity-30 flex-1 sm:flex-none bg-green-600 text-white shadow-lg shadow-green-900/20"
-                >
-                  ▶️ Resume
-                </button>
-              ) : sim.status === 'done' ? (
-                <button
-                  disabled={sim.isComputing || sim.isGraphLoading}
-                  onClick={sim.handleRun}
-                  className="px-6 py-2 rounded-lg font-bold text-sm cursor-pointer hover:bg-blue-500 disabled:opacity-30 flex-1 sm:flex-none bg-blue-600 text-white"
-                >
-                  🔄 Replay
-                </button>
-              ) : (
-                <button
-                  disabled={sim.isComputing || sim.isGraphLoading}
-                  onClick={sim.handleRun}
-                  className="px-6 py-2 rounded-lg font-bold text-sm cursor-pointer hover:bg-green-500 disabled:opacity-30 flex-1 sm:flex-none w-full sm:w-auto bg-green-600 text-white shadow-lg shadow-green-900/20"
-                >
-                  {sim.isComputing ? 'Computing...' : '▶️ Run Simulations'}
-                </button>
-              )}
+                    <button
+                      disabled={sim.isComputing || sim.isGraphLoading}
+                      onClick={sim.handleReset}
+                      className={scenarioBtnClass}
+                    >
+                      🔄 Reset
+                    </button>
 
-              <button
-                disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex >= sim.totalSteps}
-                onClick={sim.handleStepForward}
-                className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none"
-              >
-                Fwd ⏭️
-              </button>
-              <button
-                disabled={sim.isComputing || sim.isGraphLoading}
-                onClick={sim.handleSkipEnd}
-                className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-30 flex-1 sm:flex-none"
-              >
-                ⏭️ Skip
-              </button>
+                    <button
+                      disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex === 0}
+                      onClick={sim.handleStepBackward}
+                      className={scenarioBtnClass}
+                    >
+                      ⏪ Back
+                    </button>
+
+                    {sim.status === 'running' ? (
+                      <button
+                        disabled={sim.isComputing || sim.isGraphLoading}
+                        onClick={sim.handlePause}
+                        className={`${primaryBtnClass} hover:bg-red-500 bg-red-600 text-white shadow-red-900/40`}
+                      >
+                        ⏸️ Pause
+                      </button>
+                    ) : sim.status === 'paused' ? (
+                      <button
+                        disabled={sim.isComputing || sim.isGraphLoading}
+                        onClick={sim.handleResume}
+                        className={`${primaryBtnClass} hover:bg-green-500 bg-green-600 text-white shadow-green-900/40`}
+                      >
+                        ▶️ Resume
+                      </button>
+                    ) : sim.status === 'done' ? (
+                      <button
+                        disabled={sim.isComputing || sim.isGraphLoading}
+                        onClick={sim.handleRun}
+                        className={`${primaryBtnClass} hover:bg-blue-500 bg-blue-600 text-white shadow-blue-900/40`}
+                      >
+                        🔄 Replay
+                      </button>
+                    ) : (
+                      <button
+                        disabled={sim.isComputing || sim.isGraphLoading}
+                        onClick={sim.handleRun}
+                        className={`${primaryBtnClass} w-full sm:w-auto hover:bg-green-500 bg-green-600 text-white shadow-green-900/40`}
+                      >
+                        {sim.isComputing ? 'Computing...' : '▶️ Run Simulations'}
+                      </button>
+                    )}
+
+                    <button
+                      disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex >= sim.totalSteps}
+                      onClick={sim.handleStepForward}
+                      className={scenarioBtnClass}
+                    >
+                      Fwd ⏭️
+                    </button>
+                    <button
+                      disabled={sim.isComputing || sim.isGraphLoading}
+                      onClick={sim.handleSkipEnd}
+                      className={scenarioBtnClass}
+                    >
+                      ⏭️ Skip
+                    </button>
+                  </>
+                );
+              })()}
             </div>
           </main>
 
-          <aside
-            className="w-full lg:w-80 flex-shrink-0 border-t lg:border-t-0 lg:border-l border-gray-800 p-4 flex flex-col gap-4 bg-[#0a0f1e] overflow-y-auto lg:max-h-[calc(100vh-theme(spacing.20))]"
-            style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}
+          <ResizableSidebar
+            side="right"
+            storageKey="sim_right_panel"
+            defaultWidth={360}
+            minWidth={300}
+            maxWidth={480}
+            className="border-t lg:border-t-0 lg:border-l border-white/5 lg:max-h-[calc(100vh-theme(spacing.20))] bg-[#0a0f1e]/50 backdrop-blur-sm"
+            innerClassName="p-4 flex flex-col gap-4"
           >
             {sim.simResults && !sim.isComputing && sim.status === 'done' && sim.currentGraph && (
               <div className="shrink-0">
@@ -554,6 +593,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   dynamicEvents={sim.simResults.hybrid.dynamicEvents}
                   onSaveResult={sim.openSaveModal}
                   isSaved={sim.isCurrentSaved}
+                  scenarioColor={sc?.color}
                 />
               </div>
             )}
@@ -627,7 +667,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             )}
 
             {sim.mapId === 'synthetic' && (
-              <div className="shrink-0 bg-gray-900 border border-gray-700 rounded-xl p-4 flex flex-col gap-2">
+              <div className="shrink-0 glass-panel rounded-xl p-4 flex flex-col gap-2 fade-in hover:shadow-glow-blue transition-shadow duration-500">
                 <div className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold mb-1">
                   Dynamic Size Adjuster
                 </div>
@@ -635,9 +675,9 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 <div className="flex items-center justify-between gap-2">
                   
                   {/* --- CUSTOM NODES ADJUSTER --- */}
-                  <label className="flex items-center gap-1.5 flex-1 rounded-md border border-gray-700 bg-gray-800 pl-3 pr-0 py-1 overflow-hidden transition-colors focus-within:border-teal-500">
+                  <label className="flex items-center gap-1.5 flex-1 rounded-md border border-white/10 bg-black/40 shadow-inner pl-3 pr-0 py-1 overflow-hidden transition-colors focus-within:border-teal-500">
                     <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold flex-1">Nodes</span>
-                    <div className="flex items-stretch bg-gray-950 border-l border-gray-700 h-full ml-1">
+                    <div className="flex items-stretch bg-black/60 border-l border-white/10 h-full ml-1">
                       <input
                         type="number"
                         min={MIN_SYNTHETIC_NODES[scenario]}
@@ -657,7 +697,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         /* Tailwind magic to completely hide the ugly default browser arrows */
                         className="w-10 bg-transparent py-1 text-center text-xs font-bold text-teal-300 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 m-0"
                       />
-                      <div className="flex flex-col border-l border-gray-700 bg-gray-900 w-5">
+                      <div className="flex flex-col border-l border-white/10 bg-black/40 w-5">
                         <button
                           type="button"
                           disabled={sim.isComputing || sim.isGraphLoading || sim.syntheticSizing.nodes >= MAX_SYNTHETIC_NODES[scenario]}
@@ -679,9 +719,9 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   </label>
 
                   {/* --- CUSTOM LINKS ADJUSTER --- */}
-                  <label className="flex items-center gap-1.5 flex-1 rounded-md border border-gray-700 bg-gray-800 pl-3 pr-0 py-1 overflow-hidden transition-colors focus-within:border-teal-500">
+                  <label className="flex items-center gap-1.5 flex-1 rounded-md border border-white/10 bg-black/40 shadow-inner pl-3 pr-0 py-1 overflow-hidden transition-colors focus-within:border-teal-500">
                     <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold flex-1">Links</span>
-                    <div className="flex items-stretch bg-gray-950 border-l border-gray-700 h-full ml-1">
+                    <div className="flex items-stretch bg-black/60 border-l border-white/10 h-full ml-1">
                       <input
                         type="number"
                         min={4}
@@ -700,7 +740,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         disabled={sim.isComputing || sim.isGraphLoading}
                         className="w-10 bg-transparent py-1 text-center text-xs font-bold text-teal-300 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 m-0"
                       />
-                      <div className="flex flex-col border-l border-gray-700 bg-gray-900 w-5">
+                      <div className="flex flex-col border-l border-white/10 bg-black/40 w-5">
                         <button
                           type="button"
                           disabled={sim.isComputing || sim.isGraphLoading || sim.syntheticSizing.edges >= 1600}
@@ -728,7 +768,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 </div>
               </div>
             )}
-          </aside>
+          </ResizableSidebar>
         </div>
       </div>
 
@@ -740,7 +780,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         onDeleteHistory={sim.handleDeleteHistory}
         onImportHistory={sim.handleImportHistory}
       />
-
       {sim.isSaveModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 transition-opacity">
           <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-md flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden">

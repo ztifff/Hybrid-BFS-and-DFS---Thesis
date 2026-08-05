@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Network, Bot, Car, Flame, Gamepad2 } from './icons';
 import { ScenarioType } from '../types';
 import { ScenarioInfo } from './ScenarioInfo';
 
@@ -62,6 +63,35 @@ export const ScenarioPicker: React.FC<Props> = ({
   const activeScenarioConfig = scenarios.find((s) => s.id === selectedScenario);
   const canStart = selectedScenario !== null && !isLoading;
   const [isButtonHovered, setIsButtonHovered] = useState(false);
+  const [isExecuting, setIsExecuting] = useState(false);
+
+  const handleExecute = () => {
+    if (!canStart || isExecuting) return;
+    setIsExecuting(true);
+    setTimeout(() => {
+      onStart();
+      setIsExecuting(false);
+    }, 600);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isTermsOpen || isPrivacyOpen) return;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        const currentIndex = scenarios.findIndex(s => s.id === selectedScenario);
+        if (currentIndex === -1) return;
+        let nextIndex = e.key === 'ArrowRight' ? currentIndex + 1 : currentIndex - 1;
+        if (nextIndex >= scenarios.length) nextIndex = 0;
+        if (nextIndex < 0) nextIndex = scenarios.length - 1;
+        onSelectScenario(scenarios[nextIndex].id);
+      }
+      if (e.key === 'Enter') {
+        if (canStart && !isExecuting) handleExecute();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [scenarios, selectedScenario, canStart, isTermsOpen, isPrivacyOpen, isExecuting, onSelectScenario]);
 
   return (
     <div className="flex flex-col h-full bg-gray-950 p-6 rounded-none border border-gray-800 shadow-2xl relative overflow-hidden">
@@ -150,8 +180,8 @@ export const ScenarioPicker: React.FC<Props> = ({
                   className={`
                     group relative flex flex-col items-center justify-center min-w-[150px] p-4 border transition-all duration-300 snap-center
                     ${isActive 
-                        ? 'shadow-[0_0_15px_rgba(0,0,0,0.5)] transform -translate-y-1' // 🧠 FIX: Removed the hardcoded bg-gray-900 so the inline style can take over
-                        : 'bg-gray-950 border-gray-800 hover:border-gray-700 hover:bg-gray-900 opacity-60 hover:opacity-100'}
+                        ? 'shadow-[0_0_15px_rgba(0,0,0,0.5)] transform -translate-y-1' 
+                        : 'bg-gray-950 border-white/10 hover:border-white/30 hover:bg-gray-900 opacity-60 hover:opacity-100'}
                   `}
                   style={{
                     // 🧠 FIX: Apply a highly transparent background (1A = ~10% opacity) and a glowing border based on the scenario's unique color!
@@ -161,8 +191,21 @@ export const ScenarioPicker: React.FC<Props> = ({
                     borderTopWidth: isActive ? '3px' : '1px'
                   }}
                 >
-                  <span className={`text-3xl mb-3 transition-transform ${isActive ? 'scale-110 drop-shadow-md' : 'opacity-90 group-hover:scale-110 grayscale'}`}>
-                    {scenario.icon}
+                  <span 
+                    className={`mb-3 transition-transform duration-300 flex items-center justify-center ${isActive ? 'scale-110' : 'opacity-90 group-hover:scale-110 grayscale'}`}
+                    style={{ color: isActive ? scenario.color : '#9ca3af', filter: isActive ? `drop-shadow(0 0 10px ${scenario.color}80)` : 'none' }}
+                  >
+                    {(() => {
+                      const className = "w-8 h-8";
+                      switch (scenario.id) {
+                        case 'network': return <Network className={className} />;
+                        case 'robotics': return <Bot className={className} />;
+                        case 'traffic': return <Car className={className} />;
+                        case 'evacuation': return <Flame className={className} />;
+                        case 'gameai': return <Gamepad2 className={className} />;
+                        default: return <Network className={className} />;
+                      }
+                    })()}
                   </span>
                   <span className={`text-xs font-mono tracking-widest uppercase ${isActive ? 'text-gray-100 font-bold' : 'text-gray-500'}`}>
                     {scenario.name.replace(' Network', '').replace(' Simulation', '')}
@@ -186,17 +229,17 @@ export const ScenarioPicker: React.FC<Props> = ({
       {/* START BUTTON */}
       <div className="mt-4 pt-4 shrink-0 relative z-10 flex justify-center">
         <button
-          onClick={onStart}
-          disabled={!canStart}
+          onClick={handleExecute}
+          disabled={!canStart || isExecuting}
           onMouseEnter={() => setIsButtonHovered(true)}
           onMouseLeave={() => setIsButtonHovered(false)}
-          className="relative overflow-hidden w-full py-4 font-mono font-bold text-sm tracking-widest uppercase transition-all duration-300 border"
+          className="group relative overflow-hidden w-full py-4 font-mono font-bold text-sm tracking-widest uppercase transition-all duration-300 border"
           style={(() => {
             const activeColor = activeScenarioConfig?.color || '#2563eb';
-            const activeBg = makeHexWithAlpha(activeColor, canStart ? (isButtonHovered ? 0.24 : 0.16) : 0.06);
-            const borderColor = canStart ? makeHexWithAlpha(activeColor, isButtonHovered ? 0.7 : 0.5) : '#374151';
-            const textColor = canStart ? activeColor : '#9ca3af';
-            const boxShadow = canStart ? `0 0 20px ${makeHexWithAlpha(activeColor, isButtonHovered ? 0.2 : 0.15)}` : undefined;
+            const activeBg = makeHexWithAlpha(activeColor, canStart && !isExecuting ? (isButtonHovered ? 0.2 : 0.1) : 0.05);
+            const borderColor = canStart && !isExecuting ? makeHexWithAlpha(activeColor, isButtonHovered ? 0.7 : 0.4) : '#374151';
+            const textColor = canStart && !isExecuting ? activeColor : '#9ca3af';
+            const boxShadow = (canStart && !isExecuting && isButtonHovered) ? `0 0 15px ${makeHexWithAlpha(activeColor, 0.4)}` : undefined;
             return {
               backgroundColor: activeBg,
               borderColor,
@@ -205,9 +248,14 @@ export const ScenarioPicker: React.FC<Props> = ({
             };
           })()}
         >
-          {canStart ? (
+          {isExecuting ? (
             <span className="flex items-center justify-center gap-3">
-              <svg className="w-4 h-4 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${activeScenarioConfig?.color}40`, borderTopColor: activeScenarioConfig?.color }} />
+              Initializing Simulation...
+            </span>
+          ) : canStart ? (
+            <span className="flex items-center justify-center gap-3">
+              <svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
               Execute Comparative Analysis (BFS vs DFS vs Hybrid)

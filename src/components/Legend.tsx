@@ -58,8 +58,8 @@ const SCENARIO_NODE_ITEMS: Record<ScenarioType, LegendItem[]> = {
 const EDGE_ITEMS: Record<ScenarioType, LegendItem[]> = {
   network: [
     { color: '#60a5fa', label: 'Fiber Optic' },
-    { color: '#0f172a', label: 'Copper Straight-Through' },
-    { color: '#0f172a', label: 'Copper Cross-Over', dashed: true },
+    { color: '#cbd5e1', label: 'Copper Straight-Through' },
+    { color: '#cbd5e1', label: 'Copper Cross-Over', dashed: true },
     { color: '#dc2626', label: 'Serial / WAN', type: 'serial' },
     { color: '#06b6d4', label: 'Wireless', dashed: true },
   ],
@@ -101,7 +101,7 @@ export const Legend: React.FC<Props> = ({ scenario, mapId }) => {
   const cHYB = ALGORITHMS.find(a => a.id === 'hybrid')?.color || '#fb923c';
 
   return (
-    <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 space-y-4 shrink-0">
+    <div className="glass-panel rounded-xl p-4 space-y-4 shrink-0 fade-in hover:shadow-glow-blue transition-shadow duration-500">
       <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider text-center">
         Legend
       </h3>

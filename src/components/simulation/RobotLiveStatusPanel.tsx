@@ -34,14 +34,21 @@ export const RobotLiveStatusPanel: React.FC<Props> = ({
 
   const isBoxDeliveryMap = mapId === 'aws' || mapId === 'awsWarehouse' || mapId === 'synthetic';
   const activeStep = activeSteps[selectedAlgo] ?? activeSteps.bfs ?? activeSteps.hybrid ?? activeSteps.dfs;
-  const nodeMap = new Map(graphNodes.map(n => [n.id, n.label.replace(/\n/g, ' ')]));
+  const formatLabel = (label: string) => {
+    return label
+      .replace(/\n/g, " ")
+      .replace(/Finish Line /g, "FL-")
+      .replace(/Packing Desk /g, "PD-");
+  };
+
+  const nodeMap = new Map(graphNodes.map(n => [n.id, formatLabel(n.label)]));
   const theme = ALGO_CONFIG[selectedAlgo];
 
   return (
-    <div className="shrink-0 bg-[#0d1224] border border-gray-800 rounded-xl overflow-hidden shadow-lg">
+    <div className="shrink-0 glass-panel rounded-xl overflow-hidden fade-in hover:shadow-glow-blue transition-shadow duration-500">
 
       {/* ── Header ───────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-800 bg-[#0a0f1e]">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-white/5 bg-black/40">
         <div className="flex items-center gap-1.5">
           <span className="text-sm">🤖</span>
           <span className="text-[11px] font-bold uppercase tracking-widest text-gray-300">
@@ -50,7 +57,7 @@ export const RobotLiveStatusPanel: React.FC<Props> = ({
         </div>
 
         {/* Algorithm switcher */}
-        <div className="flex items-center gap-0.5 bg-gray-900 border border-gray-700 rounded-md p-0.5">
+        <div className="flex items-center gap-0.5 bg-black/40 border border-white/10 shadow-inner rounded-md p-0.5">
           {(Object.keys(ALGO_CONFIG) as Array<keyof typeof ALGO_CONFIG>).map(key => (
             <button
               key={key}
@@ -68,7 +75,7 @@ export const RobotLiveStatusPanel: React.FC<Props> = ({
       </div>
 
       {/* ── Robot Cards ──────────────────────────────────────── */}
-      <div className="flex flex-col divide-y divide-gray-800/70 max-h-[45vh] overflow-y-auto">
+      <div className="flex flex-col divide-y divide-white/5 max-h-[45vh] overflow-y-auto">
         {assignments.map((assignment, idx) => {
           const robotName  = nodeMap.get(assignment.robotId) ?? assignment.robotId;
 

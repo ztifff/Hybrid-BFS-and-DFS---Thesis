@@ -1,5 +1,53 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+
+  /* Brand Colors */
+  --color-neon-blue: #3b82f6;
+  --color-neon-green: #10b981;
+  --color-neon-purple: #8b5cf6;
+  --color-neon-amber: #f59e0b;
+  --color-neon-rose: #f43f5e;
+  --color-glass-dark: rgba(10, 15, 30, 0.65);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
+
+  /* Glowing Shadows */
+  --shadow-glow-blue: 0 0 20px rgba(59, 130, 246, 0.4);
+  --shadow-glow-green: 0 0 20px rgba(16, 185, 129, 0.4);
+  --shadow-glow-purple: 0 0 20px rgba(139, 92, 246, 0.4);
+  --shadow-glow-amber: 0 0 20px rgba(245, 158, 11, 0.4);
+  --shadow-glow-rose: 0 0 20px rgba(244, 63, 94, 0.4);
+  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+
+  /* Custom Animations */
+  --animate-fade-in: fadeIn 0.4s ease-out forwards;
+  --animate-slide-up: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-breathing-bg: breathingBg 20s ease-in-out infinite;
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes breathingBg {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+}
+
 * {
   box-sizing: border-box;
 }
@@ -8,53 +56,55 @@ html, body, #root {
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  background: #0f1117;
+  /* Deep space animated gradient background */
+  background: linear-gradient(135deg, #060913, #0f152a, #060913);
+  background-size: 200% 200%;
+  animation: breathingBg 20s ease-in-out infinite;
   color: white;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  font-family: 'Outfit', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Scrollbar styling */
+/* Scrollbar styling - Sleek and modern */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #1a1a2e;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #374151;
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #4b5563;
+  background: rgba(255, 255, 255, 0.2);
 }
 
-/* Smooth transitions */
-button {
-  transition: all 0.15s ease;
+/* Smooth transitions globally for interactive elements */
+button, a, input, select {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Grid pixel rendering */
+/* Grid pixel rendering for sharp canvas drawing */
 svg {
   image-rendering: pixelated;
-}
-
-/* Pulse animation for running state */
-@keyframes pulse-glow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
 }
 
 .pulse-glow {
   animation: pulse-glow 1s ease-in-out infinite;
 }
 
-/* Fade in animation */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+.fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
 }
 
-.fade-in {
-  animation: fadeIn 0.3s ease-out;
+/* Glassmorphism Utility */
+.glass-panel {
+  background: var(--color-glass-dark);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-glass-border);
+  box-shadow: var(--shadow-glass);
 }

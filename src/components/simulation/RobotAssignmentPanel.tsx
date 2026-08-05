@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { GraphNode, RobotAssignment } from "../../types";
 
 interface Props {
@@ -23,14 +24,21 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
 
   const isBoxDeliveryMap = mapId === 'aws' || mapId === 'awsWarehouse' || mapId === 'synthetic';
 
+  const formatLabel = (label: string) => {
+    return label
+      .replace(/\n/g, " ")
+      .replace(/Finish Line /g, "FL-")
+      .replace(/Packing Desk /g, "PD-");
+  };
+
   const getRobotLabel = (robotId: string) => {
     const node = depotNodes.find(n => n.id === robotId);
-    return node?.label?.replace(/\n/g, " ") ?? robotId;
+    return node ? formatLabel(node.label) : robotId;
   };
 
   const getShelfLabel = (shelfId: string) => {
     const node = shelfNodes.find(n => n.id === shelfId);
-    return node?.label?.replace(/\n/g, " ") ?? shelfId;
+    return node ? formatLabel(node.label) : shelfId;
   };
 
   const toggleDestination = (robotId: string, shelfId: string) => {
@@ -118,8 +126,8 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
       {SummaryButton}
 
       {/* Modal Overlay */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {isOpen && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
@@ -127,10 +135,10 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
           />
 
           {/* Modal */}
-          <div className="relative z-10 bg-[#0d1224] border border-gray-700 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden">
+          <div className="relative z-10 glass-panel rounded-2xl shadow-[0_0_40px_rgba(34,197,94,0.15)] w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden fade-in">
             
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 bg-green-900/10 shrink-0">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 bg-green-900/10 shrink-0">
               <div className="flex items-center gap-3">
                 <span className="text-xl">🤖</span>
                 <div>
@@ -212,7 +220,7 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
                         className="w-full text-left px-2 py-1.5 text-[11px] text-gray-500 hover:text-green-400 hover:bg-gray-800/50 rounded flex items-center gap-1.5 transition-colors cursor-pointer"
                       >
                         <span className="text-gray-600">+</span>
-                        {depot.label.replace(/\n/g, " ")}
+                        {formatLabel(depot.label)}
                       </button>
                     ))}
                   </div>
@@ -289,10 +297,10 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
                                   </div>
 
                                   {/* Label */}
-                                  <span className={`flex-1 text-xs font-medium ${
+                                  <span className={`flex-1 text-xs font-medium truncate ${
                                     isPriority ? "text-amber-200" : isSelected ? "text-blue-200" : "text-gray-300"
                                   }`}>
-                                    {shelf.label.replace(/\n/g, " ")}
+                                    {formatLabel(shelf.label)}
                                   </span>
 
                                   {/* Priority toggle */}
@@ -376,7 +384,8 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

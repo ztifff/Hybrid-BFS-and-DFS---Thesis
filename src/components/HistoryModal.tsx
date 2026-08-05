@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { SimulationResult, ScenarioType } from '../types';
 import { getAdaptabilityScore, getMemoryInMB, getPathOptimality } from '../utils/metricsHelpers';
 import { NetworkCanvas } from './NetworkCanvas'; 
+import { StrategyMapEvents } from './simulation/StrategyMapEvents';
 
 export interface HistoryEntry {
   id: string;
@@ -14,6 +15,17 @@ export interface HistoryEntry {
   optimalPathLength: number;
   totalNodes: number;
   timestamp: Date | string; 
+  metadata?: {
+    mapId?: string;
+    gameBoard?: string;
+    networkRoutingMode?: string;
+    deliveryMode?: string;
+    sourceDevice?: string;
+    destinationDevices?: string[];
+    robotAssignments?: any[];
+    evacuationSourceId?: string | null;
+    syntheticSizing?: { nodes: number; edges: number };
+  };
 }
 
 interface Props {
@@ -66,7 +78,15 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
   const [activeEntry, setActiveEntry] = useState<HistoryEntry | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
+  const [robotAlgo, setRobotAlgo] = useState<'bfs'|'dfs'|'hybrid'>('bfs');
   const importInputRef = React.useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (activeEntry) {
+      const isMulti = !!activeEntry.multiResults || isMultiAlgorithmResult(activeEntry.simResult as unknown) || String(activeEntry.algorithm).toLowerCase().includes('multi');
+      setRobotAlgo(isMulti ? 'bfs' : activeEntry.algorithm as 'bfs'|'dfs'|'hybrid');
+    }
+  }, [activeEntry]);
 
   // ── Auto-generate a smart export filename ───────────────────────────────
   const buildExportFilename = (entries: HistoryEntry[]): string => {
@@ -307,11 +327,277 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
       );
     };
 
+    const renderSimulationConfig = () => {
+      const meta = entry.metadata;
+      if (!meta) return (
+        <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-5 mb-5 shadow-inner">
+          <span className="text-gray-500 text-xs font-mono">No simulation configuration data available for this run.</span>
+        </div>
+      );
+
+      const resolvedMapId = meta.mapId || (baseGraph?.nodes.some(n => n.id.includes('boys') || n.id.includes('girls') || n.label?.includes('PC-PT')) 
+        ? 'campus' 
+        : baseGraph?.nodes.some(n => n.id.toLowerCase().includes('finance') || n.id.toLowerCase().includes('sales')) 
+          ? 'companybusiness' 
+          : baseGraph?.nodes.some(n => n.id.includes('exit_south_main') || n.id.includes('stair_main_') || n.id.includes('l1_spine') || n.id.includes('elev_n_'))
+            ? 'synthetic'
+            : baseGraph?.nodes.some(n => n.id.includes('lv_hapchan') || n.id.includes('s_bacolod') || n.id.includes('th_w') || n.label?.includes('Kuya J'))
+              ? 'city'
+              : baseGraph?.nodes.some(n => n.buildingId === 'GL' || n.id.toLowerCase().includes('supermarket') || n.id.toLowerCase().includes('atrium') || n.id.toLowerCase().includes('dept_store'))
+                ? 'building'
+                : baseGraph?.nodes.some(n => n.label?.includes('nurse') || n.label?.includes('air_pressure') || n.buildingId === 'L1' || n.buildingId === 'clinic')
+                  ? 'clinic'
+                  : baseGraph?.nodes.some(n => n.id.includes('shelf_f') || n.id.includes('dest_desk_a') || n.id.includes('shelf_m'))
+                    ? 'awsWarehouse'
+                    : 'synthetic');
+
+      const isBoxDelivery = resolvedMapId?.toLowerCase().includes('aws') || resolvedMapId?.toLowerCase().includes('synthetic');
+
+      const getEvacuationMapName = (id: any) => {
+        if (!id || typeof id !== 'string') return String(id || 'Unknown');
+        if (id === 'city') return 'Ayala Malls Solenad Nuvali (Atrium)';
+        if (id === 'building') return 'SM City Santa Rosa';
+        return id.replace(/_/g, ' ');
+      };
+      
+      const getNodeLabelSafe = (id: any) => {
+        if (!id || typeof id !== 'string') return String(id || 'Unknown');
+        if (!baseGraph) return id;
+        const node = baseGraph.nodes.find(n => n.id === id);
+        return node?.label || id;
+      };
+
+      const safeReplace = (val: any) => {
+        if (!val || typeof val !== 'string') return String(val || 'N/A');
+        return val.replace(/_/g, ' ').replace(/-/g, ' ');
+      };
+
+      // Guaranteed safe array of robots
+      const robots = Array.isArray(meta.robotAssignments) ? meta.robotAssignments : [];
+      const hasRobots = entry.scenario === 'robotics' && robots.length > 0;
+      
+      const hasConfig = meta.mapId || 
+                        entry.scenario === 'network' || 
+                        hasRobots || 
+                        entry.scenario === 'evacuation' || 
+                        entry.scenario === 'gameai';
+
+      if (!hasConfig) return null;
+
+      return (
+        <div className="bg-[#0a0f1e] border border-blue-900/50 rounded-xl p-5 mb-5 shadow-lg w-full">
+          <div className="flex items-center gap-2 mb-4 border-b border-gray-800 pb-3">
+            <span className="text-blue-400">⚙️</span>
+            <span className="font-bold text-gray-200 uppercase text-[11px] tracking-[0.15em]">Simulation Configuration</span>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-[11px] w-full">
+            {meta.mapId && (
+              <div className="flex flex-col gap-1.5 w-full">
+                <span className="text-gray-500 uppercase tracking-widest text-[9px] font-bold">Map Selection</span>
+                <span className="text-white font-medium capitalize bg-gray-900 border border-gray-700 px-3 py-1.5 rounded-md w-full break-words">
+                  {entry.scenario === 'evacuation' ? getEvacuationMapName(meta.mapId) : safeReplace(meta.mapId)}
+                </span>
+              </div>
+            )}
+            
+            {entry.scenario === 'network' && (
+              <>
+                <div className="flex flex-col gap-1.5 w-full">
+                  <span className="text-gray-500 uppercase tracking-widest text-[9px] font-bold">Routing Mode</span>
+                  <span className="text-cyan-300 font-medium capitalize bg-cyan-950/40 border border-cyan-900 px-3 py-1.5 rounded-md w-full break-words">
+                    {safeReplace(meta.networkRoutingMode)}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1.5 w-full">
+                  <span className="text-gray-500 uppercase tracking-widest text-[9px] font-bold">Source Device</span>
+                  <span className="text-blue-400 font-mono bg-blue-950/40 border border-blue-900 px-3 py-1.5 rounded-md w-full break-words">
+                    {getNodeLabelSafe(meta.sourceDevice)}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1.5 w-full">
+                  <span className="text-gray-500 uppercase tracking-widest text-[9px] font-bold">Destinations</span>
+                  <div className="text-indigo-300 font-mono bg-indigo-950/40 border border-indigo-900 px-3 py-1.5 rounded-md w-full max-h-[80px] overflow-y-auto break-words" style={{ scrollbarWidth: 'thin' }}>
+                    {Array.isArray(meta.destinationDevices) 
+                      ? meta.destinationDevices.map((d: any) => getNodeLabelSafe(d)).join(', ') 
+                      : 'N/A'}
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5 w-full">
+                  <span className="text-gray-500 uppercase tracking-widest text-[9px] font-bold">Delivery Style</span>
+                  <span className="text-purple-300 font-medium capitalize bg-purple-950/40 border border-purple-900 px-3 py-1.5 rounded-md w-full break-words">
+                    {meta.deliveryMode || 'N/A'}
+                  </span>
+                </div>
+              </>
+            )}
+
+            {hasRobots && (
+              <>
+                <div className="flex flex-col gap-1.5 w-full">
+                  <span className="text-gray-500 uppercase tracking-widest text-[9px] font-bold">Active Robots</span>
+                  <span className="text-orange-300 font-medium bg-orange-950/40 border border-orange-900 px-3 py-1.5 rounded-md w-full">
+                    {robots.length} Units
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1.5 w-full">
+                  <span className="text-gray-500 uppercase tracking-widest text-[9px] font-bold">{isBoxDelivery ? 'Total Payload' : 'Total Destinations'}</span>
+                  <span className="text-green-300 font-medium bg-green-950/40 border border-green-900 px-3 py-1.5 rounded-md w-full">
+                    {isBoxDelivery 
+                      ? robots.reduce((acc: number, r: any) => acc + (r.destinations?.reduce((sum: number, d: string) => sum + (r.boxCounts?.[d] || 6), 0) || 0), 0) + ' Boxes'
+                      : robots.reduce((acc: number, r: any) => acc + (r.destinations?.length || 0), 0) + ' Targets'
+                    }
+                  </span>
+                </div>
+                
+                <div className="col-span-2 md:col-span-4 mt-4 bg-gray-950/50 border border-gray-800 rounded-lg p-4 w-full">
+                  <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-800">
+                    <div className="flex flex-col md:flex-row md:items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">🤖</span>
+                        <h3 className="font-bold text-gray-200 uppercase tracking-widest text-[11px]">
+                          Robot Fleet Status
+                        </h3>
+                      </div>
+                      
+                      {(!!entry.multiResults || isMultiAlgorithmResult(entry.simResult as unknown) || String(entry.algorithm).toLowerCase().includes('multi')) && (
+                        <div className="flex bg-gray-900 border border-gray-700 rounded overflow-hidden shadow-inner">
+                          {(['bfs', 'dfs', 'hybrid'] as const).map(algo => (
+                            <button
+                              key={algo}
+                              onClick={() => setRobotAlgo(algo)}
+                              className={`px-3 py-1 text-[9px] font-bold uppercase transition-colors ${
+                                robotAlgo === algo 
+                                  ? algo === 'bfs' ? 'bg-green-600 text-white' : algo === 'dfs' ? 'bg-purple-600 text-white' : 'bg-orange-600 text-white'
+                                  : 'text-gray-500 hover:bg-gray-800 hover:text-gray-300'
+                              }`}
+                            >
+                              {algo}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-gray-500 bg-gray-900 px-2 py-1 rounded border border-gray-800 hidden sm:block">Status: ALL DELIVERIES COMPLETED</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                    {robots.map((r: any, i: number) => {
+                      const robotTotalCount = isBoxDelivery 
+                        ? (r.destinations?.reduce((sum: number, d: string) => sum + (r.boxCounts?.[d] || 6), 0) || 0)
+                        : (r.destinations?.length || 0);
+
+                      const borderColor = robotAlgo === 'bfs' ? 'border-green-900/40' : robotAlgo === 'dfs' ? 'border-purple-900/40' : 'border-orange-900/40';
+                      const textColor = robotAlgo === 'bfs' ? 'text-green-400' : robotAlgo === 'dfs' ? 'text-purple-400' : 'text-orange-400';
+                      const barColor = robotAlgo === 'bfs' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' :
+                                       robotAlgo === 'dfs' ? 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.6)]' :
+                                       'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]';
+                      const rBadgeColor = robotAlgo === 'bfs' ? 'bg-green-600' : robotAlgo === 'dfs' ? 'bg-purple-600' : 'bg-orange-600';
+
+                      return (
+                        <div key={i} className={`flex flex-col bg-[#0d1326] p-3 rounded-lg border ${borderColor}`}>
+                          <div className="flex justify-between items-center mb-2">
+                            <div className="flex items-center gap-2 font-bold">
+                              <span className={`text-white px-2 py-0.5 rounded text-[10px] ${rBadgeColor}`}>R{i+1}</span>
+                              <span className="text-blue-200 text-xs">{getNodeLabelSafe(r.robotId)}</span>
+                            </div>
+                            <div className="flex flex-col items-end">
+                              <span className={`${textColor} font-bold text-[10px]`}>COMPLETED</span>
+                              <span className="text-gray-500 text-[9px] font-mono">{robotTotalCount}/{robotTotalCount} {isBoxDelivery ? 'Boxes' : 'Targets'}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden mb-3">
+                            <div className={`h-full w-full ${barColor}`}></div>
+                          </div>
+
+                          <div className="flex flex-col gap-1.5 w-full text-[10px]">
+                            {r.priorityDest && (
+                              <div className="flex justify-between items-center bg-blue-950/50 p-2 rounded border border-blue-900/50">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-pink-400 text-[11px]">🎯 Priority:</span>
+                                  <span className="text-gray-200 font-medium">{getNodeLabelSafe(r.priorityDest)}</span>
+                                </div>
+                                <span className={textColor}>✅ Done</span>
+                              </div>
+                            )}
+                            
+                            {r.destinations?.length > 0 && (
+                              <div className="bg-gray-900/60 p-2 rounded border border-gray-800 flex flex-col gap-1.5 max-h-[100px] overflow-y-auto w-full" style={{ scrollbarWidth: 'thin' }}>
+                                <span className="text-gray-500 uppercase tracking-widest text-[8px] font-bold mb-0.5">Assigned Deliveries</span>
+                                {r.destinations.map((d: string, j: number) => {
+                                  const bCount = r.boxCounts?.[d] || 6;
+                                  return (
+                                    <div key={j} className="flex justify-between items-center">
+                                      <div className="flex items-center gap-1.5">
+                                        <span className={`${textColor} text-[10px]`}>✅</span>
+                                        <span className="text-gray-300 font-medium truncate max-w-[140px]">{getNodeLabelSafe(d)}</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        {isBoxDelivery ? (
+                                          <span className="text-gray-400 font-mono text-[9px]">{bCount}/{bCount}</span>
+                                        ) : (
+                                          <span className={`${textColor} opacity-80 text-[9px] font-mono`}>Reached</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {entry.scenario === 'evacuation' && meta.evacuationSourceId && (
+              <div className="flex flex-col gap-1.5 w-full">
+                <span className="text-gray-500 uppercase tracking-widest text-[9px] font-bold">Starting Point (Fire Origin)</span>
+                <span className="text-red-300 font-medium bg-red-950/40 border border-red-900 px-3 py-1.5 rounded-md w-full truncate">
+                  {getNodeLabelSafe(meta.evacuationSourceId)}
+                </span>
+              </div>
+            )}
+
+            {entry.scenario === 'gameai' && meta.gameBoard && (
+              <div className="flex flex-col gap-1.5 w-full">
+                <span className="text-gray-500 uppercase tracking-widest text-[9px] font-bold">Board Game</span>
+                <span className="text-purple-300 font-medium capitalize bg-purple-950/40 border border-purple-900 px-3 py-1.5 rounded-md w-full truncate">
+                  {safeReplace(meta.gameBoard)}
+                </span>
+              </div>
+            )}
+
+            {meta.mapId === 'synthetic' && meta.syntheticSizing && (
+              <>
+                <div className="flex flex-col gap-1.5 w-full">
+                  <span className="text-gray-500 uppercase tracking-widest text-[9px] font-bold">Synthetic Nodes</span>
+                  <span className="text-yellow-300 font-medium bg-yellow-950/40 border border-yellow-900 px-3 py-1.5 rounded-md w-full">
+                    {meta.syntheticSizing.nodes || 0}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1.5 w-full">
+                  <span className="text-gray-500 uppercase tracking-widest text-[9px] font-bold">Synthetic Edges</span>
+                  <span className="text-yellow-300 font-medium bg-yellow-950/40 border border-yellow-900 px-3 py-1.5 rounded-md w-full">
+                    {meta.syntheticSizing.edges || 0}
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      );
+    };
+
     return (
       <div className="flex flex-col gap-5 p-2 h-full overflow-y-auto max-h-[75vh] pr-1">
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-5">
-          <div className="xl:col-span-2 bg-gray-900/60 border border-gray-800 rounded-xl p-4 shadow-2xl">
-            <div className="flex justify-between items-center mb-3 border-b border-gray-800 pb-2">
+          <div className="xl:col-span-2 flex flex-col">
+            <div className="bg-gray-900/60 border border-gray-800 rounded-xl p-4 shadow-2xl mb-5">
+              <div className="flex justify-between items-center mb-3 border-b border-gray-800 pb-2">
               <h3 className="font-bold text-xs uppercase tracking-widest text-blue-400">🏆 Execution Benchmarks</h3>
               <span className="text-[10px] font-mono text-gray-500">RUN #{entry.runNumber || 'N/A'}</span>
             </div>
@@ -370,6 +656,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
               </tbody>
             </table>
           </div>
+          </div>
           <div className="xl:col-span-3 h-[340px] xl:h-[340px] w-full bg-[#0a0f1e] rounded-xl border border-gray-800 overflow-hidden shadow-inner relative flex flex-col">
             {baseGraph && (
               <NetworkCanvas
@@ -389,7 +676,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
                 shelfBoxCounts={shelfBoxCounts}
                 disableSimultaneousMode={true}
                 mapId={
-                  baseGraph.nodes.some(n => n.id.includes('boys') || n.id.includes('girls') || n.label?.includes('PC-PT')) 
+                  entry.metadata?.mapId || (baseGraph.nodes.some(n => n.id.includes('boys') || n.id.includes('girls') || n.label?.includes('PC-PT')) 
                     ? 'campus' 
                     : baseGraph.nodes.some(n => n.id.toLowerCase().includes('finance') || n.id.toLowerCase().includes('sales')) 
                       ? 'companybusiness' 
@@ -403,10 +690,10 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
                               ? 'clinic'
                               : baseGraph.nodes.some(n => n.id.includes('shelf_f') || n.id.includes('dest_desk_a') || n.id.includes('shelf_m'))
                                 ? 'awsWarehouse'
-                                : 'synthetic'
+                                : 'synthetic')
                 }
                 robotAssignments={
-                  baseGraph.nodes.filter(n => n.type === 'depot').map(d => ({
+                  entry.metadata?.robotAssignments || baseGraph.nodes.filter(n => n.type === 'depot').map(d => ({
                     robotId: d.id,
                     destinations: baseGraph.nodes.filter(n => n.id.startsWith('dest_') || n.type === 'shelf').map(n => n.id),
                     boxCounts: baseGraph.nodes.filter(n => n.id.startsWith('dest_') || n.type === 'shelf').reduce((acc, n) => ({ ...acc, [n.id]: 6 }), {})
@@ -572,9 +859,13 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
             />
           </div>
         </div>
+        
+        {renderSimulationConfig()}
+
         <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 text-xs text-gray-400 space-y-2">
           <span className="font-bold text-gray-300 block uppercase text-[10px] tracking-wider text-orange-400">📌 Structural Metadata</span>
           <p>Graph composed of <strong className="text-white">{entry.totalNodes || 0} total nodes</strong>. Baseline optimal path: <strong className="text-white">{entry.optimalPathLength || 0} distance units</strong>.</p>
+          
           {allEvents.length > 0 && (
             <div className="mt-2 pt-2 border-t border-gray-800/50">
               <span className="font-bold text-orange-400 block text-[10px] uppercase tracking-wider mb-2">⚡ Dynamic Blockages</span>
@@ -602,6 +893,20 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
               </div>
             </div>
           )}
+
+          {entry.scenario === 'gameai' && (
+            <div className="mt-2 pt-2 border-t border-gray-800/50">
+              <StrategyMapEvents 
+                dynamicEvents={allEvents} 
+                stepIndex={maxEventStep > 0 ? maxEventStep : maxSteps} 
+                simResults={{
+                  bfs: results.bfs as any,
+                  dfs: results.dfs as any,
+                  hybrid: results.hybrid as any
+                }} 
+              />
+            </div>
+          )}
         </div>
       </div>
     );
@@ -609,7 +914,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-      <div className="bg-[#060b16] border border-gray-800 rounded-2xl w-full max-w-[1300px] h-[90vh] flex flex-col overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+      <div className="glass-panel rounded-2xl w-full max-w-[1300px] h-[90vh] flex flex-col overflow-hidden shadow-glow-blue fade-in">
         
         {/* Header Section */}
         <header className="p-5 border-b border-gray-800 bg-[#0a0f1e]/60 flex justify-between items-center">

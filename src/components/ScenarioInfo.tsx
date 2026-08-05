@@ -1,6 +1,8 @@
 import React from 'react';
+import { Network, Bot, Car, Flame, Gamepad2 } from './icons';
 
 interface ScenarioConfig {
+  id: string;
   name: string;
   description: string;
   icon: string;
@@ -28,10 +30,20 @@ export const ScenarioInfo: React.FC<Props> = ({ config }) => {
         
         {/* Abstract Icon Block */}
         <div 
-          className="text-5xl shrink-0 p-4 border bg-gray-950 grayscale opacity-80"
-          style={{ borderColor: config.color + '22' }}
+          className="shrink-0 p-4 border bg-gray-950 flex items-center justify-center"
+          style={{ borderColor: config.color + '40', color: config.color, filter: `drop-shadow(0 0 10px ${config.color}40)` }}
         >
-          {config.icon}
+          {(() => {
+            const className = "w-12 h-12";
+            switch (config.id) {
+              case 'network': return <Network className={className} />;
+              case 'robotics': return <Bot className={className} />;
+              case 'traffic': return <Car className={className} />;
+              case 'evacuation': return <Flame className={className} />;
+              case 'gameai': return <Gamepad2 className={className} />;
+              default: return <Network className={className} />;
+            }
+          })()}
         </div>
 
         <div className="flex-1 w-full">

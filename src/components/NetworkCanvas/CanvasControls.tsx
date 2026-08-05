@@ -91,12 +91,15 @@ export const CanvasControls: React.FC<CanvasControlsProps> = ({
               };
               const dotColor = { bfs: 'bg-green-400', dfs: 'bg-purple-400', hybrid: 'bg-orange-400' };
               const isActive = followAlgo === algo;
+              const isVisible = visibleAlgos[algo];
               return (
                 <button
                   key={algo}
+                  disabled={!isVisible}
                   onClick={() => setFollowAlgo(isActive ? null : algo)}
-                  className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase border transition-all cursor-pointer flex items-center gap-2 ${
-                    isActive ? colors[algo].active : colors[algo].inactive
+                  className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase border transition-all flex items-center gap-2 ${
+                    !isVisible ? 'opacity-30 cursor-not-allowed border-gray-700 text-gray-500' :
+                    isActive ? colors[algo].active + ' cursor-pointer' : colors[algo].inactive + ' cursor-pointer'
                   }`}
                 >
                   <span className={`w-1.5 h-1.5 rounded-full ${dotColor[algo]} ${isActive ? 'opacity-100' : 'opacity-30'}`} />

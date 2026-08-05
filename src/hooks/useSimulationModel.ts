@@ -232,7 +232,18 @@ export function useSimulationModel(scenario: ScenarioType) {
       multiResults: compressedSimResult,
       optimalPathLength: bfsResult?.pathLength || 1,
       totalNodes: currentGraph.nodes.length,
-      timestamp: new Date()
+      timestamp: new Date(),
+      metadata: {
+        mapId,
+        gameBoard,
+        networkRoutingMode,
+        deliveryMode,
+        sourceDevice,
+        destinationDevices,
+        robotAssignments,
+        evacuationSourceId,
+        syntheticSizing: { ...syntheticSizing }
+      }
     };
 
     const updatedHistory = [newEntry, ...history.filter((h) => h.id !== newEntry.id)];

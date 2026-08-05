@@ -45,7 +45,15 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
   const [isShowOpen, setIsShowOpen] = useState(false);
   const [isFollowOpen, setIsFollowOpen] = useState(false);
 
-  const toggleAlgo = (algo: 'bfs' | 'dfs' | 'hybrid') => setVisibleAlgos(prev => ({ ...prev, [algo]: !prev[algo] }));
+  const toggleAlgo = (algo: 'bfs' | 'dfs' | 'hybrid') => {
+    setVisibleAlgos(prev => {
+      const willBeHidden = prev[algo];
+      if (willBeHidden && followAlgo === algo) {
+        setFollowAlgo(null);
+      }
+      return { ...prev, [algo]: !prev[algo] };
+    });
+  };
 
   // Environment checks
   const isDatacenter = scenario === 'network' && width > 100000;

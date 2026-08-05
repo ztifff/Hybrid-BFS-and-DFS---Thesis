@@ -68,6 +68,7 @@ export function normalizeHistoryEntry(entry: any): HistoryEntry {
     ...entry,
     simResult: entry.simResult ?? entry.multiResults?.hybrid,
     timestamp: entry.timestamp ? new Date(entry.timestamp) : new Date(),
+    metadata: entry.metadata,
   };
 }
 

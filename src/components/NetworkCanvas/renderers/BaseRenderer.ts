@@ -313,7 +313,16 @@ export abstract class BaseRenderer {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      const displayLabel = node.label ? node.label.split('\n')[0].trim() : '';
+      let displayLabel = node.label ? node.label.split('\n')[0].trim() : '';
+      if (zoom < 0.5) {
+        if (displayLabel.startsWith('Finish Line ')) displayLabel = displayLabel.replace('Finish Line ', 'FL-');
+        if (displayLabel.startsWith('Rack-')) displayLabel = displayLabel.replace('Rack-', 'R-');
+        if (displayLabel.startsWith('Core-')) displayLabel = displayLabel.replace('Core-', 'C-');
+        if (displayLabel.startsWith('Aggr-')) displayLabel = displayLabel.replace('Aggr-', 'A-');
+        if (displayLabel === 'Global Ingress') displayLabel = 'GI';
+        if (displayLabel === 'Dama King Row') displayLabel = 'KR';
+        if (displayLabel === 'Strategy AI') displayLabel = 'AI';
+      }
       const isGenericLink = displayLabel.toLowerCase().includes('local link section') || 
                             displayLabel.toLowerCase().includes('node/') || 
                             displayLabel.includes('#');

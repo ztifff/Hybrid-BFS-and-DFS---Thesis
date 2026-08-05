@@ -10,7 +10,8 @@ interface Props {
   totalNodes: number;
   dynamicEvents: DynamicEvent[];
   onSaveResult: () => void;  
-  isSaved: boolean;          
+  isSaved: boolean;
+  scenarioColor?: string;
 }
 
 export const SimulationReport: React.FC<Props> = ({ 
@@ -18,7 +19,8 @@ export const SimulationReport: React.FC<Props> = ({
   bfsResult,
   dynamicEvents,
   onSaveResult,
-  isSaved
+  isSaved,
+  scenarioColor
 }) => {
   const optimalDistance = bfsResult?.pathLength || 1;
 
@@ -61,7 +63,7 @@ export const SimulationReport: React.FC<Props> = ({
   const cHYB = ALGORITHMS.find(a => a.id === 'hybrid')?.color || '#fff';
 
   return (
-    <div className="bg-gray-900/80 border border-blue-900/50 rounded-xl p-4 shadow-[0_0_20px_rgba(30,58,138,0.15)] shrink-0 relative overflow-hidden flex flex-col">
+    <div className="glass-panel rounded-xl p-4 shadow-[0_0_20px_rgba(30,58,138,0.15)] shrink-0 relative overflow-hidden flex flex-col fade-in hover:shadow-glow-blue transition-shadow duration-500">
       <h3 className="font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wide text-sm">
         🏆 Comparative Benchmark
       </h3>
@@ -121,10 +123,16 @@ export const SimulationReport: React.FC<Props> = ({
       <button 
         onClick={onSaveResult}
         disabled={isSaved}
-        className={`mt-5 w-full py-2.5 rounded-lg font-bold text-sm transition-all shadow-[0_0_15px_rgba(59,130,246,0.15)] ${
+        style={!isSaved ? {
+          backgroundColor: `${scenarioColor || '#3b82f6'}33`, // 20% opacity approx
+          borderColor: `${scenarioColor || '#3b82f6'}80`, // 50% opacity approx
+          color: scenarioColor || '#93c5fd',
+          boxShadow: `0 0 15px ${scenarioColor || '#3b82f6'}26`
+        } : {}}
+        className={`mt-5 w-full py-2.5 rounded-lg font-bold text-sm transition-all ${
           isSaved 
-            ? 'bg-green-600/20 border border-green-500/50 text-green-400 cursor-default' 
-            : 'bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/50 text-blue-300 cursor-pointer'
+            ? 'bg-green-600/20 border border-green-500/50 text-green-400 cursor-default shadow-[0_0_15px_rgba(34,197,94,0.15)]' 
+            : 'hover:brightness-125 cursor-pointer'
         }`}
       >
         {isSaved ? '✅ Comparison Saved' : '💾 Save Comparison to History'}
