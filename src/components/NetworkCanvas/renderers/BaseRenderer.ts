@@ -95,7 +95,7 @@ export abstract class BaseRenderer {
     }
   }
 
-  protected drawBackground(options: RenderOptions) {}
+  protected drawBackground(_options: RenderOptions) {}
 
   protected drawEdges(options: RenderOptions) {
     const { ctx, visibleEdges, visibleNodeMap, isDatacenter, isMassive, sets } = options;
@@ -195,7 +195,7 @@ export abstract class BaseRenderer {
 
   protected drawNodesAndLabels(options: RenderOptions) {
     const { ctx, visibleNodes, isDatacenter, isMassive, zoom, pan, mapId, scenario, sourceId, sourceIds, destinationIds, visibleAlgos, sets, activeBlocked, wasHistoricallyBlocked, activeSteps } = options;
-    const scale = options.scale;
+
 
     visibleNodes.forEach(node => {
       const isRealWorldPlace = scenario === 'evacuation' && !['start', 'emergency_exit', 'corridor', 'stairwell', 'fire'].includes(node.type);

@@ -2,7 +2,7 @@ import { BaseRenderer, RenderOptions } from '../../BaseRenderer';
 
 export class GameAIRenderer extends BaseRenderer {
   protected drawBackground(options: RenderOptions) {
-    const { ctx, visibleNodes, mapId, zoom, scale, offsetX, offsetY } = options;
+    const { ctx, visibleNodes, zoom } = options;
 
     const boardNodes = visibleNodes.filter(node => typeof node.metadata?.board === 'string' && node.metadata.board !== 'arena');
     const boards = Array.from(new Set(boardNodes.map(node => node.metadata?.board as string)));

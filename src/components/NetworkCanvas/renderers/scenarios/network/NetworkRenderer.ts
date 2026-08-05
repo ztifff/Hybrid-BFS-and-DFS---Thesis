@@ -2,7 +2,7 @@ import { BaseRenderer, RenderOptions } from '../../BaseRenderer';
 
 export class NetworkRenderer extends BaseRenderer {
   protected drawBackground(options: RenderOptions) {
-    const { ctx, scenario, mapId, scale, zoom } = options;
+    const { ctx, scenario, mapId, scale } = options;
 
     if (scenario === 'network' && mapId === 'companybusiness') {
       ctx.save();
