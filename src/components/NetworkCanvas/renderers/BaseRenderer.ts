@@ -275,14 +275,11 @@ export abstract class BaseRenderer {
       }
 
       if (currBFS || currDFS || currHYB) {
-        const rBFS = ringTint ?? this.cBFS;
-        const rDFS = ringTint ?? this.cDFS;
-        const rHYB = ringTint ?? this.cHYB;
         ctx.shadowBlur = 6;
         ctx.lineWidth = 1.5;
-        if (currBFS) { ctx.beginPath(); ctx.arc(cx, cy, r + (isMassive ? 2 : 8), 0, Math.PI * 2); ctx.strokeStyle = rBFS; ctx.shadowColor = rBFS; ctx.stroke(); }
-        if (currDFS) { ctx.beginPath(); ctx.arc(cx, cy, r + (isMassive ? 4 : 12), 0, Math.PI * 2); ctx.strokeStyle = rDFS; ctx.shadowColor = rDFS; ctx.stroke(); }
-        if (currHYB) { ctx.beginPath(); ctx.arc(cx, cy, r + (isMassive ? 6 : 16), 0, Math.PI * 2); ctx.strokeStyle = rHYB; ctx.shadowColor = rHYB; ctx.stroke(); }
+        if (currBFS) { ctx.beginPath(); ctx.arc(cx, cy, r + (isMassive ? 2 : 8), 0, Math.PI * 2); ctx.strokeStyle = this.cBFS; ctx.shadowColor = this.cBFS; ctx.stroke(); }
+        if (currDFS) { ctx.beginPath(); ctx.arc(cx, cy, r + (isMassive ? 4 : 12), 0, Math.PI * 2); ctx.strokeStyle = this.cDFS; ctx.shadowColor = this.cDFS; ctx.stroke(); }
+        if (currHYB) { ctx.beginPath(); ctx.arc(cx, cy, r + (isMassive ? 6 : 16), 0, Math.PI * 2); ctx.strokeStyle = this.cHYB; ctx.shadowColor = this.cHYB; ctx.stroke(); }
         ctx.shadowBlur = 0; 
       }
 

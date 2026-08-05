@@ -306,7 +306,7 @@ export class DFSPathfinder implements PathfinderObserver {
 
       if (this.blockedNodes.has(current)) {
         if (entry.waited < MAX_WAIT_STEPS) {
-          agent.stack.unshift({ id: current, waited: entry.waited + 1 });
+          agent.stack.push({ id: current, waited: entry.waited + 1 });
           iteration++;
           const waitStep: AlgorithmStep = {
             stepIndex: iteration,

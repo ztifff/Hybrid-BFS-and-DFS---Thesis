@@ -392,7 +392,7 @@ export async function runSimulation(
   const environment = new SimulationEnvironment(dynamicEvents, onStepProgress);
 
   const startTime = performance.now();
-  const disablePathSevering = scenario === 'gameai' || scenario === 'robotics' || scenario === 'evacuation';
+  const disablePathSevering = scenario === 'gameai' || scenario === 'robotics' || scenario === 'evacuation' || scenario === 'traffic';
 
   if (algorithm === 'bfs') {
     const pathfinder = new BFSPathfinder();

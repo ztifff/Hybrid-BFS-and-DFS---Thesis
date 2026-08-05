@@ -322,7 +322,7 @@ export class HybridPathfinder implements PathfinderObserver {
 
       if (this.blockedNodes.has(current)) {
         if (entry.waited < MAX_WAIT_STEPS) {
-          agent.frontier.push({ id: current, waited: entry.waited + 1 });
+          agent.frontier.unshift({ id: current, waited: entry.waited + 1 });
           iteration++;
           const waitStep: AlgorithmStep = {
             stepIndex: iteration,
