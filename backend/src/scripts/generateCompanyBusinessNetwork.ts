@@ -71,7 +71,7 @@ function generateCompanyBusinessNetwork() {
           x: 300, y: 620,
           devices: [
             { id: "sales_pc1",     label: "Sales-PC1",     type: "access_point" },
-            { id: "sales_printer", label: "Sales-Printer",  type: "server" },
+            { id: "sales_printer", label: "Sales-Printer",  type: "end_device" },
             { id: "sales_ap",      label: "Sales-AP",       type: "wireless_ap" },
             { id: "sales_laptop",  label: "Sales-Laptop",   type: "access_point" },
             { id: "sales_tablet",  label: "Sales-Tablet",   type: "access_point" },
@@ -82,7 +82,7 @@ function generateCompanyBusinessNetwork() {
           x: 700, y: 620,
           devices: [
             { id: "hr_pc1",     label: "HR-PC1",     type: "access_point" },
-            { id: "hr_printer", label: "HR-Printer",  type: "server" },
+            { id: "hr_printer", label: "HR-Printer",  type: "end_device" },
             { id: "hr_ap",      label: "HR-AP",       type: "wireless_ap" },
             { id: "hr_laptop",  label: "HR-Laptop",   type: "access_point" },
             { id: "hr_tablet",  label: "HR-Tablet",   type: "access_point" },
@@ -98,7 +98,7 @@ function generateCompanyBusinessNetwork() {
           x: 1100, y: 620,
           devices: [
             { id: "fin_pc1",        label: "Finance-PC1",       type: "access_point" },
-            { id: "fin_printer",    label: "Finance-Printer",    type: "server" },
+            { id: "fin_printer",    label: "Finance-Printer",    type: "end_device" },
             { id: "fin_ap",         label: "Finance-AP",         type: "wireless_ap" },
             { id: "fin_laptop",     label: "Finance-Laptop",     type: "access_point" },
             { id: "fin_tablet",     label: "Finance-Tablet",     type: "access_point" },
@@ -109,7 +109,7 @@ function generateCompanyBusinessNetwork() {
           x: 1500, y: 620,
           devices: [
             { id: "adm_pc1",     label: "Admin-PC1",     type: "access_point" },
-            { id: "adm_printer", label: "Admin-Printer",  type: "server" },
+            { id: "adm_printer", label: "Admin-Printer",  type: "end_device" },
             { id: "adm_ap",      label: "Admin-AP",       type: "wireless_ap" },
             { id: "adm_laptop",  label: "Admin-Laptop",   type: "access_point" },
             { id: "adm_tablet",  label: "Admin-Tablet",   type: "access_point" },
@@ -125,7 +125,7 @@ function generateCompanyBusinessNetwork() {
           x: 1900, y: 620,
           devices: [
             { id: "ict_pc1",    label: "ICT-PC1",    type: "access_point" },
-            { id: "ict_printer",label: "ICT-Printer", type: "server" },
+            { id: "ict_printer",label: "ICT-Printer", type: "end_device" },
             { id: "ict_ap",     label: "ICT-AP",      type: "wireless_ap" },
             { id: "ict_laptop", label: "ICT-Laptop",  type: "access_point" },
             { id: "ict_tablet", label: "ICT-Tablet",  type: "access_point" },

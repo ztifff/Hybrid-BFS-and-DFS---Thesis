@@ -80,7 +80,7 @@ export const companyBusinessNetworkGraph: ScenarioGraph = {
     {
       "id": "sales_printer",
       "label": "Sales-Printer",
-      "type": "server",
+      "type": "end_device",
       "x": 410,
       "y": 740,
       "level": 3
@@ -128,7 +128,7 @@ export const companyBusinessNetworkGraph: ScenarioGraph = {
     {
       "id": "hr_printer",
       "label": "HR-Printer",
-      "type": "server",
+      "type": "end_device",
       "x": 810,
       "y": 740,
       "level": 3
@@ -176,7 +176,7 @@ export const companyBusinessNetworkGraph: ScenarioGraph = {
     {
       "id": "fin_printer",
       "label": "Finance-Printer",
-      "type": "server",
+      "type": "end_device",
       "x": 1210,
       "y": 740,
       "level": 3
@@ -224,7 +224,7 @@ export const companyBusinessNetworkGraph: ScenarioGraph = {
     {
       "id": "adm_printer",
       "label": "Admin-Printer",
-      "type": "server",
+      "type": "end_device",
       "x": 1610,
       "y": 740,
       "level": 3
@@ -272,7 +272,7 @@ export const companyBusinessNetworkGraph: ScenarioGraph = {
     {
       "id": "ict_printer",
       "label": "ICT-Printer",
-      "type": "server",
+      "type": "end_device",
       "x": 2010,
       "y": 740,
       "level": 3
