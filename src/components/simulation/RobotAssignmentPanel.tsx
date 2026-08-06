@@ -45,6 +45,10 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
     setAssignments(assignments.map(a => {
       if (a.robotId !== robotId) return a;
       const hasIt = a.destinations.includes(shelfId);
+      
+      // Prevent removing the last destination to lock it at minimum 1
+      if (hasIt && a.destinations.length <= 1) return a;
+
       const newDests = hasIt ? a.destinations.filter(d => d !== shelfId) : [...a.destinations, shelfId];
       const newPriority = (hasIt && a.priorityDest === shelfId) ? undefined : a.priorityDest;
       // Initialize box count to 6 when selecting a new destination
