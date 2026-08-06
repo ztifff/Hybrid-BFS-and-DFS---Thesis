@@ -44,6 +44,22 @@ const MAX_SYNTHETIC_NODES: Record<ScenarioType, number> = {
   gameai: 220,
 };
 
+function getNextGameAINodes(currentNodes: number, direction: 'up' | 'down', board: GameAIBoard = 'dama'): number {
+  if (board === 'dama') {
+    const D = Math.round(Math.sqrt(currentNodes - 1));
+    const nextD = direction === 'up' ? Math.min(D + 1, 12) : Math.max(D - 1, 4);
+    return (nextD * nextD) + 1;
+  } else {
+    let D = 4;
+    while (Math.ceil((D * D) / 2) + 2 <= currentNodes && D <= 12) {
+      D++;
+    }
+    D--; 
+    const nextD = direction === 'up' ? Math.min(D + 1, 12) : Math.max(D - 1, 4);
+    return Math.ceil((nextD * nextD) / 2) + 2;
+  }
+}
+
 export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const sc = getScenario(scenario);
 
@@ -701,7 +717,13 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         <button
                           type="button"
                           disabled={sim.isComputing || sim.isGraphLoading || sim.syntheticSizing.nodes >= MAX_SYNTHETIC_NODES[scenario]}
-                          onClick={() => sim.updateSyntheticSizing('nodes', sim.syntheticSizing.nodes + 1)}
+                          onClick={() => {
+                            if (scenario === 'gameai' && sim.gameBoard) {
+                              sim.updateSyntheticSizing('nodes', getNextGameAINodes(sim.syntheticSizing.nodes, 'up', sim.gameBoard));
+                            } else {
+                              sim.updateSyntheticSizing('nodes', sim.syntheticSizing.nodes + 1);
+                            }
+                          }}
                           className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center"
                         >
                           <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
@@ -709,7 +731,13 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         <button
                           type="button"
                           disabled={sim.isComputing || sim.isGraphLoading || sim.syntheticSizing.nodes <= MIN_SYNTHETIC_NODES[scenario]}
-                          onClick={() => sim.updateSyntheticSizing('nodes', sim.syntheticSizing.nodes - 1)}
+                          onClick={() => {
+                            if (scenario === 'gameai' && sim.gameBoard) {
+                              sim.updateSyntheticSizing('nodes', getNextGameAINodes(sim.syntheticSizing.nodes, 'down', sim.gameBoard));
+                            } else {
+                              sim.updateSyntheticSizing('nodes', sim.syntheticSizing.nodes - 1);
+                            }
+                          }}
                           className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 border-t border-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center"
                         >
                           <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>

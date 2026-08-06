@@ -127,7 +127,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
               mapId: model.mapId,
               seed: model.seed,
               graphSize: model.graphSize,
-              ...(model.mapId === 'synthetic' ? { sizing: model.syntheticSizing } : {}),
+              ...((model.mapId === 'synthetic' || scenario === 'gameai') ? { sizing: model.syntheticSizing } : {}),
               ...(scenario === 'gameai' ? { gameBoard: model.gameBoard } : {}),
               ...(model.networkRoutingMode === 'device-to-device' ? {
                 customSourceId: model.sourceDevice,

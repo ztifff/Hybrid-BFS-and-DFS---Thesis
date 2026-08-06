@@ -360,7 +360,7 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose }) => {
                   </Section>
                 ) : (
                   <Section title="Dynamic Board Scaling (Game AI)">
-                    <Item label="Grid Snapping" icon="📐">Because a game board must remain a perfect grid (e.g. 7x7 = 49 squares, or 8x8 = 64 squares), increasing the Nodes slider by even a single value might cause the board to jump to the next valid grid dimension. The total generated nodes shown below the slider will exactly equal the squares on the board plus 1 (for the spawning Strategy AI node).</Item>
+                    <Item label="Auto-Snapping Grids" icon="📐">Because a game board must remain a perfect grid (e.g. 8x8 = 64 squares, or 9x9 = 81 squares), clicking the up or down arrows on the Nodes adjuster will automatically snap to the next mathematically valid board size. The total nodes will equal the playable squares on the board plus 1 or 2 extra nodes for the spawning Strategy AI and portals.</Item>
                     <Item label="Fixed Links" icon="🔗">Game boards strictly adhere to the movement rules of the game (e.g. orthogonal slides in Dama, or diagonal jumps in Checkers). Therefore, the Links slider input is ignored for Game AI scenarios, and the graph will always generate exactly the mathematically valid number of links for that board size.</Item>
                   </Section>
                 )}
