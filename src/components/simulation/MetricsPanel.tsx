@@ -131,9 +131,16 @@ export const MetricsPanel: React.FC<Props> = ({
       </div>
 
       {status === 'done' && multiResults && (
-        <div className="text-center text-xs text-green-400 bg-green-900/20 border border-green-500/30 p-2 rounded-lg shadow-glow-green">
-          ✅ Simulation Complete. See Final Report below.
-        </div>
+        multiResults.hybrid.metrics.failureReason ? (
+          <div className="text-center text-xs text-red-400 bg-red-900/20 border border-red-500/30 p-2 rounded-lg shadow-glow-red leading-snug">
+            <div className="font-bold mb-1 uppercase tracking-wider text-[10px]">❌ Target Unreachable</div>
+            <div>{multiResults.hybrid.metrics.failureReason}</div>
+          </div>
+        ) : (
+          <div className="text-center text-xs text-green-400 bg-green-900/20 border border-green-500/30 p-2 rounded-lg shadow-glow-green">
+            ✅ Simulation Complete. See Final Report below.
+          </div>
+        )
       )}
     </div>
   );

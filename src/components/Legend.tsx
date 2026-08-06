@@ -40,11 +40,10 @@ const SCENARIO_NODE_ITEMS: Record<ScenarioType, LegendItem[]> = {
     { color: '#450a0a', label: 'Road Closure',          icon: '🚫' },
   ],
   evacuation: [
-    { color: '#991b1b', label: 'Evacuation Zone (Source)', icon: '🧑' },
+    { color: '#0e7490', label: 'Real-World Place (Source)', icon: '🏬' },
     { color: '#b91c1c', label: 'Emergency Exit (Target)',   icon: '🚪' },
     { color: '#dc2626', label: 'Corridor',                  icon: '🚶' },
     { color: '#ef4444', label: 'Stairwell',                 icon: '🪜' },
-    { color: '#0e7490', label: 'Real-World Place',          icon: '🏬' },
     { color: '#7f1d1d', label: 'Route Blocked',              icon: '⛔' },
   ],
   gameai: [

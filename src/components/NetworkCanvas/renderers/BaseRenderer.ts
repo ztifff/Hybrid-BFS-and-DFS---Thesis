@@ -310,7 +310,7 @@ export abstract class BaseRenderer {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      let displayLabel = node.label ? node.label.split('\n')[0].trim() : '';
+      let displayLabel = node.label ? node.label.replace('\n', ' - ').trim() : '';
       if (zoom < 0.5) {
         if (displayLabel.startsWith('Finish Line ')) displayLabel = displayLabel.replace('Finish Line ', 'FL-');
         if (displayLabel.startsWith('Rack-')) displayLabel = displayLabel.replace('Rack-', 'R-');

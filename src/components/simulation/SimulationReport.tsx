@@ -39,7 +39,8 @@ export const SimulationReport: React.FC<Props> = ({
           optimality: getPathOptimality(actualDistance, optimalDistance),
           completion: cRate, 
           adaptability: getAdaptabilityScore('done', res.metrics, algo, dynamicEvents),
-          success: res.metrics.exitFound
+          success: res.metrics.exitFound,
+          reason: res.metrics.failureReason
       };
   };
 
@@ -119,6 +120,12 @@ export const SimulationReport: React.FC<Props> = ({
               </tbody>
           </table>
       </div>
+
+      {(!bfs.success || !dfs.success || !hyb.success) && (
+        <div className="mt-3 p-2 bg-red-900/20 border border-red-500/30 rounded text-xs text-red-300 leading-snug">
+           <span className="font-bold uppercase tracking-wider text-[10px]">Failure Reason:</span> {bfs.reason || dfs.reason || hyb.reason || 'Target unreachable'}
+        </div>
+      )}
 
       <button 
         onClick={onSaveResult}

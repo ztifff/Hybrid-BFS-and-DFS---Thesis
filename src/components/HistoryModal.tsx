@@ -205,7 +205,8 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
         optimality: extractPrimitive(getPathOptimality(actualDistance, entry.optimalPathLength || 0)),
         completion: cRate,
         adaptability: extractPrimitive(getAdaptabilityScore('done', metrics, algo, res.dynamicEvents || [])),
-        success: metrics.exitFound || false
+        success: metrics.exitFound || false,
+        reason: metrics.failureReason
       };
     };
 
@@ -655,6 +656,11 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
                 </tr>
               </tbody>
             </table>
+            {(bfs !== null && !bfs.success || dfs !== null && !dfs.success || hyb !== null && !hyb.success) && (
+              <div className="mt-3 p-2 bg-red-900/20 border border-red-500/30 rounded text-xs text-red-300 leading-snug">
+                <span className="font-bold uppercase tracking-wider text-[10px]">Failure Reason:</span> {bfs?.reason || dfs?.reason || hyb?.reason || 'Target unreachable'}
+              </div>
+            )}
           </div>
           </div>
           <div className="xl:col-span-3 h-[340px] xl:h-[340px] w-full bg-[#0a0f1e] rounded-xl border border-gray-800 overflow-hidden shadow-inner relative flex flex-col">

@@ -129,6 +129,7 @@ export interface PerformanceMetrics {
   exitFound: boolean;
   exitIndex: number | null;
   completionRate: number; // ✅ ADDED: Formal metric tracking
+  failureReason?: string; // ✅ ADDED: Specific failure reason
 }
 
 // ── Dynamic Event ──────────────────────────────────────────────────────────

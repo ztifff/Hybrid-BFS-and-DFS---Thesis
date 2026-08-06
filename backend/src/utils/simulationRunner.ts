@@ -479,6 +479,26 @@ export async function runSimulation(
     completionRate = result.foundDestination !== null ? 100 : Math.min(100, (result.nodesExplored / totalGraphNodes) * 100);
   }
 
+  let failureReason: string | undefined = undefined;
+  if (result.foundDestination === null) {
+    const isCampus = mapId === 'campus';
+    const isACL = isCampus && customSourceId && (
+      customSourceId.includes('boys') || 
+      customSourceId.includes('girls') || 
+      customSourceId.includes('it_') || 
+      customSourceId.includes('lib_') || 
+      customSourceId.includes('dome_')
+    );
+    
+    if (scenario === 'network' && isACL) {
+      failureReason = 'Target unreachable due to subnet ACL restrictions.';
+    } else if (dynamicEvents.some(e => e.blocked)) {
+      failureReason = 'No valid route exists after dynamic events (Path Severed).';
+    } else {
+      failureReason = 'All possible paths are blocked or destination is isolated.';
+    }
+  }
+
   const metrics: PerformanceMetrics = {
     nodesExplored: result.nodesExplored,
     timeElapsed,
@@ -487,7 +507,8 @@ export async function runSimulation(
     memoryUsed,
     exitFound: result.foundDestination !== null,
     exitIndex,
-    completionRate, 
+    completionRate,
+    failureReason, 
   };
 
   const totalStepsLength = result.steps.length;

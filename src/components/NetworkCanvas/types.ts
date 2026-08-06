@@ -24,6 +24,7 @@ export const NODE_CONFIG: Record<string, { icon: string; radius: number; baseCol
   floor_router:    { icon: '🎛️',  radius: 17, baseColor: '#1d4ed8' },
   switch:          { icon: '🔌',  radius: 17, baseColor: '#2563eb' },
   access_point:    { icon: '💻',  radius: 14, baseColor: '#0ea5e9' }, 
+  end_device:      { icon: '💻',  radius: 14, baseColor: '#0ea5e9' }, 
   server:          { icon: '🗄️',  radius: 16, baseColor: '#475569' }, 
   wireless_ap:     { icon: '📡',  radius: 15, baseColor: '#10b981' },
   failed:          { icon: '💥',  radius: 17, baseColor: '#450a0a' },
