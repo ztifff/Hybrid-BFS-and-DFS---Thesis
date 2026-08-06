@@ -76,7 +76,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [view, setView] = useState<'list' | 'detail'>('list');
   const [activeEntry, setActiveEntry] = useState<HistoryEntry | null>(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [isPurgeModalOpen, setIsPurgeModalOpen] = useState(false);
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
   const [robotAlgo, setRobotAlgo] = useState<'bfs'|'dfs'|'hybrid'>('bfs');
   const importInputRef = React.useRef<HTMLInputElement>(null);
@@ -143,7 +143,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
       setView('list'); 
       setActiveEntry(null); 
       setSelectedIds(new Set()); 
-      setDeleteConfirmId(null);
+      setIsPurgeModalOpen(false);
       setHighlightedNodeId(null);
     }
   }, [isOpen]);
@@ -167,16 +167,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
     if (selectedIds.size === 0) return;
     onDeleteHistory(Array.from(selectedIds));
     setSelectedIds(new Set());
-  };
-
-  const handleSingleDelete = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    onDeleteHistory([id]);
-    if (activeEntry?.id === id) {
-      setView('list');
-      setActiveEntry(null);
-    }
-    setDeleteConfirmId(null);
+    setIsPurgeModalOpen(false);
   };
 
   const handleOpenDetail = (entry: HistoryEntry) => {
@@ -954,6 +945,19 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
                   📥 Import
                 </button>
                 <button
+                  onClick={() => {
+                    if (selectedIds.size === filteredHistory.length) {
+                      setSelectedIds(new Set());
+                    } else {
+                      setSelectedIds(new Set(filteredHistory.map(h => h.id)));
+                    }
+                  }}
+                  disabled={filteredHistory.length === 0}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {selectedIds.size === filteredHistory.length ? 'Deselect All' : 'Select All'}
+                </button>
+                <button
                   onClick={handleExport}
                   disabled={filteredHistory.length === 0}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-900/30 hover:bg-emerald-800/50 text-emerald-300 hover:text-emerald-200 border border-emerald-700/30 hover:border-emerald-600/50 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
@@ -975,7 +979,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
               Flagged <strong className="font-mono bg-red-950 px-1.5 py-0.5 border border-red-800/40 rounded">{selectedIds.size}</strong> records for truncation.
             </div>
             <button 
-              onClick={handleBulkDelete}
+              onClick={() => setIsPurgeModalOpen(true)}
               className="px-3 py-1 bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/30 rounded-lg text-xs font-bold transition-all cursor-pointer"
             >
               Purge Target Records
@@ -1037,30 +1041,17 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
                         </div>
 
                         {/* Inline Delete Button Wrapper */}
-                        {deleteConfirmId === entry.id ? (
-                          <div className="flex items-center gap-1.5">
-                            <button 
-                              onClick={(e) => handleSingleDelete(entry.id, e)} 
-                              className="px-2 py-0.5 bg-red-600 text-white rounded text-[10px] font-bold tracking-wide"
-                            >
-                              Confirm
-                            </button>
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(null); }} 
-                              className="px-2 py-0.5 bg-gray-800 text-gray-400 rounded text-[10px]"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        ) : (
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(entry.id); }}
-                            className="text-gray-500 hover:text-red-400 opacity-60 group-hover:opacity-100 p-1 text-xs rounded transition-all"
-                            title="Delete this record"
-                          >
-                            🗑️
-                          </button>
-                        )}
+                        <button 
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            setSelectedIds(new Set([entry.id]));
+                            setIsPurgeModalOpen(true); 
+                          }}
+                          className="text-gray-500 hover:text-red-400 opacity-60 group-hover:opacity-100 p-1 text-xs rounded transition-all"
+                          title="Delete this record"
+                        >
+                          🗑️
+                        </button>
                       </div>
                     </div>
                   );
@@ -1084,7 +1075,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
           <div className="flex gap-2">
             {view === 'detail' && (
               <button
-                onClick={() => { setView('list'); setDeleteConfirmId(null); }}
+                onClick={() => { setView('list'); }}
                 className="px-4 py-2 bg-gray-900 border border-gray-800 hover:border-gray-700 rounded-xl text-xs font-bold text-white transition-all cursor-pointer"
               >
                 ← Return to Index
@@ -1093,6 +1084,34 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
           </div>
         </footer>
       </div>
+
+      {/* Purge Confirmation Modal */}
+      {isPurgeModalOpen && (
+        <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-gray-900 border border-red-500/30 rounded-xl p-6 max-w-sm w-full shadow-2xl scale-in">
+            <h3 className="text-red-400 font-bold text-lg mb-2 flex items-center gap-2">
+              <span className="text-xl">⚠️</span> Confirm Purge
+            </h3>
+            <p className="text-gray-300 text-sm mb-6 leading-relaxed">
+              Are you sure you want to permanently delete <strong className="text-red-400 font-bold">{selectedIds.size}</strong> flagged record(s)? This action cannot be undone and the telemetry data will be lost.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => setIsPurgeModalOpen(false)}
+                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleBulkDelete}
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-bold transition-colors shadow-lg shadow-red-900/20"
+              >
+                Purge Records
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

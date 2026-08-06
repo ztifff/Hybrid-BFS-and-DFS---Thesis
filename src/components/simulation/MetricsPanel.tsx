@@ -46,10 +46,6 @@ export const MetricsPanel: React.FC<Props> = ({
         ? getPathOptimality(actualDistance, optimalPathLength)
         : { ratio: 0, label: 'N/A', color: '#64748b' };
       
-      const adaptability = isStart 
-        ? { score: 0, label: '-', color: '#64748b' } 
-        : getAdaptabilityScore(status, resultData?.metrics || null, algoId, multiResults?.hybrid.dynamicEvents);
-      
       const hasDeliveredCounts = stepData?.deliveredBoxCounts !== undefined;
       let completion = { percentage: 0, label: '0.0%' };
       if (!isStart) {
@@ -63,6 +59,11 @@ export const MetricsPanel: React.FC<Props> = ({
           completion = getCompletionRate(exploredCount, totalNodes);
         }
       }
+
+      const adaptability = isStart 
+        ? { score: 0, label: '-', color: '#64748b' } 
+        : getAdaptabilityScore(status, resultData?.metrics || null, algoId, multiResults?.hybrid.dynamicEvents, stepIndex, completion.percentage);
+
 
       const displayMemory = isStart 
         ? '0.0 KB' 

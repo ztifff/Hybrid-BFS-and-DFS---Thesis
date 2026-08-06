@@ -4,33 +4,52 @@ export function getAdaptabilityScore(
   status: 'idle' | 'running' | 'done' | 'paused',
   metrics: PerformanceMetrics | null,
   algorithm: AlgorithmType,
-  dynamicEvents?: DynamicEvent[]
+  dynamicEvents?: DynamicEvent[],
+  stepIndex?: number,
+  completionRate?: number
 ): { score: number; label: string; color: string } {
-  if (status !== 'done' || !metrics) return { score: 0, label: '-', color: '#64748b' };
-  const eventCount = dynamicEvents?.length ?? 0;
-  let score = metrics.exitFound ? 50 : 0;
+  if (!metrics || status === 'idle') return { score: 0, label: '-', color: '#64748b' };
+  
+  const currentEvents = (status === 'running' || status === 'paused') && stepIndex !== undefined
+    ? dynamicEvents?.filter(e => e.stepIndex <= stepIndex)
+    : dynamicEvents;
+
+  const eventCount = currentEvents?.length ?? 0;
+  
+  // Use final exit metric, but we will scale its reward by the current completion rate
+  const hasExit = metrics.exitFound;
+  
+  // Default to 100% if done or not provided, otherwise use the live completion rate
+  const currentCompletion = (status === 'done' || completionRate === undefined) ? (hasExit ? 100 : 0) : completionRate;
+  const completionRatio = currentCompletion / 100;
+
+  // Base score scales from 0 to 50 based on completion percentage
+  let score = hasExit ? (50 * completionRatio) : 0;
 
   if (eventCount > 0) {
-    // Scale bonus based on number of events handled
+    // Scale bonus based on number of events handled (Max 40 points)
     const eventBonus = Math.min(40, eventCount * 10);
-    score += metrics.exitFound ? eventBonus : Math.floor(eventBonus / 3);
+    // If it ultimately finds the exit, reward the event handling.
+    // If it's still running, it gets partial event credit immediately to show real-time adaptation
+    score += hasExit ? eventBonus : Math.floor(eventBonus / 3);
 
     // Algorithm-specific bonuses for handling dynamic events
-    if (algorithm === 'hybrid' && metrics.exitFound) score += 10;
-    else if (algorithm === 'bfs' && metrics.exitFound) score += 5;
+    if (algorithm === 'hybrid' && hasExit) score += 2;
+    else if (algorithm === 'bfs' && hasExit) score += 1;
   } else {
     // No events: award based on successful completion
-    score += metrics.exitFound ? 35 : 0;
+    score += hasExit ? (35 * completionRatio) : 0;
   }
 
   // Path efficiency bonus (only if path was found and is reasonable)
-  if (metrics.exitFound && metrics.pathLength > 0) {
+  if (hasExit && metrics.pathLength > 0 && status === 'done') {
     // Bonus based on path efficiency: shorter paths get higher bonus (max 10 points)
-    const pathBonus = Math.max(0, Math.floor((50 - metrics.pathLength) / 5));
+    // Only applied at the end when the path is fully realized
+    const pathBonus = Math.max(0, Math.ceil((50 - metrics.pathLength) / 5));
     score += Math.min(10, pathBonus);
   }
 
-  score = Math.min(100, Math.max(0, score));
+  score = Math.min(100, Math.max(0, Math.floor(score)));
 
   if (score >= 80) return { score, label: 'Great', color: '#22c55e' };
   if (score >= 60) return { score, label: 'Good', color: '#84cc16' };

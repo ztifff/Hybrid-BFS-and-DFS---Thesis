@@ -29,11 +29,19 @@ const GAME_AI_BOARDS: { id: GameAIBoard; label: string; icon: string }[] = [
 ];
 
 const MIN_SYNTHETIC_NODES: Record<ScenarioType, number> = {
-  network: 7,
-  robotics: 10,
-  traffic: 9,
-  evacuation: 10,
-  gameai: 18,
+  network: 7, //4 links
+  robotics: 13, //18 links
+  traffic: 9, //4 links
+  evacuation: 28, //27 links
+  gameai: 17, //24 links
+};
+
+const MIN_SYNTHETIC_LINKS: Record<ScenarioType, number> = {
+  network: 4,
+  robotics: 18,
+  traffic: 4,
+  evacuation: 27,
+  gameai: 24,
 };
 
 const MAX_SYNTHETIC_NODES: Record<ScenarioType, number> = {
@@ -87,6 +95,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const [dstDropdownOpen, setDstDropdownOpen] = useState(false);
   const [localNodesInput, setLocalNodesInput] = useState<string>(sim.syntheticSizing.nodes.toString());
   const [localEdgesInput, setLocalEdgesInput] = useState<string>(sim.syntheticSizing.edges.toString());
+  const [pendingNavigation, setPendingNavigation] = useState<{type: 'back'} | {type: 'map', mapId: string} | {type: 'gameboard', boardId: GameAIBoard} | null>(null);
 
   useEffect(() => {
     const actualNodes = sim.currentGraph?.nodes.length ?? sim.syntheticSizing.nodes;
@@ -99,6 +108,35 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
       : sim.syntheticSizing.edges;
     setLocalEdgesInput(actualEdges.toString());
   }, [sim.syntheticSizing.edges, sim.currentGraph?.edges.length]);
+
+  const handleBack = () => {
+    if (sim.status === 'done' && !sim.isCurrentSaved) {
+      setPendingNavigation({ type: 'back' });
+    } else {
+      onBack();
+    }
+  };
+
+  const handleMapChange = (mapId: string) => {
+    if (sim.mapId === mapId) return;
+    if (sim.status === 'done' && !sim.isCurrentSaved) {
+      setPendingNavigation({ type: 'map', mapId });
+    } else {
+      sim.setMapId(mapId);
+      const mapDef = MAP_REGISTRY[scenario]?.find(m => m.id === mapId);
+      if (mapDef?.isRealWorld) sim.setGraphSize('medium');
+    }
+  };
+
+  const handleBoardChange = (boardId: GameAIBoard) => {
+    if (sim.gameBoard === boardId) return;
+    if (sim.status === 'done' && !sim.isCurrentSaved) {
+      setPendingNavigation({ type: 'gameboard', boardId });
+    } else {
+      sim.setGameBoard(boardId);
+      sim.setMapId('synthetic');
+    }
+  };
 
   // Evacuation: is this a real-world map that supports custom start point selection?
   const isEvacuationRealWorld = scenario === 'evacuation' && (sim.mapId === 'city' || sim.mapId === 'building');
@@ -135,13 +173,51 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
   return (
     <>
+      {pendingNavigation && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn p-4">
+          <div className="bg-gray-900 border border-amber-500/30 rounded-xl p-6 max-w-sm w-full shadow-2xl scale-in">
+            <h3 className="text-amber-400 font-bold text-lg mb-2 flex items-center gap-2">
+              <span className="text-xl">⚠️</span> Unsaved Results
+            </h3>
+            <p className="text-gray-300 text-sm mb-6 leading-relaxed">
+              You have an unsaved simulation result. Are you sure you want to discard it and leave?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => setPendingNavigation(null)}
+                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => {
+                  if (pendingNavigation.type === 'back') {
+                    onBack();
+                  } else if (pendingNavigation.type === 'map') {
+                    sim.setMapId(pendingNavigation.mapId);
+                    const mapDef = MAP_REGISTRY[scenario]?.find(m => m.id === pendingNavigation.mapId);
+                    if (mapDef?.isRealWorld) sim.setGraphSize('medium');
+                  } else if (pendingNavigation.type === 'gameboard') {
+                    sim.setGameBoard(pendingNavigation.boardId);
+                    sim.setMapId('synthetic');
+                  }
+                  setPendingNavigation(null);
+                }}
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-bold transition-colors shadow-lg shadow-amber-900/20"
+              >
+                Discard & Leave
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="min-h-screen lg:h-screen w-full max-w-[100vw] bg-transparent text-white flex flex-col relative z-0 lg:overflow-hidden fade-in">
         {/* Help Modal */}
         {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} scenario={scenario} />}
         <header className="glass-panel border-b-0 border-white/5 px-3 md:px-6 py-2.5 md:py-3 flex items-center justify-between shrink-0 relative z-10 gap-2 w-full max-w-full">
           <div className="flex items-center gap-2 sm:gap-4 relative z-10 shrink-0">
             <button
-              onClick={onBack}
+              onClick={handleBack}
               className="px-3 py-2 text-gray-400 hover:text-white flex items-center gap-2 transition-all hover:bg-white/5 rounded-lg text-sm font-bold whitespace-nowrap active:scale-95"
             >
               <span className="opacity-70 text-lg">←</span> <span className="hidden sm:inline tracking-wider">Back</span>
@@ -251,8 +327,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                       <button
                         key={id}
                         onClick={() => {
-                          sim.setGameBoard(id);
-                          sim.setMapId('synthetic');
+                          handleBoardChange(id);
                         }}
                         disabled={sim.isComputing || sim.isGraphLoading}
                         className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
@@ -275,8 +350,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     <button
                       key={mapDef.id}
                       onClick={() => {
-                        sim.setMapId(mapDef.id);
-                        if (mapDef.isRealWorld) sim.setGraphSize('medium');
+                        handleMapChange(mapDef.id);
                       }}
                       disabled={sim.isComputing || sim.isGraphLoading}
                       className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
@@ -293,7 +367,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               )}
 
               {scenario === 'network' && (
-                <div className="flex flex-col md:flex-row items-center gap-2 justify-center w-full mt-1 bg-gray-900/60 p-2 rounded-xl border border-gray-700/50">
+                <div className="flex flex-col md:flex-row flex-wrap items-center gap-2 justify-center w-full mt-1 bg-gray-900/60 p-2 rounded-xl border border-gray-700/50">
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Mode:</span>
                     <select
@@ -772,16 +846,16 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     <div className="flex items-stretch bg-black/60 border-l border-white/10 h-full ml-1">
                       <input
                         type="number"
-                        min={4}
+                        min={MIN_SYNTHETIC_LINKS[scenario]}
                         max={1600}
                         value={localEdgesInput}
                         onChange={(event) => setLocalEdgesInput(event.target.value)}
                         onBlur={() => {
-                          if (localEdgesInput !== '') sim.updateSyntheticSizing('edges', Number(localEdgesInput));
+                          if (localEdgesInput !== '') sim.updateSyntheticSizing('edges', Math.max(MIN_SYNTHETIC_LINKS[scenario], Number(localEdgesInput)));
                         }}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && localEdgesInput !== '') {
-                            sim.updateSyntheticSizing('edges', Number(localEdgesInput));
+                            sim.updateSyntheticSizing('edges', Math.max(MIN_SYNTHETIC_LINKS[scenario], Number(localEdgesInput)));
                             (e.target as HTMLInputElement).blur();
                           }
                         }}
@@ -799,7 +873,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         </button>
                         <button
                           type="button"
-                          disabled={sim.isComputing || sim.isGraphLoading || generatedEdgeCount <= 4}
+                          disabled={sim.isComputing || sim.isGraphLoading || generatedEdgeCount <= MIN_SYNTHETIC_LINKS[scenario]}
                           onClick={() => sim.updateSyntheticSizing('edges', generatedEdgeCount - 1)}
                           className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 border-t border-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center"
                         >

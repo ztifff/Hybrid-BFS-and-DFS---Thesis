@@ -354,13 +354,22 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose }) => {
                 )}
                 {scenario !== 'gameai' ? (
                   <Section title="Dynamic Size Adjuster (Synthetic Maps only)">
-                    <Item label="Nodes" icon="🔢">Controls how many nodes are generated in the synthetic graph. On Synthetic Robotics maps, increasing nodes automatically expands the layout horizontally with up to 18 finish line exit destinations.</Item>
+                    <Item label="Nodes" icon="🔢">
+                      Controls how many nodes are generated in the synthetic graph. The strict mathematical bounds for this scenario to ensure valid layouts are:
+                      <ul className="list-disc list-inside mt-2 mb-2 ml-4 text-gray-400">
+                        {scenario === 'network' && <li><strong>Network Routing:</strong> 7 to 220 nodes</li>}
+                        {scenario === 'robotics' && <li><strong>Robotics / Warehouse:</strong> 13 to 217 nodes</li>}
+                        {scenario === 'traffic' && <li><strong>Road Traffic:</strong> 9 to 220 nodes</li>}
+                        {scenario === 'evacuation' && <li><strong>Emergency Evacuation:</strong> 28 to 144 nodes</li>}
+                      </ul>
+                      {scenario === 'robotics' && 'On Synthetic Robotics maps, increasing nodes automatically expands the layout horizontally with up to 18 finish line exit destinations.'}
+                    </Item>
                     <Item label="Links" icon="🔗">Controls edge connectivity. Link counts automatically scale with node density to ensure dense graphs remain 100% pathable and connected.</Item>
                     <Item label="Generated X nodes / Y links" icon="📋">Displays actual generated node and edge counts after structure generation.</Item>
                   </Section>
                 ) : (
                   <Section title="Dynamic Board Scaling (Game AI)">
-                    <Item label="Auto-Snapping Grids" icon="📐">Because a game board must remain a perfect grid (e.g. 8x8 = 64 squares, or 9x9 = 81 squares), clicking the up or down arrows on the Nodes adjuster will automatically snap to the next mathematically valid board size. The total nodes will equal the playable squares on the board plus 1 or 2 extra nodes for the spawning Strategy AI and portals.</Item>
+                    <Item label="Auto-Snapping Grids" icon="📐">Because a game board must remain a perfect grid (e.g. 8x8 = 64 squares, or 9x9 = 81 squares), clicking the up or down arrows on the Nodes adjuster will automatically snap to the next mathematically valid board size. The Game AI graph has a strict bound of <strong>17 to 145 nodes</strong>. The total nodes will equal the playable squares on the board plus 1 or 2 extra nodes for the spawning Strategy AI and portals.</Item>
                     <Item label="Fixed Links" icon="🔗">Game boards strictly adhere to the movement rules of the game (e.g. orthogonal slides in Dama, or diagonal jumps in Checkers). Therefore, the Links slider input is ignored for Game AI scenarios, and the graph will always generate exactly the mathematically valid number of links for that board size.</Item>
                   </Section>
                 )}
