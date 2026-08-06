@@ -41,7 +41,7 @@ const MAX_SYNTHETIC_NODES: Record<ScenarioType, number> = {
   robotics: 217,
   traffic: 220,
   evacuation: 144,
-  gameai: 220,
+  gameai: 145,
 };
 
 function getNextGameAINodes(currentNodes: number, direction: 'up' | 'down', board: GameAIBoard = 'dama'): number {
@@ -57,6 +57,22 @@ function getNextGameAINodes(currentNodes: number, direction: 'up' | 'down', boar
     D--; 
     const nextD = direction === 'up' ? Math.min(D + 1, 12) : Math.max(D - 1, 4);
     return Math.ceil((nextD * nextD) / 2) + 2;
+  }
+}
+
+function getNextRoboticsNodes(currentNodes: number, direction: 'up' | 'down'): number {
+  const sizes = [13, 16, 19, 25, 29, 33, 36, 41, 46, 55, 61, 67, 71, 78, 85, 97, 105, 113, 118, 127, 136, 151, 161, 171, 177, 188, 199, 217];
+  let currentIndex = sizes.findIndex(s => s >= currentNodes);
+  if (currentIndex === -1) currentIndex = sizes.length - 1;
+  
+  if (direction === 'up') {
+    return sizes[Math.min(currentIndex + 1, sizes.length - 1)];
+  } else {
+    // If the currentNodes is exactly a size, step down. If it's between sizes, stepping down goes to the previous valid size.
+    if (sizes[currentIndex] > currentNodes && currentIndex > 0) {
+      return sizes[currentIndex - 1];
+    }
+    return sizes[Math.max(currentIndex - 1, 0)];
   }
 }
 
@@ -720,6 +736,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                           onClick={() => {
                             if (scenario === 'gameai' && sim.gameBoard) {
                               sim.updateSyntheticSizing('nodes', getNextGameAINodes(sim.syntheticSizing.nodes, 'up', sim.gameBoard));
+                            } else if (scenario === 'robotics') {
+                              sim.updateSyntheticSizing('nodes', getNextRoboticsNodes(sim.syntheticSizing.nodes, 'up'));
                             } else {
                               sim.updateSyntheticSizing('nodes', sim.syntheticSizing.nodes + 1);
                             }
@@ -734,6 +752,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                           onClick={() => {
                             if (scenario === 'gameai' && sim.gameBoard) {
                               sim.updateSyntheticSizing('nodes', getNextGameAINodes(sim.syntheticSizing.nodes, 'down', sim.gameBoard));
+                            } else if (scenario === 'robotics') {
+                              sim.updateSyntheticSizing('nodes', getNextRoboticsNodes(sim.syntheticSizing.nodes, 'down'));
                             } else {
                               sim.updateSyntheticSizing('nodes', sim.syntheticSizing.nodes - 1);
                             }
@@ -771,16 +791,16 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                       <div className="flex flex-col border-l border-white/10 bg-black/40 w-5">
                         <button
                           type="button"
-                          disabled={sim.isComputing || sim.isGraphLoading || sim.syntheticSizing.edges >= 1600}
-                          onClick={() => sim.updateSyntheticSizing('edges', sim.syntheticSizing.edges + 1)}
+                          disabled={sim.isComputing || sim.isGraphLoading || generatedEdgeCount >= 1600}
+                          onClick={() => sim.updateSyntheticSizing('edges', generatedEdgeCount + 1)}
                           className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center"
                         >
                           <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
                         </button>
                         <button
                           type="button"
-                          disabled={sim.isComputing || sim.isGraphLoading || sim.syntheticSizing.edges <= 4}
-                          onClick={() => sim.updateSyntheticSizing('edges', sim.syntheticSizing.edges - 1)}
+                          disabled={sim.isComputing || sim.isGraphLoading || generatedEdgeCount <= 4}
+                          onClick={() => sim.updateSyntheticSizing('edges', generatedEdgeCount - 1)}
                           className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 border-t border-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center"
                         >
                           <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>

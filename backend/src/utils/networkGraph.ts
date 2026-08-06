@@ -148,7 +148,7 @@ export function buildNetworkGraph(
 
   return fitGraphEdgeCount(
     { nodes, edges, sourceId: 'dc_ingress', destinationIds, width: W, height: H },
-    sizing?.edges,
+    sizing?.edges ? sizing.edges * 2 : 0,
     seed,
     { edgeType: 'ethernet', labelUnit: 'ms', latencyBase: 2, latencySpread: 5, maxEdges: targetNodes * 12 }
   );

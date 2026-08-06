@@ -159,7 +159,7 @@ export function buildRoboticsGraph(
   const predefinedExitIds = destIds.length >= 2 ? destIds.slice(0, 2) : destIds;
 
   // The UI sends undirected link requested limits. Since we use bidirectional edges, multiply by 2.
-  const requestedLinks = sizing?.edges !== undefined ? Math.max(sizing.edges * 2, edges.length) : edges.length;
+  const requestedLinks = sizing?.edges ? sizing.edges * 2 : 0;
 
   return fitGraphEdgeCount(
     {

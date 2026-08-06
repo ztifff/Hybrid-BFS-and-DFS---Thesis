@@ -119,32 +119,40 @@ export function useSimulation(params: { scenario: ScenarioType }) {
         let mergedResults: any = null;
 
         while (keepFetching && isMounted) {
+          const requestBody = {
+            scenario: model.scenario,
+            mapId: model.mapId,
+            seed: model.seed,
+            graphSize: model.graphSize,
+            ...((model.mapId === 'synthetic' || model.scenario === 'gameai') ? { 
+              sizing: {
+                nodes: model.syntheticSizing.nodes,
+                ...(model.syntheticSizing.edges > 0 ? { edges: model.syntheticSizing.edges } : {})
+              }
+            } : {}),
+            ...(model.scenario === 'gameai' && model.gameBoard ? { gameBoard: model.gameBoard } : {}),
+            ...(model.networkRoutingMode === 'device-to-device' ? {
+              customSourceId: model.sourceDevice,
+              customDestinationIds: model.destinationDevices,
+              deliveryMode: model.deliveryMode
+            } : {}),
+            ...(scenario === 'robotics' ? {
+              customRobotAssignments: model.robotAssignments,
+              customSourceIds: model.sourceDevices,
+              customDestinationIds: model.destinationDevices,
+              deliveryMode: 'multicast'
+            } : {}),
+            ...(scenario === 'evacuation' && model.evacuationSourceId ? {
+              customSourceId: model.evacuationSourceId
+            } : {})
+          };
+
           const response = await fetch(`https://backend-1e4y.onrender.com/api/simulation/run?offset=${currentOffset}&limit=${limit}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              scenario,
-              mapId: model.mapId,
-              seed: model.seed,
-              graphSize: model.graphSize,
-              ...((model.mapId === 'synthetic' || scenario === 'gameai') ? { sizing: model.syntheticSizing } : {}),
-              ...(scenario === 'gameai' ? { gameBoard: model.gameBoard } : {}),
-              ...(model.networkRoutingMode === 'device-to-device' ? {
-                customSourceId: model.sourceDevice,
-                customDestinationIds: model.destinationDevices,
-                deliveryMode: model.deliveryMode
-              } : {}),
-              ...(scenario === 'robotics' ? {
-                customRobotAssignments: model.robotAssignments,
-                customSourceIds: model.sourceDevices,
-                customDestinationIds: model.destinationDevices,
-                deliveryMode: 'multicast'
-              } : {}),
-              ...(scenario === 'evacuation' && model.evacuationSourceId ? {
-                customSourceId: model.evacuationSourceId
-              } : {})
-            })
+            body: JSON.stringify(requestBody)
           });
+          console.log("[DEBUG] Fetch response status:", response.status);
 
           if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
           const json = await response.json();

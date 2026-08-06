@@ -12,11 +12,11 @@ export function parseGraphSizing(
   const nodes = Number(rawNodes);
   const edges = Number(rawEdges);
 
-  if (!Number.isFinite(nodes) && !Number.isFinite(edges)) return undefined;
+  if (!Number.isFinite(nodes)) return undefined;
 
   return {
-    nodes: Number.isFinite(nodes) ? clampInt(nodes, 6, 400) : 64,
-    edges: Number.isFinite(edges) ? clampInt(edges, 4, 1600) : 96,
+    nodes: clampInt(nodes, 6, 400),
+    edges: Number.isFinite(edges) ? clampInt(edges, 0, 1600) : 0,
   };
 }
 
@@ -102,7 +102,7 @@ export function fitGraphEdgeCount(
   seed: number,
   options: EdgeFitOptions
 ): ScenarioGraph {
-  if (!Number.isFinite(requestedEdges)) return graph;
+  if (!Number.isFinite(requestedEdges) || requestedEdges === 0) return graph;
 
   const maxPossibleEdges = graph.nodes.length * Math.max(graph.nodes.length - 1, 0);
   const maxEdges = Math.min(options.maxEdges ?? maxPossibleEdges, maxPossibleEdges);

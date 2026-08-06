@@ -8,13 +8,13 @@ export const getGraphData = (req: Request, res: Response) => {
   try {
     const scenario = req.query.scenario as ScenarioType;
     const mapId = (req.query.mapId as string) || 'synthetic';
-    const useRealWorld = mapId !== 'synthetic';
+    const useRealWorld = scenario !== 'gameai' && mapId !== 'synthetic';
     const mode = mapId;
     const gameBoard = req.query.gameBoard as GameAIBoard | undefined;
     const graphSize = (req.query.graphSize as GraphSize) || 'medium';
     const sizing = useRealWorld
       ? undefined
-      : parseGraphSizing(req.query.targetNodes, req.query.targetEdges);
+      : parseGraphSizing(req.query.targetNodes || req.query.nodes, req.query.targetEdges || req.query.edges);
     // 1. Extract the seed from the frontend request (fallback to Date.now() if missing)
     const seed = req.query.seed ? parseInt(req.query.seed as string, 10) : Date.now();
     const chessPiece = (req.query.chessPiece as string) || 'knight';

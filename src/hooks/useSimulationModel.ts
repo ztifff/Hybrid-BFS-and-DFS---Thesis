@@ -10,9 +10,9 @@ export type MultiResultsLocal = {
 };
 
 const DEFAULT_SYNTHETIC_SIZING: Record<ScenarioType, GraphSizing> = {
-  network: { nodes: 28, edges: 44 },
+  network: { nodes: 28, edges: 27 },
   robotics: { nodes: 56, edges: 63 },
-  traffic: { nodes: 36, edges: 65 },
+  traffic: { nodes: 36, edges: 29 },
   evacuation: { nodes: 60, edges: 49 },
   gameai: { nodes: 66, edges: 120 },
 };
@@ -83,9 +83,7 @@ export function useSimulationModel(scenario: ScenarioType) {
 
       if (field === 'nodes') {
         nextNodes = nextVal;
-        // Auto-adjust links when nodes increase so the target edge count keeps up with the expanded graph.
-        // Use a minimum increment so the links value updates instead of staying stalled at the previous edge target.
-        nextEdges = Math.max(current.edges + 1, Math.round(nextVal * 1.1));
+        nextEdges = 0; // 0 means 'auto' (the backend will return the natural edge count)
       } else {
         nextEdges = nextVal;
       }
@@ -271,9 +269,11 @@ export function useSimulationModel(scenario: ScenarioType) {
           seed: seed.toString()
         });
 
-        if (mapId === 'synthetic' && scenario !== 'gameai') {
+        if (mapId === 'synthetic' || scenario === 'gameai') {
           graphParams.set('targetNodes', String(syntheticSizing.nodes));
-          graphParams.set('targetEdges', String(syntheticSizing.edges));
+          if (syntheticSizing.edges > 0) {
+            graphParams.set('targetEdges', String(syntheticSizing.edges));
+          }
         }
 
         if (scenario === 'gameai') graphParams.set('gameBoard', gameBoard);
@@ -292,9 +292,11 @@ export function useSimulationModel(scenario: ScenarioType) {
           graphParams.set('customSourceId', evacuationSourceId);
         }
 
-        const response = await fetch(`https://backend-1e4y.onrender.com/api/network/graph?${graphParams}`);
+        const response = await fetch(`/api/network/graph?${graphParams}`);
+        console.log("[DEBUG] Fetching network graph... URL:", `https://backend-1e4y.onrender.com/api/network/graph?${graphParams}`);
         if (!response.ok) throw new Error(`Graph API Error: ${response.statusText}`);
         const json = await response.json();
+        console.log("[DEBUG] Fetch network graph response nodes:", json.data?.nodes?.length);
 
         if (isMounted) {
           setCurrentGraph(json.data);

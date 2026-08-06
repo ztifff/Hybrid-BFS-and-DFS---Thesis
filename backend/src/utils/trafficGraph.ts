@@ -173,7 +173,7 @@ export function buildTrafficGraph(
 
   return fitGraphEdgeCount(
     { nodes, edges, sourceId, destinationIds, width: W, height: H },
-    sizing?.edges,
+    sizing?.edges ? sizing.edges * 2 : 0,
     seed,
     { edgeType: 'road', labelUnit: 'm', latencyBase: 2, latencySpread: 5, maxEdges: targetNodes * 10 }
   );

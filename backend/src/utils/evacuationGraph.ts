@@ -279,7 +279,7 @@ export function buildEvacuationGraph(
 
   return fitGraphEdgeCount(
     graph,
-    sizing?.edges ? sizing.edges * 2 : undefined,
+    sizing?.edges ? sizing.edges * 2 : 0,
     seed,
     { edgeType: 'corridor', labelUnit: 's', latencyBase: 2, latencySpread: 5, maxEdges: targetNodes * 10 }
   );
