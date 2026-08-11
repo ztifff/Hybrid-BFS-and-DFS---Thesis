@@ -214,22 +214,22 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
       <div className="min-h-screen lg:h-screen w-full max-w-[100vw] bg-transparent text-white flex flex-col relative z-0 lg:overflow-hidden fade-in">
         {/* Help Modal */}
         {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} scenario={scenario} />}
-        <header className="glass-panel border-b-0 border-white/5 px-3 md:px-6 py-2.5 md:py-3 flex items-center justify-between shrink-0 relative z-10 gap-2 w-full max-w-full">
-          <div className="flex items-center gap-2 sm:gap-4 relative z-10 shrink-0">
+        <header className="glass-panel border-b-0 border-white/5 px-2 sm:px-3 md:px-6 py-2.5 md:py-3 flex items-center justify-between shrink-0 relative z-10 gap-1.5 sm:gap-2 w-full max-w-full overflow-hidden">
+          <div className="flex items-center gap-1.5 sm:gap-4 relative z-10 min-w-0 flex-1">
             <button
               onClick={handleBack}
-              className="px-3 py-2 text-gray-400 hover:text-white flex items-center gap-2 transition-all hover:bg-white/5 rounded-lg text-sm font-bold whitespace-nowrap active:scale-95"
+              className="px-2 sm:px-3 py-2 text-gray-400 hover:text-white flex items-center gap-1 sm:gap-2 transition-all hover:bg-white/5 rounded-lg text-sm font-bold whitespace-nowrap active:scale-95 shrink-0"
             >
               <span className="opacity-70 text-lg">←</span> <span className="hidden sm:inline tracking-wider">Back</span>
             </button>
-            <div className="h-6 w-px bg-white/10 hidden sm:block mx-1"></div>
-            <div className="flex items-center gap-3 bg-[#0a0f1e]/80 px-5 py-2.5 rounded-xl border border-white/10 shadow-inner">
-              <span className="text-2xl drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">{sc?.icon}</span>
-              <h1 className="font-bold text-base md:text-lg text-white tracking-widest drop-shadow-md whitespace-nowrap">{sc?.name}</h1>
+            <div className="h-6 w-px bg-white/10 hidden sm:block mx-0.5 shrink-0"></div>
+            <div className="flex items-center gap-1.5 sm:gap-3 bg-[#0a0f1e]/80 px-2.5 sm:px-5 py-2 sm:py-2.5 rounded-xl border border-white/10 shadow-inner min-w-0">
+              <span className="text-xl sm:text-2xl drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] shrink-0">{sc?.icon}</span>
+              <h1 className="font-bold text-xs sm:text-base md:text-lg text-white tracking-widest drop-shadow-md truncate">{sc?.name}</h1>
             </div>
 
             {/* Algorithm Legend / Indicator */}
-            <div className="hidden lg:flex items-center gap-4 ml-4 px-4 py-1.5 bg-black/40 rounded-full border border-white/5 text-[10px] font-bold tracking-widest uppercase">
+            <div className="hidden lg:flex items-center gap-4 ml-4 px-4 py-1.5 bg-black/40 rounded-full border border-white/5 text-[10px] font-bold tracking-widest uppercase shrink-0">
               <span className="text-green-400 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]">
                 <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]"></span> BFS
               </span>
@@ -244,13 +244,14 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             </div>
           </div>
           
-          <div className="flex items-center gap-3 shrink-0 relative z-10 ml-auto">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0 relative z-10 ml-auto">
             <button 
               onClick={() => sim.setIsHistoryModalOpen(true)}
-              className="w-8 h-8 md:w-auto md:h-auto md:px-4 md:py-1.5 rounded-full md:rounded-lg glass-panel text-gray-200 hover:text-white text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer hover:-translate-y-0.5 active:scale-[0.98] shadow-md hover:shadow-glow-blue hover:border-blue-500/50"
+              className="px-2.5 sm:px-4 py-1.5 rounded-lg glass-panel text-gray-200 hover:text-white text-sm font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer hover:-translate-y-0.5 active:scale-[0.98] shadow-md hover:shadow-glow-blue hover:border-blue-500/50"
             >
               <span className="hidden sm:inline">Result History</span>
-              <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full leading-none">
+              <span className="sm:hidden text-base">🗄️</span>
+              <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full leading-none min-w-[20px] text-center">
                 {scenarioHistoryCount}
               </span>
             </button>

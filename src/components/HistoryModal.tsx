@@ -914,18 +914,19 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
       <div className="glass-panel rounded-2xl w-full max-w-[1300px] h-[90vh] flex flex-col overflow-hidden shadow-glow-blue fade-in">
         
         {/* Header Section */}
-        <header className="p-5 border-b border-gray-800 bg-[#0a0f1e]/60 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <h2 className="text-lg font-bold text-white tracking-tight">
+        <header className="p-4 md:p-5 border-b border-gray-800 bg-[#0a0f1e]/60 flex flex-col md:flex-row md:justify-between md:items-center gap-4 relative">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 pr-10">
+            <h2 className="text-base md:text-lg font-bold text-white tracking-tight leading-tight">
               {view === 'list' ? '🗄️ Core Simulation Storage History' : `🔍 Performance Inspect: ${activeEntry?.name}`}
             </h2>
             {view === 'list' && (
-              <span className="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full font-mono">
+              <span className="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full font-mono w-fit">
                 {filteredHistory.length} entries
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          
+          <div className="flex flex-wrap items-center gap-2 md:pr-10">
             {/* Import/Export toolbar — only shown in list view */}
             {view === 'list' && (
               <>
@@ -939,7 +940,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
                 />
                 <button
                   onClick={() => importInputRef.current?.click()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-900/30 hover:bg-blue-800/50 text-blue-300 hover:text-blue-200 border border-blue-700/30 hover:border-blue-600/50 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                  className="flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-3 py-1.5 bg-blue-900/30 hover:bg-blue-800/50 text-blue-300 hover:text-blue-200 border border-blue-700/30 hover:border-blue-600/50 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap"
                   title="Import history from a JSON file"
                 >
                   📥 Import
@@ -953,22 +954,23 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
                     }
                   }}
                   disabled={filteredHistory.length === 0}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
                 >
                   {selectedIds.size === filteredHistory.length ? 'Deselect All' : 'Select All'}
                 </button>
                 <button
                   onClick={handleExport}
                   disabled={filteredHistory.length === 0}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-900/30 hover:bg-emerald-800/50 text-emerald-300 hover:text-emerald-200 border border-emerald-700/30 hover:border-emerald-600/50 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-3 py-1.5 bg-emerald-900/30 hover:bg-emerald-800/50 text-emerald-300 hover:text-emerald-200 border border-emerald-700/30 hover:border-emerald-600/50 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
                   title={selectedIds.size > 0 ? `Export ${selectedIds.size} selected record(s)` : 'Export all records'}
                 >
                   📤 {selectedIds.size > 0 ? `Export (${selectedIds.size})` : 'Export All'}
                 </button>
               </>
             )}
-            <button onClick={onClose} className="text-gray-400 hover:text-white bg-gray-900 border border-gray-800 hover:border-gray-700 w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-all">✕</button>
           </div>
+          
+          <button onClick={onClose} className="absolute top-4 md:top-5 right-4 md:right-5 text-gray-400 hover:text-white bg-gray-900 border border-gray-800 hover:border-gray-700 w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-all z-10 shrink-0">✕</button>
         </header>
 
         {/* Dynamic Action Toolbar for Selection Management */}
