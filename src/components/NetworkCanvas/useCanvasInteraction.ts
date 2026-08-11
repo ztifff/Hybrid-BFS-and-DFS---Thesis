@@ -89,21 +89,56 @@ export function useCanvasInteraction({ autoFit, width, height, onDeselect, highl
   const handleMouseUp = useCallback(() => setIsDragging(false), []);
   const handleMouseLeave = useCallback(() => setIsDragging(false), []);
 
+  const [initialPinchDist, setInitialPinchDist] = useState<number | null>(null);
+  const [initialPinchZoom, setInitialPinchZoom] = useState<number>(1);
+
+  const getPinchDistance = (touches: React.TouchList) => {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
   const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>, stopFollow: () => void) => {
     if (highlightedNodeId) onDeselect?.();
     stopFollow();
     if (e.touches.length === 1) {
       setIsDragging(true);
       setDragStart({ x: e.touches[0].clientX - pan.x, y: e.touches[0].clientY - pan.y });
+    } else if (e.touches.length === 2) {
+      setIsDragging(false);
+      setInitialPinchDist(getPinchDistance(e.touches));
+      setInitialPinchZoom(zoom);
     }
-  }, [highlightedNodeId, pan, onDeselect]);
+  }, [highlightedNodeId, pan, onDeselect, zoom]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
-    if (!isDragging || e.touches.length !== 1) return;
-    setPan({ x: e.touches[0].clientX - dragStart.x, y: e.touches[0].clientY - dragStart.y });
-  }, [isDragging, dragStart]);
+    if (e.touches.length === 1 && isDragging) {
+      setPan({ x: e.touches[0].clientX - dragStart.x, y: e.touches[0].clientY - dragStart.y });
+    } else if (e.touches.length === 2 && initialPinchDist !== null) {
+      const currentDist = getPinchDistance(e.touches);
+      const scaleAdjust = currentDist / initialPinchDist;
+      const newZoom = Math.max(0.2, Math.min(initialPinchZoom * scaleAdjust, 30));
+      
+      // Calculate center of pinch for smooth zooming
+      const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      
+      const rect = e.currentTarget.getBoundingClientRect();
+      const mouseX = centerX - rect.left;
+      const mouseY = centerY - rect.top;
+      
+      setPan(prev => ({
+        x: mouseX - (mouseX - prev.x) * (newZoom / zoom),
+        y: mouseY - (mouseY - prev.y) * (newZoom / zoom)
+      }));
+      setZoom(newZoom);
+    }
+  }, [isDragging, dragStart, initialPinchDist, initialPinchZoom, zoom]);
 
-  const handleTouchEnd = useCallback(() => setIsDragging(false), []);
+  const handleTouchEnd = useCallback(() => {
+    setIsDragging(false);
+    setInitialPinchDist(null);
+  }, []);
 
   const resetZoom = useCallback(() => { 
     setZoom(1); 

@@ -13,22 +13,42 @@ export const CiscoTerminal: React.FC<Props> = ({ nodeId, onClose }) => {
 
   useEffect(() => {
     if (!isDragging) return;
-    const handleMouseMove = (e: MouseEvent) => {
-      setPosition({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
+    const handleMove = (e: MouseEvent | TouchEvent) => {
+      let clientX, clientY;
+      if ('touches' in e) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else {
+        clientX = (e as MouseEvent).clientX;
+        clientY = (e as MouseEvent).clientY;
+      }
+      setPosition({ x: clientX - dragStart.x, y: clientY - dragStart.y });
     };
-    const handleMouseUp = () => setIsDragging(false);
+    const handleUp = () => setIsDragging(false);
 
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('mousemove', handleMove as EventListener);
+    window.addEventListener('mouseup', handleUp);
+    window.addEventListener('touchmove', handleMove as EventListener, { passive: false });
+    window.addEventListener('touchend', handleUp);
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mousemove', handleMove as EventListener);
+      window.removeEventListener('mouseup', handleUp);
+      window.removeEventListener('touchmove', handleMove as EventListener);
+      window.removeEventListener('touchend', handleUp);
     };
   }, [isDragging, dragStart]);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handlePointerDown = (e: React.MouseEvent | React.TouchEvent) => {
     setIsDragging(true);
-    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+    let clientX, clientY;
+    if ('touches' in e) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = (e as React.MouseEvent).clientX;
+      clientY = (e as React.MouseEvent).clientY;
+    }
+    setDragStart({ x: clientX - position.x, y: clientY - position.y });
   };
 
   useEffect(() => {
@@ -103,20 +123,23 @@ export const CiscoTerminal: React.FC<Props> = ({ nodeId, onClose }) => {
 
   return (
     <div 
-      className="absolute bottom-4 right-4 w-[600px] bg-black border-2 border-gray-600 rounded shadow-[0_0_30px_rgba(0,0,0,0.8)] z-[100] flex flex-col font-mono text-sm overflow-hidden"
+      className="absolute bottom-4 right-4 w-[calc(100vw-32px)] sm:w-[500px] md:w-[600px] max-w-[600px] bg-black border-2 border-gray-600 rounded shadow-[0_0_30px_rgba(0,0,0,0.8)] z-[100] flex flex-col font-mono text-sm overflow-hidden"
       style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
       onMouseDown={e => e.stopPropagation()}
+      onTouchStart={e => e.stopPropagation()}
       onClick={e => e.stopPropagation()}
       onWheel={e => e.stopPropagation()}
     >
       <div 
-        className="bg-gray-800 text-gray-300 px-3 py-1 flex justify-between items-center border-b border-gray-600 cursor-move select-none"
-        onMouseDown={handleMouseDown}
+        className="bg-gray-800 text-gray-300 px-3 py-2 md:py-1 flex justify-between items-center border-b border-gray-600 cursor-move select-none touch-none"
+        onMouseDown={handlePointerDown}
+        onTouchStart={handlePointerDown}
       >
         <span className="font-bold text-xs tracking-wider">Terminal - {nodeId}</span>
         <button 
           onClick={(e) => { e.stopPropagation(); onClose(); }} 
-          className="hover:text-red-400 font-bold transition-colors cursor-pointer"
+          onTouchEnd={(e) => { e.stopPropagation(); onClose(); }}
+          className="hover:text-red-400 font-bold transition-colors cursor-pointer px-2 py-1 bg-gray-700/50 rounded md:bg-transparent md:p-0"
         >
           X
         </button>
