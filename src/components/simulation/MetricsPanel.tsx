@@ -65,9 +65,25 @@ export const MetricsPanel: React.FC<Props> = ({
         : getAdaptabilityScore(status, resultData?.metrics || null, algoId, multiResults?.hybrid.dynamicEvents, stepIndex, completion.percentage);
 
 
-      const displayMemory = isStart 
-        ? '0.0 KB' 
-        : (resultData ? getMemoryInMB(resultData.metrics.memoryUsed) : '-');
+      // ── Real-time memory estimate ───────────────────────────────────────────
+      // The backend only returns a single `memoryUsed` figure in `resultData`
+      // which represents the PEAK value at the very end of the run.
+      // To show a live, growing reading we re-apply the same formula the
+      // backend uses (estimateMemory) with the per-step counts available here.
+      // Formula: ((nodesExplored + frontierSize) * nodeBytes * multiplier) / 1024
+      //   nodeBytes  = 128 B (per visited node) 
+      //   multiplier = 1.5 (BFS/Hybrid overhead for queue pointers) / 1.0 (DFS)
+      const NODE_BYTES = 128;
+      const multiplier = algoId === 'dfs' ? 1.0 : 1.5;
+      const liveExplored = stepData?.explored.length ?? 0;
+      const liveFrontier = stepData?.frontier.length ?? 0;
+      const liveMemoryKB = ((liveExplored + liveFrontier) * NODE_BYTES * multiplier) / 1024;
+
+      const displayMemory = isStart
+        ? '0.000 MB'
+        : status === 'done' && resultData
+          ? getMemoryInMB(resultData.metrics.memoryUsed)
+          : getMemoryInMB(liveMemoryKB);
 
       return (
           <div className="flex flex-col gap-2 text-center border-r border-gray-700/50 last:border-0 px-1">
