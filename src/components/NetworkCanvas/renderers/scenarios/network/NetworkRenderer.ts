@@ -11,7 +11,7 @@ export class NetworkRenderer extends BaseRenderer {
         { label: 'Distribution Layer', color: '#06b6d4', cx: 1300, cy: 400, rx: 750, ry: 110 }
       ];
 
-      layers.forEach(layer => {
+      layers.forEach((layer, i) => {
         ctx.fillStyle = this.getRgba(layer.color, 0.15);
         ctx.strokeStyle = this.getRgba(layer.color, 0.4);
         ctx.lineWidth = 2;
@@ -21,21 +21,33 @@ export class NetworkRenderer extends BaseRenderer {
         ctx.fill();
         ctx.stroke();
 
-        const boxWidth = 140;
-        const boxHeight = 30;
-        const labelX = this.sx(layer.cx + layer.rx, options) - boxWidth; 
-        const labelY = this.sy(layer.cy, options);
+        // Core Layer (i=0): label floats OUTSIDE the right edge so it's always visible
+        // Distribution Layer (i=1): label sits INSIDE the right edge
+        const boxWidth = 150;
+        const boxHeight = 24;
+        const labelX = i === 0
+          ? this.sx(layer.cx + layer.rx, options) + 6
+          : this.sx(layer.cx + layer.rx, options) - boxWidth - 8;
+        const labelY = this.sy(layer.cy, options) - boxHeight / 2;
 
-        ctx.fillStyle = '#991b1b'; 
-        ctx.fillRect(labelX, labelY - boxHeight / 2, boxWidth, boxHeight);
-        ctx.strokeStyle = '#000000';
-        ctx.strokeRect(labelX, labelY - boxHeight / 2, boxWidth, boxHeight);
-        
+        const bgColor = i === 0 ? '#881337' : '#164e63';
+        ctx.fillStyle = bgColor;
+        if (ctx.roundRect) {
+          ctx.beginPath();
+          ctx.roundRect(labelX, labelY, boxWidth, boxHeight, 5);
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        } else {
+          ctx.fillRect(labelX, labelY, boxWidth, boxHeight);
+        }
+
         ctx.fillStyle = '#ffffff';
-        ctx.font = `bold 14px sans-serif`;
+        ctx.font = `bold 12px sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(layer.label, labelX + boxWidth / 2, labelY);
+        ctx.fillText(layer.label, labelX + boxWidth / 2, labelY + boxHeight / 2);
       });
       ctx.restore();
 

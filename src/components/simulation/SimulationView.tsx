@@ -93,6 +93,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   // Network routing DST dropdown state
   const [dstDropdownOpen, setDstDropdownOpen] = useState(false);
+  const [dstMinWarning, setDstMinWarning] = useState(false);
   const [localNodesInput, setLocalNodesInput] = useState<string>(sim.syntheticSizing.nodes.toString());
   const [localEdgesInput, setLocalEdgesInput] = useState<string>(sim.syntheticSizing.edges.toString());
   const [pendingNavigation, setPendingNavigation] = useState<{type: 'back'} | {type: 'map', mapId: string} | {type: 'gameboard', boardId: GameAIBoard} | null>(null);
@@ -419,29 +420,55 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
                         {dstDropdownOpen && (
                           <>
-                            <div className="fixed inset-0 z-40" onClick={() => setDstDropdownOpen(false)}></div>
+                            <div className="fixed inset-0 z-40" onClick={() => { setDstDropdownOpen(false); setDstMinWarning(false); }}></div>
                             <div className="absolute top-full right-0 mt-1 bg-gray-800 border border-gray-600 rounded shadow-xl z-50 min-w-[200px] max-h-[300px] overflow-y-auto">
+                              
+                              {/* ── Minimum warning banner at TOP so it's always visible ── */}
+                              {dstMinWarning && (
+                                <div className="sticky top-0 z-10 mx-0 px-3 py-2.5 bg-amber-950 border-b border-amber-500/60 flex items-start gap-2">
+                                  <span className="text-amber-400 text-sm shrink-0 mt-0.5">⚠️</span>
+                                  <div>
+                                    <p className="text-amber-300 text-[11px] font-bold leading-tight">Minimum 2 Destinations Required</p>
+                                    <p className="text-amber-400/70 text-[10px] mt-0.5 leading-tight">Device-to-Device mode needs at least 2 destinations to compare routing paths.</p>
+                                  </div>
+                                </div>
+                              )}
+
                               {sim.currentGraph.nodes
                                 .filter(n => sim.mapId === 'campus' ? n.type === 'access_point' : (n.type === 'access_point' || n.type === 'server'))
                                 .filter(n => n.id !== sim.sourceDevice)
                                 .sort((a, b) => a.label.localeCompare(b.label))
-                                .map(n => (
-                                  <label key={`dst-${n.id}`} className="flex items-center gap-2 px-3 py-2 hover:bg-gray-700 cursor-pointer">
-                                    <input 
-                                      type="checkbox" 
-                                      className="accent-red-500"
-                                      checked={sim.destinationDevices.includes(n.id)}
-                                      onChange={(e) => {
-                                        if (e.target.checked) {
-                                          sim.setDestinationDevices([...sim.destinationDevices, n.id]);
-                                        } else {
-                                          sim.setDestinationDevices(sim.destinationDevices.filter(id => id !== n.id));
-                                        }
-                                      }}
-                                    />
-                                    <span className="text-xs text-gray-200 whitespace-nowrap">{n.label.replace('\n', ' - ')}</span>
-                                  </label>
-                                ))}
+                                .map(n => {
+                                  const isChecked = sim.destinationDevices.includes(n.id);
+                                  const atMin = sim.destinationDevices.length <= 2;
+                                  return (
+                                    <label key={`dst-${n.id}`} className="flex items-center gap-2 px-3 py-2 hover:bg-gray-700 cursor-pointer select-none">
+                                      <input 
+                                        type="checkbox" 
+                                        className="accent-red-500"
+                                        checked={isChecked}
+                                        onChange={() => {}} // controlled — handled by onClick
+                                        onClick={(e) => {
+                                          if (isChecked && atMin) {
+                                            // Block deselect and flash warning
+                                            e.preventDefault();
+                                            setDstMinWarning(true);
+                                            setTimeout(() => setDstMinWarning(false), 3000);
+                                            return;
+                                          }
+                                          if (isChecked) {
+                                            setDstMinWarning(false);
+                                            sim.setDestinationDevices(sim.destinationDevices.filter(id => id !== n.id));
+                                          } else {
+                                            setDstMinWarning(false);
+                                            sim.setDestinationDevices([...sim.destinationDevices, n.id]);
+                                          }
+                                        }}
+                                      />
+                                      <span className="text-xs text-gray-200 whitespace-nowrap">{n.label.replace('\n', ' - ')}</span>
+                                    </label>
+                                  );
+                                })}
                             </div>
                           </>
                         )}

@@ -78,6 +78,8 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
   const [activeEntry, setActiveEntry] = useState<HistoryEntry | null>(null);
   const [isPurgeModalOpen, setIsPurgeModalOpen] = useState(false);
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
+  const [importError, setImportError] = useState<{ expected: string; found: string } | null>(null);
+  const [importSuccess, setImportSuccess] = useState<{ count: number; scenario: string } | null>(null);
   const [robotAlgo, setRobotAlgo] = useState<'bfs'|'dfs'|'hybrid'>('bfs');
   const importInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -119,15 +121,32 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
     reader.onload = (ev) => {
       try {
         const parsed = JSON.parse(ev.target?.result as string);
-        const entries: HistoryEntry[] = (Array.isArray(parsed) ? parsed : [parsed]).map(entry => ({
+        const rawEntries: HistoryEntry[] = (Array.isArray(parsed) ? parsed : [parsed]);
+
+        // ── Scenario Mismatch Guard ──────────────────────────────────────────
+        // If the current modal is scoped to a scenario, every record in the
+        // imported file must belong to that same scenario. Reject the whole
+        // file if even one record doesn't match.
+        if (scenario) {
+          const mismatched = rawEntries.filter(entry => entry.scenario && entry.scenario !== scenario);
+          if (mismatched.length > 0) {
+            const foundScenario = mismatched[0].scenario;
+            setImportError({ expected: scenario, found: foundScenario ?? 'unknown' });
+            if (importInputRef.current) importInputRef.current.value = '';
+            return;
+          }
+        }
+
+        const entries: HistoryEntry[] = rawEntries.map(entry => ({
           ...entry,
           timestamp: entry.timestamp ? new Date(entry.timestamp) : new Date(),
           // Re-stamp with a new unique id to avoid collisions
           id: entry.id ?? Date.now().toString() + Math.random().toString(36).slice(2),
         }));
+
         if (entries.length > 0) {
           onImportHistory(entries);
-          alert(`✅ Imported ${entries.length} record(s) successfully.`);
+          setImportSuccess({ count: entries.length, scenario: entries[0]?.scenario ?? scenario ?? 'simulation' });
         }
       } catch {
         alert('❌ Invalid file format. Please select a valid history JSON file.');
@@ -1109,6 +1128,116 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
                 className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-bold transition-colors shadow-lg shadow-red-900/20"
               >
                 Purge Records
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Scenario Mismatch Error Modal ─────────────────────────────── */}
+      {importError && (
+        <div className="absolute inset-0 z-[70] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fadeIn p-4">
+          <div className="bg-[#0d1117] border border-red-500/40 rounded-2xl w-full max-w-md shadow-2xl shadow-red-900/30 overflow-hidden scale-in">
+            {/* Header gradient bar */}
+            <div className="bg-gradient-to-r from-red-900/80 via-rose-800/60 to-red-900/80 px-6 py-4 border-b border-red-500/30 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-500/20 border border-red-500/50 flex items-center justify-center text-xl shrink-0">
+                🚫
+              </div>
+              <div>
+                <h3 className="text-red-300 font-bold text-base tracking-wide">Invalid Scenario Results</h3>
+                <p className="text-red-400/70 text-xs mt-0.5">Scenario mismatch detected in import file</p>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-5 space-y-4">
+              <p className="text-gray-300 text-sm leading-relaxed">
+                The file you selected contains results from a <strong className="text-red-400">different scenario</strong> and cannot be imported here.
+              </p>
+
+              {/* Scenario comparison badges */}
+              <div className="flex items-center gap-3 bg-black/40 rounded-xl p-4 border border-white/5">
+                <div className="flex-1 text-center">
+                  <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-1.5">Current Scenario</div>
+                  <span className="inline-block px-3 py-1.5 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-300 text-xs font-bold uppercase tracking-wider">
+                    {importError.expected}
+                  </span>
+                </div>
+                <div className="text-gray-600 text-lg font-bold shrink-0">≠</div>
+                <div className="flex-1 text-center">
+                  <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-1.5">File Contains</div>
+                  <span className="inline-block px-3 py-1.5 rounded-lg bg-red-500/20 border border-red-500/40 text-red-300 text-xs font-bold uppercase tracking-wider">
+                    {importError.found}
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-gray-500 text-xs leading-relaxed">
+                💡 To import these results, navigate to the <strong className="text-gray-400">{importError.found.charAt(0).toUpperCase() + importError.found.slice(1)}</strong> scenario and try importing there.
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 pb-5 flex justify-end">
+              <button
+                onClick={() => setImportError(null)}
+                className="px-6 py-2.5 bg-red-600 hover:bg-red-500 active:scale-95 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-red-900/30 cursor-pointer"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Import Success Modal ─────────────────────────────────────────── */}
+      {importSuccess && (
+        <div className="absolute inset-0 z-[70] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fadeIn p-4">
+          <div className="bg-[#0d1117] border border-emerald-500/40 rounded-2xl w-full max-w-md shadow-2xl shadow-emerald-900/30 overflow-hidden scale-in">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-emerald-900/80 via-green-800/60 to-emerald-900/80 px-6 py-4 border-b border-emerald-500/30 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center text-xl shrink-0">
+                ✅
+              </div>
+              <div>
+                <h3 className="text-emerald-300 font-bold text-base tracking-wide">Import Successful</h3>
+                <p className="text-emerald-400/70 text-xs mt-0.5">Records have been added to history</p>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-5 space-y-4">
+              <p className="text-gray-300 text-sm leading-relaxed">
+                Successfully imported simulation records into the <strong className="text-emerald-400">{importSuccess.scenario.charAt(0).toUpperCase() + importSuccess.scenario.slice(1)}</strong> scenario history.
+              </p>
+
+              {/* Stats badge */}
+              <div className="flex items-center gap-4 bg-black/40 rounded-xl p-4 border border-white/5">
+                <div className="flex-1 text-center">
+                  <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-1.5">Records Imported</div>
+                  <span className="text-3xl font-black text-emerald-400">{importSuccess.count}</span>
+                </div>
+                <div className="w-px h-10 bg-white/10 shrink-0" />
+                <div className="flex-1 text-center">
+                  <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-1.5">Scenario</div>
+                  <span className="inline-block px-3 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold uppercase tracking-wider">
+                    {importSuccess.scenario}
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-gray-500 text-xs leading-relaxed">
+                💡 Your imported records are now visible in the history list and are ready for review.
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 pb-5 flex justify-end">
+              <button
+                onClick={() => setImportSuccess(null)}
+                className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-900/30 cursor-pointer"
+              >
+                Done
               </button>
             </div>
           </div>

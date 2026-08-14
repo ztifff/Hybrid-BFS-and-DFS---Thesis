@@ -21,6 +21,8 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeRobotId, setActiveRobotId] = useState<string | null>(null);
+  const [minRobotWarning, setMinRobotWarning] = useState(false);
+  const [minDestWarning, setMinDestWarning] = useState(false);
 
   const isBoxDeliveryMap = mapId === 'aws' || mapId === 'awsWarehouse' || mapId === 'synthetic';
 
@@ -46,8 +48,12 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
       if (a.robotId !== robotId) return a;
       const hasIt = a.destinations.includes(shelfId);
       
-      // Prevent removing the last destination to lock it at minimum 1
-      if (hasIt && a.destinations.length <= 1) return a;
+      // Prevent removing the last destination — show warning instead
+      if (hasIt && a.destinations.length <= 1) {
+        setMinDestWarning(true);
+        setTimeout(() => setMinDestWarning(false), 3000);
+        return a;
+      }
 
       const newDests = hasIt ? a.destinations.filter(d => d !== shelfId) : [...a.destinations, shelfId];
       const newPriority = (hasIt && a.priorityDest === shelfId) ? undefined : a.priorityDest;
@@ -74,6 +80,12 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
   };
 
   const removeRobot = (robotId: string) => {
+    // Block if this is the last active robot
+    if (assignments.length <= 1) {
+      setMinRobotWarning(true);
+      setTimeout(() => setMinRobotWarning(false), 3000);
+      return;
+    }
     setAssignments(assignments.filter(a => a.robotId !== robotId));
     if (activeRobotId === robotId) setActiveRobotId(null);
   };
@@ -208,6 +220,17 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
                       </button>
                     );
                   })}
+
+                  {/* Minimum robot warning — sticky at bottom of robot list */}
+                  {minRobotWarning && (
+                    <div className="sticky bottom-0 z-10 px-3 py-2.5 bg-amber-950 border-t border-amber-500/60 flex items-start gap-2">
+                      <span className="text-amber-400 text-sm shrink-0 mt-0.5">⚠️</span>
+                      <div>
+                        <p className="text-amber-300 text-[11px] font-bold leading-tight">Minimum 1 Robot Required</p>
+                        <p className="text-amber-400/70 text-[10px] mt-0.5 leading-tight">At least one active robot must remain in the simulation.</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Inactive robots */}
@@ -265,6 +288,16 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
 
                     {/* Destination list */}
                     <div className="flex-1 overflow-y-auto p-3">
+                      {/* Minimum destination warning — sticky at top */}
+                      {minDestWarning && (
+                        <div className="sticky top-0 z-10 -mx-3 -mt-3 mb-3 px-3 py-2.5 bg-amber-950 border-b border-amber-500/60 flex items-start gap-2">
+                          <span className="text-amber-400 text-sm shrink-0 mt-0.5">⚠️</span>
+                          <div>
+                            <p className="text-amber-300 text-[11px] font-bold leading-tight">Minimum 1 Destination Required</p>
+                            <p className="text-amber-400/70 text-[10px] mt-0.5 leading-tight">Each robot must have at least one delivery destination assigned.</p>
+                          </div>
+                        </div>
+                      )}
                       <div className="text-[9px] uppercase tracking-widest text-gray-500 font-bold mb-2 px-1">
                         Click to select · ⭐ to set priority (visited first)
                       </div>
