@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { AlgorithmStep, GameAIBoard, GraphSize, GraphSizing, RobotAssignment, ScenarioGraph, ScenarioType, SimulationResult } from '../types';
 import { HistoryEntry } from '../components/HistoryModal';
-import { useSimulationModel } from './useSimulationModel';
+import { useSimulationModel, PendingNavigation } from './useSimulationModel';
 import { useSimulationController } from './useSimulationController';
 
 type MultiResults = {
@@ -68,7 +68,7 @@ export interface SimulationState {
   handleSkipEnd: () => void;
   handleRerollEvents: () => void;
   handleImportHistory: (entries: HistoryEntry[]) => void;
-  
+
   // Modals
   isHistoryModalOpen: boolean;
   setIsHistoryModalOpen: (open: boolean) => void;
@@ -87,15 +87,45 @@ export interface SimulationState {
   // Evacuation: user-selectable start point
   evacuationSourceId: string | null;
   setEvacuationSourceId: (id: string | null | ((prev: string | null) => string | null)) => void;
+
+  // ── Extracted from SimulationView ──────────────────────────────────────────
+  isEvacuationRealWorld: boolean;
+  scenarioHistoryCount: number;
+  shelfBoxCounts: Map<string, number> | undefined;
+  generatedNodeCount: number;
+  generatedEdgeCount: number;
+
+  localNodesInput: string;
+  setLocalNodesInput: (v: string) => void;
+  localEdgesInput: string;
+  setLocalEdgesInput: (v: string) => void;
+
+  minAlgoWarning: boolean;
+  toggleAlgorithm: (algo: 'bfs' | 'dfs' | 'hybrid') => void;
+
+  pendingNavigation: PendingNavigation | null;
+  setPendingNavigation: (nav: PendingNavigation | null) => void;
+  requestBack: (status: string, saved: boolean) => void;
+  requestMapChange: (newMapId: string, status: string, saved: boolean) => void;
+  requestBoardChange: (boardId: GameAIBoard, status: string, saved: boolean) => void;
+  confirmPendingNavigation: () => void;
+
+  stepNodesUp: () => void;
+  stepNodesDown: () => void;
+  stepEdgesUp: () => void;
+  stepEdgesDown: () => void;
+
+  deliveryMode: 'anycast' | 'multicast';
+  setDeliveryMode: (mode: 'anycast' | 'multicast') => void;
 }
 
 export type Status = 'idle' | 'running' | 'done' | 'paused';
 
-export function useSimulation(params: { scenario: ScenarioType }) {
-  const { scenario } = params;
+export function useSimulation(params: { scenario: ScenarioType; onBack?: () => void }) {
+  const { scenario, onBack } = params;
 
-  // Initialize the Model
-  const model = useSimulationModel(scenario);
+  // Initialize the Model (pass onBack so the model can call it from navigation handlers)
+  const model = useSimulationModel(scenario, onBack);
 
   // Initialize the Controller
   const controller = useSimulationController(model);
@@ -127,7 +157,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
             mapId: model.mapId,
             seed: model.seed,
             graphSize: model.graphSize,
-            ...((model.mapId === 'synthetic' || model.scenario === 'gameai') ? { 
+            ...((model.mapId === 'synthetic' || model.scenario === 'gameai') ? {
               sizing: {
                 nodes: model.syntheticSizing.nodes,
                 ...(model.syntheticSizing.edges > 0 ? { edges: model.syntheticSizing.edges } : {})
@@ -187,7 +217,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
           }
 
           const isDone = !results.bfs.meta?.hasMore && !results.dfs.meta?.hasMore && !results.hybrid.meta?.hasMore;
-          
+
           if (isDone || maxStepsInChunk === 0) {
             keepFetching = false;
             model.setIsComputing(false);
@@ -289,6 +319,32 @@ export function useSimulation(params: { scenario: ScenarioType }) {
     // Evacuation: user-selectable start point (city + building maps)
     evacuationSourceId: model.evacuationSourceId,
     setEvacuationSourceId: model.setEvacuationSourceId,
-    
+
+    // ── Extracted from SimulationView ──────────────────────────────────────────
+    isEvacuationRealWorld: model.isEvacuationRealWorld,
+    scenarioHistoryCount: model.scenarioHistoryCount,
+    shelfBoxCounts: model.shelfBoxCounts,
+    generatedNodeCount: model.generatedNodeCount,
+    generatedEdgeCount: model.generatedEdgeCount,
+
+    localNodesInput: model.localNodesInput,
+    setLocalNodesInput: model.setLocalNodesInput,
+    localEdgesInput: model.localEdgesInput,
+    setLocalEdgesInput: model.setLocalEdgesInput,
+
+    minAlgoWarning: model.minAlgoWarning,
+    toggleAlgorithm: model.toggleAlgorithm,
+
+    pendingNavigation: model.pendingNavigation,
+    setPendingNavigation: model.setPendingNavigation,
+    requestBack: model.requestBack,
+    requestMapChange: model.requestMapChange,
+    requestBoardChange: model.requestBoardChange,
+    confirmPendingNavigation: model.confirmPendingNavigation,
+
+    stepNodesUp: model.stepNodesUp,
+    stepNodesDown: model.stepNodesDown,
+    stepEdgesUp: model.stepEdgesUp,
+    stepEdgesDown: model.stepEdgesDown,
   };
 }

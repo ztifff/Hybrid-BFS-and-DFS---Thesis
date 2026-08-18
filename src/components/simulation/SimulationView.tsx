@@ -1,8 +1,8 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
-import { ScenarioType, GameAIBoard } from '../../types';
+import { ScenarioType } from '../../types';
 import { useSimulation } from '../../hooks/useSimulation';
-import { MAX_SYNTHETIC_NODES, MIN_SYNTHETIC_NODES, SizingKey } from '../../hooks/useSimulationModel';
+import { MAX_SYNTHETIC_NODES, MIN_SYNTHETIC_NODES, MIN_SYNTHETIC_LINKS, GAME_AI_BOARDS, SizingKey } from '../../hooks/useSimulationModel';
 import { getScenario } from '../../config/scenarios';
 import { CiscoTerminal } from '../NetworkCanvas/renderers/scenarios/network/CiscoTerminal';
 import { MAP_REGISTRY } from '../../config/mapRegistry';
@@ -24,159 +24,40 @@ interface Props {
   onBack: () => void;
 }
 
-const GAME_AI_BOARDS: { id: GameAIBoard; label: string; icon: string }[] = [
-  { id: 'dama', label: 'Turkish Draughts', icon: '🔵' },
-  { id: 'checkers', label: 'Checkers', icon: '⚫' },
-];
-
-const MIN_SYNTHETIC_LINKS: Record<ScenarioType, number> = {
-  network: 4,
-  robotics: 18,
-  traffic: 4,
-  evacuation: 27,
-  gameai: 24,
-};
-
-function getNextGameAINodes(currentNodes: number, direction: 'up' | 'down', board: GameAIBoard = 'dama'): number {
-  if (board === 'dama') {
-    const D = Math.round(Math.sqrt(currentNodes - 1));
-    const nextD = direction === 'up' ? Math.min(D + 1, 12) : Math.max(D - 1, 4);
-    return (nextD * nextD) + 1;
-  } else {
-    let D = 4;
-    while (Math.ceil((D * D) / 2) + 2 <= currentNodes && D <= 12) {
-      D++;
-    }
-    D--; 
-    const nextD = direction === 'up' ? Math.min(D + 1, 12) : Math.max(D - 1, 4);
-    return Math.ceil((nextD * nextD) / 2) + 2;
-  }
-}
-
-function getNextRoboticsNodes(currentNodes: number, direction: 'up' | 'down'): number {
-  const sizes = [13, 16, 19, 25, 29, 33, 36, 41, 46, 55, 61, 67, 71, 78, 85, 97, 105, 113, 118, 127, 136, 151, 161, 171, 177, 188, 199, 217];
-  let currentIndex = sizes.findIndex(s => s >= currentNodes);
-  if (currentIndex === -1) currentIndex = sizes.length - 1;
-  
-  if (direction === 'up') {
-    return sizes[Math.min(currentIndex + 1, sizes.length - 1)];
-  } else {
-    // If the currentNodes is exactly a size, step down. If it's between sizes, stepping down goes to the previous valid size.
-    if (sizes[currentIndex] > currentNodes && currentIndex > 0) {
-      return sizes[currentIndex - 1];
-    }
-    return sizes[Math.max(currentIndex - 1, 0)];
-  }
-}
-
 export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const sc = getScenario(scenario);
+  const sim = useSimulation({ scenario, onBack });
 
-  const sim = useSimulation({ scenario });
-
+  // ── Purely local UI state (nothing to do with business logic) ───────────────
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
-  // Network routing DST dropdown state
   const [dstDropdownOpen, setDstDropdownOpen] = useState(false);
   const [dstMinWarning, setDstMinWarning] = useState(false);
-  const [localNodesInput, setLocalNodesInput] = useState<string>(sim.syntheticSizing.nodes.toString());
-  const [localEdgesInput, setLocalEdgesInput] = useState<string>(sim.syntheticSizing.edges.toString());
-  const [pendingNavigation, setPendingNavigation] = useState<{type: 'back'} | {type: 'map', mapId: string} | {type: 'gameboard', boardId: GameAIBoard} | null>(null);
-  // Algorithm visibility — clicking the pills in the header toggles each algorithm on/off
-  const [minAlgoWarning, setMinAlgoWarning] = useState(false);
-  const minAlgoWarningTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const toggleAlgorithm = (algo: 'bfs' | 'dfs' | 'hybrid') => {
-    sim.setActiveAlgorithms(prev => {
-      const next = { ...prev, [algo]: !prev[algo] };
-      const anyActive = next.bfs || next.dfs || next.hybrid;
-      if (!anyActive) {
-        // Show warning toast and do NOT apply the toggle
-        if (minAlgoWarningTimer.current) clearTimeout(minAlgoWarningTimer.current);
-        setMinAlgoWarning(true);
-        minAlgoWarningTimer.current = setTimeout(() => setMinAlgoWarning(false), 2800);
-        return prev;
-      }
-      return next;
-    });
-  };
-
-  useEffect(() => {
-    const actualNodes = sim.currentGraph?.nodes.length ?? sim.syntheticSizing.nodes;
-    setLocalNodesInput(actualNodes.toString());
-  }, [sim.syntheticSizing.nodes, sim.currentGraph?.nodes.length]);
-
-  useEffect(() => {
-    const actualEdges = sim.currentGraph 
-      ? Math.floor(sim.currentGraph.edges.filter(e => e.type !== 'wireless').length / 2) 
-      : sim.syntheticSizing.edges;
-    setLocalEdgesInput(actualEdges.toString());
-  }, [sim.syntheticSizing.edges, sim.currentGraph?.edges.length]);
-
-  const handleBack = () => {
-    if (sim.status === 'done' && !sim.isCurrentSaved) {
-      setPendingNavigation({ type: 'back' });
-    } else {
-      onBack();
-    }
-  };
-
-  const handleMapChange = (mapId: string) => {
-    if (sim.mapId === mapId) return;
-    if (sim.status === 'done' && !sim.isCurrentSaved) {
-      setPendingNavigation({ type: 'map', mapId });
-    } else {
-      sim.setMapId(mapId);
-      const mapDef = MAP_REGISTRY[scenario]?.find(m => m.id === mapId);
-      if (mapDef?.isRealWorld) sim.setGraphSize('medium');
-    }
-  };
-
-  const handleBoardChange = (boardId: GameAIBoard) => {
-    if (sim.gameBoard === boardId) return;
-    if (sim.status === 'done' && !sim.isCurrentSaved) {
-      setPendingNavigation({ type: 'gameboard', boardId });
-    } else {
-      sim.setGameBoard(boardId);
-      sim.setMapId('synthetic');
-    }
-  };
-
-  // Evacuation: is this a real-world map that supports custom start point selection?
-  const isEvacuationRealWorld = scenario === 'evacuation' && (sim.mapId === 'city' || sim.mapId === 'building');
 
   const handleEventClick = (nodeId: string) => {
     setHighlightedNodeId(prev => prev === nodeId ? null : nodeId);
   };
 
-  const scenarioHistoryCount = useMemo(
-    () => sim.history.filter((h) => h.scenario === scenario).length,
-    [sim.history, scenario]
-  );
+  // ── Button style helpers ────────────────────────────────────────────────────
+  const baseBtnClass = "px-2.5 xl:px-4 py-1.5 xl:py-2 rounded-lg text-xs xl:text-sm font-semibold transition-all duration-300 ease-out transform active:scale-[0.97] cursor-pointer disabled:opacity-30 disabled:pointer-events-none disabled:transform-none flex items-center gap-1.5 xl:gap-2 shadow-md hover:shadow-lg hover:-translate-y-0.5 flex-1 sm:flex-none justify-center whitespace-nowrap";
 
-  // Derive shelf box counts from robot assignments for AWS Warehouse canvas visualization
-  const shelfBoxCounts = useMemo(() => {
-    if (scenario !== 'robotics' || !sim.robotAssignments?.length) return undefined;
-    const map = new Map<string, number>();
-    sim.robotAssignments.forEach(a => {
-      a.destinations.forEach(destId => {
-        const count = a.boxCounts?.[destId] ?? 6;
-        // Sum total required boxes across all robots assigned to this destination
-        map.set(destId, (map.get(destId) ?? 0) + count);
-      });
-    });
-    return map;
-  }, [scenario, sim.robotAssignments]);
-  const generatedNodeCount = sim.currentGraph?.nodes.length ?? sim.syntheticSizing.nodes;
-  // Divide the edges length by 2 to show the number of physical undirected links (lines) drawn on the canvas,
-  // since the backend models every physical link as two bidirectional directed edges (A->B and B->A).
-  // We explicitly exclude 'wireless' edges (like capture jumps in Game AI) from this visual count.
-  const generatedEdgeCount = sim.currentGraph 
-    ? Math.floor(sim.currentGraph.edges.filter(e => e.type !== 'wireless').length / 2) 
-    : sim.syntheticSizing.edges;
+  const scenarioBtnClass = (() => {
+    const map: Record<ScenarioType, string> = {
+      network:    `${baseBtnClass} bg-blue-900/40 text-blue-300 hover:bg-blue-600 hover:text-white border border-blue-800 hover:border-blue-500 hover:shadow-blue-900/50`,
+      robotics:   `${baseBtnClass} bg-orange-900/40 text-orange-300 hover:bg-orange-600 hover:text-white border border-orange-800 hover:border-orange-500 hover:shadow-orange-900/50`,
+      traffic:    `${baseBtnClass} bg-emerald-900/40 text-emerald-300 hover:bg-emerald-600 hover:text-white border border-emerald-800 hover:border-emerald-500 hover:shadow-emerald-900/50`,
+      evacuation: `${baseBtnClass} bg-red-900/40 text-red-300 hover:bg-red-600 hover:text-white border border-red-800 hover:border-red-500 hover:shadow-red-900/50`,
+      gameai:     `${baseBtnClass} bg-purple-900/40 text-purple-300 hover:bg-purple-600 hover:text-white border border-purple-800 hover:border-purple-500 hover:shadow-purple-900/50`,
+    };
+    return map[scenario] ?? `${baseBtnClass} bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600`;
+  })();
+
+  const primaryBtnClass = "px-4 xl:px-6 py-1.5 xl:py-2 rounded-lg font-bold text-xs xl:text-sm transition-all duration-300 ease-out transform active:scale-[0.97] cursor-pointer disabled:opacity-30 disabled:pointer-events-none disabled:transform-none flex items-center justify-center gap-1.5 xl:gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex-1 sm:flex-none whitespace-nowrap";
 
   return (
     <>
-      {pendingNavigation && (
+      {/* ── Unsaved-result navigation guard modal ─────────────────────────────── */}
+      {sim.pendingNavigation && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn p-4">
           <div className="bg-gray-900 border border-amber-500/30 rounded-xl p-6 max-w-sm w-full shadow-2xl scale-in">
             <h3 className="text-amber-400 font-bold text-lg mb-2 flex items-center gap-2">
@@ -186,41 +67,32 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               You have an unsaved simulation result. Are you sure you want to discard it and leave?
             </p>
             <div className="flex justify-end gap-3">
-              <button 
-                onClick={() => setPendingNavigation(null)}
+              <button
+                onClick={() => sim.setPendingNavigation(null)}
                 className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm font-medium transition-colors"
               >
                 Cancel
               </button>
-              <button 
-                onClick={() => {
-                  if (pendingNavigation.type === 'back') {
-                    onBack();
-                  } else if (pendingNavigation.type === 'map') {
-                    sim.setMapId(pendingNavigation.mapId);
-                    const mapDef = MAP_REGISTRY[scenario]?.find(m => m.id === pendingNavigation.mapId);
-                    if (mapDef?.isRealWorld) sim.setGraphSize('medium');
-                  } else if (pendingNavigation.type === 'gameboard') {
-                    sim.setGameBoard(pendingNavigation.boardId);
-                    sim.setMapId('synthetic');
-                  }
-                  setPendingNavigation(null);
-                }}
+              <button
+                onClick={sim.confirmPendingNavigation}
                 className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-bold transition-colors shadow-lg shadow-amber-900/20"
               >
-                Discard & Leave
+                Discard &amp; Leave
               </button>
             </div>
           </div>
         </div>
       )}
+
       <div className="min-h-screen lg:h-screen w-full max-w-[100vw] bg-transparent text-white flex flex-col relative z-0 lg:overflow-hidden fade-in">
         {/* Help Modal */}
         {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} scenario={scenario} />}
+
+        {/* ── Header ───────────────────────────────────────────────────────────── */}
         <header className="glass-panel border-b-0 border-white/5 px-2 sm:px-3 md:px-6 py-2.5 md:py-3 flex items-center justify-between shrink-0 relative z-10 gap-1.5 sm:gap-2 w-full max-w-full overflow-hidden">
           <div className="flex items-center gap-1.5 sm:gap-4 relative z-10 min-w-0 flex-1">
             <button
-              onClick={handleBack}
+              onClick={() => sim.requestBack(sim.status, sim.isCurrentSaved)}
               className="px-2 sm:px-3 py-2 text-gray-400 hover:text-white flex items-center gap-1 sm:gap-2 transition-all hover:bg-white/5 rounded-lg text-sm font-bold whitespace-nowrap active:scale-95 shrink-0"
             >
               <span className="opacity-70 text-lg">←</span> <span className="hidden sm:inline tracking-wider">Back</span>
@@ -231,10 +103,9 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               <h1 className="font-bold text-xs sm:text-base md:text-lg text-white tracking-widest drop-shadow-md truncate">{sc?.name}</h1>
             </div>
 
-            {/* Algorithm Legend / Indicator — clickable to toggle each algorithm */}
+            {/* Algorithm toggle pills */}
             <div className="hidden lg:flex items-center gap-3 ml-4 px-4 py-1.5 bg-black/40 rounded-full border border-white/5 text-[10px] font-bold tracking-widest uppercase shrink-0 relative">
-              {/* Min-algorithm warning toast */}
-              {minAlgoWarning && (
+              {sim.minAlgoWarning && (
                 <div className="fixed bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap z-[9999]
                   flex items-center gap-1.5 px-4 py-2.5 rounded-lg
                   bg-amber-950/95 border border-amber-500/60 text-amber-300
@@ -252,7 +123,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 <React.Fragment key={id}>
                   {i > 0 && <span className="text-gray-600">|</span>}
                   <button
-                    onClick={() => toggleAlgorithm(id)}
+                    onClick={() => sim.toggleAlgorithm(id)}
                     title={sim.activeAlgorithms[id] ? `Hide ${label} from simulation view` : `Show ${label} in simulation view`}
                     className={`flex items-center gap-1.5 rounded-md px-2 py-1 transition-all duration-150 cursor-pointer select-none ${
                       sim.activeAlgorithms[id]
@@ -269,16 +140,16 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               ))}
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2 sm:gap-3 shrink-0 relative z-10 ml-auto">
-            <button 
+            <button
               onClick={() => sim.setIsHistoryModalOpen(true)}
               className="px-2.5 sm:px-4 py-1.5 rounded-lg glass-panel text-gray-200 hover:text-white text-sm font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer hover:-translate-y-0.5 active:scale-[0.98] shadow-md hover:shadow-glow-blue hover:border-blue-500/50"
             >
               <span className="hidden sm:inline">Result History</span>
               <span className="sm:hidden text-base">🗄️</span>
               <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full leading-none min-w-[20px] text-center">
-                {scenarioHistoryCount}
+                {sim.scenarioHistoryCount}
               </span>
             </button>
           </div>
@@ -297,13 +168,15 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               <span className="md:hidden">{sc?.icon || '?'}</span>
               <span className="hidden md:flex items-center gap-2">
                 <span className="text-lg leading-none filter drop-shadow-sm">{sc?.icon || '❓'}</span>
-                Help & Guide
+                Help &amp; Guide
               </span>
             </button>
           </div>
         </header>
 
         <div className="flex flex-col lg:flex-row flex-1 lg:min-h-0 overflow-y-auto lg:overflow-hidden">
+
+          {/* ── Left Sidebar: Metrics ─────────────────────────────────────────── */}
           <ResizableSidebar
             side="left"
             storageKey="sim_left_panel"
@@ -336,51 +209,45 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             <Legend scenario={scenario} mapId={sim.mapId} />
           </ResizableSidebar>
 
+          {/* ── Main Canvas Area ──────────────────────────────────────────────── */}
           <main className="flex-1 flex flex-col items-center justify-start p-4 w-full relative lg:overflow-hidden min-h-0">
+
+            {/* Scenario / Map / Board selectors */}
             <div className="mb-1 flex flex-col items-center gap-1.5 w-full shrink-0">
               <div className="flex items-center gap-2 flex-wrap justify-center text-center">
                 <div className="px-3 py-1 rounded-full text-xs font-bold bg-blue-900/20 text-blue-400 border border-blue-500/50">
                   Simultaneous Multi-Algorithm Evaluation
                 </div>
                 <div className="text-xs text-gray-400 flex items-center gap-2">
-                  <span>
-                    Dynamic: <span className="text-orange-400">{sc.dynamicDescription}</span>
-                  </span>
+                  <span>Dynamic: <span className="text-orange-400">{sc.dynamicDescription}</span></span>
                 </div>
               </div>
 
               {scenario === 'gameai' && (
-                <div className="flex flex-col items-center gap-2">
-                  <div className="flex items-center gap-2 justify-center overflow-x-auto max-w-full" style={{ scrollbarWidth: 'none' }}>
-                    {GAME_AI_BOARDS.map(({ id, label, icon }) => (
-                      <button
-                        key={id}
-                        onClick={() => {
-                          handleBoardChange(id);
-                        }}
-                        disabled={sim.isComputing || sim.isGraphLoading}
-                        className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
-                          sim.gameBoard === id
-                            ? 'bg-purple-900/40 text-purple-300 border border-purple-500/60 shadow-[0_0_10px_rgba(139,92,246,0.25)]'
-                            : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
-                        }`}
-                      >
-                        <span>{icon}</span>
-                        {label}
-                      </button>
-                    ))}
-                  </div>
+                <div className="flex items-center gap-2 justify-center overflow-x-auto max-w-full" style={{ scrollbarWidth: 'none' }}>
+                  {GAME_AI_BOARDS.map(({ id, label, icon }) => (
+                    <button
+                      key={id}
+                      onClick={() => sim.requestBoardChange(id, sim.status, sim.isCurrentSaved)}
+                      disabled={sim.isComputing || sim.isGraphLoading}
+                      className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
+                        sim.gameBoard === id
+                          ? 'bg-purple-900/40 text-purple-300 border border-purple-500/60 shadow-[0_0_10px_rgba(139,92,246,0.25)]'
+                          : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
+                      }`}
+                    >
+                      <span>{icon}</span>{label}
+                    </button>
+                  ))}
                 </div>
               )}
 
               {(scenario === 'traffic' || scenario === 'evacuation' || scenario === 'robotics' || scenario === 'network') && (
-                <div className="flex items-center gap-2 justify-center overflow-x-auto max-w-full scrollbar-none" style={{ scrollbarWidth: 'none' }}>
+                <div className="flex items-center gap-2 justify-center overflow-x-auto max-w-full" style={{ scrollbarWidth: 'none' }}>
                   {MAP_REGISTRY[scenario]?.map(mapDef => (
                     <button
                       key={mapDef.id}
-                      onClick={() => {
-                        handleMapChange(mapDef.id);
-                      }}
+                      onClick={() => sim.requestMapChange(mapDef.id, sim.status, sim.isCurrentSaved)}
                       disabled={sim.isComputing || sim.isGraphLoading}
                       className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
                         sim.mapId === mapDef.id
@@ -388,8 +255,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                           : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
                       }`}
                     >
-                      <span>{mapDef.icon}</span>
-                      {mapDef.label}
+                      <span>{mapDef.icon}</span>{mapDef.label}
                     </button>
                   ))}
                 </div>
@@ -427,19 +293,14 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                             .map(n => <option key={`src-${n.id}`} value={n.id}>{n.label.replace('\n', ' - ')}</option>)}
                         </select>
                       </div>
-                      
+
                       <div className="text-gray-500 hidden md:block">→</div>
-                      
+
                       <div className="flex items-center gap-2 relative">
                         <span className="text-[10px] uppercase tracking-widest text-red-400 font-bold">Dst:</span>
-                        
-                        <div 
+                        <div
                           className={`bg-gray-800 border ${sim.destinationDevices.length > 0 ? 'border-red-900' : 'border-red-500'} rounded text-xs font-bold text-white px-2 py-1 flex items-center justify-between min-w-[120px] max-w-[150px] ${(sim.isComputing || sim.status === 'running') ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-red-500'}`}
-                          onClick={() => {
-                            if (!sim.isComputing && sim.status !== 'running') {
-                              setDstDropdownOpen(!dstDropdownOpen);
-                            }
-                          }}
+                          onClick={() => { if (!sim.isComputing && sim.status !== 'running') setDstDropdownOpen(o => !o); }}
                         >
                           <span className="truncate">{sim.destinationDevices.length > 0 ? `${sim.destinationDevices.length} Selected` : 'Select Dst...'}</span>
                           <span className="text-[10px] ml-2">▼</span>
@@ -449,18 +310,15 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                           <>
                             <div className="fixed inset-0 z-40" onClick={() => { setDstDropdownOpen(false); setDstMinWarning(false); }}></div>
                             <div className="absolute top-full right-0 mt-1 bg-gray-800 border border-gray-600 rounded shadow-xl z-50 min-w-[200px] max-h-[300px] overflow-y-auto">
-                              
-                              {/* ── Minimum warning banner at TOP so it's always visible ── */}
                               {dstMinWarning && (
                                 <div className="sticky top-0 z-10 mx-0 px-3 py-2.5 bg-amber-950 border-b border-amber-500/60 flex items-start gap-2">
                                   <span className="text-amber-400 text-sm shrink-0 mt-0.5">⚠️</span>
                                   <div>
                                     <p className="text-amber-300 text-[11px] font-bold leading-tight">Minimum 2 Destinations Required</p>
-                                    <p className="text-amber-400/70 text-[10px] mt-0.5 leading-tight">Device-to-Device mode needs at least 2 destinations to compare routing paths.</p>
+                                    <p className="text-amber-400/70 text-[10px] mt-0.5 leading-tight">Device-to-Device mode needs at least 2 destinations.</p>
                                   </div>
                                 </div>
                               )}
-
                               {sim.currentGraph.nodes
                                 .filter(n => sim.mapId === 'campus' ? n.type === 'access_point' : (n.type === 'access_point' || n.type === 'server'))
                                 .filter(n => n.id !== sim.sourceDevice)
@@ -470,24 +328,22 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                                   const atMin = sim.destinationDevices.length <= 2;
                                   return (
                                     <label key={`dst-${n.id}`} className="flex items-center gap-2 px-3 py-2 hover:bg-gray-700 cursor-pointer select-none">
-                                      <input 
-                                        type="checkbox" 
+                                      <input
+                                        type="checkbox"
                                         className="accent-red-500"
                                         checked={isChecked}
-                                        onChange={() => {}} // controlled — handled by onClick
+                                        onChange={() => {}}
                                         onClick={(e) => {
                                           if (isChecked && atMin) {
-                                            // Block deselect and flash warning
                                             e.preventDefault();
                                             setDstMinWarning(true);
                                             setTimeout(() => setDstMinWarning(false), 3000);
                                             return;
                                           }
+                                          setDstMinWarning(false);
                                           if (isChecked) {
-                                            setDstMinWarning(false);
                                             sim.setDestinationDevices(sim.destinationDevices.filter(id => id !== n.id));
                                           } else {
-                                            setDstMinWarning(false);
                                             sim.setDestinationDevices([...sim.destinationDevices, n.id]);
                                           }
                                         }}
@@ -500,7 +356,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                           </>
                         )}
                       </div>
-                      
+
                       <div className="h-4 w-px bg-gray-700 hidden md:block mx-1"></div>
                       <div className="flex items-center gap-2">
                         <select
@@ -517,6 +373,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   )}
                 </div>
               )}
+
               {scenario === 'evacuation' && sim.currentGraph && (
                 <div className="flex flex-col md:flex-row items-center gap-2 justify-center w-full mt-1 bg-gray-900/60 p-2 rounded-xl border border-gray-700/50">
                   <div className="flex items-center gap-2">
@@ -554,13 +411,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   </div>
                 </div>
               )}
-
             </div>
 
-            <div
-              className="rounded-2xl overflow-hidden border border-gray-700 w-full relative h-[50vh] lg:flex-1 lg:min-h-0 shadow-[0_0_48px_rgba(37,99,235,0.1)] bg-[#0a0f1e]"
-              style={{ maxWidth: 1200 }}
-            >
+            {/* Canvas */}
+            <div className="rounded-2xl overflow-hidden border border-gray-700 w-full relative h-[50vh] lg:flex-1 lg:min-h-0 shadow-[0_0_48px_rgba(37,99,235,0.1)] bg-[#0a0f1e]" style={{ maxWidth: 1200 }}>
               {sim.currentGraph ? (
                 <>
                   <NetworkCanvas
@@ -575,8 +429,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                       if (scenario === 'robotics') {
                         setHighlightedNodeId(prev => prev === nodeId ? null : nodeId);
                       }
-                      // Evacuation: clicking a place/origin/room node sets it as the new start
-                      if (isEvacuationRealWorld && !sim.isComputing) {
+                      if (sim.isEvacuationRealWorld && !sim.isComputing) {
                         const node = sim.currentGraph?.nodes.find(n => n.id === nodeId);
                         if (node && (node.type === 'place' || node.type === 'origin' || node.type === 'room')) {
                           sim.setEvacuationSourceId(prev => prev === nodeId ? null : nodeId);
@@ -584,16 +437,13 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                       }
                     }}
                     mapId={sim.mapId}
-                    shelfBoxCounts={shelfBoxCounts}
+                    shelfBoxCounts={sim.shelfBoxCounts}
                     robotAssignments={sim.robotAssignments}
                     activeAlgorithms={sim.activeAlgorithms}
                   />
 
                   {scenario === 'network' && (sim.mapId === 'companybusiness' || sim.mapId === 'campus') && highlightedNodeId && (
-                    <CiscoTerminal 
-                      nodeId={highlightedNodeId} 
-                      onClose={() => setHighlightedNodeId(null)} 
-                    />
+                    <CiscoTerminal nodeId={highlightedNodeId} onClose={() => setHighlightedNodeId(null)} />
                   )}
 
                   {scenario === 'network' && (sim.mapId === 'companybusiness' || sim.mapId === 'campus') && (
@@ -603,13 +453,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         .map(n => (
                           <button
                             key={`terminal-btn-${n.id}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setHighlightedNodeId(prev => prev === n.id ? null : n.id);
-                            }}
+                            onClick={(e) => { e.stopPropagation(); setHighlightedNodeId(prev => prev === n.id ? null : n.id); }}
                             className={`px-3 py-1.5 rounded border font-mono text-xs shadow-md flex items-center gap-2 transition-colors cursor-pointer ${
-                              highlightedNodeId === n.id 
-                                ? 'bg-gray-800 border-green-500 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.2)]' 
+                              highlightedNodeId === n.id
+                                ? 'bg-gray-800 border-green-500 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.2)]'
                                 : 'bg-gray-900 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200'
                             }`}
                           >
@@ -619,14 +466,11 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         ))}
                     </div>
                   )}
-      
 
                   {sim.isGraphLoading && (
                     <div className="absolute inset-0 bg-[#0a0f1e]/40 backdrop-blur-[2px] flex flex-col items-center justify-center text-white gap-3 z-50 transition-all">
                       <div className="w-8 h-8 border-4 border-gray-600 border-t-blue-500 rounded-full animate-spin" />
-                      <span className="text-sm font-mono tracking-wider font-bold shadow-black drop-shadow-md">
-                        Resyncing Map...
-                      </span>
+                      <span className="text-sm font-mono tracking-wider font-bold shadow-black drop-shadow-md">Resyncing Map...</span>
                     </div>
                   )}
                 </>
@@ -638,105 +482,30 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               )}
             </div>
 
+            {/* Playback Controls */}
             <div className="mt-2 flex items-center gap-2 flex-wrap justify-center w-full shrink-0">
-              {(() => {
-                const baseBtnClass = "px-2.5 xl:px-4 py-1.5 xl:py-2 rounded-lg text-xs xl:text-sm font-semibold transition-all duration-300 ease-out transform active:scale-[0.97] cursor-pointer disabled:opacity-30 disabled:pointer-events-none disabled:transform-none flex items-center gap-1.5 xl:gap-2 shadow-md hover:shadow-lg hover:-translate-y-0.5 flex-1 sm:flex-none justify-center whitespace-nowrap";
-                
-                let scenarioBtnClass = `${baseBtnClass} bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600`;
-                if (scenario === 'network') {
-                  scenarioBtnClass = `${baseBtnClass} bg-blue-900/40 text-blue-300 hover:bg-blue-600 hover:text-white border border-blue-800 hover:border-blue-500 hover:shadow-blue-900/50`;
-                } else if (scenario === 'robotics') {
-                  scenarioBtnClass = `${baseBtnClass} bg-orange-900/40 text-orange-300 hover:bg-orange-600 hover:text-white border border-orange-800 hover:border-orange-500 hover:shadow-orange-900/50`;
-                } else if (scenario === 'traffic') {
-                  scenarioBtnClass = `${baseBtnClass} bg-emerald-900/40 text-emerald-300 hover:bg-emerald-600 hover:text-white border border-emerald-800 hover:border-emerald-500 hover:shadow-emerald-900/50`;
-                } else if (scenario === 'evacuation') {
-                  scenarioBtnClass = `${baseBtnClass} bg-red-900/40 text-red-300 hover:bg-red-600 hover:text-white border border-red-800 hover:border-red-500 hover:shadow-red-900/50`;
-                } else if (scenario === 'gameai') {
-                  scenarioBtnClass = `${baseBtnClass} bg-purple-900/40 text-purple-300 hover:bg-purple-600 hover:text-white border border-purple-800 hover:border-purple-500 hover:shadow-purple-900/50`;
-                }
+              <button onClick={sim.handleRerollEvents} disabled={sim.status === 'running'} className={scenarioBtnClass}>🎲 Reroll Events</button>
+              <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleReset} className={scenarioBtnClass}>🔄 Reset</button>
+              <button disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex === 0} onClick={sim.handleStepBackward} className={scenarioBtnClass}>⏪ Back</button>
 
-                const primaryBtnClass = "px-4 xl:px-6 py-1.5 xl:py-2 rounded-lg font-bold text-xs xl:text-sm transition-all duration-300 ease-out transform active:scale-[0.97] cursor-pointer disabled:opacity-30 disabled:pointer-events-none disabled:transform-none flex items-center justify-center gap-1.5 xl:gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex-1 sm:flex-none whitespace-nowrap";
+              {sim.status === 'running' ? (
+                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handlePause} className={`${primaryBtnClass} hover:bg-red-500 bg-red-600 text-white shadow-red-900/40`}>⏸️ Pause</button>
+              ) : sim.status === 'paused' ? (
+                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleResume} className={`${primaryBtnClass} hover:bg-green-500 bg-green-600 text-white shadow-green-900/40`}>▶️ Resume</button>
+              ) : sim.status === 'done' ? (
+                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleRun} className={`${primaryBtnClass} hover:bg-blue-500 bg-blue-600 text-white shadow-blue-900/40`}>🔄 Replay</button>
+              ) : (
+                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleRun} className={`${primaryBtnClass} w-full sm:w-auto hover:bg-green-500 bg-green-600 text-white shadow-green-900/40`}>
+                  {sim.isComputing ? 'Computing...' : '▶️ Run Simulations'}
+                </button>
+              )}
 
-                return (
-                  <>
-                    <button
-                      onClick={sim.handleRerollEvents}
-                      disabled={sim.status === 'running'}
-                      className={scenarioBtnClass}
-                    >
-                      🎲 Reroll Events
-                    </button>
-
-                    <button
-                      disabled={sim.isComputing || sim.isGraphLoading}
-                      onClick={sim.handleReset}
-                      className={scenarioBtnClass}
-                    >
-                      🔄 Reset
-                    </button>
-
-                    <button
-                      disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex === 0}
-                      onClick={sim.handleStepBackward}
-                      className={scenarioBtnClass}
-                    >
-                      ⏪ Back
-                    </button>
-
-                    {sim.status === 'running' ? (
-                      <button
-                        disabled={sim.isComputing || sim.isGraphLoading}
-                        onClick={sim.handlePause}
-                        className={`${primaryBtnClass} hover:bg-red-500 bg-red-600 text-white shadow-red-900/40`}
-                      >
-                        ⏸️ Pause
-                      </button>
-                    ) : sim.status === 'paused' ? (
-                      <button
-                        disabled={sim.isComputing || sim.isGraphLoading}
-                        onClick={sim.handleResume}
-                        className={`${primaryBtnClass} hover:bg-green-500 bg-green-600 text-white shadow-green-900/40`}
-                      >
-                        ▶️ Resume
-                      </button>
-                    ) : sim.status === 'done' ? (
-                      <button
-                        disabled={sim.isComputing || sim.isGraphLoading}
-                        onClick={sim.handleRun}
-                        className={`${primaryBtnClass} hover:bg-blue-500 bg-blue-600 text-white shadow-blue-900/40`}
-                      >
-                        🔄 Replay
-                      </button>
-                    ) : (
-                      <button
-                        disabled={sim.isComputing || sim.isGraphLoading}
-                        onClick={sim.handleRun}
-                        className={`${primaryBtnClass} w-full sm:w-auto hover:bg-green-500 bg-green-600 text-white shadow-green-900/40`}
-                      >
-                        {sim.isComputing ? 'Computing...' : '▶️ Run Simulations'}
-                      </button>
-                    )}
-
-                    <button
-                      disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex >= sim.totalSteps}
-                      onClick={sim.handleStepForward}
-                      className={scenarioBtnClass}
-                    >
-                      Fwd ⏭️
-                    </button>
-                    <button
-                      disabled={sim.isComputing || sim.isGraphLoading}
-                      onClick={sim.handleSkipEnd}
-                      className={scenarioBtnClass}
-                    >
-                      ⏭️ Skip
-                    </button>
-                  </>
-                );
-              })()}
+              <button disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex >= sim.totalSteps} onClick={sim.handleStepForward} className={scenarioBtnClass}>Fwd ⏭️</button>
+              <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleSkipEnd} className={scenarioBtnClass}>⏭️ Skip</button>
             </div>
           </main>
 
+          {/* ── Right Sidebar: Reports / Events / Panels ──────────────────────── */}
           <ResizableSidebar
             side="right"
             storageKey="sim_right_panel"
@@ -783,22 +552,19 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   disabled={sim.isComputing || sim.status === 'running'}
                   mapId={sim.mapId}
                 />
-
-                  <RobotLiveStatusPanel
-                    assignments={sim.robotAssignments}
-                    activeSteps={sim.activeSteps}
-                    graphNodes={sim.currentGraph.nodes}
-                    onRobotClick={(nodeId) => setHighlightedNodeId(nodeId)}
-                    mapId={sim.mapId}
-                  />
+                <RobotLiveStatusPanel
+                  assignments={sim.robotAssignments}
+                  activeSteps={sim.activeSteps}
+                  graphNodes={sim.currentGraph.nodes}
+                  onRobotClick={(nodeId) => setHighlightedNodeId(nodeId)}
+                  mapId={sim.mapId}
+                />
               </>
             )}
 
             {sim.mapId === 'campus' && scenario === 'network' && (
               <div className="shrink-0 bg-gray-900 border border-indigo-900/50 rounded-xl p-4 flex flex-col gap-2 max-h-[40vh] overflow-y-auto">
-                <div className="text-[10px] uppercase tracking-[0.2em] text-indigo-400 font-bold mb-1">
-                  Campus Topology Rules
-                </div>
+                <div className="text-[10px] uppercase tracking-[0.2em] text-indigo-400 font-bold mb-1">Campus Topology Rules</div>
                 <div className="text-xs text-gray-300 space-y-3 leading-relaxed">
                   <div>
                     <p className="text-gray-100 font-semibold mb-1">1. Routed Traffic with ACLs</p>
@@ -810,7 +576,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     </ul>
                     <p className="text-gray-500 italic mt-1.5 text-[10px]">Why? This simulates a strict university security policy, intentionally isolating student dormitories to specific academic clusters to prevent unauthorized campus-wide network access.</p>
                   </div>
-                  
                   <div className="pt-2 border-t border-gray-800">
                     <p className="text-gray-100 font-semibold mb-1">2. Local Switched Traffic</p>
                     <p className="text-gray-400">The <span className="text-yellow-400 font-medium">Yellow Zone (IT, Library, Dome)</span> shares a single subnet (192.168.1.x). Their traffic never touches a router; it flows freely via Layer 2 switching on S0, bypassing all security ACLs.</p>
@@ -830,15 +595,13 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               </div>
             )}
 
+            {/* Synthetic Size Adjuster */}
             {sim.mapId === 'synthetic' && (
               <div className="shrink-0 glass-panel rounded-xl p-4 flex flex-col gap-2 fade-in hover:shadow-glow-blue transition-shadow duration-500">
-                <div className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold mb-1">
-                  Dynamic Size Adjuster
-                </div>
-                
+                <div className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold mb-1">Dynamic Size Adjuster</div>
+
                 <div className="flex items-center justify-between gap-2">
-                  
-                  {/* --- CUSTOM NODES ADJUSTER --- */}
+                  {/* Nodes */}
                   <label className="flex items-center gap-1.5 flex-1 rounded-md border border-white/10 bg-black/40 shadow-inner pl-3 pr-0 py-1 overflow-hidden transition-colors focus-within:border-teal-500">
                     <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold flex-1">Nodes</span>
                     <div className="flex items-stretch bg-black/60 border-l border-white/10 h-full ml-1">
@@ -846,59 +609,25 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         type="number"
                         min={MIN_SYNTHETIC_NODES[sim.sizingKey as SizingKey]}
                         max={MAX_SYNTHETIC_NODES[sim.sizingKey as SizingKey]}
-                        value={localNodesInput}
-                        onChange={(event) => setLocalNodesInput(event.target.value)}
-                        onBlur={() => {
-                          if (localNodesInput !== '') sim.updateSyntheticSizing('nodes', Number(localNodesInput));
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && localNodesInput !== '') {
-                            sim.updateSyntheticSizing('nodes', Number(localNodesInput));
-                            (e.target as HTMLInputElement).blur();
-                          }
-                        }}
+                        value={sim.localNodesInput}
+                        onChange={(e) => sim.setLocalNodesInput(e.target.value)}
+                        onBlur={() => { if (sim.localNodesInput !== '') sim.updateSyntheticSizing('nodes', Number(sim.localNodesInput)); }}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && sim.localNodesInput !== '') { sim.updateSyntheticSizing('nodes', Number(sim.localNodesInput)); (e.target as HTMLInputElement).blur(); }}}
                         disabled={sim.isComputing || sim.isGraphLoading}
-                        /* Tailwind magic to completely hide the ugly default browser arrows */
                         className="w-10 bg-transparent py-1 text-center text-xs font-bold text-teal-300 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 m-0"
                       />
                       <div className="flex flex-col border-l border-white/10 bg-black/40 w-5">
-                        <button
-                          type="button"
-                          disabled={sim.isComputing || sim.isGraphLoading || sim.syntheticSizing.nodes >= MAX_SYNTHETIC_NODES[sim.sizingKey as SizingKey]}
-                          onClick={() => {
-                            if (scenario === 'gameai' && sim.gameBoard) {
-                              sim.updateSyntheticSizing('nodes', getNextGameAINodes(sim.syntheticSizing.nodes, 'up', sim.gameBoard));
-                            } else if (scenario === 'robotics') {
-                              sim.updateSyntheticSizing('nodes', getNextRoboticsNodes(sim.syntheticSizing.nodes, 'up'));
-                            } else {
-                              sim.updateSyntheticSizing('nodes', sim.syntheticSizing.nodes + 1);
-                            }
-                          }}
-                          className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center"
-                        >
+                        <button type="button" disabled={sim.isComputing || sim.isGraphLoading || sim.syntheticSizing.nodes >= MAX_SYNTHETIC_NODES[sim.sizingKey as SizingKey]} onClick={sim.stepNodesUp} className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center">
                           <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
                         </button>
-                        <button
-                          type="button"
-                          disabled={sim.isComputing || sim.isGraphLoading || sim.syntheticSizing.nodes <= MIN_SYNTHETIC_NODES[sim.sizingKey as SizingKey]}
-                          onClick={() => {
-                            if (scenario === 'gameai' && sim.gameBoard) {
-                              sim.updateSyntheticSizing('nodes', getNextGameAINodes(sim.syntheticSizing.nodes, 'down', sim.gameBoard));
-                            } else if (scenario === 'robotics') {
-                              sim.updateSyntheticSizing('nodes', getNextRoboticsNodes(sim.syntheticSizing.nodes, 'down'));
-                            } else {
-                              sim.updateSyntheticSizing('nodes', sim.syntheticSizing.nodes - 1);
-                            }
-                          }}
-                          className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 border-t border-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center"
-                        >
+                        <button type="button" disabled={sim.isComputing || sim.isGraphLoading || sim.syntheticSizing.nodes <= MIN_SYNTHETIC_NODES[sim.sizingKey as SizingKey]} onClick={sim.stepNodesDown} className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 border-t border-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center">
                           <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
                         </button>
                       </div>
                     </div>
                   </label>
 
-                  {/* --- CUSTOM LINKS ADJUSTER --- */}
+                  {/* Links */}
                   <label className="flex items-center gap-1.5 flex-1 rounded-md border border-white/10 bg-black/40 shadow-inner pl-3 pr-0 py-1 overflow-hidden transition-colors focus-within:border-teal-500">
                     <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold flex-1">Links</span>
                     <div className="flex items-stretch bg-black/60 border-l border-white/10 h-full ml-1">
@@ -906,45 +635,27 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         type="number"
                         min={MIN_SYNTHETIC_LINKS[scenario]}
                         max={1600}
-                        value={localEdgesInput}
-                        onChange={(event) => setLocalEdgesInput(event.target.value)}
-                        onBlur={() => {
-                          if (localEdgesInput !== '') sim.updateSyntheticSizing('edges', Math.max(MIN_SYNTHETIC_LINKS[scenario], Number(localEdgesInput)));
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && localEdgesInput !== '') {
-                            sim.updateSyntheticSizing('edges', Math.max(MIN_SYNTHETIC_LINKS[scenario], Number(localEdgesInput)));
-                            (e.target as HTMLInputElement).blur();
-                          }
-                        }}
+                        value={sim.localEdgesInput}
+                        onChange={(e) => sim.setLocalEdgesInput(e.target.value)}
+                        onBlur={() => { if (sim.localEdgesInput !== '') sim.updateSyntheticSizing('edges', Math.max(MIN_SYNTHETIC_LINKS[scenario], Number(sim.localEdgesInput))); }}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && sim.localEdgesInput !== '') { sim.updateSyntheticSizing('edges', Math.max(MIN_SYNTHETIC_LINKS[scenario], Number(sim.localEdgesInput))); (e.target as HTMLInputElement).blur(); }}}
                         disabled={sim.isComputing || sim.isGraphLoading}
                         className="w-10 bg-transparent py-1 text-center text-xs font-bold text-teal-300 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 m-0"
                       />
                       <div className="flex flex-col border-l border-white/10 bg-black/40 w-5">
-                        <button
-                          type="button"
-                          disabled={sim.isComputing || sim.isGraphLoading || generatedEdgeCount >= 1600}
-                          onClick={() => sim.updateSyntheticSizing('edges', generatedEdgeCount + 1)}
-                          className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center"
-                        >
+                        <button type="button" disabled={sim.isComputing || sim.isGraphLoading || sim.generatedEdgeCount >= 1600} onClick={sim.stepEdgesUp} className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center">
                           <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
                         </button>
-                        <button
-                          type="button"
-                          disabled={sim.isComputing || sim.isGraphLoading || generatedEdgeCount <= MIN_SYNTHETIC_LINKS[scenario]}
-                          onClick={() => sim.updateSyntheticSizing('edges', generatedEdgeCount - 1)}
-                          className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 border-t border-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center"
-                        >
+                        <button type="button" disabled={sim.isComputing || sim.isGraphLoading || sim.generatedEdgeCount <= MIN_SYNTHETIC_LINKS[scenario]} onClick={sim.stepEdgesDown} className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 border-t border-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center">
                           <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
                         </button>
                       </div>
                     </div>
                   </label>
-
                 </div>
-                
+
                 <div className="text-center mt-1 text-[9px] text-gray-500 tracking-wider">
-                  Generated: {generatedNodeCount} nodes / {generatedEdgeCount} links
+                  Generated: {sim.generatedNodeCount} nodes / {sim.generatedEdgeCount} links
                 </div>
               </div>
             )}
@@ -952,6 +663,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         </div>
       </div>
 
+      {/* ── History Modal ──────────────────────────────────────────────────────── */}
       <HistoryModal
         isOpen={sim.isHistoryModalOpen}
         onClose={() => sim.setIsHistoryModalOpen(false)}
@@ -961,15 +673,14 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         onImportHistory={sim.handleImportHistory}
         activeAlgorithms={sim.activeAlgorithms}
       />
+
+      {/* ── Save Result Modal ──────────────────────────────────────────────────── */}
       {sim.isSaveModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 transition-opacity">
           <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-md flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden">
             <div className="p-6">
               <h3 className="text-lg font-bold text-white mb-2">💾 Save Result to History</h3>
-              <p className="text-sm text-gray-400 mb-5">
-                Enter a custom name for this simulation run to easily identify it later.
-              </p>
-
+              <p className="text-sm text-gray-400 mb-5">Enter a custom name for this simulation run to easily identify it later.</p>
               <input
                 type="text"
                 value={sim.saveNameInput}
@@ -980,21 +691,9 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 onKeyDown={(e) => e.key === 'Enter' && sim.confirmSaveResult()}
               />
             </div>
-
             <div className="bg-gray-950 border-t border-gray-800 p-4 flex justify-end gap-3">
-              <button
-                onClick={() => sim.setIsSaveModalOpen(false)}
-                className="px-5 py-2.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold text-sm transition-all cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => sim.confirmSaveResult()}
-                disabled={sim.isCurrentSaved || sim.isComputing}
-                className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)] cursor-pointer"
-              >
-                Save Result
-              </button>
+              <button onClick={() => sim.setIsSaveModalOpen(false)} className="px-5 py-2.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold text-sm transition-all cursor-pointer">Cancel</button>
+              <button onClick={() => sim.confirmSaveResult()} disabled={sim.isCurrentSaved || sim.isComputing} className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)] cursor-pointer">Save Result</button>
             </div>
           </div>
         </div>

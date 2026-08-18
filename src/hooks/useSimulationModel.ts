@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { GameAIBoard, GraphSizing, RobotAssignment, ScenarioGraph, ScenarioType, SimulationResult } from '../types';
 import { loadLocalHistory, persistLocalHistory } from '../utils/historyHelpers';
 import { HistoryEntry } from '../components/HistoryModal';
+import { MAP_REGISTRY } from '../config/mapRegistry';
 
 export type MultiResultsLocal = {
   bfs: SimulationResult;
@@ -11,6 +12,21 @@ export type MultiResultsLocal = {
 
 export type SizingKey = ScenarioType | 'gameai-dama' | 'gameai-checkers';
 
+// ── Exported constants (used by SimulationView for rendering) ──────────────────
+export const GAME_AI_BOARDS: { id: GameAIBoard; label: string; icon: string }[] = [
+  { id: 'dama', label: 'Turkish Draughts', icon: '🔵' },
+  { id: 'checkers', label: 'Checkers', icon: '⚫' },
+];
+
+export const MIN_SYNTHETIC_LINKS: Record<ScenarioType, number> = {
+  network: 4,
+  robotics: 18,
+  traffic: 4,
+  evacuation: 27,
+  gameai: 24,
+};
+
+// ── Sizing tables ──────────────────────────────────────────────────────────────
 const DEFAULT_SYNTHETIC_SIZING: Record<SizingKey, GraphSizing> = {
   network:         { nodes: 28,  edges: 27  },
   robotics:        { nodes: 56,  edges: 63  },
@@ -41,10 +57,51 @@ export const MIN_SYNTHETIC_NODES: Record<SizingKey, number> = {
   'gameai-checkers': 14
 };
 
+// ── Pure helpers (node stepping logic) ────────────────────────────────────────
+export function getNextGameAINodes(currentNodes: number, direction: 'up' | 'down', board: GameAIBoard = 'dama'): number {
+  if (board === 'dama') {
+    const D = Math.round(Math.sqrt(currentNodes - 1));
+    const nextD = direction === 'up' ? Math.min(D + 1, 12) : Math.max(D - 1, 4);
+    return (nextD * nextD) + 1;
+  } else {
+    let D = 4;
+    while (Math.ceil((D * D) / 2) + 2 <= currentNodes && D <= 12) {
+      D++;
+    }
+    D--;
+    const nextD = direction === 'up' ? Math.min(D + 1, 12) : Math.max(D - 1, 4);
+    return Math.ceil((nextD * nextD) / 2) + 2;
+  }
+}
+
+export function getNextRoboticsNodes(currentNodes: number, direction: 'up' | 'down'): number {
+  const sizes = [13, 16, 19, 25, 29, 33, 36, 41, 46, 55, 61, 67, 71, 78, 85, 97, 105, 113, 118, 127, 136, 151, 161, 171, 177, 188, 199, 217];
+  let currentIndex = sizes.findIndex(s => s >= currentNodes);
+  if (currentIndex === -1) currentIndex = sizes.length - 1;
+
+  if (direction === 'up') {
+    return sizes[Math.min(currentIndex + 1, sizes.length - 1)];
+  } else {
+    // If the currentNodes is exactly a size, step down. If it's between sizes, stepping down goes to the previous valid size.
+    if (sizes[currentIndex] > currentNodes && currentIndex > 0) {
+      return sizes[currentIndex - 1];
+    }
+    return sizes[Math.max(currentIndex - 1, 0)];
+  }
+}
+
+// ── Pending navigation type ────────────────────────────────────────────────────
+export type PendingNavigation =
+  | { type: 'back' }
+  | { type: 'map'; mapId: string }
+  | { type: 'gameboard'; boardId: GameAIBoard };
+
+// ──────────────────────────────────────────────────────────────────────────────
+
 const clampSizing = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, Math.round(value)));
 
-export function useSimulationModel(scenario: ScenarioType) {
+export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) {
   // Configuration State
   const [gameBoard, setGameBoard] = useState<GameAIBoard>('dama');
   const [seed, setSeed] = useState(() => Date.now());
@@ -94,7 +151,7 @@ export function useSimulationModel(scenario: ScenarioType) {
   const syntheticSizing = syntheticSizingByScenario[sizingKey] ?? DEFAULT_SYNTHETIC_SIZING[sizingKey];
   const updateSyntheticSizing = useCallback((field: keyof GraphSizing, rawValue: number) => {
     // We set min to 0 here to allow the user to freely type single digits (like '2' for '200')
-    // without the input instantly locking to the minimum (e.g. 7). The backend generators 
+    // without the input instantly locking to the minimum (e.g. 7). The backend generators
     // will safely clamp the final value to the actual scenario minimums anyway.
     const min = 0;
     const max = field === 'nodes' ? MAX_SYNTHETIC_NODES[sizingKey] : 1600;
@@ -133,9 +190,9 @@ export function useSimulationModel(scenario: ScenarioType) {
   const [simResults, setSimResults] = useState<MultiResultsLocal | null>(null);
   const [bfsResult, setBfsResult] = useState<{ pathLength: number } | null>(null);
   const [isComputing, setIsComputing] = useState(true);
-  
+
   const [activeAlgorithms, setActiveAlgorithms] = useState({ bfs: true, dfs: true, hybrid: true });
-  
+
   const [savedSignatures, setSavedSignatures] = useState<string[]>([]);
   const currentSignature = `${activeAlgorithms.bfs}-${activeAlgorithms.dfs}-${activeAlgorithms.hybrid}`;
   const isCurrentSaved = savedSignatures.includes(currentSignature);
@@ -147,9 +204,8 @@ export function useSimulationModel(scenario: ScenarioType) {
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [saveNameInput, setSaveNameInput] = useState('');
   const [saveDefaultName, setSaveDefaultName] = useState('');
-  
 
-
+  // ── Derived metrics exposed to the view ───────────────────────────────────────
   const totalSteps = useMemo(() => {
     if (!simResults) return 0;
     return Math.max(
@@ -159,7 +215,158 @@ export function useSimulationModel(scenario: ScenarioType) {
     );
   }, [simResults, activeAlgorithms]);
 
-  // DB / History Logic
+  // ── Derived view values ────────────────────────────────────────────────────────
+  // Is this an evacuation map that supports click-to-set-source?
+  const isEvacuationRealWorld = scenario === 'evacuation' && (mapId === 'city' || mapId === 'building');
+
+  // Number of history entries for this scenario (badge count in header)
+  const scenarioHistoryCount = useMemo(
+    () => history.filter(h => h.scenario === scenario).length,
+    [history, scenario]
+  );
+
+  // Shelf box counts derived from robot assignments (for canvas visualization)
+  const shelfBoxCounts = useMemo(() => {
+    if (scenario !== 'robotics' || !robotAssignments?.length) return undefined;
+    const map = new Map<string, number>();
+    robotAssignments.forEach(a => {
+      a.destinations.forEach(destId => {
+        const count = a.boxCounts?.[destId] ?? 6;
+        // Sum total required boxes across all robots assigned to this destination
+        map.set(destId, (map.get(destId) ?? 0) + count);
+      });
+    });
+    return map;
+  }, [scenario, robotAssignments]);
+
+  // Node/edge display counts for the synthetic size adjuster panel
+  const generatedNodeCount = currentGraph?.nodes.length ?? syntheticSizing.nodes;
+  // Divide the edges length by 2 to show the number of physical undirected links (lines) drawn on the canvas,
+  // since the backend models every physical link as two bidirectional directed edges (A->B and B->A).
+  // We explicitly exclude 'wireless' edges (like capture jumps in Game AI) from this visual count.
+  const generatedEdgeCount = currentGraph
+    ? Math.floor(currentGraph.edges.filter(e => e.type !== 'wireless').length / 2)
+    : syntheticSizing.edges;
+
+  // ── Local sizing input state (controlled inputs for the size adjuster panel) ──
+  const [localNodesInput, setLocalNodesInput] = useState<string>(syntheticSizing.nodes.toString());
+  const [localEdgesInput, setLocalEdgesInput] = useState<string>(syntheticSizing.edges.toString());
+
+  useEffect(() => {
+    setLocalNodesInput(generatedNodeCount.toString());
+  }, [generatedNodeCount]);
+
+  useEffect(() => {
+    setLocalEdgesInput(generatedEdgeCount.toString());
+  }, [generatedEdgeCount]);
+
+  // ── Algorithm toggle guard ────────────────────────────────────────────────────
+  const [minAlgoWarning, setMinAlgoWarning] = useState(false);
+  const minAlgoWarningTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const toggleAlgorithm = useCallback((algo: 'bfs' | 'dfs' | 'hybrid') => {
+    setActiveAlgorithms(prev => {
+      const next = { ...prev, [algo]: !prev[algo] };
+      const anyActive = next.bfs || next.dfs || next.hybrid;
+      if (!anyActive) {
+        // Show warning toast and do NOT apply the toggle
+        if (minAlgoWarningTimer.current) clearTimeout(minAlgoWarningTimer.current);
+        setMinAlgoWarning(true);
+        minAlgoWarningTimer.current = setTimeout(() => setMinAlgoWarning(false), 2800);
+        return prev;
+      }
+      return next;
+    });
+  }, []);
+
+  // ── Navigation guard (unsaved result prompt) ───────────────────────────────────
+  const [pendingNavigation, setPendingNavigation] = useState<PendingNavigation | null>(null);
+
+  const handleBack = useCallback(() => {
+    if (/* status 'done' and not saved */ false) {
+      // status is not available here — handled by the caller guard below
+    }
+    onBack?.();
+  }, [onBack]);
+
+  // These handlers check if results are unsaved and show the confirmation modal.
+  // They require `status` and `isCurrentSaved`, which come from the controller layer.
+  // So they are returned as factory functions that the view/controller can call with
+  // those values. The actual guard wiring happens in `useSimulation`.
+  const requestBack = useCallback((status: string, saved: boolean) => {
+    if (status === 'done' && !saved) {
+      setPendingNavigation({ type: 'back' });
+    } else {
+      onBack?.();
+    }
+  }, [onBack]);
+
+  const requestMapChange = useCallback((newMapId: string, status: string, saved: boolean) => {
+    if (mapId === newMapId) return;
+    if (status === 'done' && !saved) {
+      setPendingNavigation({ type: 'map', mapId: newMapId });
+    } else {
+      setMapId(newMapId);
+      const mapDef = MAP_REGISTRY[scenario]?.find(m => m.id === newMapId);
+      if (mapDef?.isRealWorld) setGraphSize('medium');
+    }
+  }, [mapId, scenario]);
+
+  const requestBoardChange = useCallback((boardId: GameAIBoard, status: string, saved: boolean) => {
+    if (gameBoard === boardId) return;
+    if (status === 'done' && !saved) {
+      setPendingNavigation({ type: 'gameboard', boardId });
+    } else {
+      setGameBoard(boardId);
+      setMapId('synthetic');
+    }
+  }, [gameBoard]);
+
+  const confirmPendingNavigation = useCallback(() => {
+    if (!pendingNavigation) return;
+    if (pendingNavigation.type === 'back') {
+      onBack?.();
+    } else if (pendingNavigation.type === 'map') {
+      setMapId(pendingNavigation.mapId);
+      const mapDef = MAP_REGISTRY[scenario]?.find(m => m.id === pendingNavigation.mapId);
+      if (mapDef?.isRealWorld) setGraphSize('medium');
+    } else if (pendingNavigation.type === 'gameboard') {
+      setGameBoard(pendingNavigation.boardId);
+      setMapId('synthetic');
+    }
+    setPendingNavigation(null);
+  }, [pendingNavigation, onBack, scenario]);
+
+  // ── Synthetic size stepper actions ────────────────────────────────────────────
+  const stepNodesUp = useCallback(() => {
+    if (scenario === 'gameai') {
+      updateSyntheticSizing('nodes', getNextGameAINodes(syntheticSizing.nodes, 'up', gameBoard));
+    } else if (scenario === 'robotics') {
+      updateSyntheticSizing('nodes', getNextRoboticsNodes(syntheticSizing.nodes, 'up'));
+    } else {
+      updateSyntheticSizing('nodes', syntheticSizing.nodes + 1);
+    }
+  }, [scenario, gameBoard, syntheticSizing.nodes, updateSyntheticSizing]);
+
+  const stepNodesDown = useCallback(() => {
+    if (scenario === 'gameai') {
+      updateSyntheticSizing('nodes', getNextGameAINodes(syntheticSizing.nodes, 'down', gameBoard));
+    } else if (scenario === 'robotics') {
+      updateSyntheticSizing('nodes', getNextRoboticsNodes(syntheticSizing.nodes, 'down'));
+    } else {
+      updateSyntheticSizing('nodes', syntheticSizing.nodes - 1);
+    }
+  }, [scenario, gameBoard, syntheticSizing.nodes, updateSyntheticSizing]);
+
+  const stepEdgesUp = useCallback(() => {
+    updateSyntheticSizing('edges', generatedEdgeCount + 1);
+  }, [generatedEdgeCount, updateSyntheticSizing]);
+
+  const stepEdgesDown = useCallback(() => {
+    updateSyntheticSizing('edges', generatedEdgeCount - 1);
+  }, [generatedEdgeCount, updateSyntheticSizing]);
+
+  // ── DB / History Logic ────────────────────────────────────────────────────────
   const loadHistory = useCallback(async () => {
     try {
       const allScenarios: string[] = ['network', 'robotics', 'traffic', 'evacuation', 'gameai'];
@@ -271,7 +478,7 @@ export function useSimulationModel(scenario: ScenarioType) {
         destinationDevices,
         robotAssignments,
         evacuationSourceId,
-        syntheticSizing: { 
+        syntheticSizing: {
           nodes: currentGraph.nodes.length,
           edges: Math.floor(currentGraph.edges.filter(e => e.type !== 'wireless').length / 2)
         },
@@ -284,14 +491,14 @@ export function useSimulationModel(scenario: ScenarioType) {
       alert('Failed to save to database. IndexedDB write failed.');
       console.warn('IndexedDB write failed:', err);
     });
-    
+
     setHistory(updatedHistory);
     setSavedSignatures(prev => [...prev, currentSignature]);
     setCurrentSavedId(newEntryId);
     setIsSaveModalOpen(false);
   }, [simResults, currentGraph, history, scenario, bfsResult, saveNameInput, saveDefaultName]);
 
-  // Fetch API logic
+  // ── Fetch API logic ───────────────────────────────────────────────────────────
   useEffect(() => {
     let isMounted = true;
     const fetchGraphStructure = async () => {
@@ -345,38 +552,39 @@ export function useSimulationModel(scenario: ScenarioType) {
     fetchGraphStructure();
     return () => { isMounted = false; };
   }, [scenario, mapId, gameBoard, graphSize, seed, syntheticSizing.nodes, syntheticSizing.edges, networkRoutingMode, sourceDevice, sourceDevices, destinationDevices, destinationDevices_robotics, evacuationSourceId]);
+
   // Synchronize custom endpoints if the map changes or if they are invalid
   useEffect(() => {
     if (scenario === 'robotics' && currentGraph && robotAssignments.length === 0) {
       // Pick a default robot (source) and at least 2 default destinations from the graph
       const defaultRobot = currentGraph.sourceIds?.[0] || currentGraph.sourceId || currentGraph.nodes.find(n => n.type === 'depot' || n.id.includes('Robot'))?.id;
-      
+
       const defaultDests = currentGraph.destinationIds && currentGraph.destinationIds.length >= 2
         ? currentGraph.destinationIds.slice(0, 2)
         : currentGraph.nodes.filter(n => n.type === 'shelf' || n.type === 'delivery_bay' || n.id.includes('nurse') || n.id.includes('air_pressure')).slice(0, 2).map(n => n.id);
-      
+
       if (defaultRobot && defaultDests.length > 0) {
         setRobotAssignments([{ robotId: defaultRobot, destinations: defaultDests }]);
       }
     }
-    
+
     if (networkRoutingMode === 'device-to-device' && currentGraph) {
       let currentSource = sourceDevice;
       const validSource = currentGraph.nodes.some(n => n.id === currentSource);
       const endpoints = currentGraph.nodes.filter(n => mapId === 'campus' ? n.type === 'access_point' : (n.type === 'access_point' || n.type === 'server'));
 
-      
+
       if (!validSource && endpoints.length > 0) {
         currentSource = endpoints[0].id;
         setSourceDevice(currentSource);
       }
-      
+
       const validDestinations = destinationDevices.filter(d => currentGraph.nodes.some(n => n.id === d));
-      
+
       // Ensure at least 2 destinations are selected (if available) so it doesn't default to empty
       const availableDests = endpoints.filter(e => e.id !== currentSource && !validDestinations.includes(e.id));
       const needed = 2 - validDestinations.length;
-      
+
       if (needed > 0 && availableDests.length > 0) {
         const newDests = [...validDestinations, ...availableDests.slice(0, needed).map(e => e.id)];
         setDestinationDevices(newDests);
@@ -446,9 +654,9 @@ export function useSimulationModel(scenario: ScenarioType) {
     // Per-robot assignment state (robotics only)
     robotAssignments, setRobotAssignments,
     deliveryMode, setDeliveryMode,
-    
+
     history, handleDeleteHistory, handleImportHistory, confirmSaveResult, openSaveModal,
-    isCurrentSaved, 
+    isCurrentSaved,
     setSavedSignatures,
     currentSavedId, setCurrentSavedId,
 
@@ -465,5 +673,35 @@ export function useSimulationModel(scenario: ScenarioType) {
     isComputing, setIsComputing,
     totalSteps,
     evacuationSourceId, setEvacuationSourceId,
+
+    // ── Extracted from SimulationView ──────────────────────────────────────────
+    // Derived view values
+    isEvacuationRealWorld,
+    scenarioHistoryCount,
+    shelfBoxCounts,
+    generatedNodeCount,
+    generatedEdgeCount,
+
+    // Local sizing input state (for the synthetic size adjuster controlled inputs)
+    localNodesInput, setLocalNodesInput,
+    localEdgesInput, setLocalEdgesInput,
+
+    // Algorithm toggle guard
+    minAlgoWarning,
+    toggleAlgorithm,
+
+    // Navigation guard
+    pendingNavigation,
+    setPendingNavigation,
+    requestBack,
+    requestMapChange,
+    requestBoardChange,
+    confirmPendingNavigation,
+
+    // Synthetic size stepper actions
+    stepNodesUp,
+    stepNodesDown,
+    stepEdgesUp,
+    stepEdgesDown,
   };
 }
