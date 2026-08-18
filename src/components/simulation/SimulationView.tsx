@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 
 import { ScenarioType, GameAIBoard } from '../../types';
 import { useSimulation } from '../../hooks/useSimulation';
+import { MAX_SYNTHETIC_NODES, MIN_SYNTHETIC_NODES, SizingKey } from '../../hooks/useSimulationModel';
 import { getScenario } from '../../config/scenarios';
 import { CiscoTerminal } from '../NetworkCanvas/renderers/scenarios/network/CiscoTerminal';
 import { MAP_REGISTRY } from '../../config/mapRegistry';
@@ -28,28 +29,12 @@ const GAME_AI_BOARDS: { id: GameAIBoard; label: string; icon: string }[] = [
   { id: 'checkers', label: 'Checkers', icon: '⚫' },
 ];
 
-const MIN_SYNTHETIC_NODES: Record<ScenarioType, number> = {
-  network: 7, //4 links
-  robotics: 13, //18 links
-  traffic: 9, //4 links
-  evacuation: 28, //27 links
-  gameai: 17, //24 links
-};
-
 const MIN_SYNTHETIC_LINKS: Record<ScenarioType, number> = {
   network: 4,
   robotics: 18,
   traffic: 4,
   evacuation: 27,
   gameai: 24,
-};
-
-const MAX_SYNTHETIC_NODES: Record<ScenarioType, number> = {
-  network: 220,
-  robotics: 217,
-  traffic: 220,
-  evacuation: 144,
-  gameai: 145,
 };
 
 function getNextGameAINodes(currentNodes: number, direction: 'up' | 'down', board: GameAIBoard = 'dama'): number {
@@ -97,6 +82,23 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const [localNodesInput, setLocalNodesInput] = useState<string>(sim.syntheticSizing.nodes.toString());
   const [localEdgesInput, setLocalEdgesInput] = useState<string>(sim.syntheticSizing.edges.toString());
   const [pendingNavigation, setPendingNavigation] = useState<{type: 'back'} | {type: 'map', mapId: string} | {type: 'gameboard', boardId: GameAIBoard} | null>(null);
+  // Algorithm visibility — clicking the pills in the header toggles each algorithm on/off
+  const [minAlgoWarning, setMinAlgoWarning] = useState(false);
+  const minAlgoWarningTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const toggleAlgorithm = (algo: 'bfs' | 'dfs' | 'hybrid') => {
+    sim.setActiveAlgorithms(prev => {
+      const next = { ...prev, [algo]: !prev[algo] };
+      const anyActive = next.bfs || next.dfs || next.hybrid;
+      if (!anyActive) {
+        // Show warning toast and do NOT apply the toggle
+        if (minAlgoWarningTimer.current) clearTimeout(minAlgoWarningTimer.current);
+        setMinAlgoWarning(true);
+        minAlgoWarningTimer.current = setTimeout(() => setMinAlgoWarning(false), 2800);
+        return prev;
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     const actualNodes = sim.currentGraph?.nodes.length ?? sim.syntheticSizing.nodes;
@@ -229,19 +231,42 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               <h1 className="font-bold text-xs sm:text-base md:text-lg text-white tracking-widest drop-shadow-md truncate">{sc?.name}</h1>
             </div>
 
-            {/* Algorithm Legend / Indicator */}
-            <div className="hidden lg:flex items-center gap-4 ml-4 px-4 py-1.5 bg-black/40 rounded-full border border-white/5 text-[10px] font-bold tracking-widest uppercase shrink-0">
-              <span className="text-green-400 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]">
-                <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]"></span> BFS
-              </span>
-              <span className="text-gray-600">|</span>
-              <span className="text-purple-400 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(192,132,252,0.5)]">
-                <span className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)]"></span> DFS
-              </span>
-              <span className="text-gray-600">|</span>
-              <span className="text-orange-400 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(251,146,60,0.5)]">
-                <span className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]"></span> Hybrid
-              </span>
+            {/* Algorithm Legend / Indicator — clickable to toggle each algorithm */}
+            <div className="hidden lg:flex items-center gap-3 ml-4 px-4 py-1.5 bg-black/40 rounded-full border border-white/5 text-[10px] font-bold tracking-widest uppercase shrink-0 relative">
+              {/* Min-algorithm warning toast */}
+              {minAlgoWarning && (
+                <div className="fixed bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap z-[9999]
+                  flex items-center gap-1.5 px-4 py-2.5 rounded-lg
+                  bg-amber-950/95 border border-amber-500/60 text-amber-300
+                  text-xs font-bold shadow-[0_0_20px_rgba(245,158,11,0.25)]
+                  animate-fadeIn pointer-events-none">
+                  <span className="text-amber-400">⚠</span>
+                  At least 1 algorithm must remain active
+                </div>
+              )}
+              {([
+                { id: 'bfs' as const, label: 'BFS', textCls: 'text-green-400', dotCls: 'bg-green-500', hoverBg: 'hover:bg-green-500/15', activeBg: 'bg-green-500/10', glow: 'rgba(74,222,128,0.5)', dotGlow: 'rgba(34,197,94,0.8)' },
+                { id: 'dfs' as const, label: 'DFS', textCls: 'text-purple-400', dotCls: 'bg-purple-500', hoverBg: 'hover:bg-purple-500/15', activeBg: 'bg-purple-500/10', glow: 'rgba(192,132,252,0.5)', dotGlow: 'rgba(168,85,247,0.8)' },
+                { id: 'hybrid' as const, label: 'Hybrid', textCls: 'text-orange-400', dotCls: 'bg-orange-500', hoverBg: 'hover:bg-orange-500/15', activeBg: 'bg-orange-500/10', glow: 'rgba(251,146,60,0.5)', dotGlow: 'rgba(249,115,22,0.8)' },
+              ]).map(({ id, label, textCls, dotCls, hoverBg, activeBg, glow, dotGlow }, i) => (
+                <React.Fragment key={id}>
+                  {i > 0 && <span className="text-gray-600">|</span>}
+                  <button
+                    onClick={() => toggleAlgorithm(id)}
+                    title={sim.activeAlgorithms[id] ? `Hide ${label} from simulation view` : `Show ${label} in simulation view`}
+                    className={`flex items-center gap-1.5 rounded-md px-2 py-1 transition-all duration-150 cursor-pointer select-none ${
+                      sim.activeAlgorithms[id]
+                        ? `${textCls} ${activeBg} ${hoverBg} drop-shadow-[0_0_6px_${glow}] hover:drop-shadow-[0_0_12px_${glow}] hover:brightness-125 active:scale-95`
+                        : `text-gray-500 opacity-50 hover:opacity-75 hover:bg-white/5 active:scale-95`
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full flex-shrink-0 transition-all duration-200 ${
+                      sim.activeAlgorithms[id] ? `${dotCls} shadow-[0_0_8px_${dotGlow}]` : 'bg-gray-600'
+                    }`} />
+                    <span className={sim.activeAlgorithms[id] ? '' : 'line-through'}>{label}</span>
+                  </button>
+                </React.Fragment>
+              ))}
             </div>
           </div>
           
@@ -298,6 +323,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 totalSteps={sim.totalSteps}
                 totalNodes={sim.currentGraph.nodes.length}
                 optimalPathLength={sim.bfsResult?.pathLength ?? 0}
+                activeAlgorithms={sim.activeAlgorithms}
+                mapId={sim.mapId}
               />
             ) : (
               <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 flex flex-col items-center justify-center py-12 text-center text-gray-400 animate-pulse">
@@ -559,6 +586,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     mapId={sim.mapId}
                     shelfBoxCounts={shelfBoxCounts}
                     robotAssignments={sim.robotAssignments}
+                    activeAlgorithms={sim.activeAlgorithms}
                   />
 
                   {scenario === 'network' && (sim.mapId === 'companybusiness' || sim.mapId === 'campus') && highlightedNodeId && (
@@ -728,6 +756,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   onSaveResult={sim.openSaveModal}
                   isSaved={sim.isCurrentSaved}
                   scenarioColor={sc?.color}
+                  activeAlgorithms={sim.activeAlgorithms}
                 />
               </div>
             )}
@@ -740,6 +769,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 scenario={scenario}
                 onEventClick={handleEventClick}
                 highlightedNodeId={highlightedNodeId}
+                activeAlgorithms={sim.activeAlgorithms}
               />
             </div>
 
@@ -814,8 +844,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     <div className="flex items-stretch bg-black/60 border-l border-white/10 h-full ml-1">
                       <input
                         type="number"
-                        min={MIN_SYNTHETIC_NODES[scenario]}
-                        max={MAX_SYNTHETIC_NODES[scenario]}
+                        min={MIN_SYNTHETIC_NODES[sim.sizingKey as SizingKey]}
+                        max={MAX_SYNTHETIC_NODES[sim.sizingKey as SizingKey]}
                         value={localNodesInput}
                         onChange={(event) => setLocalNodesInput(event.target.value)}
                         onBlur={() => {
@@ -834,7 +864,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                       <div className="flex flex-col border-l border-white/10 bg-black/40 w-5">
                         <button
                           type="button"
-                          disabled={sim.isComputing || sim.isGraphLoading || sim.syntheticSizing.nodes >= MAX_SYNTHETIC_NODES[scenario]}
+                          disabled={sim.isComputing || sim.isGraphLoading || sim.syntheticSizing.nodes >= MAX_SYNTHETIC_NODES[sim.sizingKey as SizingKey]}
                           onClick={() => {
                             if (scenario === 'gameai' && sim.gameBoard) {
                               sim.updateSyntheticSizing('nodes', getNextGameAINodes(sim.syntheticSizing.nodes, 'up', sim.gameBoard));
@@ -850,7 +880,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         </button>
                         <button
                           type="button"
-                          disabled={sim.isComputing || sim.isGraphLoading || sim.syntheticSizing.nodes <= MIN_SYNTHETIC_NODES[scenario]}
+                          disabled={sim.isComputing || sim.isGraphLoading || sim.syntheticSizing.nodes <= MIN_SYNTHETIC_NODES[sim.sizingKey as SizingKey]}
                           onClick={() => {
                             if (scenario === 'gameai' && sim.gameBoard) {
                               sim.updateSyntheticSizing('nodes', getNextGameAINodes(sim.syntheticSizing.nodes, 'down', sim.gameBoard));
@@ -929,6 +959,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         scenario={scenario}
         onDeleteHistory={sim.handleDeleteHistory}
         onImportHistory={sim.handleImportHistory}
+        activeAlgorithms={sim.activeAlgorithms}
       />
       {sim.isSaveModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 transition-opacity">
@@ -958,7 +989,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 Cancel
               </button>
               <button
-                onClick={sim.confirmSaveResult}
+                onClick={() => sim.confirmSaveResult()}
+                disabled={sim.isCurrentSaved || sim.isComputing}
                 className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)] cursor-pointer"
               >
                 Save Result

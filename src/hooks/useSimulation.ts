@@ -47,6 +47,7 @@ export interface SimulationState {
   setGraphSize: (size: GraphSize) => void;
   syntheticSizing: GraphSizing;
   updateSyntheticSizing: (field: keyof GraphSizing, value: number) => void;
+  sizingKey: string;
   networkRoutingMode: 'default' | 'device-to-device';
   setNetworkRoutingMode: (mode: 'default' | 'device-to-device') => void;
   sourceDevice: string;
@@ -77,6 +78,8 @@ export interface SimulationState {
   setSaveNameInput: (name: string) => void;
   saveDefaultName: string;
   setSaveDefaultName: (name: string) => void;
+  activeAlgorithms: { bfs: boolean; dfs: boolean; hybrid: boolean };
+  setActiveAlgorithms: React.Dispatch<React.SetStateAction<{ bfs: boolean; dfs: boolean; hybrid: boolean }>>;
   confirmSaveResult: () => void;
   openSaveModal: () => void;
   handleDeleteHistory: (ids: string[]) => void;
@@ -105,7 +108,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
     const fetchGraphData = async () => {
       try {
         model.setIsComputing(true);
-        model.setIsCurrentSaved(false);
+        model.setSavedSignatures([]);
         model.setCurrentSavedId(null);
         model.setBfsResult(null);
         controller.setStatus('idle');
@@ -231,7 +234,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
     totalSteps: model.totalSteps,
     activeSteps: controller.activeSteps,
 
-    // Save State
+    // History & State
     isCurrentSaved: model.isCurrentSaved,
     currentSavedId: model.currentSavedId,
 
@@ -244,6 +247,7 @@ export function useSimulation(params: { scenario: ScenarioType }) {
     setGraphSize: model.setGraphSize,
     syntheticSizing: model.syntheticSizing,
     updateSyntheticSizing: model.updateSyntheticSizing,
+    sizingKey: model.sizingKey,
     networkRoutingMode: model.networkRoutingMode,
     setNetworkRoutingMode: model.setNetworkRoutingMode,
     sourceDevice: model.sourceDevice,
@@ -276,6 +280,8 @@ export function useSimulation(params: { scenario: ScenarioType }) {
     setSaveNameInput: model.setSaveNameInput,
     saveDefaultName: model.saveDefaultName,
     setSaveDefaultName: model.setSaveDefaultName,
+    activeAlgorithms: model.activeAlgorithms,
+    setActiveAlgorithms: model.setActiveAlgorithms,
     confirmSaveResult,
     openSaveModal: model.openSaveModal,
     handleDeleteHistory: model.handleDeleteHistory,

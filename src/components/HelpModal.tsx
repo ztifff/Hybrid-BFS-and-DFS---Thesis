@@ -159,9 +159,9 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose }) => {
                 : [`${base}/CanvasControl.png`];
             }
             if (tab === 'buttons') {
-              if (scenario === 'network') images = [`${base}/SimulationControl.png`, `${base}/Mode1.png`, `${base}/Mode2.png`, `${base}/Mode3.png`];
-              else if (scenario === 'robotics') images = [`${base}/SimulationControl.png`, `${base}/RobotAssign.png`, `${base}/RobotAssign1.png`, `${base}/RobotFleetStatus.png`];
-              else images = [`${base}/SimulationControl.png`];
+              if (scenario === 'network') images = [`${base}/SimulationControl.png`, `/help-images/ActiveAlgo.png`, `${base}/Mode1.png`, `${base}/Mode2.png`, `${base}/Mode3.png`];
+              else if (scenario === 'robotics') images = [`${base}/SimulationControl.png`, `/help-images/ActiveAlgo.png`, `${base}/RobotAssign.png`, `${base}/RobotAssign1.png`, `${base}/RobotFleetStatus.png`];
+              else images = [`${base}/SimulationControl.png`, `/help-images/ActiveAlgo.png`];
             }
             if (tab === 'maps') {
               images = scenario === 'network'
@@ -273,6 +273,7 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose }) => {
             <>
               <Section title="Map Selector (Above Canvas)">
                 <Item label="Simultaneous Multi-Algorithm Evaluation badge" icon="🔵">Indicates that BFS, DFS, and Hybrid are all running at the same time on the same graph — not sequentially.</Item>
+                <Item label="Active Algorithm Toggle" icon="🔘">Click the BFS, DFS, or HYBRID pills to toggle them on or off. Turning off an algorithm removes it from the canvas, live metrics, and execution benchmark tables. At least one algorithm must remain active.</Item>
                 <Item label="Dynamic: [description]" icon="⚡">Describes the type of dynamic events that will appear during this scenario's simulation.</Item>
                 <Item label="Map buttons (Synthetic / Company / Campus)" icon="🗺️">Switches the active graph map. Synthetic generates a random configurable graph; real-world maps load fixed topology data. See the Map Variants tab for details on each map.</Item>
                 {scenario === 'gameai' && <Item label="Game Board (Turkish Draughts / Checkers)" icon="♟️">Switches the game board type. Each has different tile layouts, movement rules, and opponent behavior patterns.</Item>}

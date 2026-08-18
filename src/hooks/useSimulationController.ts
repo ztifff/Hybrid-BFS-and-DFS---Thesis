@@ -68,11 +68,33 @@ export function useSimulationController(model: {
     return () => stopAnimation();
   }, [stopAnimation]);
 
+  const prevTotalStepsRef = useRef(totalSteps);
+
   useEffect(() => {
-    if (stepIndex >= totalSteps && status === 'running') {
+    const prevTotalSteps = prevTotalStepsRef.current;
+
+    if (stepIndex > totalSteps) {
+      // Clamp down if max steps shrinks
+      setStepIndex(totalSteps);
+      if (status === 'running') {
+        stopAnimation();
+        setStatus('done');
+      }
+    } else if (stepIndex === prevTotalSteps && totalSteps > prevTotalSteps && stepIndex > 0) {
+      // Auto-forward to the new end if the user was already at the end and max steps expanded
+      setStepIndex(totalSteps);
+    } else if (stepIndex === totalSteps && status === 'running') {
+      // Stop animation naturally when reaching the end
       stopAnimation();
       setStatus('done');
     }
+    
+    // Clear the 'done' state if the max timeline expanded past our playhead and we didn't auto-forward
+    if (status === 'done' && stepIndex < totalSteps && !(stepIndex === prevTotalSteps && totalSteps > prevTotalSteps)) {
+      setStatus('paused');
+    }
+
+    prevTotalStepsRef.current = totalSteps;
   }, [stepIndex, totalSteps, status, stopAnimation]);
 
   const handleRun = () => {

@@ -20,6 +20,7 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
   autoFit,
   shelfBoxCounts,
   robotAssignments,
+  activeAlgorithms,
 }) => {
   const { nodes, edges, width, height } = graph;
 
@@ -44,6 +45,23 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
   const [visibleAlgos, setVisibleAlgos] = useState({ bfs: true, dfs: true, hybrid: true });
   const [isShowOpen, setIsShowOpen] = useState(false);
   const [isFollowOpen, setIsFollowOpen] = useState(false);
+
+  // Sync header pill toggles → canvas visibility
+  useEffect(() => {
+    if (!activeAlgorithms) return;
+    setVisibleAlgos(prev => {
+      const next = {
+        bfs: activeAlgorithms.bfs ? prev.bfs : false,
+        dfs: activeAlgorithms.dfs ? prev.dfs : false,
+        hybrid: activeAlgorithms.hybrid ? prev.hybrid : false,
+      };
+      // If an algo was just re-enabled, restore it to visible
+      if (activeAlgorithms.bfs && !prev.bfs) next.bfs = true;
+      if (activeAlgorithms.dfs && !prev.dfs) next.dfs = true;
+      if (activeAlgorithms.hybrid && !prev.hybrid) next.hybrid = true;
+      return next;
+    });
+  }, [activeAlgorithms?.bfs, activeAlgorithms?.dfs, activeAlgorithms?.hybrid]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleAlgo = (algo: 'bfs' | 'dfs' | 'hybrid') => {
     setVisibleAlgos(prev => {
@@ -286,6 +304,7 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
         isLayeredMap={isLayeredMap} activeFloor={activeFloor} setActiveFloor={setActiveFloor} uniqueFloors={uniqueFloors}
         isShowOpen={isShowOpen} setIsShowOpen={setIsShowOpen} visibleAlgos={visibleAlgos} toggleAlgo={toggleAlgo}
         isFollowOpen={isFollowOpen} setIsFollowOpen={setIsFollowOpen} followAlgo={followAlgo} setFollowAlgo={setFollowAlgo}
+        activeAlgorithms={activeAlgorithms}
       />
       <canvas ref={canvasRef} style={{ display: 'block', width: '100%', height: '100%' }} />
     </div>

@@ -9,6 +9,7 @@ interface Props {
   onEventClick?: (nodeId: string) => void;
   highlightedNodeId?: string | null;
   mapId?: string;
+  activeAlgorithms?: { bfs: boolean; dfs: boolean; hybrid: boolean };
 }
 
 const ALGORITHM_LABELS: Record<string, string> = {
@@ -59,7 +60,7 @@ function didAlgorithmReroute(
   return false;
 }
 
-export const DynamicMapEvents: React.FC<Props> = ({ dynamicEvents, stepIndex, simResults, scenario, onEventClick, highlightedNodeId, mapId }) => {
+export const DynamicMapEvents: React.FC<Props> = ({ dynamicEvents, stepIndex, simResults, scenario, onEventClick, highlightedNodeId, mapId, activeAlgorithms }) => {
   // Scenario-specific icons that match what's shown on the canvas
   const BLOCK_ICON: Record<string, string> = {
     traffic:    '🚫', // 🚫 Road Closure
@@ -87,7 +88,7 @@ export const DynamicMapEvents: React.FC<Props> = ({ dynamicEvents, stepIndex, si
       // Only cross-examine algorithm reroutes for blocking events
       if (event.blocked && simResults) {
         (['bfs', 'dfs', 'hybrid'] as const).forEach((algorithm) => {
-          if (didAlgorithmReroute(algorithm, event, simResults)) {
+          if ((!activeAlgorithms || activeAlgorithms[algorithm]) && didAlgorithmReroute(algorithm, event, simResults)) {
             affectedAlgorithms.push(ALGORITHM_LABELS[algorithm]);
           }
         });

@@ -35,7 +35,12 @@ export function buildGameAIGraph(
   let boardDim = fallbackBoardDim;
   let auxiliaryNodeCount = 0;
 
-  if (sizing) {
+  // Only resize the board when the user has actually moved the slider away from
+  // the natural fallback (±15% tolerance). This prevents the shared default
+  // slider value from accidentally inflating the board beyond the intended 8×8.
+  const userRequestedDifferentSize = sizing != null && Math.abs(targetNodes - fallbackNodes) > fallbackNodes * 0.15;
+
+  if (userRequestedDifferentSize) {
     if (board === 'checkers') {
       boardDim = clampInt(Math.sqrt((targetNodes - 2) * 2), 4, 12);
       while (Math.ceil((boardDim * boardDim) / 2) + 2 > targetNodes && boardDim > 4) boardDim--;
@@ -97,7 +102,14 @@ export function buildGameAIGraph(
 
   if (board === 'checkers') {
     buildCheckersBoard(addNode, addTwoWayEdge, boardDim);
-    entryNode = `checkers_${files[1]}1`;
+
+    // Randomize start from bottom row dark squares (same seed offset as Dama)
+    const bottomDarkCols: number[] = [];
+    for (let col = 0; col < boardDim; col++) {
+      if ((0 + col) % 2 !== 0) bottomDarkCols.push(col); // dark squares have (row+col) % 2 !== 0
+    }
+    const pickedCheckerStart = bottomDarkCols[Math.floor(seededRng(seed + 55) * bottomDarkCols.length)];
+    entryNode = `checkers_${files[pickedCheckerStart]}1`;
 
     // Pick 2-3 random dark squares from the top 2 rows as targets
     const topDarkCols: number[] = [];

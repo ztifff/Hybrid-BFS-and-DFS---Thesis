@@ -25,6 +25,7 @@ export interface HistoryEntry {
     robotAssignments?: any[];
     evacuationSourceId?: string | null;
     syntheticSizing?: { nodes: number; edges: number };
+    activeAlgorithms?: { bfs: boolean; dfs: boolean; hybrid: boolean };
   };
 }
 
@@ -35,6 +36,7 @@ interface Props {
   scenario?: ScenarioType;
   onDeleteHistory: (ids: string[]) => void;
   onImportHistory: (entries: HistoryEntry[]) => void;
+  activeAlgorithms?: { bfs: boolean; dfs: boolean; hybrid: boolean };
 }
 
 const SCENARIO_BADGES: Record<string, string> = {
@@ -81,6 +83,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
   const [importError, setImportError] = useState<{ expected: string; found: string } | null>(null);
   const [importSuccess, setImportSuccess] = useState<{ count: number; scenario: string } | null>(null);
   const [robotAlgo, setRobotAlgo] = useState<'bfs'|'dfs'|'hybrid'>('bfs');
+  const [historyTimelineStep, setHistoryTimelineStep] = useState<number>(-1);
   const importInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -88,6 +91,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
       const isMulti = !!activeEntry.multiResults || isMultiAlgorithmResult(activeEntry.simResult as unknown) || String(activeEntry.algorithm).toLowerCase().includes('multi');
       setRobotAlgo(isMulti ? 'bfs' : activeEntry.algorithm as 'bfs'|'dfs'|'hybrid');
     }
+    setHistoryTimelineStep(-1);
   }, [activeEntry]);
 
   // ── Auto-generate a smart export filename ───────────────────────────────
@@ -164,6 +168,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
       setSelectedIds(new Set()); 
       setIsPurgeModalOpen(false);
       setHighlightedNodeId(null);
+      setHistoryTimelineStep(-1);
     }
   }, [isOpen]);
 
@@ -224,16 +229,33 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
     const dfs = getData('dfs');
     const hyb = getData('hybrid');
 
+    const BLOCK_ICON: Record<string, string> = {
+      traffic:    '🚦',
+      evacuation: '🔥',
+      robotics:   '📦',
+      network:    '🚫',
+      gameai:     entry.metadata?.mapId === 'dama' ? '🔻' : '🔴',
+    };
+    const CLEAR_ICON: Record<string, string> = {
+      traffic:    '✅',
+      evacuation: '🟢',
+      robotics:   '✅',
+      network:    '⚡',
+      gameai:     '✅',
+    };
+    const blockIcon = BLOCK_ICON[entry.scenario ?? ''] ?? '⛔';
+    const clearIcon = CLEAR_ICON[entry.scenario ?? ''] ?? '✅';
+
     const renderCell = (value: string | number, color: string, isFailure: boolean = false) => (
       <td className={`py-3 text-center text-xs font-mono font-bold ${isFailure ? 'text-red-500 bg-red-950/10' : 'text-gray-200'}`} style={!isFailure ? { color } : {}}>
         {isFailure ? 'CRITICAL FAILURE' : value}
       </td>
     );
 
+    const entryActiveAlgorithms = entry.metadata?.activeAlgorithms ?? { bfs: true, dfs: true, hybrid: true };
+
     const baseGraph = results.hybrid?.graph || results.bfs?.graph || results.dfs?.graph || entry.simResult?.graph;
     const allEvents = results.hybrid?.dynamicEvents || results.bfs?.dynamicEvents || results.dfs?.dynamicEvents || entry.simResult?.dynamicEvents || [];
-    const blockedNodeIds = new Set<string>();
-    allEvents.forEach(e => { if (e.blocked) blockedNodeIds.add(e.nodeId); });
     const maxEventStep = allEvents.length > 0 ? Math.max(...allEvents.map(e => e.stepIndex)) : 0;
     const maxSteps = Math.max(
       results.bfs?.steps?.length || 0,
@@ -241,6 +263,11 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
       results.hybrid?.steps?.length || 0,
       entry.simResult?.steps?.length || 0
     );
+    const ultimateMax = Math.max(maxEventStep, maxSteps);
+    const currentStep = historyTimelineStep === -1 ? ultimateMax : Math.min(historyTimelineStep, ultimateMax);
+
+    const blockedNodeIds = new Set<string>();
+    allEvents.forEach(e => { if (e.stepIndex <= currentStep && e.blocked) blockedNodeIds.add(e.nodeId); });
 
     // Build shelfBoxCounts for AWS warehouse box visualization.
     // For packing desks: set capacity to 6 (the renderer uses this as requiredCount
@@ -258,15 +285,30 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
     })();
     type AlgoData = NonNullable<ReturnType<typeof getData>>;
     const algoEntries: { key: AlgorithmKey; label: string; color: string; data: AlgoData }[] = [
-      ...(bfs && bfs.success ? [{ key: 'bfs' as AlgorithmKey, label: 'BFS', color: '#4ade80', data: bfs }] : []),
-      ...(dfs && dfs.success ? [{ key: 'dfs' as AlgorithmKey, label: 'DFS', color: '#c084fc', data: dfs }] : []),
-      ...(hyb && hyb.success ? [{ key: 'hybrid' as AlgorithmKey, label: 'Hybrid', color: '#fb923c', data: hyb }] : []),
+      ...(bfs && bfs.success && entryActiveAlgorithms.bfs ? [{ key: 'bfs' as AlgorithmKey, label: 'BFS', color: '#4ade80', data: bfs }] : []),
+      ...(dfs && dfs.success && entryActiveAlgorithms.dfs ? [{ key: 'dfs' as AlgorithmKey, label: 'DFS', color: '#c084fc', data: dfs }] : []),
+      ...(hyb && hyb.success && entryActiveAlgorithms.hybrid ? [{ key: 'hybrid' as AlgorithmKey, label: 'Hybrid BFS-DFS', color: '#fb923c', data: hyb }] : []),
     ];
 
     const computeScore = (d: AlgoData) => {
-      const maxTime = Math.max(bfs?.time || 0, dfs?.time || 0, hyb?.time || 0, 0.001);
-      const maxDist = Math.max(bfs?.distance || 0, dfs?.distance || 0, hyb?.distance || 0, 1);
-      const maxMem  = Math.max(bfs?.nodes || 0, dfs?.nodes || 0, hyb?.nodes || 0, 1);
+      const maxTime = Math.max(
+        entryActiveAlgorithms.bfs ? (bfs?.time || 0) : 0,
+        entryActiveAlgorithms.dfs ? (dfs?.time || 0) : 0,
+        entryActiveAlgorithms.hybrid ? (hyb?.time || 0) : 0,
+        0.001
+      );
+      const maxDist = Math.max(
+        entryActiveAlgorithms.bfs ? (bfs?.distance || 0) : 0,
+        entryActiveAlgorithms.dfs ? (dfs?.distance || 0) : 0,
+        entryActiveAlgorithms.hybrid ? (hyb?.distance || 0) : 0,
+        1
+      );
+      const maxMem  = Math.max(
+        entryActiveAlgorithms.bfs ? (bfs?.nodes || 0) : 0,
+        entryActiveAlgorithms.dfs ? (dfs?.nodes || 0) : 0,
+        entryActiveAlgorithms.hybrid ? (hyb?.nodes || 0) : 0,
+        1
+      );
       const speedScore  = 1 - d.time / maxTime;
       const distScore   = 1 - d.distance / maxDist;
       const memScore    = 1 - d.nodes / maxMem;
@@ -304,33 +346,35 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
     const BarRow = ({ label, bfsVal, dfsVal, hybVal, unit = '', lowerBetter = true }: {
       label: string; bfsVal: number; dfsVal: number; hybVal: number; unit?: string; lowerBetter?: boolean;
     }) => {
-      const values = [bfsVal, dfsVal, hybVal].filter(v => v > 0);
+      const rawValues = [
+        { val: bfsVal, color: '#4ade80', active: entryActiveAlgorithms.bfs },
+        { val: dfsVal, color: '#c084fc', active: entryActiveAlgorithms.dfs },
+        { val: hybVal, color: '#fb923c', active: entryActiveAlgorithms.hybrid }
+      ];
+      const activeValues = rawValues.filter(d => d.active).map(d => d.val);
+      const values = activeValues.filter(v => v > 0);
       const maxVal = Math.max(...values, 0.001);
       const toW = (v: number) => `${Math.min(100, (v / maxVal) * 100).toFixed(1)}%`;
-      const isBest = (v: number) => lowerBetter
-        ? values.length > 0 && v === Math.min(...values)
-        : values.length > 0 && v === Math.max(...values);
+      const isBest = (v: number) => values.length > 0 && (lowerBetter ? v === Math.min(...values) : v === Math.max(...values));
       return (
         <div className="space-y-1.5">
           <div className="flex justify-between items-center">
             <span className="text-[10px] text-gray-500 uppercase tracking-wide font-semibold">{label}</span>
           </div>
-          {[
-            { key: 'BFS', val: bfsVal, color: '#4ade80', bg: 'bg-green-500' },
-            { key: 'DFS', val: dfsVal, color: '#c084fc', bg: 'bg-purple-500' },
-            { key: 'HYB', val: hybVal, color: '#fb923c', bg: 'bg-orange-500' },
-          ].map(({ key, val, color, bg }) => (
-            <div key={key} className="flex items-center gap-2">
-              <span className="text-[10px] font-mono w-7 shrink-0" style={{ color }}>{key}</span>
+          {rawValues.filter(d => d.active).map((d, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <span className="text-[10px] font-mono w-7 shrink-0" style={{ color: d.color }}>
+                {d.color === '#4ade80' ? 'BFS' : d.color === '#c084fc' ? 'DFS' : 'HYB'}
+              </span>
               <div className="flex-1 bg-gray-800/60 rounded-full h-2 overflow-hidden">
                 <div
-                  className={`h-full rounded-full transition-all ${bg} ${isBest(val) ? 'ring-1 ring-white/30' : 'opacity-70'}`}
-                  style={{ width: val > 0 ? toW(val) : '2%' }}
+                  className={`h-full rounded-full transition-all ${d.color === '#4ade80' ? 'bg-green-500' : d.color === '#c084fc' ? 'bg-purple-500' : 'bg-orange-500'} ${isBest(d.val) ? 'ring-1 ring-white/30' : 'opacity-70'}`}
+                  style={{ width: d.val > 0 ? toW(d.val) : '2%' }}
                 />
               </div>
-              <span className={`text-[10px] font-mono w-16 text-right shrink-0 ${isBest(val) ? 'text-white font-bold' : 'text-gray-500'}`}>
-                {val > 0 ? `${val % 1 !== 0 ? val.toFixed(2) : val}${unit}` : 'N/A'}
-                {isBest(val) && <span className="ml-0.5 text-yellow-400">★</span>}
+              <span className={`text-[10px] font-mono w-16 text-right shrink-0 ${isBest(d.val) ? 'text-white font-bold' : 'text-gray-500'}`}>
+                {d.val > 0 ? `${d.val % 1 !== 0 ? d.val.toFixed(2) : d.val}${unit}` : 'N/A'}
+                {isBest(d.val) && <span className="ml-0.5 text-yellow-400">★</span>}
               </span>
             </div>
           ))}
@@ -473,7 +517,7 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
                       
                       {(!!entry.multiResults || isMultiAlgorithmResult(entry.simResult as unknown) || String(entry.algorithm).toLowerCase().includes('multi')) && (
                         <div className="flex bg-gray-900 border border-gray-700 rounded overflow-hidden shadow-inner">
-                          {(['bfs', 'dfs', 'hybrid'] as const).map(algo => (
+                          {(['bfs', 'dfs', 'hybrid'] as const).filter(a => entryActiveAlgorithms[a]).map(algo => (
                             <button
                               key={algo}
                               onClick={() => setRobotAlgo(algo)}
@@ -612,60 +656,85 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
               <h3 className="font-bold text-xs uppercase tracking-widest text-blue-400">🏆 Execution Benchmarks</h3>
               <span className="text-[10px] font-mono text-gray-500">RUN #{entry.runNumber || 'N/A'}</span>
             </div>
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-gray-800">
-                  <th className="py-2 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Metric</th>
-                  <th className="py-2 text-center text-xs text-green-400 font-mono font-bold bg-green-500/5">BFS</th>
-                  <th className="py-2 text-center text-xs text-purple-400 font-mono font-bold bg-purple-500/5">DFS</th>
-                  <th className="py-2 text-center text-xs text-orange-400 font-mono font-bold bg-orange-500/5">HYB</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-800/40">
-                <tr>
-                  <td className="py-2.5 text-xs text-gray-400">Exec Time</td>
-                  {renderCell(bfs ? `${bfs.time.toFixed(2)} ms` : 'N/A', '#4ade80', bfs !== null && !bfs.success)}
-                  {renderCell(dfs ? `${dfs.time.toFixed(2)} ms` : 'N/A', '#c084fc', dfs !== null && !dfs.success)}
-                  {renderCell(hyb ? `${hyb.time.toFixed(2)} ms` : 'N/A', '#fb923c', hyb !== null && !hyb.success)}
-                </tr>
-                <tr>
-                  <td className="py-2.5 text-xs text-gray-400">Distance</td>
-                  {renderCell(bfs ? bfs.distance.toFixed(1) : 'N/A', '#cbd5e1', bfs !== null && !bfs.success)}
-                  {renderCell(dfs ? dfs.distance.toFixed(1) : 'N/A', '#cbd5e1', dfs !== null && !dfs.success)}
-                  {renderCell(hyb ? hyb.distance.toFixed(1) : 'N/A', '#cbd5e1', hyb !== null && !hyb.success)}
-                </tr>
-                <tr>
-                  <td className="py-2.5 text-xs text-gray-400">Nodes Swept</td>
-                  {renderCell(bfs ? bfs.nodes : 'N/A', '#94a3b8', bfs !== null && !bfs.success)}
-                  {renderCell(dfs ? dfs.nodes : 'N/A', '#94a3b8', dfs !== null && !dfs.success)}
-                  {renderCell(hyb ? hyb.nodes : 'N/A', '#94a3b8', hyb !== null && !hyb.success)}
-                </tr>
-                <tr>
-                  <td className="py-2.5 text-xs text-gray-400">Memory</td>
-                  {renderCell(bfs ? bfs.memory : 'N/A', '#cbd5e1', bfs !== null && !bfs.success)}
-                  {renderCell(dfs ? dfs.memory : 'N/A', '#cbd5e1', dfs !== null && !dfs.success)}
-                  {renderCell(hyb ? hyb.memory : 'N/A', '#cbd5e1', hyb !== null && !hyb.success)}
-                </tr>
-                <tr>
-                  <td className="py-2.5 text-xs text-gray-400">Path Optimality</td>
-                  {renderCell(bfs ? bfs.optimality : 'N/A', '#4ade80', bfs !== null && !bfs.success)}
-                  {renderCell(dfs ? dfs.optimality : 'N/A', '#ef4444', dfs !== null && !dfs.success)}
-                  {renderCell(hyb ? hyb.optimality : 'N/A', '#fb923c', hyb !== null && !hyb.success)}
-                </tr>
-                <tr>
-                  <td className="py-2.5 text-xs text-gray-400">Adaptability</td>
-                  {renderCell(bfs ? `${bfs.adaptability}/100` : 'N/A', '#cbd5e1', bfs !== null && !bfs.success)}
-                  {renderCell(dfs ? `${dfs.adaptability}/100` : 'N/A', '#cbd5e1', dfs !== null && !dfs.success)}
-                  {renderCell(hyb ? `${hyb.adaptability}/100` : 'N/A', '#fb923c', hyb !== null && !hyb.success)}
-                </tr>
-                <tr className="bg-gray-950/20">
-                  <td className="py-2.5 text-xs text-gray-400 font-semibold">Completion</td>
-                  {renderCell(bfs ? bfs.completion : 'N/A', '#4ade80', bfs !== null && !bfs.success)}
-                  {renderCell(dfs ? dfs.completion : 'N/A', '#c084fc', dfs !== null && !dfs.success)}
-                  {renderCell(hyb ? hyb.completion : 'N/A', '#fb923c', hyb !== null && !hyb.success)}
-                </tr>
-              </tbody>
-            </table>
+            {(() => {
+              const allAlgos = ['bfs', 'dfs', 'hybrid'] as const;
+              const activeAlgos = allAlgos.filter(a => entryActiveAlgorithms[a]);
+              
+              const algoColors = {
+                bfs: { text: 'text-green-400', bg: 'bg-green-500/5', hex: '#4ade80' },
+                dfs: { text: 'text-purple-400', bg: 'bg-purple-500/5', hex: '#c084fc' },
+                hybrid: { text: 'text-orange-400', bg: 'bg-orange-500/5', hex: '#fb923c' }
+              };
+              
+              const data = { bfs, dfs, hyb };
+              const mapAlgoToDataKey = (a: 'bfs' | 'dfs' | 'hybrid') => a === 'hybrid' ? 'hyb' : a;
+
+              return (
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-gray-800">
+                      <th className="py-2 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Metric</th>
+                      {activeAlgos.map(a => (
+                        <th key={a} className={`py-2 text-center text-xs ${algoColors[a].text} font-mono font-bold ${algoColors[a].bg}`}>
+                          {a === 'hybrid' ? 'HYB' : a.toUpperCase()}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-800/40">
+                    <tr>
+                      <td className="py-2.5 text-xs text-gray-400">Execution Time</td>
+                      {activeAlgos.map(a => {
+                        const d = data[mapAlgoToDataKey(a)];
+                        return <React.Fragment key={a}>{renderCell(d ? `${d.time.toFixed(2)} ms` : 'N/A', algoColors[a].hex, d !== null && !d.success)}</React.Fragment>;
+                      })}
+                    </tr>
+                    <tr>
+                      <td className="py-2.5 text-xs text-gray-400">Distance</td>
+                      {activeAlgos.map(a => {
+                        const d = data[mapAlgoToDataKey(a)];
+                        return <React.Fragment key={a}>{renderCell(d ? d.distance.toFixed(1) : 'N/A', '#cbd5e1', d !== null && !d.success)}</React.Fragment>;
+                      })}
+                    </tr>
+                    <tr>
+                      <td className="py-2.5 text-xs text-gray-400">Nodes Visited</td>
+                      {activeAlgos.map(a => {
+                        const d = data[mapAlgoToDataKey(a)];
+                        return <React.Fragment key={a}>{renderCell(d ? d.nodes : 'N/A', '#94a3b8', d !== null && !d.success)}</React.Fragment>;
+                      })}
+                    </tr>
+                    <tr>
+                      <td className="py-2.5 text-xs text-gray-400">Memory</td>
+                      {activeAlgos.map(a => {
+                        const d = data[mapAlgoToDataKey(a)];
+                        return <React.Fragment key={a}>{renderCell(d ? d.memory : 'N/A', '#cbd5e1', d !== null && !d.success)}</React.Fragment>;
+                      })}
+                    </tr>
+                    <tr>
+                      <td className="py-2.5 text-xs text-gray-400">Path Optimality</td>
+                      {activeAlgos.map(a => {
+                        const d = data[mapAlgoToDataKey(a)];
+                        return <React.Fragment key={a}>{renderCell(d ? d.optimality : 'N/A', algoColors[a].hex, d !== null && !d.success)}</React.Fragment>;
+                      })}
+                    </tr>
+                    <tr>
+                      <td className="py-2.5 text-xs text-gray-400">Adaptability</td>
+                      {activeAlgos.map(a => {
+                        const d = data[mapAlgoToDataKey(a)];
+                        return <React.Fragment key={a}>{renderCell(d ? `${d.adaptability}/100` : 'N/A', '#cbd5e1', d !== null && !d.success)}</React.Fragment>;
+                      })}
+                    </tr>
+                    <tr className="bg-gray-950/20">
+                      <td className="py-2.5 text-xs text-gray-400 font-semibold">Completion</td>
+                      {activeAlgos.map(a => {
+                        const d = data[mapAlgoToDataKey(a)];
+                        return <React.Fragment key={a}>{renderCell(d ? d.completion : 'N/A', algoColors[a].hex, d !== null && !d.success)}</React.Fragment>;
+                      })}
+                    </tr>
+                  </tbody>
+                </table>
+              );
+            })()}
             {(bfs !== null && !bfs.success || dfs !== null && !dfs.success || hyb !== null && !hyb.success) && (
               <div className="mt-3 p-2 bg-red-900/20 border border-red-500/30 rounded text-xs text-red-300 leading-snug">
                 <span className="font-bold uppercase tracking-wider text-[10px]">Failure Reason:</span> {bfs?.reason || dfs?.reason || hyb?.reason || 'Target unreachable'}
@@ -673,22 +742,24 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
             )}
           </div>
           </div>
-          <div className="xl:col-span-3 h-[340px] xl:h-[340px] w-full bg-[#0a0f1e] rounded-xl border border-gray-800 overflow-hidden shadow-inner relative flex flex-col">
+          <div className="xl:col-span-3 h-[390px] xl:h-[390px] w-full bg-[#0a0f1e] rounded-xl border border-gray-800 overflow-hidden shadow-inner flex flex-col">
+            <div className="flex-1 relative overflow-hidden">
             {baseGraph && (
               <NetworkCanvas
                 graph={baseGraph}
                 activeSteps={{
-                  bfs: results.bfs?.steps?.length ? results.bfs.steps[results.bfs.steps.length - 1] : null,
-                  dfs: results.dfs?.steps?.length ? results.dfs.steps[results.dfs.steps.length - 1] : null,
-                  hybrid: results.hybrid?.steps?.length ? results.hybrid.steps[results.hybrid.steps.length - 1] : null
+                  bfs: entryActiveAlgorithms.bfs && results.bfs?.steps?.length ? results.bfs.steps[Math.min(currentStep, results.bfs.steps.length - 1)] : null,
+                  dfs: entryActiveAlgorithms.dfs && results.dfs?.steps?.length ? results.dfs.steps[Math.min(currentStep, results.dfs.steps.length - 1)] : null,
+                  hybrid: entryActiveAlgorithms.hybrid && results.hybrid?.steps?.length ? results.hybrid.steps[Math.min(currentStep, results.hybrid.steps.length - 1)] : null
                 }}
                 scenario={entry.scenario}
-                stepIndex={maxEventStep > 0 ? maxEventStep : maxSteps}
+                stepIndex={currentStep}
                 dynamicEvents={allEvents}
                 historicalBlockedNodeIds={blockedNodeIds}
                 highlightedNodeId={highlightedNodeId}
                 onDeselect={() => setHighlightedNodeId(null)}
                 autoFit={true}
+                activeAlgorithms={entryActiveAlgorithms}
                 shelfBoxCounts={shelfBoxCounts}
                 disableSimultaneousMode={true}
                 mapId={
@@ -717,6 +788,21 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
                 }
               />
             )}
+            </div>
+            
+            {/* TIMELINE SLIDER */}
+            <div className="h-10 bg-gray-900 border-t border-gray-800 flex items-center px-4 gap-3 shrink-0 shadow-[0_-5px_15px_rgba(0,0,0,0.3)] z-10">
+              <span className="text-[9px] font-bold tracking-widest text-gray-500 uppercase shrink-0 cursor-help" title="Replays dynamic events (e.g., blockages). This does not replay individual algorithm pathfinding steps.">Event Replay</span>
+              <input 
+                 type="range" 
+                 min="0" 
+                 max={ultimateMax} 
+                 value={currentStep} 
+                 onChange={e => setHistoryTimelineStep(Number(e.target.value))} 
+                 className="flex-1 accent-indigo-500 h-1 cursor-pointer bg-gray-800 rounded-lg appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-indigo-400 [&::-webkit-slider-thumb]:rounded-full hover:[&::-webkit-slider-thumb]:bg-indigo-300 [&::-webkit-slider-thumb]:transition-all" 
+              />
+              <span className="text-[10px] font-mono text-indigo-400 font-bold shrink-0 text-right w-16" title="Simulation Tick (Total Events / Time)">Tick {currentStep}</span>
+            </div>
           </div>
           
           {entry.scenario === 'network' && baseGraph?.nodes.some(n => n.id.includes('boys') || n.label?.includes('PC-PT')) && (
@@ -797,11 +883,11 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {(
               [
-                { key: 'bfs' as AlgorithmKey, label: 'BFS', color: '#4ade80', result: bfs },
-                { key: 'dfs' as AlgorithmKey, label: 'DFS', color: '#c084fc', result: dfs },
-                { key: 'hybrid' as AlgorithmKey, label: 'Hybrid BFS-DFS', color: '#fb923c', result: hyb },
-              ] as const
-            ).map(({ key, label, color, result }) => {
+                { key: 'bfs' as AlgorithmKey, label: 'BFS', color: '#4ade80', result: bfs, active: entryActiveAlgorithms.bfs },
+                { key: 'dfs' as AlgorithmKey, label: 'DFS', color: '#c084fc', result: dfs, active: entryActiveAlgorithms.dfs },
+                { key: 'hybrid' as AlgorithmKey, label: 'Hybrid BFS-DFS', color: '#fb923c', result: hyb, active: entryActiveAlgorithms.hybrid },
+              ]
+            ).filter(algo => algo.active).map(({ key, label, color, result }) => {
               const profile = MOVEMENT_PROFILES[key];
               const isWinner = winner?.key === key;
               return (
@@ -845,32 +931,44 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <BarRow
               label="Execution Time (lower ★ = better)"
-              bfsVal={bfs?.time ?? 0} dfsVal={dfs?.time ?? 0} hybVal={hyb?.time ?? 0}
+              bfsVal={entryActiveAlgorithms.bfs ? (bfs?.time ?? 0) : 0} 
+              dfsVal={entryActiveAlgorithms.dfs ? (dfs?.time ?? 0) : 0} 
+              hybVal={entryActiveAlgorithms.hybrid ? (hyb?.time ?? 0) : 0}
               unit=" ms" lowerBetter={true}
             />
             <BarRow
               label="Path Distance — Hops (lower ★ = better)"
-              bfsVal={bfs?.distance ?? 0} dfsVal={dfs?.distance ?? 0} hybVal={hyb?.distance ?? 0}
+              bfsVal={entryActiveAlgorithms.bfs ? (bfs?.distance ?? 0) : 0} 
+              dfsVal={entryActiveAlgorithms.dfs ? (dfs?.distance ?? 0) : 0} 
+              hybVal={entryActiveAlgorithms.hybrid ? (hyb?.distance ?? 0) : 0}
               lowerBetter={true}
             />
             <BarRow
               label="Nodes Swept / Explored (lower ★ = better)"
-              bfsVal={bfs?.nodes ?? 0} dfsVal={dfs?.nodes ?? 0} hybVal={hyb?.nodes ?? 0}
+              bfsVal={entryActiveAlgorithms.bfs ? (bfs?.nodes ?? 0) : 0} 
+              dfsVal={entryActiveAlgorithms.dfs ? (dfs?.nodes ?? 0) : 0} 
+              hybVal={entryActiveAlgorithms.hybrid ? (hyb?.nodes ?? 0) : 0}
               lowerBetter={true}
             />
             <BarRow
               label="Dynamic Adaptability (higher ★ = better)"
-              bfsVal={Number(bfs?.adaptability ?? 0)} dfsVal={Number(dfs?.adaptability ?? 0)} hybVal={Number(hyb?.adaptability ?? 0)}
+              bfsVal={entryActiveAlgorithms.bfs ? Number(bfs?.adaptability ?? 0) : 0} 
+              dfsVal={entryActiveAlgorithms.dfs ? Number(dfs?.adaptability ?? 0) : 0} 
+              hybVal={entryActiveAlgorithms.hybrid ? Number(hyb?.adaptability ?? 0) : 0}
               lowerBetter={false}
             />
             <BarRow
               label="Completion Rate % (higher ★ = better)"
-              bfsVal={parseFloat(bfs?.completion ?? '0')} dfsVal={parseFloat(dfs?.completion ?? '0')} hybVal={parseFloat(hyb?.completion ?? '0')}
+              bfsVal={entryActiveAlgorithms.bfs ? parseFloat(bfs?.completion ?? '0') : 0} 
+              dfsVal={entryActiveAlgorithms.dfs ? parseFloat(dfs?.completion ?? '0') : 0} 
+              hybVal={entryActiveAlgorithms.hybrid ? parseFloat(hyb?.completion ?? '0') : 0}
               lowerBetter={false}
             />
             <BarRow
               label="Memory Used — KB (lower ★ = better)"
-              bfsVal={parseFloat(String(bfs?.memory ?? '0'))} dfsVal={parseFloat(String(dfs?.memory ?? '0'))} hybVal={parseFloat(String(hyb?.memory ?? '0'))}
+              bfsVal={entryActiveAlgorithms.bfs ? parseFloat(String(bfs?.memory ?? '0')) : 0} 
+              dfsVal={entryActiveAlgorithms.dfs ? parseFloat(String(dfs?.memory ?? '0')) : 0} 
+              hybVal={entryActiveAlgorithms.hybrid ? parseFloat(String(hyb?.memory ?? '0')) : 0}
               unit=" KB" lowerBetter={true}
             />
           </div>
@@ -880,19 +978,22 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
 
         <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 text-xs text-gray-400 space-y-2">
           <span className="font-bold text-gray-300 block uppercase text-[10px] tracking-wider text-orange-400">📌 Structural Metadata</span>
-          <p>Graph composed of <strong className="text-white">{entry.totalNodes || 0} total nodes</strong>. Baseline optimal path: <strong className="text-white">{entry.optimalPathLength || 0} distance units</strong>.</p>
+          <p>Graph composed of <strong className="text-white">{entry.totalNodes || 0} nodes</strong> and <strong className="text-white">{entry.metadata?.syntheticSizing?.edges || 0} edges</strong>. Baseline optimal path: <strong className="text-white">{entry.optimalPathLength || 0} distance units</strong>.</p>
           
           {allEvents.length > 0 && (
             <div className="mt-2 pt-2 border-t border-gray-800/50">
-              <span className="font-bold text-orange-400 block text-[10px] uppercase tracking-wider mb-2">⚡ Dynamic Blockages</span>
-              <div className="flex flex-col gap-1.5 max-h-[160px] overflow-y-auto">
-                {allEvents.map((event, idx) => {
+              <span className="font-bold text-orange-400 block text-[10px] uppercase tracking-wider mb-2">⚡ Dynamic Blockages ({allEvents.filter(e => e.stepIndex <= currentStep).length})</span>
+              <div className="flex flex-col gap-1.5 max-h-[160px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+                {allEvents.filter(e => e.stepIndex <= currentStep).reverse().map((event, idx) => {
                   const isHighlighted = highlightedNodeId === event.nodeId;
                   return (
                     <div
                       key={idx}
-                      onClick={() => setHighlightedNodeId(prev => prev === event.nodeId ? null : event.nodeId)}
-                      title="Click to locate on map"
+                      onClick={() => {
+                        setHighlightedNodeId(prev => prev === event.nodeId ? null : event.nodeId);
+                        setHistoryTimelineStep(event.stepIndex);
+                      }}
+                      title="Click to seek to this step and locate on map"
                       className={`flex items-start gap-2 p-2 rounded border cursor-pointer select-none transition-all ${
                         isHighlighted
                           ? 'border-yellow-400 bg-yellow-900/20 shadow-[0_0_8px_rgba(234,179,8,0.35)] scale-[1.01]'
@@ -901,8 +1002,11 @@ export const HistoryModal: React.FC<Props> = ({ isOpen, onClose, history, scenar
                             : 'border-green-500/30 bg-green-900/10 text-green-300 hover:border-green-400/60'
                       }`}
                     >
-                      <span className="font-mono opacity-60 shrink-0">[{event.stepIndex}]</span>
-                      <span>{event.blocked ? '🔴' : '🟢'} {event.label}</span>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-[10px] font-mono opacity-60 shrink-0">[{event.stepIndex}]</span>
+                        <span className="text-[10px] shrink-0">{event.blocked ? blockIcon : clearIcon}</span>
+                        <span className="truncate flex-1 font-medium">{event.label}</span>
+                      </div>
                     </div>
                   );
                 })}

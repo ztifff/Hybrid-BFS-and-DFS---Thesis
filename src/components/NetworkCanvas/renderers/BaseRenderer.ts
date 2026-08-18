@@ -243,10 +243,8 @@ export abstract class BaseRenderer {
       if (isBlocked) { 
         fillColor = scenario === 'evacuation' ? '#3f1212' : '#dc2626'; 
         opacity = 1; 
-      } else if (wasHistoricallyBlocked.has(node.id)) { 
-        fillColor = scenario === 'evacuation' ? '#ea580c' : '#ef4444'; 
-        opacity = 1; 
       }
+
       const bfsFound = !visibleAlgos.bfs || (activeSteps.bfs?.foundDestinations?.includes(node.id) ?? false);
       const dfsFound = !visibleAlgos.dfs || (activeSteps.dfs?.foundDestinations?.includes(node.id) ?? false);
       const hybFound = !visibleAlgos.hybrid || (activeSteps.hybrid?.foundDestinations?.includes(node.id) ?? false);
@@ -424,7 +422,7 @@ export abstract class BaseRenderer {
         if (scenario === 'gameai' && isSource) {
           displayIcon = mapId === 'dama' ? '🔷' : '🔵';
         }
-        ctx.fillText((isBlocked || wasHistoricallyBlocked.has(node.id)) ? blockedIcon : displayIcon, cx, cy);
+        ctx.fillText(isBlocked ? blockedIcon : displayIcon, cx, cy);
 
         // Render carried package badge on active robot node ONLY after picking up from a shelf
         if (scenario === 'robotics' && (sets.bfs.current === node.id || sets.dfs.current === node.id || sets.hyb.current === node.id)) {

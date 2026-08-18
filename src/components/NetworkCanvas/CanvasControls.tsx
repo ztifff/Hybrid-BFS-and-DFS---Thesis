@@ -20,13 +20,16 @@ interface CanvasControlsProps {
   setIsFollowOpen: React.Dispatch<React.SetStateAction<boolean>>;
   followAlgo: 'bfs' | 'dfs' | 'hybrid' | null;
   setFollowAlgo: (algo: 'bfs' | 'dfs' | 'hybrid' | null) => void;
+  // External algorithm active state (from header pills)
+  activeAlgorithms?: { bfs: boolean; dfs: boolean; hybrid: boolean };
 }
 
 export const CanvasControls: React.FC<CanvasControlsProps> = ({
   zoom, setZoom, resetZoom,
   isLayeredMap, activeFloor, setActiveFloor, uniqueFloors = [],
   isShowOpen, setIsShowOpen, visibleAlgos, toggleAlgo,
-  isFollowOpen, setIsFollowOpen, followAlgo, setFollowAlgo
+  isFollowOpen, setIsFollowOpen, followAlgo, setFollowAlgo,
+  activeAlgorithms,
 }) => {
   return (
     <>
@@ -48,21 +51,30 @@ export const CanvasControls: React.FC<CanvasControlsProps> = ({
               { algo: 'bfs',    label: 'BFS',    on: 'bg-green-600  text-white border-green-500',  off: 'text-gray-500 border-gray-700' },
               { algo: 'dfs',    label: 'DFS',    on: 'bg-purple-600 text-white border-purple-500', off: 'text-gray-500 border-gray-700' },
               { algo: 'hybrid', label: 'Hybrid', on: 'bg-orange-600 text-white border-orange-500', off: 'text-gray-500 border-gray-700' },
-            ] as const).map(({ algo, label, on, off }) => (
-              <button
-                key={algo}
-                onClick={() => toggleAlgo(algo)}
-                className={`px-3 py-1 rounded-lg text-[10px] font-bold border transition-all cursor-pointer flex items-center gap-2 ${
-                  visibleAlgos[algo] ? on : off
-                }`}
-              >
-                <span className={`w-1.5 h-1.5 rounded-full ${
-                  algo === 'bfs' ? 'bg-green-400' : algo === 'dfs' ? 'bg-purple-400' : 'bg-orange-400'
-                } ${visibleAlgos[algo] ? 'opacity-100' : 'opacity-30'}`} />
-                {label}
-                <span className="ml-auto text-[9px] opacity-60">{visibleAlgos[algo] ? 'ON' : 'OFF'}</span>
-              </button>
-            ))}
+            ] as const).map(({ algo, label, on, off }) => {
+              const isGloballyDisabled = activeAlgorithms ? !activeAlgorithms[algo] : false;
+              return (
+                <button
+                  key={algo}
+                  onClick={() => !isGloballyDisabled && toggleAlgo(algo)}
+                  disabled={isGloballyDisabled}
+                  title={isGloballyDisabled ? `${label} is hidden from the header — click the pill to re-enable` : undefined}
+                  className={`px-3 py-1 rounded-lg text-[10px] font-bold border transition-all flex items-center gap-2 ${
+                    isGloballyDisabled
+                      ? 'opacity-40 cursor-not-allowed border-gray-700 text-gray-500 bg-gray-800/30'
+                      : `cursor-pointer ${visibleAlgos[algo] ? on : off}`
+                  }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    algo === 'bfs' ? 'bg-green-400' : algo === 'dfs' ? 'bg-purple-400' : 'bg-orange-400'
+                  } ${(isGloballyDisabled || !visibleAlgos[algo]) ? 'opacity-30' : 'opacity-100'}`} />
+                  {isGloballyDisabled ? '⊘ ' : ''}{label}
+                  <span className="ml-auto text-[9px] opacity-60">
+                    {isGloballyDisabled ? 'LOCKED' : visibleAlgos[algo] ? 'ON' : 'OFF'}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

@@ -9,20 +9,36 @@ export type MultiResultsLocal = {
   hybrid: SimulationResult;
 };
 
-const DEFAULT_SYNTHETIC_SIZING: Record<ScenarioType, GraphSizing> = {
-  network: { nodes: 28, edges: 27 },
-  robotics: { nodes: 56, edges: 63 },
-  traffic: { nodes: 36, edges: 29 },
-  evacuation: { nodes: 60, edges: 49 },
-  gameai: { nodes: 66, edges: 120 },
+export type SizingKey = ScenarioType | 'gameai-dama' | 'gameai-checkers';
+
+const DEFAULT_SYNTHETIC_SIZING: Record<SizingKey, GraphSizing> = {
+  network:         { nodes: 28,  edges: 27  },
+  robotics:        { nodes: 56,  edges: 63  },
+  traffic:         { nodes: 36,  edges: 29  },
+  evacuation:      { nodes: 60,  edges: 49  },
+  gameai:          { nodes: 65,  edges: 120 }, // fallback (unused when board is known)
+  'gameai-dama':   { nodes: 65,  edges: 112 }, // 8×8 dama = 65 natural nodes
+  'gameai-checkers': { nodes: 34, edges: 100 }, // 8×8 checkers = 34 natural nodes
 };
 
-const MAX_SYNTHETIC_NODES: Record<ScenarioType, number> = {
-  network: 220,
-  robotics: 217,
-  traffic: 220,
-  evacuation: 144,
-  gameai: 145,
+export const MAX_SYNTHETIC_NODES: Record<SizingKey, number> = {
+  network:           220,
+  robotics:          217,
+  traffic:           220,
+  evacuation:        144,
+  gameai:            145,
+  'gameai-dama':     145,
+  'gameai-checkers': 145,
+};
+
+export const MIN_SYNTHETIC_NODES: Record<SizingKey, number> = {
+  network:           7,
+  robotics:          13,
+  traffic:           9,
+  evacuation:        28,
+  gameai:            17,
+  'gameai-dama':     17,
+  'gameai-checkers': 14
 };
 
 const clampSizing = (value: number, min: number, max: number) =>
@@ -67,16 +83,24 @@ export function useSimulationModel(scenario: ScenarioType) {
     [robotAssignments]
   );
 
-  const syntheticSizing = syntheticSizingByScenario[scenario];
+  // Compound key: game AI boards have their own independent sizing slots.
+  // We explicitly check if the board-specific key exists in the defaults to avoid
+  // TypeScript errors from board names (e.g. 'snakes') not listed in SizingKey.
+  const boardKey = `gameai-${gameBoard}` as string;
+  const sizingKey: SizingKey = scenario === 'gameai' && boardKey in DEFAULT_SYNTHETIC_SIZING
+    ? (boardKey as SizingKey)
+    : scenario;
+
+  const syntheticSizing = syntheticSizingByScenario[sizingKey] ?? DEFAULT_SYNTHETIC_SIZING[sizingKey];
   const updateSyntheticSizing = useCallback((field: keyof GraphSizing, rawValue: number) => {
     // We set min to 0 here to allow the user to freely type single digits (like '2' for '200')
     // without the input instantly locking to the minimum (e.g. 7). The backend generators 
     // will safely clamp the final value to the actual scenario minimums anyway.
     const min = 0;
-    const max = field === 'nodes' ? MAX_SYNTHETIC_NODES[scenario] : 1600;
+    const max = field === 'nodes' ? MAX_SYNTHETIC_NODES[sizingKey] : 1600;
 
     setSyntheticSizingByScenario((previous) => {
-      const current = previous[scenario];
+      const current = previous[sizingKey] ?? DEFAULT_SYNTHETIC_SIZING[sizingKey];
       const nextVal = clampSizing(rawValue, min, max);
       let nextNodes = current.nodes;
       let nextEdges = current.edges;
@@ -90,13 +114,13 @@ export function useSimulationModel(scenario: ScenarioType) {
 
       return {
         ...previous,
-        [scenario]: {
+        [sizingKey]: {
           nodes: nextNodes,
           edges: nextEdges,
         },
       };
     });
-  }, [scenario]);
+  }, [sizingKey]);
 
   const handleRerollEvents = () => {
     setSeed(Date.now());
@@ -110,7 +134,12 @@ export function useSimulationModel(scenario: ScenarioType) {
   const [bfsResult, setBfsResult] = useState<{ pathLength: number } | null>(null);
   const [isComputing, setIsComputing] = useState(true);
   
-  const [isCurrentSaved, setIsCurrentSaved] = useState(false);
+  const [activeAlgorithms, setActiveAlgorithms] = useState({ bfs: true, dfs: true, hybrid: true });
+  
+  const [savedSignatures, setSavedSignatures] = useState<string[]>([]);
+  const currentSignature = `${activeAlgorithms.bfs}-${activeAlgorithms.dfs}-${activeAlgorithms.hybrid}`;
+  const isCurrentSaved = savedSignatures.includes(currentSignature);
+
   const [currentSavedId, setCurrentSavedId] = useState<string | null>(null);
 
   // Modals
@@ -118,15 +147,17 @@ export function useSimulationModel(scenario: ScenarioType) {
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [saveNameInput, setSaveNameInput] = useState('');
   const [saveDefaultName, setSaveDefaultName] = useState('');
+  
+
 
   const totalSteps = useMemo(() => {
     if (!simResults) return 0;
     return Math.max(
-      simResults.bfs?.steps?.length ?? 0,
-      simResults.dfs?.steps?.length ?? 0,
-      simResults.hybrid?.steps?.length ?? 0
+      activeAlgorithms.bfs ? (simResults.bfs?.steps?.length ?? 0) : 0,
+      activeAlgorithms.dfs ? (simResults.dfs?.steps?.length ?? 0) : 0,
+      activeAlgorithms.hybrid ? (simResults.hybrid?.steps?.length ?? 0) : 0
     );
-  }, [simResults]);
+  }, [simResults, activeAlgorithms]);
 
   // DB / History Logic
   const loadHistory = useCallback(async () => {
@@ -162,7 +193,7 @@ export function useSimulationModel(scenario: ScenarioType) {
     }
     setHistory(updatedHistory);
     if (currentSavedId && ids.includes(currentSavedId)) {
-      setIsCurrentSaved(false);
+      setSavedSignatures([]);
       setCurrentSavedId(null);
     }
   }, [history, currentSavedId]);
@@ -240,7 +271,11 @@ export function useSimulationModel(scenario: ScenarioType) {
         destinationDevices,
         robotAssignments,
         evacuationSourceId,
-        syntheticSizing: { ...syntheticSizing }
+        syntheticSizing: { 
+          nodes: currentGraph.nodes.length,
+          edges: Math.floor(currentGraph.edges.filter(e => e.type !== 'wireless').length / 2)
+        },
+        activeAlgorithms
       }
     };
 
@@ -251,7 +286,7 @@ export function useSimulationModel(scenario: ScenarioType) {
     });
     
     setHistory(updatedHistory);
-    setIsCurrentSaved(true);
+    setSavedSignatures(prev => [...prev, currentSignature]);
     setCurrentSavedId(newEntryId);
     setIsSaveModalOpen(false);
   }, [simResults, currentGraph, history, scenario, bfsResult, saveNameInput, saveDefaultName]);
@@ -413,14 +448,16 @@ export function useSimulationModel(scenario: ScenarioType) {
     deliveryMode, setDeliveryMode,
     
     history, handleDeleteHistory, handleImportHistory, confirmSaveResult, openSaveModal,
-    isCurrentSaved, setIsCurrentSaved,
+    isCurrentSaved, 
+    setSavedSignatures,
     currentSavedId, setCurrentSavedId,
 
     isHistoryModalOpen, setIsHistoryModalOpen,
     isSaveModalOpen, setIsSaveModalOpen,
     saveNameInput, setSaveNameInput,
     saveDefaultName, setSaveDefaultName,
-    
+    sizingKey,
+    activeAlgorithms, setActiveAlgorithms,
 
     currentGraph, isGraphLoading,
     simResults, setSimResults,

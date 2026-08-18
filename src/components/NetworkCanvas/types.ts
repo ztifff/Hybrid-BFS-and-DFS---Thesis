@@ -15,6 +15,7 @@ export interface NetworkCanvasProps {
   shelfBoxCounts?: Map<string, number>; // nodeId → box count for AWS Warehouse shelf visualization
   robotAssignments?: RobotAssignment[];  // per-robot rack allocation for AWS Warehouse
   disableSimultaneousMode?: boolean;     // if true, forces single-algorithm box rendering even when multiple algos are visible
+  activeAlgorithms?: { bfs: boolean; dfs: boolean; hybrid: boolean }; // from header pill toggles
 }
 
 export const NODE_CONFIG: Record<string, { icon: string; radius: number; baseColor: string }> = {

@@ -12,6 +12,8 @@ interface Props {
   totalSteps: number;
   totalNodes?: number;
   optimalPathLength?: number;
+  activeAlgorithms?: { bfs: boolean; dfs: boolean; hybrid: boolean };
+  mapId?: string;
 }
 export const MetricsPanel: React.FC<Props> = ({
   multiResults,
@@ -22,11 +24,17 @@ export const MetricsPanel: React.FC<Props> = ({
   totalSteps,
   totalNodes,
   optimalPathLength,
+  activeAlgorithms = { bfs: true, dfs: true, hybrid: true },
+  mapId,
 }) => {
   const sc = getScenario(scenario);
   const progress = totalSteps > 0 ? (stepIndex / totalSteps) * 100 : 0;
 
+  const activeCount = [activeAlgorithms.bfs, activeAlgorithms.dfs, activeAlgorithms.hybrid].filter(Boolean).length;
+  const gridCols = activeCount === 1 ? 'grid-cols-1' : activeCount === 2 ? 'grid-cols-2' : 'grid-cols-3';
+
   const renderAlgoColumn = (algoId: AlgorithmType, name: string) => {
+      const isActive = activeAlgorithms[algoId];
       const color = ALGORITHMS.find(a => a.id === algoId)?.color || '#fff';
       const stepData = activeSteps[algoId];
       const resultData = multiResults?.[algoId];
@@ -49,7 +57,7 @@ export const MetricsPanel: React.FC<Props> = ({
       const hasDeliveredCounts = stepData?.deliveredBoxCounts !== undefined;
       let completion = { percentage: 0, label: '0.0%' };
       if (!isStart) {
-        if (hasDeliveredCounts && stepData?.deliveredBoxCounts) {
+        if (scenario === 'robotics' && mapId === 'aws' && hasDeliveredCounts && stepData?.deliveredBoxCounts) {
           const totalDelivered = Object.values(stepData.deliveredBoxCounts).reduce((a, b) => a + b, 0);
           const pct = Math.min(100, (totalDelivered / 12) * 100);
           completion = { percentage: pct, label: `${pct.toFixed(1)}%` };
@@ -84,6 +92,9 @@ export const MetricsPanel: React.FC<Props> = ({
         : status === 'done' && resultData
           ? getMemoryInMB(resultData.metrics.memoryUsed)
           : getMemoryInMB(liveMemoryKB);
+
+      // Hidden algorithm — don't render the column at all
+      if (!isActive) return null;
 
       return (
           <div className="flex flex-col gap-2 text-center border-r border-gray-700/50 last:border-0 px-1">
@@ -141,7 +152,7 @@ export const MetricsPanel: React.FC<Props> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-3 bg-black/30 rounded-lg p-2 border border-white/5 shadow-inner">
+      <div className={`grid ${gridCols} bg-black/30 rounded-lg p-2 border border-white/5 shadow-inner`}>
           {renderAlgoColumn('bfs', 'BFS')}
           {renderAlgoColumn('dfs', 'DFS')}
           {renderAlgoColumn('hybrid', 'HYBRID')}
