@@ -9,14 +9,14 @@ interface Props {
   bfsResult: any;
   totalNodes: number;
   dynamicEvents: DynamicEvent[];
-  onSaveResult: () => void;  
+  onSaveResult: () => void;
   isSaved: boolean;
   scenarioColor?: string;
   activeAlgorithms?: { bfs: boolean; dfs: boolean; hybrid: boolean };
 }
 
-export const SimulationReport: React.FC<Props> = ({ 
-  multiResults, 
+export const SimulationReport: React.FC<Props> = ({
+  multiResults,
   bfsResult,
   dynamicEvents,
   onSaveResult,
@@ -27,22 +27,22 @@ export const SimulationReport: React.FC<Props> = ({
   const optimalDistance = bfsResult?.pathLength || 1;
 
   const getData = (algo: 'bfs' | 'dfs' | 'hybrid') => {
-      const res = multiResults[algo];
-      const actualDistance = Math.max(res.metrics.pathLength, 1);
-      const cRate = res.metrics.completionRate ? res.metrics.completionRate.toFixed(1) + '%' : '0%';
-      
-      return {
-          time: res.metrics.timeElapsed,
-          nodes: res.metrics.nodesExplored,
-          distance: actualDistance,
-          memory: res.metrics.memoryUsed,
-          memoryLabel: getMemoryInMB(res.metrics.memoryUsed),
-          optimality: getPathOptimality(actualDistance, optimalDistance),
-          completion: cRate, 
-          adaptability: getAdaptabilityScore('done', res.metrics, algo, dynamicEvents),
-          success: res.metrics.exitFound,
-          reason: res.metrics.failureReason
-      };
+    const res = multiResults[algo];
+    const actualDistance = Math.max(res.metrics.pathLength, 1);
+    const cRate = res.metrics.completionRate ? res.metrics.completionRate.toFixed(1) + '%' : '0%';
+
+    return {
+      time: res.metrics.timeElapsed,
+      nodes: res.metrics.nodesExplored,
+      distance: actualDistance,
+      memory: res.metrics.memoryUsed,
+      memoryLabel: getMemoryInMB(res.metrics.memoryUsed),
+      optimality: getPathOptimality(actualDistance, optimalDistance),
+      completion: cRate,
+      adaptability: getAdaptabilityScore('done', res.metrics, algo, dynamicEvents),
+      success: res.metrics.exitFound,
+      reason: res.metrics.failureReason
+    };
   };
 
   // Build list of only active algorithms to render
@@ -51,30 +51,29 @@ export const SimulationReport: React.FC<Props> = ({
   const activeAlgos = allAlgos.filter(a => activeAlgorithms[a]);
 
   const data: Record<AlgoKey, ReturnType<typeof getData>> = {
-    bfs:    getData('bfs'),
-    dfs:    getData('dfs'),
+    bfs: getData('bfs'),
+    dfs: getData('dfs'),
     hybrid: getData('hybrid'),
   };
 
   // Winner comparisons consider only active algorithms
-  const minTime   = Math.min(...activeAlgos.map(a => data[a].time));
-  const minNodes  = Math.min(...activeAlgos.map(a => data[a].nodes));
+  const minTime = Math.min(...activeAlgos.map(a => data[a].time));
+  const minNodes = Math.min(...activeAlgos.map(a => data[a].nodes));
   const minMemory = Math.min(...activeAlgos.map(a => data[a].memory));
-  const maxAdapt  = Math.max(...activeAlgos.map(a => data[a].adaptability.score));
+  const maxAdapt = Math.max(...activeAlgos.map(a => data[a].adaptability.score));
 
   const colors: Record<AlgoKey, string> = {
-    bfs:    ALGORITHMS.find(a => a.id === 'bfs')?.color    || '#fff',
-    dfs:    ALGORITHMS.find(a => a.id === 'dfs')?.color    || '#fff',
+    bfs: ALGORITHMS.find(a => a.id === 'bfs')?.color || '#fff',
+    dfs: ALGORITHMS.find(a => a.id === 'dfs')?.color || '#fff',
     hybrid: ALGORITHMS.find(a => a.id === 'hybrid')?.color || '#fff',
   };
   const labels: Record<AlgoKey, string> = { bfs: 'BFS', dfs: 'DFS', hybrid: 'HYBRID' };
 
   const renderCell = (algo: AlgoKey, value: string | number, isWinner: boolean, isFailure: boolean = false) => (
-    <td key={algo} className={`py-2 text-center text-xs font-bold ${
-      isFailure  ? 'text-red-500'
-      : isWinner ? 'bg-green-900/20 text-green-400 rounded'
-                 : 'text-gray-300'
-    }`} style={!isFailure && !isWinner ? { color: colors[algo] } : {}}>
+    <td key={algo} className={`py-2 text-center text-xs font-bold ${isFailure ? 'text-red-500'
+        : isWinner ? 'bg-green-900/20 text-green-400 rounded'
+          : 'text-gray-300'
+      }`} style={!isFailure && !isWinner ? { color: colors[algo] } : {}}>
       {isFailure ? 'Failed' : value}
     </td>
   );
@@ -84,9 +83,9 @@ export const SimulationReport: React.FC<Props> = ({
   return (
     <div className="glass-panel rounded-xl p-4 shadow-[0_0_20px_rgba(30,58,138,0.15)] shrink-0 relative overflow-hidden flex flex-col fade-in hover:shadow-glow-blue transition-shadow duration-500">
       <h3 className="font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wide text-sm">
-        🏆 Comparative Benchmark
+        Comparative Benchmark
       </h3>
-      
+
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
@@ -135,7 +134,7 @@ export const SimulationReport: React.FC<Props> = ({
         </div>
       )}
 
-      <button 
+      <button
         onClick={onSaveResult}
         disabled={isSaved}
         style={!isSaved ? {
@@ -144,11 +143,10 @@ export const SimulationReport: React.FC<Props> = ({
           color: scenarioColor || '#93c5fd',
           boxShadow: `0 0 15px ${scenarioColor || '#3b82f6'}26`
         } : {}}
-        className={`mt-5 w-full py-2.5 rounded-lg font-bold text-sm transition-all ${
-          isSaved 
-            ? 'bg-green-600/20 border border-green-500/50 text-green-400 cursor-default shadow-[0_0_15px_rgba(34,197,94,0.15)]' 
+        className={`mt-5 w-full py-2.5 rounded-lg font-bold text-sm transition-all ${isSaved
+            ? 'bg-green-600/20 border border-green-500/50 text-green-400 cursor-default shadow-[0_0_15px_rgba(34,197,94,0.15)]'
             : 'hover:brightness-125 cursor-pointer'
-        }`}
+          }`}
       >
         {isSaved ? '✅ Comparison Saved' : '💾 Save Comparison to History'}
       </button>

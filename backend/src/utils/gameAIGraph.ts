@@ -231,15 +231,7 @@ function buildDamaBoard(
         if (from < to) addTwoWayEdge(from, to, 1, 'path', 'man move');
       }
 
-      // Capture jumps: orthogonal 2-step (over an opponent)
-      const jumpMoves: [number, number][] = [[0, 2], [0, -2], [2, 0], [-2, 0]];
-      for (const [dc, dr] of jumpMoves) {
-        const nc = col + dc;
-        const nr = row + dr;
-        if (nc < 0 || nc >= size || nr < 0 || nr >= size) continue;
-        const to = `dama_${files[nc]}${nr + 1}`;
-        if (from < to) addTwoWayEdge(from, to, 1, 'wireless', 'capture jump');
-      }
+
 
     }
   }
@@ -270,7 +262,7 @@ function buildCheckersBoard(
     }
   }
 
-  const moves = [[1, 1], [-1, 1], [1, -1], [-1, -1], [2, 2], [-2, 2], [2, -2], [-2, -2]];
+  const moves = [[1, 1], [-1, 1], [1, -1], [-1, -1]];
   for (let row = 0; row < size; row++) {
     for (let col = 0; col < size; col++) {
       if ((row + col) % 2 === 0) continue;
@@ -282,8 +274,7 @@ function buildCheckersBoard(
         const from = `checkers_${files[col]}${row + 1}`;
         const to = `checkers_${files[nc]}${nr + 1}`;
         if (from < to) {
-          const isJump = Math.abs(dc) === 2;
-          addTwoWayEdge(from, to, isJump ? 1 : 2, isJump ? 'wireless' : 'path', isJump ? 'capture jump' : 'diagonal move');
+          addTwoWayEdge(from, to, 2, 'path', 'diagonal move');
         }
       }
     }

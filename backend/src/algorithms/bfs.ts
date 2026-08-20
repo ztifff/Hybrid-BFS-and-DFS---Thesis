@@ -49,11 +49,22 @@ function collectSubtree(
   return result;
 }
 
-function calcPathLatency(path: string[], edges: ScenarioGraph['edges']): number {
+function calcPathLatency(paths: string[][], edges: ScenarioGraph['edges']): number {
+  const usedEdges = new Set<string>();
   let total = 0;
-  for (let i = 0; i < path.length - 1; i++) {
-    const edge = edges.find((e) => (e.from === path[i] && e.to === path[i + 1]) || (e.to === path[i] && e.from === path[i + 1]));
-    if (edge) total += edge.latency;
+
+  for (const path of paths) {
+    for (let i = 0; i < path.length - 1; i++) {
+      const from = path[i];
+      const to = path[i + 1];
+      const edgeKey = from < to ? `${from}-${to}` : `${to}-${from}`;
+      
+      if (!usedEdges.has(edgeKey)) {
+        usedEdges.add(edgeKey);
+        const edge = edges.find((e) => (e.from === from && e.to === to) || (e.to === from && e.from === to));
+        if (edge) total += edge.latency;
+      }
+    }
   }
   return total;
 }
@@ -181,16 +192,21 @@ export class BFSPathfinder implements PathfinderObserver {
       });
       return result;
     };
-    const getCombinedPath = (activeAgent: AgentState) => {
-      const pathSet = new Set<string>();
+    const getCurrentPaths = (activeAgent: AgentState): string[][] => {
+      const paths: string[][] = [];
       agents.forEach(a => {
         a.foundDestinations.forEach(d => {
-          reconstructPath(a.parentMap, d).forEach(n => pathSet.add(n));
+          paths.push(reconstructPath(a.parentMap, d));
         });
       });
       if (activeAgent.lastCurrent) {
-        reconstructPath(activeAgent.parentMap, activeAgent.lastCurrent).forEach(n => pathSet.add(n));
+        paths.push(reconstructPath(activeAgent.parentMap, activeAgent.lastCurrent));
       }
+      return paths;
+    };
+    const getCombinedPath = (activeAgent: AgentState) => {
+      const pathSet = new Set<string>();
+      getCurrentPaths(activeAgent).forEach(p => p.forEach(n => pathSet.add(n)));
       return Array.from(pathSet);
     };
     const getAllFoundDestinations = () => Array.from(new Set(agents.flatMap(a => a.foundDestinations)));
@@ -277,6 +293,7 @@ export class BFSPathfinder implements PathfinderObserver {
             explored: getAllExplored(),
             frontier: agents.flatMap(a => a.queue.map(q => q.id)),
             path: getCombinedPath(agent),
+            currentLatency: calcPathLatency(getCurrentPaths(agent), edges),
             current: rollbackTo,
             done: false,
             foundDestination: getAllFoundDestinations()[0] || null,
@@ -305,39 +322,68 @@ export class BFSPathfinder implements PathfinderObserver {
       const current = entry.id;
 
       if (this.blockedNodes.has(current)) {
-        if (entry.waited < MAX_WAIT_STEPS) {
-          agent.queue.push({ id: current, waited: entry.waited + 1 });
-          iteration++;
-          const waitStep: AlgorithmStep = {
-            stepIndex: iteration,
-            explored: getAllExplored(),
-            frontier: agents.flatMap(a => a.queue.map(q => q.id)),
-            path: getCombinedPath(agent),
-            current,
-            done: false,
-            foundDestination: getAllFoundDestinations()[0] || null,
-            foundDestinations: getAllFoundDestinations(),
-            phaseLabel: `⏳ BFS [${agent.robotId}] - Congestion at [${current}], waiting (${entry.waited + 1}/${MAX_WAIT_STEPS})`,
-            deliveredBoxCounts: getAllDeliveredBoxCounts(),
-            pickedUpBoxCounts: getAllPickedUpBoxCounts(),
-            activeRobotId: agent.robotId,
-            robotPositions: getRobotPositions()
-          };
-          steps.push(waitStep);
-          environment.tick(waitStep);
-        } else {
-          // Reroute from last valid position (agent.lastCurrent), NOT robot start!
-          const restartNode = (agent.lastCurrent && !this.blockedNodes.has(agent.lastCurrent))
-            ? agent.lastCurrent
-            : agent.robotId;
+        const hasUnblockedAlternatives = agent.queue.some(q => !this.blockedNodes.has(q.id));
 
-          agent.visited.clear();
-          agent.visited.add(restartNode);
-          agent.parentMap.clear();
-          agent.parentMap.set(restartNode, null);
-          agent.childrenMap.clear();
-          agent.queue = [{ id: restartNode, waited: 0 }];
+        if (hasUnblockedAlternatives) {
+          agent.queue.push({ id: current, waited: entry.waited });
+          
+          if (entry.waited === 0) {
+            iteration++;
+            const rerouteStep: AlgorithmStep = {
+              stepIndex: iteration,
+              explored: getAllExplored(),
+              frontier: agents.flatMap(a => a.queue.map(q => q.id)),
+              path: getCombinedPath(agent),
+            currentLatency: calcPathLatency(getCurrentPaths(agent), edges),
+              current,
+              done: false,
+              foundDestination: getAllFoundDestinations()[0] || null,
+              foundDestinations: getAllFoundDestinations(),
+              phaseLabel: `🔀 BFS [${agent.robotId}] — Blockade at [${current}], rerouting!`,
+              deliveredBoxCounts: getAllDeliveredBoxCounts(),
+              pickedUpBoxCounts: getAllPickedUpBoxCounts(),
+              activeRobotId: agent.robotId,
+              robotPositions: getRobotPositions()
+            };
+            steps.push(rerouteStep);
+            environment.tick(rerouteStep);
+          }
+        } else {
+          if (entry.waited < MAX_WAIT_STEPS) {
+            agent.queue.unshift({ id: current, waited: entry.waited + 1 });
+            iteration++;
+            const waitStep: AlgorithmStep = {
+              stepIndex: iteration,
+              explored: getAllExplored(),
+              frontier: agents.flatMap(a => a.queue.map(q => q.id)),
+              path: getCombinedPath(agent),
+            currentLatency: calcPathLatency(getCurrentPaths(agent), edges),
+              current,
+              done: false,
+              foundDestination: getAllFoundDestinations()[0] || null,
+              foundDestinations: getAllFoundDestinations(),
+              phaseLabel: `⏳ BFS [${agent.robotId}] - Congestion at [${current}], waiting (${entry.waited + 1}/${MAX_WAIT_STEPS})`,
+              deliveredBoxCounts: getAllDeliveredBoxCounts(),
+              pickedUpBoxCounts: getAllPickedUpBoxCounts(),
+              activeRobotId: agent.robotId,
+              robotPositions: getRobotPositions()
+            };
+            steps.push(waitStep);
+            environment.tick(waitStep);
+          } else {
+            const restartNode = (agent.lastCurrent && !this.blockedNodes.has(agent.lastCurrent))
+              ? agent.lastCurrent
+              : agent.robotId;
+
+            agent.visited.clear();
+            agent.visited.add(restartNode);
+            agent.parentMap.clear();
+            agent.parentMap.set(restartNode, null);
+            agent.childrenMap.clear();
+            agent.queue = [{ id: restartNode, waited: 0 }];
+          }
         }
+
         activeAgentIndex = (activeAgentIndex + 1) % agents.length;
         continue;
       }
@@ -429,6 +475,7 @@ export class BFSPathfinder implements PathfinderObserver {
         explored: getAllExplored(),
         frontier: agents.flatMap(a => a.queue.map(q => q.id)),
         path: getCombinedPath(agent),
+        currentLatency: calcPathLatency(getCurrentPaths(agent), edges),
         current,
         done: false,
         foundDestination: getAllFoundDestinations()[0] || null,
@@ -474,13 +521,14 @@ export class BFSPathfinder implements PathfinderObserver {
     });
 
     const combinedFinalPath = Array.from(new Set(finalPaths.flat()));
-    const totalLatency = calcPathLatency(combinedFinalPath, edges);
+    const totalLatency = calcPathLatency(finalPaths, edges);
 
     steps.push({
       stepIndex: iteration,
       explored: getAllExplored(),
       frontier: [],
       path: combinedFinalPath,
+      currentLatency: totalLatency,
       current: allFoundDests[0] ?? sources[0],
       done: true,
       foundDestination: allFoundDests[0] ?? null,

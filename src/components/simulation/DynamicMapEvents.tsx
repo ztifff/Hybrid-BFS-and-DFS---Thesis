@@ -104,8 +104,8 @@ export const DynamicMapEvents: React.FC<Props> = ({ dynamicEvents, stepIndex, si
   return (
     <div className="glass-panel rounded-xl p-3 flex flex-col shrink-0 h-[360px] fade-in hover:shadow-glow-purple transition-shadow duration-500">
       <div className="flex items-center mb-2 shrink-0 border-b border-gray-800 pb-2">
-        <h3 className="text-xs text-gray-400 font-bold uppercase tracking-wider flex items-center gap-2">
-          📅 Dynamic Map Events
+        <h3 className="text-xs text-gray-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+          <span className="sm:hidden">📅 </span>Dynamic Map Events
         </h3>
       </div>
 

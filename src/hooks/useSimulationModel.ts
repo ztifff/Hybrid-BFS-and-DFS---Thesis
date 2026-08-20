@@ -529,8 +529,8 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
           graphParams.set('customSourceId', evacuationSourceId);
         }
 
-        const response = await fetch(`/api/network/graph?${graphParams}`);
-        console.log("[DEBUG] Fetching network graph... URL:", `/api/network/graph?${graphParams}`);
+        const response = await fetch(`https://backend-1e4y.onrender.com/api/network/graph?${graphParams}`);
+        console.log("[DEBUG] Fetching network graph... URL:", `https://backend-1e4y.onrender.com/api/network/graph?${graphParams}`);
         if (!response.ok) throw new Error(`Graph API Error: ${response.statusText}`);
         const json = await response.json();
         console.log("[DEBUG] Fetch network graph response nodes:", json.data?.nodes?.length);

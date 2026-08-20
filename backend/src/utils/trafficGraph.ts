@@ -95,7 +95,7 @@ export function buildTrafficGraph(
         // Randomly drop 15% of minor streets to create realistic blocks/cul-de-sacs
         if (isBoulevard || rand() > 0.15) {
           const latency = isBoulevard ? 2 : 4 + Math.floor(rand() * 3);
-          const label = isBoulevard ? `${latency}m Blvd` : `${latency}m St`;
+          const label = isBoulevard ? `${latency}min Blvd` : `${latency}min St`;
           edges.push({ id: `${nodeId(r, c-1)}-${id}`, from: nodeId(r, c-1), to: id, latency, label, type: 'road' });
         }
       }
@@ -105,7 +105,7 @@ export function buildTrafficGraph(
         const isAvenue = c === mainAvenueCol;
         if (isAvenue || rand() > 0.15) {
           const latency = isAvenue ? 2 : 4 + Math.floor(rand() * 3);
-          const label = isAvenue ? `${latency}m Ave` : `${latency}m St`;
+          const label = isAvenue ? `${latency}min Ave` : `${latency}min St`;
           edges.push({ id: `${nodeId(r-1, c)}-${id}`, from: nodeId(r-1, c), to: id, latency, label, type: 'road' });
         }
       }
@@ -131,14 +131,25 @@ export function buildTrafficGraph(
   }
 
   for (let i = 0; i < highwayNodes.length - 1; i++) {
-    edges.push({ 
-      id: `hwy_${i}`, 
-      from: highwayNodes[i], 
-      to: highwayNodes[i+1], 
-      latency: 1, 
-      label: '1m HWY', 
-      type: 'road' 
-    });
+    const from = highwayNodes[i];
+    const to = highwayNodes[i+1];
+    const existingEdgeIndex = edges.findIndex(e => 
+      (e.from === from && e.to === to) || (e.from === to && e.to === from)
+    );
+
+    if (existingEdgeIndex !== -1) {
+      edges[existingEdgeIndex].latency = 1;
+      edges[existingEdgeIndex].label = '1min HWY';
+    } else {
+      edges.push({ 
+        id: `hwy_${i}`, 
+        from, 
+        to, 
+        latency: 1, 
+        label: '1min HWY', 
+        type: 'road' 
+      });
+    }
   }
 
   // 5. Source and Destinations

@@ -108,6 +108,7 @@ export interface AlgorithmStep {
   pickedUpBoxCounts?: Record<string, number>; // shelfId -> count of boxes picked up up to this step
   activeRobotId?: string;
   robotPositions?: Record<string, string>;
+  currentLatency?: number;
 }
 
 // ── Performance Metrics ────────────────────────────────────────────────────

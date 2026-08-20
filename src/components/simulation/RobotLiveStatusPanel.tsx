@@ -50,7 +50,7 @@ export const RobotLiveStatusPanel: React.FC<Props> = ({
       {/* ── Header ───────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/5 bg-black/40">
         <div className="flex items-center gap-1.5">
-          <span className="text-sm">🤖</span>
+          <span className="text-sm sm:hidden">🤖</span>
           <span className="text-[11px] font-bold uppercase tracking-widest text-gray-300">
             Robot Fleet Status
           </span>
@@ -113,18 +113,18 @@ export const RobotLiveStatusPanel: React.FC<Props> = ({
           const isDone    = percent >= 100;
 
           /* task badge */
-          let task = 'In Transit';
+          let task: React.ReactNode = 'In Transit';
           if (isDone) {
-            task = '✅ Done';
+            task = <><span className="sm:hidden">✅ </span>Done</>;
           } else if (activeStep?.phaseLabel?.toLowerCase().includes('congestion')) {
-            task = '⏳ Blocked';
+            task = <><span className="sm:hidden">⏳ </span>Blocked</>;
           } else if (locId && assignment.destinations.includes(locId)) {
-            task = '🚚 Unloading';
+            task = <><span className="sm:hidden">🚚 </span>Unloading</>;
           } else if (locId && (locId.startsWith('shelf') || locId.startsWith('clutter'))) {
-            task = '📦 Loading';
+            task = <><span className="sm:hidden">📦 </span>Loading</>;
           } else if (assignment.priorityDest && !isDone) {
             const pLabel = nodeMap.get(assignment.priorityDest) ?? assignment.priorityDest;
-            task = `⭐ ${pLabel.length > 12 ? pLabel.slice(0, 12) + '…' : pLabel}`;
+            task = <><span className="sm:hidden">⭐ </span>{pLabel.length > 12 ? pLabel.slice(0, 12) + '…' : pLabel}</>;
           }
 
           return (
@@ -166,7 +166,7 @@ export const RobotLiveStatusPanel: React.FC<Props> = ({
               {/* Row 2: current location + task badge */}
               <div className="flex items-center justify-between gap-2 mb-1">
                 <div className="flex items-center gap-1 min-w-0">
-                  <span className="text-[10px] group-hover:text-emerald-400 transition-colors shrink-0">🎯</span>
+                  <span className="text-[10px] group-hover:text-emerald-400 transition-colors shrink-0 sm:hidden">🎯</span>
                   <span className="text-[10px] text-gray-400 truncate group-hover:text-gray-200 transition-colors" title={locLabel}>
                     {locLabel}
                   </span>
@@ -194,7 +194,7 @@ export const RobotLiveStatusPanel: React.FC<Props> = ({
                         <span className={`truncate max-w-[170px] ${
                           isReached ? 'text-emerald-300 font-medium' : isCurrent ? 'text-blue-300 font-semibold' : 'text-gray-400'
                         }`} title={destName}>
-                          {isReached ? '✅' : isCurrent ? '🚚' : '📍'} {destName}
+                          <span className="sm:hidden">{isReached ? '✅ ' : isCurrent ? '🚚 ' : '📍 '}</span>{destName}
                         </span>
                         <span className={`text-[9px] font-bold shrink-0 ${
                           isReached ? 'text-emerald-400' : isCurrent ? 'text-blue-400' : 'text-gray-500'
@@ -209,7 +209,7 @@ export const RobotLiveStatusPanel: React.FC<Props> = ({
 
               {/* hover hint */}
               <div className="text-[9px] text-emerald-500/70 text-right mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                Click to focus 🔍
+                Click to focus <span className="sm:hidden">🔍</span>
               </div>
             </div>
           );

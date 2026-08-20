@@ -49,7 +49,7 @@ export const SimulationConfig: React.FC<Props> = ({
   return (
     <div className="bg-[#0a0f1e] border border-blue-900/50 rounded-xl p-5 mb-5 shadow-lg w-full">
       <div className="flex items-center gap-2 mb-4 border-b border-gray-800 pb-3">
-        <span className="text-blue-400">⚙️</span>
+        <span className="text-blue-400 sm:hidden">⚙️</span>
         <span className="font-bold text-gray-200 uppercase text-[11px] tracking-[0.15em]">
           Simulation Configuration
         </span>
@@ -120,7 +120,7 @@ export const SimulationConfig: React.FC<Props> = ({
               <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-800">
                 <div className="flex flex-col md:flex-row md:items-center gap-4">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">🤖</span>
+                    <span className="text-lg sm:hidden">🤖</span>
                     <h3 className="font-bold text-gray-200 uppercase tracking-widest text-[11px]">Robot Fleet Status</h3>
                   </div>
                   {(!!entry.multiResults || isMultiAlgorithmResult(entry.simResult as unknown) || String(entry.algorithm).toLowerCase().includes('multi')) && (
@@ -178,10 +178,10 @@ export const SimulationConfig: React.FC<Props> = ({
                         {r.priorityDest && (
                           <div className="flex justify-between items-center bg-blue-950/50 p-2 rounded border border-blue-900/50">
                             <div className="flex items-center gap-1.5">
-                              <span className="text-pink-400 text-[11px]">🎯 Priority:</span>
+                              <span className="text-pink-400 text-[11px]"><span className="sm:hidden">🎯 </span>Priority:</span>
                               <span className="text-gray-200 font-medium">{label(r.priorityDest)}</span>
                             </div>
-                            <span className={textColor}>✅ Done</span>
+                            <span className={textColor}><span className="sm:hidden">✅ </span>Done</span>
                           </div>
                         )}
                         {r.destinations?.length > 0 && (
@@ -192,7 +192,7 @@ export const SimulationConfig: React.FC<Props> = ({
                               return (
                                 <div key={j} className="flex justify-between items-center">
                                   <div className="flex items-center gap-1.5">
-                                    <span className={`${textColor} text-[10px]`}>✅</span>
+                                    <span className={`${textColor} text-[10px] sm:hidden`}>✅</span>
                                     <span className="text-gray-300 font-medium truncate max-w-[140px]">{label(d)}</span>
                                   </div>
                                   <div className="flex items-center gap-2">

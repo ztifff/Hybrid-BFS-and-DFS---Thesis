@@ -131,8 +131,8 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 pr-10">
             <h2 className="text-base md:text-lg font-bold text-white tracking-tight leading-tight">
               {view === 'list'
-                ? '🗄️ Core Simulation Storage History'
-                : `🔍 Performance Inspect: ${activeEntry?.name}`}
+                ? <><span className="sm:hidden">🗄️ </span>Core Simulation Storage History</>
+                : <><span className="sm:hidden">🔍 </span>Performance Inspect: {activeEntry?.name}</>}
             </h2>
             {view === 'list' && (
               <span className="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full font-mono w-fit">
@@ -155,7 +155,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
                   onClick={() => importInputRef.current?.click()}
                   className="flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-3 py-1.5 bg-blue-900/30 hover:bg-blue-800/50 text-blue-300 hover:text-blue-200 border border-blue-700/30 hover:border-blue-600/50 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap"
                 >
-                  📥 Import
+                  <span className="sm:hidden">📥 </span>Import
                 </button>
                 <button
                   onClick={() => setSelectedIds(
@@ -174,7 +174,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
                   className="flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-3 py-1.5 bg-emerald-900/30 hover:bg-emerald-800/50 text-emerald-300 hover:text-emerald-200 border border-emerald-700/30 hover:border-emerald-600/50 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
                   title={selectedIds.size > 0 ? `Export ${selectedIds.size} selected record(s)` : 'Export all records'}
                 >
-                  📤 {selectedIds.size > 0 ? `Export (${selectedIds.size})` : 'Export All'}
+                  <span className="sm:hidden">📤 </span>{selectedIds.size > 0 ? `Export (${selectedIds.size})` : 'Export All'}
                 </button>
               </>
             )}

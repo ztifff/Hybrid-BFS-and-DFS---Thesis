@@ -9,6 +9,7 @@ import { MAP_REGISTRY } from '../../config/mapRegistry';
 
 import { NetworkCanvas } from '../../components/NetworkCanvas';
 import { MetricsPanel } from './MetricsPanel';
+import { Network, Bot, Car, Flame, Gamepad2 } from '../../components/icons';
 import { Legend } from '../../components/Legend';
 import { SimulationReport } from './SimulationReport';
 import { HistoryModal } from '../../components/HistoryModal';
@@ -89,8 +90,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} scenario={scenario} />}
 
         {/* ── Header ───────────────────────────────────────────────────────────── */}
-        <header className="glass-panel border-b-0 border-white/5 px-2 sm:px-3 md:px-6 py-2.5 md:py-3 flex items-center justify-between shrink-0 relative z-10 gap-1.5 sm:gap-2 w-full max-w-full overflow-hidden">
-          <div className="flex items-center gap-1.5 sm:gap-4 relative z-10 min-w-0 flex-1">
+        <header className="glass-panel border-b-0 border-white/5 px-2 sm:px-3 md:px-6 py-2.5 md:py-3 flex flex-wrap lg:flex-nowrap items-center justify-between shrink-0 relative z-10 gap-y-2 gap-x-1.5 w-full max-w-full">
+          
+          {/* Left: Back & Title */}
+          <div className="flex items-center gap-1.5 sm:gap-4 relative z-10 min-w-0 flex-1 lg:flex-none">
             <button
               onClick={() => sim.requestBack(sim.status, sim.isCurrentSaved)}
               className="px-2 sm:px-3 py-2 text-gray-400 hover:text-white flex items-center gap-1 sm:gap-2 transition-all hover:bg-white/5 rounded-lg text-sm font-bold whitespace-nowrap active:scale-95 shrink-0"
@@ -99,47 +102,60 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             </button>
             <div className="h-6 w-px bg-white/10 hidden sm:block mx-0.5 shrink-0"></div>
             <div className="flex items-center gap-1.5 sm:gap-3 bg-[#0a0f1e]/80 px-2.5 sm:px-5 py-2 sm:py-2.5 rounded-xl border border-white/10 shadow-inner min-w-0">
-              <span className="text-xl sm:text-2xl drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] shrink-0">{sc?.icon}</span>
+              <span className="text-xl sm:text-2xl drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] shrink-0 flex items-center justify-center" style={{ color: sc?.color }}>
+                {(() => {
+                  const className = "w-6 h-6 sm:w-8 sm:h-8";
+                  switch (scenario) {
+                    case 'network': return <Network className={className} />;
+                    case 'robotics': return <Bot className={className} />;
+                    case 'traffic': return <Car className={className} />;
+                    case 'evacuation': return <Flame className={className} />;
+                    case 'gameai': return <Gamepad2 className={className} />;
+                    default: return <Network className={className} />;
+                  }
+                })()}
+              </span>
               <h1 className="font-bold text-xs sm:text-base md:text-lg text-white tracking-widest drop-shadow-md truncate">{sc?.name}</h1>
-            </div>
-
-            {/* Algorithm toggle pills */}
-            <div className="hidden lg:flex items-center gap-3 ml-4 px-4 py-1.5 bg-black/40 rounded-full border border-white/5 text-[10px] font-bold tracking-widest uppercase shrink-0 relative">
-              {sim.minAlgoWarning && (
-                <div className="fixed bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap z-[9999]
-                  flex items-center gap-1.5 px-4 py-2.5 rounded-lg
-                  bg-amber-950/95 border border-amber-500/60 text-amber-300
-                  text-xs font-bold shadow-[0_0_20px_rgba(245,158,11,0.25)]
-                  animate-fadeIn pointer-events-none">
-                  <span className="text-amber-400">⚠</span>
-                  At least 1 algorithm must remain active
-                </div>
-              )}
-              {([
-                { id: 'bfs' as const, label: 'BFS', textCls: 'text-green-400', dotCls: 'bg-green-500', hoverBg: 'hover:bg-green-500/15', activeBg: 'bg-green-500/10', glow: 'rgba(74,222,128,0.5)', dotGlow: 'rgba(34,197,94,0.8)' },
-                { id: 'dfs' as const, label: 'DFS', textCls: 'text-purple-400', dotCls: 'bg-purple-500', hoverBg: 'hover:bg-purple-500/15', activeBg: 'bg-purple-500/10', glow: 'rgba(192,132,252,0.5)', dotGlow: 'rgba(168,85,247,0.8)' },
-                { id: 'hybrid' as const, label: 'Hybrid', textCls: 'text-orange-400', dotCls: 'bg-orange-500', hoverBg: 'hover:bg-orange-500/15', activeBg: 'bg-orange-500/10', glow: 'rgba(251,146,60,0.5)', dotGlow: 'rgba(249,115,22,0.8)' },
-              ]).map(({ id, label, textCls, dotCls, hoverBg, activeBg, glow, dotGlow }, i) => (
-                <React.Fragment key={id}>
-                  {i > 0 && <span className="text-gray-600">|</span>}
-                  <button
-                    onClick={() => sim.toggleAlgorithm(id)}
-                    title={sim.activeAlgorithms[id] ? `Hide ${label} from simulation view` : `Show ${label} in simulation view`}
-                    className={`flex items-center gap-1.5 rounded-md px-2 py-1 transition-all duration-150 cursor-pointer select-none ${sim.activeAlgorithms[id]
-                      ? `${textCls} ${activeBg} ${hoverBg} drop-shadow-[0_0_6px_${glow}] hover:drop-shadow-[0_0_12px_${glow}] hover:brightness-125 active:scale-95`
-                      : `text-gray-500 opacity-50 hover:opacity-75 hover:bg-white/5 active:scale-95`
-                      }`}
-                  >
-                    <span className={`w-2 h-2 rounded-full flex-shrink-0 transition-all duration-200 ${sim.activeAlgorithms[id] ? `${dotCls} shadow-[0_0_8px_${dotGlow}]` : 'bg-gray-600'
-                      }`} />
-                    <span className={sim.activeAlgorithms[id] ? '' : 'line-through'}>{label}</span>
-                  </button>
-                </React.Fragment>
-              ))}
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0 relative z-10 ml-auto">
+          {/* Center: Algorithm toggle pills (Wraps to new line on mobile) */}
+          <div className="flex items-center justify-center gap-2 sm:gap-3 px-2 sm:px-4 py-1.5 bg-black/40 rounded-full border border-white/5 text-[9px] sm:text-[10px] font-bold tracking-widest uppercase order-3 lg:order-none w-full lg:w-auto shrink-0 relative lg:mx-4">
+            {sim.minAlgoWarning && (
+              <div className="fixed bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap z-[9999]
+                flex items-center gap-1.5 px-4 py-2.5 rounded-lg
+                bg-amber-950/95 border border-amber-500/60 text-amber-300
+                text-xs font-bold shadow-[0_0_20px_rgba(245,158,11,0.25)]
+                animate-fadeIn pointer-events-none">
+                <span className="text-amber-400">⚠</span>
+                At least 1 algorithm must remain active
+              </div>
+            )}
+            {([
+              { id: 'bfs' as const, label: 'BFS', textCls: 'text-green-400', dotCls: 'bg-green-500', hoverBg: 'hover:bg-green-500/15', activeBg: 'bg-green-500/10', glow: 'rgba(74,222,128,0.5)', dotGlow: 'rgba(34,197,94,0.8)' },
+              { id: 'dfs' as const, label: 'DFS', textCls: 'text-purple-400', dotCls: 'bg-purple-500', hoverBg: 'hover:bg-purple-500/15', activeBg: 'bg-purple-500/10', glow: 'rgba(192,132,252,0.5)', dotGlow: 'rgba(168,85,247,0.8)' },
+              { id: 'hybrid' as const, label: 'Hybrid', textCls: 'text-orange-400', dotCls: 'bg-orange-500', hoverBg: 'hover:bg-orange-500/15', activeBg: 'bg-orange-500/10', glow: 'rgba(251,146,60,0.5)', dotGlow: 'rgba(249,115,22,0.8)' },
+            ]).map(({ id, label, textCls, dotCls, hoverBg, activeBg, glow, dotGlow }, i) => (
+              <React.Fragment key={id}>
+                {i > 0 && <span className="text-gray-600">|</span>}
+                <button
+                  onClick={() => sim.toggleAlgorithm(id)}
+                  title={sim.activeAlgorithms[id] ? `Hide ${label} from simulation view` : `Show ${label} in simulation view`}
+                  className={`flex items-center gap-1.5 rounded-md px-1.5 sm:px-2 py-1 transition-all duration-150 cursor-pointer select-none ${sim.activeAlgorithms[id]
+                    ? `${textCls} ${activeBg} ${hoverBg} drop-shadow-[0_0_6px_${glow}] hover:drop-shadow-[0_0_12px_${glow}] hover:brightness-125 active:scale-95`
+                    : `text-gray-500 opacity-50 hover:opacity-75 hover:bg-white/5 active:scale-95`
+                    }`}
+                >
+                  <span className={`w-2 h-2 rounded-full flex-shrink-0 transition-all duration-200 ${sim.activeAlgorithms[id] ? `${dotCls} shadow-[0_0_8px_${dotGlow}]` : 'bg-gray-600'
+                    }`} />
+                  <span className={sim.activeAlgorithms[id] ? '' : 'line-through'}>{label}</span>
+                </button>
+              </React.Fragment>
+            ))}
+          </div>
+
+          {/* Right: Actions */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0 relative z-10 ml-auto order-2 lg:order-none">
             <button
               onClick={() => sim.setIsHistoryModalOpen(true)}
               className="px-2.5 sm:px-4 py-1.5 rounded-lg glass-panel text-gray-200 hover:text-white text-sm font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer hover:-translate-y-0.5 active:scale-[0.98] shadow-md hover:shadow-glow-blue hover:border-blue-500/50"
@@ -165,7 +181,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             >
               <span className="md:hidden">{sc?.icon || '?'}</span>
               <span className="hidden md:flex items-center gap-2">
-                <span className="text-lg leading-none filter drop-shadow-sm">{sc?.icon || '❓'}</span>
+                <span className="text-lg leading-none filter drop-shadow-sm md:hidden">{sc?.icon || '❓'}</span>
                 Help &amp; Guide
               </span>
             </button>
@@ -233,7 +249,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
                         }`}
                     >
-                      <span>{icon}</span>{label}
+                      <span className="sm:hidden">{icon}</span>{label}
                     </button>
                   ))}
                 </div>
@@ -251,7 +267,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
                         }`}
                     >
-                      <span>{mapDef.icon}</span>{mapDef.label}
+                      <span className="sm:hidden">{mapDef.icon}</span>{mapDef.label}
                     </button>
                   ))}
                 </div>
@@ -374,7 +390,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 <div className="flex flex-col md:flex-row items-center gap-2 justify-center w-full mt-1 bg-gray-900/60 p-2 rounded-xl border border-gray-700/50">
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] uppercase tracking-widest text-emerald-400 font-bold flex items-center gap-1">
-                      <span>🔥</span> STARTING POINT (SRC):
+                      <span className="sm:hidden">🔥</span> STARTING POINT (SRC):
                     </span>
                     <select
                       value={sim.evacuationSourceId || sim.currentGraph.sourceId || ''}
@@ -455,7 +471,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                               : 'bg-gray-900 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200'
                               }`}
                           >
-                            <span className="text-[14px]">📟</span>
+                            <span className="text-[14px] sm:hidden">📟</span>
                             {n.label ? n.label.split('\n')[0] : n.id} Terminal
                           </button>
                         ))}
@@ -479,24 +495,24 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
             {/* Playback Controls */}
             <div className="mt-2 flex items-center gap-2 flex-wrap justify-center w-full shrink-0">
-              <button onClick={sim.handleRerollEvents} disabled={sim.status === 'running'} className={scenarioBtnClass}>🎲 Reroll Events</button>
-              <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleReset} className={scenarioBtnClass}>🔄 Reset</button>
-              <button disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex === 0} onClick={sim.handleStepBackward} className={scenarioBtnClass}>⏪ Back</button>
+              <button onClick={sim.handleRerollEvents} disabled={sim.status === 'running'} className={scenarioBtnClass}><span className="sm:hidden">🎲 </span>Reroll Events</button>
+              <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleReset} className={scenarioBtnClass}><span className="sm:hidden">🔄 </span>Reset</button>
+              <button disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex === 0} onClick={sim.handleStepBackward} className={scenarioBtnClass}><span className="sm:hidden">⏪ </span>Back</button>
 
               {sim.status === 'running' ? (
-                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handlePause} className={`${primaryBtnClass} hover:bg-red-500 bg-red-600 text-white shadow-red-900/40`}>⏸️ Pause</button>
+                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handlePause} className={`${primaryBtnClass} hover:bg-red-500 bg-red-600 text-white shadow-red-900/40`}><span className="sm:hidden">⏸️ </span>Pause</button>
               ) : sim.status === 'paused' ? (
-                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleResume} className={`${primaryBtnClass} hover:bg-green-500 bg-green-600 text-white shadow-green-900/40`}>▶️ Resume</button>
+                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleResume} className={`${primaryBtnClass} hover:bg-green-500 bg-green-600 text-white shadow-green-900/40`}><span className="sm:hidden">▶️ </span>Resume</button>
               ) : sim.status === 'done' ? (
-                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleRun} className={`${primaryBtnClass} hover:bg-blue-500 bg-blue-600 text-white shadow-blue-900/40`}>🔄 Replay</button>
+                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleRun} className={`${primaryBtnClass} hover:bg-blue-500 bg-blue-600 text-white shadow-blue-900/40`}><span className="sm:hidden">🔄 </span>Replay</button>
               ) : (
                 <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleRun} className={`${primaryBtnClass} w-full sm:w-auto hover:bg-green-500 bg-green-600 text-white shadow-green-900/40`}>
-                  {sim.isComputing ? 'Computing...' : '▶️ Run Simulations'}
+                  {sim.isComputing ? 'Computing...' : <><span className="sm:hidden">▶️ </span>Run Simulations</>}
                 </button>
               )}
-
-              <button disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex >= sim.totalSteps} onClick={sim.handleStepForward} className={scenarioBtnClass}>Fwd ⏭️</button>
-              <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleSkipEnd} className={scenarioBtnClass}>⏭️ Skip</button>
+              
+              <button disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex >= sim.totalSteps} onClick={sim.handleStepForward} className={scenarioBtnClass}>Fwd<span className="sm:hidden"> ⏭️</span></button>
+              <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleSkipEnd} className={scenarioBtnClass}><span className="sm:hidden">⏭️ </span>Skip</button>
             </div>
           </main>
 

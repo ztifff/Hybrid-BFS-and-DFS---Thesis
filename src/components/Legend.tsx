@@ -74,8 +74,6 @@ const EDGE_ITEMS: Record<ScenarioType, LegendItem[]> = {
   ],
   gameai: [
     { color: '#c4b5fd', label: 'Man Move (forward / lateral)' },
-    { color: '#fdba74', label: 'Capture Jump (orthogonal)', dashed: true },
-    { color: '#86efac', label: 'King Slide (long-range orthogonal)' },
   ],
 };
 

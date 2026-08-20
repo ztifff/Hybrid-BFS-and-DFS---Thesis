@@ -122,18 +122,18 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
       }`}
     >
       <div className="flex items-center gap-2">
-        <span className="text-sm">🤖</span>
+        <span className="text-sm sm:hidden">🤖</span>
         <div className="text-left">
           <div className="text-[10px] uppercase tracking-[0.18em] text-green-400 font-bold">
             Robot Assignments
           </div>
           <div className="text-[11px] text-gray-400 font-medium">
             {assignments.length} robot{assignments.length !== 1 ? "s" : ""} · {totalDests} dest{totalDests !== 1 ? "s" : ""}
-            {isBoxDeliveryMap ? ` · 📦 ${totalBoxes} boxes` : ""}
+            {isBoxDeliveryMap ? <> · {totalBoxes} box{totalBoxes !== 1 ? "es" : ""}</> : ""}
           </div>
         </div>
       </div>
-      <span className="text-gray-400 text-xs">⚙️</span>
+      <span className="text-gray-400 text-xs sm:hidden">⚙️</span>
     </button>
   );
 
@@ -156,11 +156,11 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 bg-green-900/10 shrink-0">
               <div className="flex items-center gap-3">
-                <span className="text-xl">🤖</span>
+                <span className="text-xl sm:hidden">🤖</span>
                 <div>
                   <h2 className="text-sm font-bold text-white">Robot Delivery Assignments</h2>
                   <p className="text-[10px] text-gray-400 mt-0.5">
-                    Assign destinations to each robot · ⭐ Priority destinations are visited first
+                    Assign destinations to each robot · <span className="sm:hidden">⭐ </span>Priority destinations are visited first
                   </p>
                 </div>
               </div>
@@ -198,14 +198,14 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
                             : "hover:bg-gray-800/50"
                         }`}
                       >
-                        <span className="text-sm shrink-0">🤖</span>
+                        <span className="text-sm shrink-0 sm:hidden">🤖</span>
                         <div className="flex-1 min-w-0">
                           <div className={`text-xs font-semibold truncate ${isActive ? "text-green-300" : "text-gray-300"}`}>
                             {getRobotLabel(a.robotId)}
                           </div>
                           <div className="text-[10px] text-gray-500">
                             {a.destinations.length} dest{a.destinations.length !== 1 ? "s" : ""}
-                            {a.priorityDest && " · ⭐ priority"}
+                            {a.priorityDest && <><span className="sm:hidden"> · ⭐</span> priority</>}
                           </div>
                         </div>
                         {!disabled && (
@@ -224,7 +224,7 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
                   {/* Minimum robot warning — sticky at bottom of robot list */}
                   {minRobotWarning && (
                     <div className="sticky bottom-0 z-10 px-3 py-2.5 bg-amber-950 border-t border-amber-500/60 flex items-start gap-2">
-                      <span className="text-amber-400 text-sm shrink-0 mt-0.5">⚠️</span>
+                      <span className="text-amber-400 text-sm shrink-0 mt-0.5 sm:hidden">⚠️</span>
                       <div>
                         <p className="text-amber-300 text-[11px] font-bold leading-tight">Minimum 1 Robot Required</p>
                         <p className="text-amber-400/70 text-[10px] mt-0.5 leading-tight">At least one active robot must remain in the simulation.</p>
@@ -269,7 +269,7 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
                     {/* Robot header */}
                     <div className="px-4 py-3 border-b border-gray-800 bg-gray-900/30 shrink-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-base">🤖</span>
+                        <span className="text-base sm:hidden">🤖</span>
                         <div>
                           <div className="text-sm font-bold text-green-300">
                             {getRobotLabel(activeAssignment.robotId)}
@@ -278,7 +278,7 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
                             {activeAssignment.destinations.length} destinations selected
                             {activeAssignment.priorityDest && (
                               <span className="text-amber-400 ml-2">
-                                · ⭐ {getShelfLabel(activeAssignment.priorityDest)} is priority
+                                · <span className="sm:hidden">⭐ </span>{getShelfLabel(activeAssignment.priorityDest)} is priority
                               </span>
                             )}
                           </div>
@@ -291,7 +291,7 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
                       {/* Minimum destination warning — sticky at top */}
                       {minDestWarning && (
                         <div className="sticky top-0 z-10 -mx-3 -mt-3 mb-3 px-3 py-2.5 bg-amber-950 border-b border-amber-500/60 flex items-start gap-2">
-                          <span className="text-amber-400 text-sm shrink-0 mt-0.5">⚠️</span>
+                          <span className="text-amber-400 text-sm shrink-0 mt-0.5 sm:hidden">⚠️</span>
                           <div>
                             <p className="text-amber-300 text-[11px] font-bold leading-tight">Minimum 1 Destination Required</p>
                             <p className="text-amber-400/70 text-[10px] mt-0.5 leading-tight">Each robot must have at least one delivery destination assigned.</p>
@@ -299,7 +299,7 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
                         </div>
                       )}
                       <div className="text-[9px] uppercase tracking-widest text-gray-500 font-bold mb-2 px-1">
-                        Click to select · ⭐ to set priority (visited first)
+                        Click to select · <span className="sm:hidden">⭐ </span>to set priority (visited first)
                       </div>
                       <div className="space-y-1">
                         {shelfNodes
@@ -354,7 +354,7 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
                                           : "text-gray-600 hover:text-amber-400"
                                       }`}
                                     >
-                                      {isPriority ? "⭐" : "☆"}
+                                      <span className="sm:hidden">{isPriority ? "⭐" : "☆"}</span>
                                     </button>
                                   )}
 
@@ -371,7 +371,7 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
                                     className="flex items-center gap-2 pl-7"
                                     onClick={(e) => e.stopPropagation()}
                                   >
-                                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">📦 Boxes:</span>
+                                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider pl-1">Boxes:</span>
                                     <div className="flex items-center gap-1">
                                       {Array.from({ length: 6 }, (_, i) => {
                                         const boxNum = i + 1;
@@ -383,11 +383,15 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
                                             disabled={disabled}
                                             onClick={() => setBoxCount(activeAssignment.robotId, shelf.id, boxNum)}
                                             title={`Set ${boxNum} box${boxNum !== 1 ? 'es' : ''}`}
-                                            className={`text-base leading-none transition-all cursor-pointer hover:scale-110 disabled:cursor-not-allowed ${
-                                              isFilled ? 'text-amber-400' : 'text-gray-600'
+                                            className={`p-0.5 transition-all cursor-pointer hover:scale-110 disabled:cursor-not-allowed ${
+                                              isFilled ? 'text-amber-500' : 'text-gray-600'
                                             }`}
                                           >
-                                            {isFilled ? '📦' : '□'}
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={isFilled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                              {isFilled && <line x1="9" y1="9" x2="15" y2="15"></line>}
+                                              {isFilled && <line x1="15" y1="9" x2="9" y2="15"></line>}
+                                            </svg>
                                           </button>
                                         );
                                       })}
@@ -411,7 +415,7 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
             <div className="flex items-center justify-between px-5 py-3 border-t border-gray-800 bg-[#0a0f1e] shrink-0">
               <div className="text-xs text-gray-500">
                 {assignments.length} robot{assignments.length !== 1 ? "s" : ""} · {totalDests} destination{totalDests !== 1 ? "s" : ""}
-                {isBoxDeliveryMap ? ` · 📦 ${totalBoxes} box${totalBoxes !== 1 ? "es" : ""} configured` : ""}
+                {isBoxDeliveryMap ? <> · {totalBoxes} box{totalBoxes !== 1 ? "es" : ""} configured</> : ""}
               </div>
               <button
                 onClick={() => setIsOpen(false)}

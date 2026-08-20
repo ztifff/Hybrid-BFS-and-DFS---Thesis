@@ -66,10 +66,12 @@ export const PerformanceBarChart: React.FC<Props> = ({ bfs, dfs, hyb, entryActiv
   const aa = entryActiveAlgorithms;
   return (
     <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4">
-      <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4 pb-2 border-b border-gray-800">
-        📊 Performance Breakdown — Visual Comparison
-      </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="px-4 py-3 border-b border-gray-800 bg-gray-900/40">
+        <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
+          <span className="sm:hidden">📊 </span>Performance Breakdown — Visual Comparison
+        </h3>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
         <BarRow label="Execution Time (lower ★ = better)"       bfsVal={aa.bfs ? (bfs?.time ?? 0) : 0}                        dfsVal={aa.dfs ? (dfs?.time ?? 0) : 0}                        hybVal={aa.hybrid ? (hyb?.time ?? 0) : 0}                        unit=" ms"  lowerBetter={true}  activeAlgorithms={aa} />
         <BarRow label="Path Distance — Hops (lower ★ = better)" bfsVal={aa.bfs ? (bfs?.distance ?? 0) : 0}                    dfsVal={aa.dfs ? (dfs?.distance ?? 0) : 0}                    hybVal={aa.hybrid ? (hyb?.distance ?? 0) : 0}                    lowerBetter={true}  activeAlgorithms={aa} />
         <BarRow label="Nodes Swept / Explored (lower ★ = better)"bfsVal={aa.bfs ? (bfs?.nodes ?? 0) : 0}                      dfsVal={aa.dfs ? (dfs?.nodes ?? 0) : 0}                      hybVal={aa.hybrid ? (hyb?.nodes ?? 0) : 0}                      lowerBetter={true}  activeAlgorithms={aa} />

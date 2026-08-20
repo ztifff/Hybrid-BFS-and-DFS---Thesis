@@ -86,7 +86,7 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
 
 const Item: React.FC<{ label: string; icon?: string; children: React.ReactNode }> = ({ label, icon, children }) => (
   <div className="flex gap-3 text-sm">
-    {icon && <span className="text-lg shrink-0 mt-0.5">{icon}</span>}
+    {icon && <span className="text-lg shrink-0 mt-0.5 sm:hidden">{icon}</span>}
     <div>
       <span className="font-semibold text-white">{label}: </span>
       <span className="text-gray-300">{children}</span>
@@ -125,13 +125,13 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose }) => {
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`px-3 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer border ${
+              className={`px-3 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer border flex items-center gap-1.5 ${
                 tab === t.id
                   ? 'bg-blue-600 text-white border-blue-500 shadow-[0_0_12px_rgba(37,99,235,0.4)]'
                   : 'text-gray-400 border-transparent hover:text-white hover:bg-gray-800'
               }`}
             >
-              {t.icon} {t.label}
+              <span className="sm:hidden">{t.icon}</span> <span>{t.label}</span>
             </button>
           ))}
         </div>

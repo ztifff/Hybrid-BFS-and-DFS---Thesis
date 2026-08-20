@@ -12,9 +12,8 @@ interface Props {
 
 const renderCell = (value: string | number, color: string, isFailure = false) => (
   <td
-    className={`py-3 text-center text-xs font-mono font-bold ${
-      isFailure ? 'text-red-500 bg-red-950/10' : 'text-gray-200'
-    }`}
+    className={`py-3 text-center text-xs font-mono font-bold ${isFailure ? 'text-red-500 bg-red-950/10' : 'text-gray-200'
+      }`}
     style={!isFailure ? { color } : {}}
   >
     {isFailure ? 'CRITICAL FAILURE' : value}
@@ -32,8 +31,8 @@ export const BenchmarkTable: React.FC<Props> = ({
   const activeAlgos = allAlgos.filter(a => entryActiveAlgorithms[a]);
 
   const algoColors: Record<AlgorithmKey, { text: string; bg: string; hex: string }> = {
-    bfs:    { text: 'text-green-400',  bg: 'bg-green-500/5',  hex: '#4ade80' },
-    dfs:    { text: 'text-purple-400', bg: 'bg-purple-500/5', hex: '#c084fc' },
+    bfs: { text: 'text-green-400', bg: 'bg-green-500/5', hex: '#4ade80' },
+    dfs: { text: 'text-purple-400', bg: 'bg-purple-500/5', hex: '#c084fc' },
     hybrid: { text: 'text-orange-400', bg: 'bg-orange-500/5', hex: '#fb923c' },
   };
 
@@ -44,7 +43,7 @@ export const BenchmarkTable: React.FC<Props> = ({
     <div className="bg-gray-900/60 border border-gray-800 rounded-xl p-4 shadow-2xl mb-5">
       <div className="flex justify-between items-center mb-3 border-b border-gray-800 pb-2">
         <h3 className="font-bold text-xs uppercase tracking-widest text-blue-400">
-          🏆 Execution Benchmarks
+          Execution Benchmarks
         </h3>
         <span className="text-[10px] font-mono text-gray-500">RUN #{runNumber || 'N/A'}</span>
       </div>
@@ -68,12 +67,12 @@ export const BenchmarkTable: React.FC<Props> = ({
         <tbody className="divide-y divide-gray-800/40">
           {[
             { label: 'Execution Time', val: (d: AlgoData) => `${d.time.toFixed(2)} ms`, color: (a: AlgorithmKey) => algoColors[a].hex },
-            { label: 'Distance',       val: (d: AlgoData) => d.distance.toFixed(1),     color: () => '#cbd5e1' },
-            { label: 'Nodes Visited',  val: (d: AlgoData) => String(d.nodes),           color: () => '#94a3b8' },
-            { label: 'Memory',         val: (d: AlgoData) => String(d.memory),          color: () => '#cbd5e1' },
-            { label: 'Path Optimality',val: (d: AlgoData) => String(d.optimality),      color: (a: AlgorithmKey) => algoColors[a].hex },
-            { label: 'Adaptability',   val: (d: AlgoData) => `${d.adaptability}/100`,   color: () => '#cbd5e1' },
-            { label: 'Completion',     val: (d: AlgoData) => d.completion,              color: (a: AlgorithmKey) => algoColors[a].hex, bold: true },
+            { label: 'Distance', val: (d: AlgoData) => d.distance.toFixed(1), color: () => '#cbd5e1' },
+            { label: 'Nodes Visited', val: (d: AlgoData) => String(d.nodes), color: () => '#94a3b8' },
+            { label: 'Memory', val: (d: AlgoData) => String(d.memory), color: () => '#cbd5e1' },
+            { label: 'Path Optimality', val: (d: AlgoData) => String(d.optimality), color: (a: AlgorithmKey) => algoColors[a].hex },
+            { label: 'Adaptability', val: (d: AlgoData) => `${d.adaptability}/100`, color: () => '#cbd5e1' },
+            { label: 'Completion', val: (d: AlgoData) => d.completion, color: (a: AlgorithmKey) => algoColors[a].hex, bold: true },
           ].map(({ label, val, color, bold }) => (
             <tr key={label} className={bold ? 'bg-gray-950/20' : ''}>
               <td className={`py-2.5 text-xs text-gray-400 ${bold ? 'font-semibold' : ''}`}>
