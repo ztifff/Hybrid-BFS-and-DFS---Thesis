@@ -5,13 +5,13 @@ import { simulationHistory } from '../store/historyStore';
 
 
 export class SimulationController {
- async runSimulation(req: Request, res: Response): Promise<void> {
+  async runSimulation(req: Request, res: Response): Promise<void> {
     try {
       const { scenario, mapId, seed, gameBoard, graphSize, chessPiece, sizing, customSourceId, customSourceIds, customDestinationIds, deliveryMode, customBlockedNodes, customRobotAssignments } = req.body as {
         scenario: ScenarioType;
         mapId: string;
         seed: number;
-        gameBoard?: 'dama' | 'checkers' ;
+        gameBoard?: 'dama' | 'checkers';
         graphSize?: GraphSize;
         chessPiece?: string;
         sizing?: GraphSizing;
@@ -34,7 +34,7 @@ export class SimulationController {
       const useRealWorld = scenario !== 'gameai' && mapId !== 'synthetic';
       const activeSizing = useRealWorld ? undefined : sizing;
       console.log("[DEBUG] Controller received - scenario:", scenario, "mapId:", mapId, "sizing:", sizing, "activeSizing:", activeSizing);
-      
+
       const record = await orchestrateSimulation(
         scenario,
         seed,
@@ -61,34 +61,34 @@ export class SimulationController {
     }
   }
 
- async getHistory(req: Request, res: Response): Promise<void> {
-  try {
-    const page = parseInt((req.query.page as string) ?? '1', 10);
-    const limit = parseInt((req.query.limit as string) ?? '10', 10);
-    const { data, total } = simulationHistory.getPaginated(page, limit);
-    res.status(200).json({ success: true, data, total, page, limit });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    res.status(500).json({ success: false, error: message });
+  async getHistory(req: Request, res: Response): Promise<void> {
+    try {
+      const page = parseInt((req.query.page as string) ?? '1', 10);
+      const limit = parseInt((req.query.limit as string) ?? '10', 10);
+      const { data, total } = simulationHistory.getPaginated(page, limit);
+      res.status(200).json({ success: true, data, total, page, limit });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      res.status(500).json({ success: false, error: message });
+    }
   }
-}
 
-async getById(req: Request, res: Response): Promise<void> {
-  const result = simulationHistory.get(req.params.id);
-  if (!result) {
-    res.status(404).json({ success: false, error: 'Simulation not found' });
-    return;
+  async getById(req: Request, res: Response): Promise<void> {
+    const result = simulationHistory.get(req.params.id);
+    if (!result) {
+      res.status(404).json({ success: false, error: 'Simulation not found' });
+      return;
+    }
+    res.status(200).json({ success: true, data: result });
   }
-  res.status(200).json({ success: true, data: result });
-}
 
-async deleteById(req: Request, res: Response): Promise<void> {
-  const existed = simulationHistory.delete(req.params.id);
-  if (!existed) {
-    res.status(404).json({ success: false, error: 'Simulation not found' });
-    return;
+  async deleteById(req: Request, res: Response): Promise<void> {
+    const existed = simulationHistory.delete(req.params.id);
+    if (!existed) {
+      res.status(404).json({ success: false, error: 'Simulation not found' });
+      return;
+    }
+    res.status(200).json({ success: true, message: 'Deleted successfully' });
   }
-  res.status(200).json({ success: true, message: 'Deleted successfully' });
-}
 
 }

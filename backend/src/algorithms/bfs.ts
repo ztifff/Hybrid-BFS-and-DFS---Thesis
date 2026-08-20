@@ -358,7 +358,7 @@ export class BFSPathfinder implements PathfinderObserver {
       };
 
       if (isRoboticsMap) {
-        const STORAGE_SHELVES = new Set(['shelf_a1','shelf_a2','shelf_b1','shelf_b2','shelf_d1','shelf_d2','shelf_e1','shelf_e2','shelf_e3','shelf_e4','shelf_f1','shelf_f2']);
+        const STORAGE_SHELVES = new Set(['shelf_a1', 'shelf_a2', 'shelf_b1', 'shelf_b2', 'shelf_d1', 'shelf_d2', 'shelf_e1', 'shelf_e2', 'shelf_e3', 'shelf_e4', 'shelf_f1', 'shelf_f2']);
         const isStorageShelf = (id: string) => STORAGE_SHELVES.has(id) || (id.startsWith('shelf_') && !id.startsWith('dest_'));
 
         // Phase 1: Seeking a box from an available storage shelf (shelf has remaining boxes < 6)

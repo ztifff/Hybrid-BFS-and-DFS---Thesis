@@ -48,7 +48,7 @@ export class SimulationEnvironment {
         });
       }
     }
-    
+
     this.currentFrame++;
     if (this.stepCallback) {
       this.stepCallback(step);

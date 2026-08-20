@@ -28,32 +28,32 @@ export const MIN_SYNTHETIC_LINKS: Record<ScenarioType, number> = {
 
 // ── Sizing tables ──────────────────────────────────────────────────────────────
 const DEFAULT_SYNTHETIC_SIZING: Record<SizingKey, GraphSizing> = {
-  network:         { nodes: 28,  edges: 27  },
-  robotics:        { nodes: 56,  edges: 63  },
-  traffic:         { nodes: 36,  edges: 29  },
-  evacuation:      { nodes: 60,  edges: 49  },
-  gameai:          { nodes: 65,  edges: 120 }, // fallback (unused when board is known)
-  'gameai-dama':   { nodes: 65,  edges: 112 }, // 8×8 dama = 65 natural nodes
+  network: { nodes: 28, edges: 27 },
+  robotics: { nodes: 56, edges: 63 },
+  traffic: { nodes: 36, edges: 29 },
+  evacuation: { nodes: 60, edges: 49 },
+  gameai: { nodes: 65, edges: 120 }, // fallback (unused when board is known)
+  'gameai-dama': { nodes: 65, edges: 112 }, // 8×8 dama = 65 natural nodes
   'gameai-checkers': { nodes: 34, edges: 100 }, // 8×8 checkers = 34 natural nodes
 };
 
 export const MAX_SYNTHETIC_NODES: Record<SizingKey, number> = {
-  network:           220,
-  robotics:          217,
-  traffic:           220,
-  evacuation:        144,
-  gameai:            145,
-  'gameai-dama':     145,
+  network: 220,
+  robotics: 217,
+  traffic: 220,
+  evacuation: 144,
+  gameai: 145,
+  'gameai-dama': 145,
   'gameai-checkers': 145,
 };
 
 export const MIN_SYNTHETIC_NODES: Record<SizingKey, number> = {
-  network:           7,
-  robotics:          13,
-  traffic:           9,
-  evacuation:        28,
-  gameai:            17,
-  'gameai-dama':     17,
+  network: 7,
+  robotics: 13,
+  traffic: 9,
+  evacuation: 28,
+  gameai: 17,
+  'gameai-dama': 17,
   'gameai-checkers': 14
 };
 
@@ -282,12 +282,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
   // ── Navigation guard (unsaved result prompt) ───────────────────────────────────
   const [pendingNavigation, setPendingNavigation] = useState<PendingNavigation | null>(null);
 
-  const handleBack = useCallback(() => {
-    if (/* status 'done' and not saved */ false) {
-      // status is not available here — handled by the caller guard below
-    }
-    onBack?.();
-  }, [onBack]);
+
 
   // These handlers check if results are unsaved and show the confirmation modal.
   // They require `status` and `isCurrentSaved`, which come from the controller layer.
@@ -534,8 +529,8 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
           graphParams.set('customSourceId', evacuationSourceId);
         }
 
-        const response = await fetch(`https://backend-1e4y.onrender.com/api/network/graph?${graphParams}`);
-        console.log("[DEBUG] Fetching network graph... URL:", `https://backend-1e4y.onrender.com/api/network/graph?${graphParams}`);
+        const response = await fetch(`/api/network/graph?${graphParams}`);
+        console.log("[DEBUG] Fetching network graph... URL:", `/api/network/graph?${graphParams}`);
         if (!response.ok) throw new Error(`Graph API Error: ${response.statusText}`);
         const json = await response.json();
         console.log("[DEBUG] Fetch network graph response nodes:", json.data?.nodes?.length);

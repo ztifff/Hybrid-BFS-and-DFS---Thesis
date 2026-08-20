@@ -62,9 +62,9 @@ function generateDynamicEvents(
     const nextProtected: string[] = [];
     for (const p of currentProtected) {
       const neighbors = adj.get(p) || [];
-      const maxToProtect = Math.min(neighbors.length, 4); 
+      const maxToProtect = Math.min(neighbors.length, 4);
       const shuffledNeighbors = [...neighbors].sort(() => rng() - 0.5).slice(0, maxToProtect);
-      
+
       for (const n of shuffledNeighbors) {
         if (!protectedNodes.has(n)) {
           protectedNodes.add(n);
@@ -81,7 +81,7 @@ function generateDynamicEvents(
   const isGameAI = scenario === 'gameai';
   const isTraffic = scenario === 'traffic';
   const isMassive = graph.nodes.length > 150;
-  
+
   let dynamicDensity = 0.15;
   if (isGameAI) {
     dynamicDensity = 0.10;
@@ -90,10 +90,10 @@ function generateDynamicEvents(
   } else {
     dynamicDensity = Math.min(0.45, 0.15 + (graph.nodes.length / 800));
   }
-  
-  const minIncidents = isGameAI ? 3 : 2; 
-  const maxIncidents = isGameAI ? 6 : Math.floor(candidates.length * (isTraffic ? 0.10 : 0.60)); 
-  
+
+  const minIncidents = isGameAI ? 3 : 2;
+  const maxIncidents = isGameAI ? 6 : Math.floor(candidates.length * (isTraffic ? 0.10 : 0.60));
+
   const incidentCount = Math.min(
     maxIncidents,
     Math.max(minIncidents, Math.floor(candidates.length * dynamicDensity))
@@ -129,10 +129,10 @@ function generateDynamicEvents(
       break;
     case 'evacuation':
       standardLabels = [
-        { block: '🧱 Debris', clear: '🟢 Steps Cleared' }, 
+        { block: '🧱 Debris', clear: '🟢 Steps Cleared' },
         { block: '🔒 Shutter Lockout / Trapped Exit', clear: '🔓 Shutter Raised' },
         { block: '💥 Glass Facade Shatter', clear: '✅ Aisle Swept' },
-        { block: '💨 Smoke / Blind Zone', clear: '✅ Exhaust Fans Active' }, 
+        { block: '💨 Smoke / Blind Zone', clear: '✅ Exhaust Fans Active' },
         { block: '🔥 Indoor Tenant Fire Spreads', clear: '✅ Sprinklers Activated' }
       ];
       break;
@@ -152,13 +152,13 @@ function generateDynamicEvents(
 
     const epicenterId = candidates[Math.floor(rng() * candidates.length)];
     if (usedNodes.has(epicenterId) || protectedNodes.has(epicenterId)) continue;
-    
+
     // 🧠 FIX 2: THE TIMING OVERHAUL
     // Force 50% of the blockages to exist at Step 0. 
     // Force the other 50% to spawn within the first 15 frames so they trigger before fast algorithms finish!
     let stepIndex = 0;
     if (rng() > 0.50) {
-      stepIndex = Math.floor(rng() * 15) + 1; 
+      stepIndex = Math.floor(rng() * 15) + 1;
     }
 
     const hazardDuration = 5 + Math.floor(rng() * 6); // 5 to 10 steps
@@ -217,13 +217,13 @@ function generateDynamicEvents(
     while (shiftStep < totalSteps) {
       const nextDuration = 5 + Math.floor(rng() * 6);
       const oppCandidates = candidates.filter(c => !usedNodes.has(c) && !protectedNodes.has(c));
-      
+
       if (oppCandidates.length > 0) {
         const oppositeId = oppCandidates[Math.floor(rng() * oppCandidates.length)];
         usedNodes.add(oppositeId);
         const oppositeNode = graph.nodes.find(n => n.id === oppositeId);
         const oppNodeName = oppositeNode?.label?.split('\n')[0] ?? oppositeId;
-        
+
         events.push({
           stepIndex: shiftStep,
           nodeId: oppositeId,
@@ -250,7 +250,7 @@ function generateDynamicEvents(
       // Deploy opponent piece immediately
       const pieceNode = graph.nodes.find(n => n.id === piece);
       const pieceName = `Opponent ${idx + 1}`;
-      
+
       events.push({
         stepIndex: 1 + idx,
         nodeId: piece,
@@ -279,14 +279,14 @@ function generateDynamicEvents(
         if (futureBlockSquares.length > 0) {
           const nextPiecePos = futureBlockSquares[Math.floor(rng() * futureBlockSquares.length)];
           const nextNode = graph.nodes.find(n => n.id === nextPiecePos);
-          
+
           events.push({
             stepIndex: moveStep,
             nodeId: nextPiecePos,
             blocked: true,
             label: `${standardLabels[1].block} - ${pieceName} blocks at ${nextNode?.label?.split('\n')[0] ?? nextPiecePos}`,
           });
-          
+
           currentPiecePos = nextPiecePos;
         }
       }
@@ -316,7 +316,7 @@ export async function runSimulation(
   customSourceIds?: string[],
   customRobotAssignments?: { robotId: string; destinations: string[]; priorityDest?: string; boxCounts?: Record<string, number> }[]
 ): Promise<SimulationResult & { meta?: { hasMore: boolean; totalSteps: number; currentOffset: number } }> {
-  
+
   const graph = buildScenarioGraph(scenario, useRealWorld, gameBoard, mapId, graphSize, dynamicSeed, chessPiece, activeSizing);
 
   if (customSourceId) graph.sourceId = customSourceId;
@@ -421,7 +421,7 @@ export async function runSimulation(
 
   // Build a map: nodeId -> latest clear step (or -1 if never cleared)
   const latestClearStep = new Map<string, number>();
-  const firstBlockStep  = new Map<string, { step: number; label: string }>(); // for generating the clear label
+  const firstBlockStep = new Map<string, { step: number; label: string }>(); // for generating the clear label
 
   dynamicEvents.forEach(ev => {
     if (ev.blocked) {
@@ -436,11 +436,11 @@ export async function runSimulation(
 
   // Find the clear-label for each scenario
   const clearSuffix: Record<string, string> = {
-    robotics:   'Cleared',
-    network:    'Restored',
-    traffic:    'Reopened',
+    robotics: 'Cleared',
+    network: 'Restored',
+    traffic: 'Reopened',
     evacuation: 'Resolved',
-    gameai:     'Resolved',
+    gameai: 'Resolved',
   };
   const suffix = clearSuffix[scenario] ?? 'Resolved';
 
@@ -466,7 +466,7 @@ export async function runSimulation(
 
   const exitIndex = result.foundDestination ? graph.destinationIds.indexOf(result.foundDestination) : null;
   const totalGraphNodes = graph.nodes.length || 1;
-  
+
   const isAWSWarehouse = graph.nodes.some(n => n.id === 'dest_desk_a') || graph.nodes.some(n => n.id === 'shelf_e1');
   let completionRate = 0;
   if (isAWSWarehouse) {
@@ -483,13 +483,13 @@ export async function runSimulation(
   if (result.foundDestination === null) {
     const isCampus = mapId === 'campus';
     const isACL = isCampus && customSourceId && (
-      customSourceId.includes('boys') || 
-      customSourceId.includes('girls') || 
-      customSourceId.includes('it_') || 
-      customSourceId.includes('lib_') || 
+      customSourceId.includes('boys') ||
+      customSourceId.includes('girls') ||
+      customSourceId.includes('it_') ||
+      customSourceId.includes('lib_') ||
       customSourceId.includes('dome_')
     );
-    
+
     if (scenario === 'network' && isACL) {
       failureReason = 'Target unreachable due to subnet ACL restrictions.';
     } else if (dynamicEvents.some(e => e.blocked)) {
@@ -508,7 +508,7 @@ export async function runSimulation(
     exitFound: result.foundDestination !== null,
     exitIndex,
     completionRate,
-    failureReason, 
+    failureReason,
   };
 
   const totalStepsLength = result.steps.length;
@@ -553,8 +553,8 @@ export async function orchestrateSimulation(
   customSourceIds?: string[],
   customRobotAssignments?: { robotId: string; destinations: string[]; priorityDest?: string; boxCounts?: Record<string, number> }[]
 ) {
-  const bfsRes    = await runSimulation(scenario, 'bfs',    seed, useRealWorld, mapId, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing, customSourceId, customDestinationIds, deliveryMode, customBlockedNodes, customSourceIds, customRobotAssignments);
-  const dfsRes    = await runSimulation(scenario, 'dfs',    seed, useRealWorld, mapId, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing, customSourceId, customDestinationIds, deliveryMode, customBlockedNodes, customSourceIds, customRobotAssignments);
+  const bfsRes = await runSimulation(scenario, 'bfs', seed, useRealWorld, mapId, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing, customSourceId, customDestinationIds, deliveryMode, customBlockedNodes, customSourceIds, customRobotAssignments);
+  const dfsRes = await runSimulation(scenario, 'dfs', seed, useRealWorld, mapId, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing, customSourceId, customDestinationIds, deliveryMode, customBlockedNodes, customSourceIds, customRobotAssignments);
   const hybridRes = await runSimulation(scenario, 'hybrid', seed, useRealWorld, mapId, undefined, offset, limit, gameBoard, graphSize, chessPiece, activeSizing, customSourceId, customDestinationIds, deliveryMode, customBlockedNodes, customSourceIds, customRobotAssignments);
 
   let optimalPathLength = 0;

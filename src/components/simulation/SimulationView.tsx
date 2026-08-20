@@ -43,11 +43,11 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
   const scenarioBtnClass = (() => {
     const map: Record<ScenarioType, string> = {
-      network:    `${baseBtnClass} bg-blue-900/40 text-blue-300 hover:bg-blue-600 hover:text-white border border-blue-800 hover:border-blue-500 hover:shadow-blue-900/50`,
-      robotics:   `${baseBtnClass} bg-orange-900/40 text-orange-300 hover:bg-orange-600 hover:text-white border border-orange-800 hover:border-orange-500 hover:shadow-orange-900/50`,
-      traffic:    `${baseBtnClass} bg-emerald-900/40 text-emerald-300 hover:bg-emerald-600 hover:text-white border border-emerald-800 hover:border-emerald-500 hover:shadow-emerald-900/50`,
+      network: `${baseBtnClass} bg-blue-900/40 text-blue-300 hover:bg-blue-600 hover:text-white border border-blue-800 hover:border-blue-500 hover:shadow-blue-900/50`,
+      robotics: `${baseBtnClass} bg-orange-900/40 text-orange-300 hover:bg-orange-600 hover:text-white border border-orange-800 hover:border-orange-500 hover:shadow-orange-900/50`,
+      traffic: `${baseBtnClass} bg-emerald-900/40 text-emerald-300 hover:bg-emerald-600 hover:text-white border border-emerald-800 hover:border-emerald-500 hover:shadow-emerald-900/50`,
       evacuation: `${baseBtnClass} bg-red-900/40 text-red-300 hover:bg-red-600 hover:text-white border border-red-800 hover:border-red-500 hover:shadow-red-900/50`,
-      gameai:     `${baseBtnClass} bg-purple-900/40 text-purple-300 hover:bg-purple-600 hover:text-white border border-purple-800 hover:border-purple-500 hover:shadow-purple-900/50`,
+      gameai: `${baseBtnClass} bg-purple-900/40 text-purple-300 hover:bg-purple-600 hover:text-white border border-purple-800 hover:border-purple-500 hover:shadow-purple-900/50`,
     };
     return map[scenario] ?? `${baseBtnClass} bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600`;
   })();
@@ -125,15 +125,13 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   <button
                     onClick={() => sim.toggleAlgorithm(id)}
                     title={sim.activeAlgorithms[id] ? `Hide ${label} from simulation view` : `Show ${label} in simulation view`}
-                    className={`flex items-center gap-1.5 rounded-md px-2 py-1 transition-all duration-150 cursor-pointer select-none ${
-                      sim.activeAlgorithms[id]
-                        ? `${textCls} ${activeBg} ${hoverBg} drop-shadow-[0_0_6px_${glow}] hover:drop-shadow-[0_0_12px_${glow}] hover:brightness-125 active:scale-95`
-                        : `text-gray-500 opacity-50 hover:opacity-75 hover:bg-white/5 active:scale-95`
-                    }`}
+                    className={`flex items-center gap-1.5 rounded-md px-2 py-1 transition-all duration-150 cursor-pointer select-none ${sim.activeAlgorithms[id]
+                      ? `${textCls} ${activeBg} ${hoverBg} drop-shadow-[0_0_6px_${glow}] hover:drop-shadow-[0_0_12px_${glow}] hover:brightness-125 active:scale-95`
+                      : `text-gray-500 opacity-50 hover:opacity-75 hover:bg-white/5 active:scale-95`
+                      }`}
                   >
-                    <span className={`w-2 h-2 rounded-full flex-shrink-0 transition-all duration-200 ${
-                      sim.activeAlgorithms[id] ? `${dotCls} shadow-[0_0_8px_${dotGlow}]` : 'bg-gray-600'
-                    }`} />
+                    <span className={`w-2 h-2 rounded-full flex-shrink-0 transition-all duration-200 ${sim.activeAlgorithms[id] ? `${dotCls} shadow-[0_0_8px_${dotGlow}]` : 'bg-gray-600'
+                      }`} />
                     <span className={sim.activeAlgorithms[id] ? '' : 'line-through'}>{label}</span>
                   </button>
                 </React.Fragment>
@@ -230,11 +228,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                       key={id}
                       onClick={() => sim.requestBoardChange(id, sim.status, sim.isCurrentSaved)}
                       disabled={sim.isComputing || sim.isGraphLoading}
-                      className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
-                        sim.gameBoard === id
-                          ? 'bg-purple-900/40 text-purple-300 border border-purple-500/60 shadow-[0_0_10px_rgba(139,92,246,0.25)]'
-                          : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
-                      }`}
+                      className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${sim.gameBoard === id
+                        ? 'bg-purple-900/40 text-purple-300 border border-purple-500/60 shadow-[0_0_10px_rgba(139,92,246,0.25)]'
+                        : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
+                        }`}
                     >
                       <span>{icon}</span>{label}
                     </button>
@@ -249,11 +246,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                       key={mapDef.id}
                       onClick={() => sim.requestMapChange(mapDef.id, sim.status, sim.isCurrentSaved)}
                       disabled={sim.isComputing || sim.isGraphLoading}
-                      className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${
-                        sim.mapId === mapDef.id
-                          ? 'bg-purple-900/40 text-purple-300 border border-purple-500/60 shadow-[0_0_10px_rgba(139,92,246,0.25)]'
-                          : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
-                      }`}
+                      className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${sim.mapId === mapDef.id
+                        ? 'bg-purple-900/40 text-purple-300 border border-purple-500/60 shadow-[0_0_10px_rgba(139,92,246,0.25)]'
+                        : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
+                        }`}
                     >
                       <span>{mapDef.icon}</span>{mapDef.label}
                     </button>
@@ -332,7 +328,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                                         type="checkbox"
                                         className="accent-red-500"
                                         checked={isChecked}
-                                        onChange={() => {}}
+                                        onChange={() => { }}
                                         onClick={(e) => {
                                           if (isChecked && atMin) {
                                             e.preventDefault();
@@ -454,11 +450,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                           <button
                             key={`terminal-btn-${n.id}`}
                             onClick={(e) => { e.stopPropagation(); setHighlightedNodeId(prev => prev === n.id ? null : n.id); }}
-                            className={`px-3 py-1.5 rounded border font-mono text-xs shadow-md flex items-center gap-2 transition-colors cursor-pointer ${
-                              highlightedNodeId === n.id
-                                ? 'bg-gray-800 border-green-500 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.2)]'
-                                : 'bg-gray-900 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200'
-                            }`}
+                            className={`px-3 py-1.5 rounded border font-mono text-xs shadow-md flex items-center gap-2 transition-colors cursor-pointer ${highlightedNodeId === n.id
+                              ? 'bg-gray-800 border-green-500 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.2)]'
+                              : 'bg-gray-900 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+                              }`}
                           >
                             <span className="text-[14px]">📟</span>
                             {n.label ? n.label.split('\n')[0] : n.id} Terminal
@@ -612,7 +607,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         value={sim.localNodesInput}
                         onChange={(e) => sim.setLocalNodesInput(e.target.value)}
                         onBlur={() => { if (sim.localNodesInput !== '') sim.updateSyntheticSizing('nodes', Number(sim.localNodesInput)); }}
-                        onKeyDown={(e) => { if (e.key === 'Enter' && sim.localNodesInput !== '') { sim.updateSyntheticSizing('nodes', Number(sim.localNodesInput)); (e.target as HTMLInputElement).blur(); }}}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && sim.localNodesInput !== '') { sim.updateSyntheticSizing('nodes', Number(sim.localNodesInput)); (e.target as HTMLInputElement).blur(); } }}
                         disabled={sim.isComputing || sim.isGraphLoading}
                         className="w-10 bg-transparent py-1 text-center text-xs font-bold text-teal-300 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 m-0"
                       />
@@ -638,7 +633,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         value={sim.localEdgesInput}
                         onChange={(e) => sim.setLocalEdgesInput(e.target.value)}
                         onBlur={() => { if (sim.localEdgesInput !== '') sim.updateSyntheticSizing('edges', Math.max(MIN_SYNTHETIC_LINKS[scenario], Number(sim.localEdgesInput))); }}
-                        onKeyDown={(e) => { if (e.key === 'Enter' && sim.localEdgesInput !== '') { sim.updateSyntheticSizing('edges', Math.max(MIN_SYNTHETIC_LINKS[scenario], Number(sim.localEdgesInput))); (e.target as HTMLInputElement).blur(); }}}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && sim.localEdgesInput !== '') { sim.updateSyntheticSizing('edges', Math.max(MIN_SYNTHETIC_LINKS[scenario], Number(sim.localEdgesInput))); (e.target as HTMLInputElement).blur(); } }}
                         disabled={sim.isComputing || sim.isGraphLoading}
                         className="w-10 bg-transparent py-1 text-center text-xs font-bold text-teal-300 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 m-0"
                       />

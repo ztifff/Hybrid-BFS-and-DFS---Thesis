@@ -1,7 +1,7 @@
 import { ScenarioGraph, GraphNode, GraphEdge, GraphSize, GraphSizing } from '../types/index';
 import { clampInt, fitGraphEdgeCount, resolveSizingValue } from './graphSizing';
 
-const W = 1600; 
+const W = 1600;
 const H = 1200;
 
 export type GameAIBoard = 'dama' | 'checkers';
@@ -232,7 +232,7 @@ function buildDamaBoard(
       }
 
       // Capture jumps: orthogonal 2-step (over an opponent)
-      const jumpMoves: [number, number][] = [[0,2],[0,-2],[2,0],[-2,0]];
+      const jumpMoves: [number, number][] = [[0, 2], [0, -2], [2, 0], [-2, 0]];
       for (const [dc, dr] of jumpMoves) {
         const nc = col + dc;
         const nr = row + dr;
@@ -250,7 +250,7 @@ function buildCheckersBoard(
   addTwoWayEdge: (from: string, to: string, latency?: number, type?: GraphEdge['type'], label?: string) => void,
   size: number
 ) {
-  const tileSize = Math.floor(400 / size); 
+  const tileSize = Math.floor(400 / size);
   const originX = Math.floor((W - tileSize * size) / 2);
   const originY = Math.floor((H - tileSize * size) / 2);
 
@@ -270,7 +270,7 @@ function buildCheckersBoard(
     }
   }
 
-  const moves = [[1,1],[-1,1],[1,-1],[-1,-1],[2,2],[-2,2],[2,-2],[-2,-2]];
+  const moves = [[1, 1], [-1, 1], [1, -1], [-1, -1], [2, 2], [-2, 2], [2, -2], [-2, -2]];
   for (let row = 0; row < size; row++) {
     for (let col = 0; col < size; col++) {
       if ((row + col) % 2 === 0) continue;

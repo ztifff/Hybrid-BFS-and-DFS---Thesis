@@ -96,10 +96,10 @@ export interface ScenarioGraph {
 // ── Algorithm Step (graph-based) ───────────────────────────────────────────
 export interface AlgorithmStep {
   stepIndex: number;        // (for dynamic event synchronization)
-  explored: string[];       
-  frontier: string[];       
-  path: string[];           
-  current: string | null;   
+  explored: string[];
+  frontier: string[];
+  path: string[];
+  current: string | null;
   done: boolean;
   foundDestination: string | null;
   foundDestinations?: string[];
@@ -128,7 +128,7 @@ export interface DynamicEvent {
   stepIndex: number;
   nodeId: string;
   blocked: boolean; // true = node failed, false = restored
-  label: string;    
+  label: string;
 }
 
 // ── Simulation Result ──────────────────────────────────────────────────────

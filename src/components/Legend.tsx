@@ -17,34 +17,34 @@ interface LegendItem {
 
 const SCENARIO_NODE_ITEMS: Record<ScenarioType, LegendItem[]> = {
   network: [
-    { color: '#1e40af', label: 'Core Router / ISP',  icon: '🌐' },
+    { color: '#1e40af', label: 'Core Router / ISP', icon: '🌐' },
     { color: '#1d4ed8', label: 'Multilayer Switch', icon: '🎛️' },
     { color: '#2563eb', label: 'Access / Floor Switch', icon: '🔌' },
     { color: '#10b981', label: 'Wireless Access Point', icon: '📡' },
     { color: '#0ea5e9', label: 'End Device (PC/Laptop)', icon: '💻' },
     { color: '#475569', label: 'Server', icon: '🗄️' },
-    { color: '#450a0a', label: 'Failed Component',       icon: '💥' },
+    { color: '#450a0a', label: 'Failed Component', icon: '💥' },
   ],
   robotics: [
     { color: '#92400e', label: 'Central Depot (Source)', icon: '🏭' },
-    { color: '#b45309', label: 'Warehouse Zone',         icon: '📦' },
-    { color: '#d97706', label: 'Aisle',                  icon: '🔧' },
-    { color: '#f59e0b', label: 'Delivery Bay (Target)',  icon: '📫' },
-    { color: '#450a0a', label: 'Blocked Aisle',          icon: '🚧' },
+    { color: '#b45309', label: 'Warehouse Zone', icon: '📦' },
+    { color: '#d97706', label: 'Aisle', icon: '🔧' },
+    { color: '#f59e0b', label: 'Delivery Bay (Target)', icon: '📫' },
+    { color: '#450a0a', label: 'Blocked Aisle', icon: '🚧' },
   ],
   traffic: [
     { color: '#065f46', label: 'City Center (Source)', icon: '🏙️' },
     { color: '#047857', label: 'Highway Exit (Target)', icon: '🛣️' },
-    { color: '#059669', label: 'Intersection',          icon: '🚦' },
-    { color: '#10b981', label: 'Street',                icon: '🚗' },
-    { color: '#450a0a', label: 'Road Closure',          icon: '🚫' },
+    { color: '#059669', label: 'Intersection', icon: '🚦' },
+    { color: '#10b981', label: 'Street', icon: '🚗' },
+    { color: '#450a0a', label: 'Road Closure', icon: '🚫' },
   ],
   evacuation: [
     { color: '#0e7490', label: 'Real-World Place (Source)', icon: '🏬' },
-    { color: '#b91c1c', label: 'Emergency Exit (Target)',   icon: '🚪' },
-    { color: '#dc2626', label: 'Corridor',                  icon: '🚶' },
-    { color: '#ef4444', label: 'Stairwell',                 icon: '🪜' },
-    { color: '#7f1d1d', label: 'Route Blocked',              icon: '⛔' },
+    { color: '#b91c1c', label: 'Emergency Exit (Target)', icon: '🚪' },
+    { color: '#dc2626', label: 'Corridor', icon: '🚶' },
+    { color: '#ef4444', label: 'Stairwell', icon: '🪜' },
+    { color: '#7f1d1d', label: 'Route Blocked', icon: '⛔' },
   ],
   gameai: [
     { color: '#9333ea', label: 'Strategy Planner (Source)', icon: '🔵' },
@@ -84,14 +84,14 @@ export const Legend: React.FC<Props> = ({ scenario, mapId }) => {
   // For gameai: replace the generic icons with the board-appropriate icons
   const nodeItems = scenario === 'gameai'
     ? rawItems.map(item => {
-        if (item.label === 'Opponent Piece (Blocked)') {
-          return { ...item, icon: mapId === 'dama' ? '🔻' : '🔴' };
-        }
-        if (item.label === 'Strategy Planner (Source)') {
-          return { ...item, icon: mapId === 'dama' ? '🔷' : '🔵' };
-        }
-        return item;
-      })
+      if (item.label === 'Opponent Piece (Blocked)') {
+        return { ...item, icon: mapId === 'dama' ? '🔻' : '🔴' };
+      }
+      if (item.label === 'Strategy Planner (Source)') {
+        return { ...item, icon: mapId === 'dama' ? '🔷' : '🔵' };
+      }
+      return item;
+    })
     : rawItems;
   const edgeItems = EDGE_ITEMS[scenario] ?? [];
 
@@ -119,15 +119,15 @@ export const Legend: React.FC<Props> = ({ scenario, mapId }) => {
               <span className="text-xs text-gray-300 leading-tight">{item.label}</span>
             </div>
           ))}
-          
+
           {/* ✅ UPDATED: Legend item explains the new visual "bead" layout for explored nodes */}
           <div className="flex items-center gap-2 pt-2 border-t border-gray-700/50 mt-2">
-              <svg width="24" height="24" className="flex-shrink-0">
-                  <circle cx="12" cy="12" r="10" fill={cBFS} stroke="#fff" strokeWidth="1.5" />
-                  <circle cx="12" cy="12" r="6" fill={cDFS} stroke="#fff" strokeWidth="1" />
-                  <circle cx="12" cy="12" r="2.5" fill={cHYB} stroke="#fff" strokeWidth="0.5" />
-              </svg>
-              <span className="text-xs text-gray-300 leading-tight italic">Explored Nodes (Stacked by Alg.)</span>
+            <svg width="24" height="24" className="flex-shrink-0">
+              <circle cx="12" cy="12" r="10" fill={cBFS} stroke="#fff" strokeWidth="1.5" />
+              <circle cx="12" cy="12" r="6" fill={cDFS} stroke="#fff" strokeWidth="1" />
+              <circle cx="12" cy="12" r="2.5" fill={cHYB} stroke="#fff" strokeWidth="0.5" />
+            </svg>
+            <span className="text-xs text-gray-300 leading-tight italic">Explored Nodes (Stacked by Alg.)</span>
           </div>
         </div>
       </div>

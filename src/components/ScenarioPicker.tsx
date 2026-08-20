@@ -42,7 +42,7 @@ export const ScenarioPicker: React.FC<Props> = ({
   useEffect(() => {
     const fetchScenarios = async () => {
       try {
-        const response = await fetch('https://backend-1e4y.onrender.com/api/scenarios');
+        const response = await fetch('/api/scenarios');
         if (!response.ok) return;
         const json = await response.json();
         if (json.success && Array.isArray(json.data)) {
@@ -95,7 +95,7 @@ export const ScenarioPicker: React.FC<Props> = ({
 
   return (
     <div className="flex flex-col h-full bg-gray-950 p-6 rounded-none border border-gray-800 shadow-2xl relative overflow-hidden">
-      
+
       <style>
         {`
           @keyframes drift {
@@ -109,18 +109,18 @@ export const ScenarioPicker: React.FC<Props> = ({
       </style>
 
       {/* Subtle Analytical Grid Background */}
-      <div 
+      <div
         className="absolute inset-0 opacity-[0.03] pointer-events-none"
         style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '20px 20px' }}
       />
-      
+
       {/* The Drifting Background Glow */}
-      <div 
+      <div
         className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px] opacity-15 pointer-events-none"
-        style={{ 
+        style={{
           backgroundColor: activeScenarioConfig?.color || '#3b82f6',
-          animation: 'drift 35s ease-in-out infinite', 
-          transition: 'background-color 1s ease' 
+          animation: 'drift 35s ease-in-out infinite',
+          transition: 'background-color 1s ease'
         }}
       />
 
@@ -129,41 +129,41 @@ export const ScenarioPicker: React.FC<Props> = ({
           <h2 className="text-xl font-bold text-gray-200 tracking-tight flex items-center gap-3 font-mono uppercase">
             <span className="text-blue-500 animate-pulse">_</span> Evaluation Topology
             {isLoading && (
-               <span className="flex h-2 w-2 relative">
-                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                 <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-               </span>
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+              </span>
             )}
           </h2>
           <p className="text-gray-500 text-xs mt-1 font-mono uppercase tracking-wider">Select Graph Environment for Algorithm Benchmarking</p>
         </div>
-        
+
         {/* Animated System Status Readout */}
         <div className="hidden sm:flex flex-col items-end">
-           <span className="text-[10px] text-gray-600 font-mono uppercase tracking-widest flex items-center gap-1.5">
-             System Status
-             <span className={`w-1.5 h-1.5 rounded-full ${canStart ? 'bg-emerald-500/50' : 'bg-amber-500/50'} animate-pulse`}></span>
-           </span>
-           <span className={`text-xs font-mono font-bold tracking-wide flex items-center gap-2 ${canStart ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]' : 'text-amber-500'}`}>
-             {canStart ? 'READY FOR EVALUATION' : 'INITIALIZING...'}
-             <span className="w-1.5 h-3 bg-emerald-400/80 animate-[ping_1s_steps(2,start)_infinite]"></span>
-           </span>
-           {canStart && (
-             <div className="w-full h-0.5 bg-gray-800 mt-1.5 overflow-hidden rounded-full relative">
-               <div className="absolute top-0 bottom-0 left-0 w-1/3 bg-emerald-500/50 rounded-full" 
-                    style={{ animation: 'translateX 2s linear infinite' }}>
-                    <style>
-                      {`
+          <span className="text-[10px] text-gray-600 font-mono uppercase tracking-widest flex items-center gap-1.5">
+            System Status
+            <span className={`w-1.5 h-1.5 rounded-full ${canStart ? 'bg-emerald-500/50' : 'bg-amber-500/50'} animate-pulse`}></span>
+          </span>
+          <span className={`text-xs font-mono font-bold tracking-wide flex items-center gap-2 ${canStart ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]' : 'text-amber-500'}`}>
+            {canStart ? 'READY FOR EVALUATION' : 'INITIALIZING...'}
+            <span className="w-1.5 h-3 bg-emerald-400/80 animate-[ping_1s_steps(2,start)_infinite]"></span>
+          </span>
+          {canStart && (
+            <div className="w-full h-0.5 bg-gray-800 mt-1.5 overflow-hidden rounded-full relative">
+              <div className="absolute top-0 bottom-0 left-0 w-1/3 bg-emerald-500/50 rounded-full"
+                style={{ animation: 'translateX 2s linear infinite' }}>
+                <style>
+                  {`
                         @keyframes translateX {
                           0% { transform: translateX(-100%); opacity: 0; }
                           50% { opacity: 1; }
                           100% { transform: translateX(300%); opacity: 0; }
                         }
                       `}
-                    </style>
-               </div>
-             </div>
-           )}
+                </style>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -179,9 +179,9 @@ export const ScenarioPicker: React.FC<Props> = ({
                   onClick={() => onSelectScenario(scenario.id)}
                   className={`
                     group relative flex flex-col items-center justify-center min-w-[150px] p-4 border transition-all duration-300 snap-center
-                    ${isActive 
-                        ? 'shadow-[0_0_15px_rgba(0,0,0,0.5)] transform -translate-y-1' 
-                        : 'bg-gray-950 border-white/10 hover:border-white/30 hover:bg-gray-900 opacity-60 hover:opacity-100'}
+                    ${isActive
+                      ? 'shadow-[0_0_15px_rgba(0,0,0,0.5)] transform -translate-y-1'
+                      : 'bg-gray-950 border-white/10 hover:border-white/30 hover:bg-gray-900 opacity-60 hover:opacity-100'}
                   `}
                   style={{
                     // 🧠 FIX: Apply a highly transparent background (1A = ~10% opacity) and a glowing border based on the scenario's unique color!
@@ -191,7 +191,7 @@ export const ScenarioPicker: React.FC<Props> = ({
                     borderTopWidth: isActive ? '3px' : '1px'
                   }}
                 >
-                  <span 
+                  <span
                     className={`mb-3 transition-transform duration-300 flex items-center justify-center ${isActive ? 'scale-110' : 'opacity-90 group-hover:scale-110 grayscale'}`}
                     style={{ color: isActive ? scenario.color : '#9ca3af', filter: isActive ? `drop-shadow(0 0 10px ${scenario.color}80)` : 'none' }}
                   >
@@ -221,7 +221,7 @@ export const ScenarioPicker: React.FC<Props> = ({
       <div className="flex-1 min-h-0 overflow-y-auto relative z-10" style={{ scrollbarWidth: 'none' }}>
         {activeScenarioConfig && (
           <div className="animate-fade-in-up">
-             <ScenarioInfo config={activeScenarioConfig} />
+            <ScenarioInfo config={activeScenarioConfig} />
           </div>
         )}
       </div>
