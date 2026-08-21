@@ -667,16 +667,16 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         max={MAX_SYNTHETIC_NODES[sim.sizingKey as SizingKey]}
                         value={sim.localNodesInput}
                         onChange={(e) => sim.setLocalNodesInput(e.target.value)}
-                        onBlur={() => { if (sim.localNodesInput !== '') sim.updateSyntheticSizing('nodes', Number(sim.localNodesInput)); }}
-                        onKeyDown={(e) => { if (e.key === 'Enter' && sim.localNodesInput !== '') { sim.updateSyntheticSizing('nodes', Number(sim.localNodesInput)); (e.target as HTMLInputElement).blur(); } }}
+                        onBlur={() => { if (sim.localNodesInput !== '') sim.requestSizingChange('nodes', Number(sim.localNodesInput), sim.status, sim.isCurrentSaved); }}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && sim.localNodesInput !== '') { sim.requestSizingChange('nodes', Number(sim.localNodesInput), sim.status, sim.isCurrentSaved); (e.target as HTMLInputElement).blur(); } }}
                         disabled={sim.isComputing || sim.isGraphLoading}
                         className="w-10 bg-transparent py-1 text-center text-xs font-bold text-teal-300 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 m-0"
                       />
                       <div className="flex flex-col border-l border-white/10 bg-black/40 w-5">
-                        <button type="button" disabled={sim.isComputing || sim.isGraphLoading || sim.syntheticSizing.nodes >= MAX_SYNTHETIC_NODES[sim.sizingKey as SizingKey]} onClick={sim.stepNodesUp} className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center">
+                        <button type="button" disabled={sim.isComputing || sim.isGraphLoading || sim.syntheticSizing.nodes >= MAX_SYNTHETIC_NODES[sim.sizingKey as SizingKey]} onClick={() => sim.requestSizingStep('nodesUp', sim.status, sim.isCurrentSaved)} className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center">
                           <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
                         </button>
-                        <button type="button" disabled={sim.isComputing || sim.isGraphLoading || sim.syntheticSizing.nodes <= MIN_SYNTHETIC_NODES[sim.sizingKey as SizingKey]} onClick={sim.stepNodesDown} className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 border-t border-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center">
+                        <button type="button" disabled={sim.isComputing || sim.isGraphLoading || sim.syntheticSizing.nodes <= MIN_SYNTHETIC_NODES[sim.sizingKey as SizingKey]} onClick={() => sim.requestSizingStep('nodesDown', sim.status, sim.isCurrentSaved)} className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 border-t border-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center">
                           <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
                         </button>
                       </div>
@@ -693,16 +693,16 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         max={1600}
                         value={sim.localEdgesInput}
                         onChange={(e) => sim.setLocalEdgesInput(e.target.value)}
-                        onBlur={() => { if (sim.localEdgesInput !== '') sim.updateSyntheticSizing('edges', Math.max(MIN_SYNTHETIC_LINKS[scenario], Number(sim.localEdgesInput))); }}
-                        onKeyDown={(e) => { if (e.key === 'Enter' && sim.localEdgesInput !== '') { sim.updateSyntheticSizing('edges', Math.max(MIN_SYNTHETIC_LINKS[scenario], Number(sim.localEdgesInput))); (e.target as HTMLInputElement).blur(); } }}
+                        onBlur={() => { if (sim.localEdgesInput !== '') sim.requestSizingChange('edges', Math.max(MIN_SYNTHETIC_LINKS[scenario], Number(sim.localEdgesInput)), sim.status, sim.isCurrentSaved); }}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && sim.localEdgesInput !== '') { sim.requestSizingChange('edges', Math.max(MIN_SYNTHETIC_LINKS[scenario], Number(sim.localEdgesInput)), sim.status, sim.isCurrentSaved); (e.target as HTMLInputElement).blur(); } }}
                         disabled={sim.isComputing || sim.isGraphLoading}
                         className="w-10 bg-transparent py-1 text-center text-xs font-bold text-teal-300 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 m-0"
                       />
                       <div className="flex flex-col border-l border-white/10 bg-black/40 w-5">
-                        <button type="button" disabled={sim.isComputing || sim.isGraphLoading || sim.generatedEdgeCount >= 1600} onClick={sim.stepEdgesUp} className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center">
+                        <button type="button" disabled={sim.isComputing || sim.isGraphLoading || sim.generatedEdgeCount >= 1600} onClick={() => sim.requestSizingStep('edgesUp', sim.status, sim.isCurrentSaved)} className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center">
                           <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
                         </button>
-                        <button type="button" disabled={sim.isComputing || sim.isGraphLoading || sim.generatedEdgeCount <= MIN_SYNTHETIC_LINKS[scenario]} onClick={sim.stepEdgesDown} className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 border-t border-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center">
+                        <button type="button" disabled={sim.isComputing || sim.isGraphLoading || sim.generatedEdgeCount <= MIN_SYNTHETIC_LINKS[scenario]} onClick={() => sim.requestSizingStep('edgesDown', sim.status, sim.isCurrentSaved)} className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 border-t border-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center">
                           <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
                         </button>
                       </div>

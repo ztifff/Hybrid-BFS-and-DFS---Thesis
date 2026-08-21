@@ -94,7 +94,9 @@ export function getNextRoboticsNodes(currentNodes: number, direction: 'up' | 'do
 export type PendingNavigation =
   | { type: 'back' }
   | { type: 'map'; mapId: string }
-  | { type: 'gameboard'; boardId: GameAIBoard };
+  | { type: 'gameboard'; boardId: GameAIBoard }
+  | { type: 'sizing'; field: keyof GraphSizing; value: number }
+  | { type: 'sizing_step'; action: 'nodesUp' | 'nodesDown' | 'edgesUp' | 'edgesDown' };
 
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -317,20 +319,13 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     }
   }, [gameBoard]);
 
-  const confirmPendingNavigation = useCallback(() => {
-    if (!pendingNavigation) return;
-    if (pendingNavigation.type === 'back') {
-      onBack?.();
-    } else if (pendingNavigation.type === 'map') {
-      setMapId(pendingNavigation.mapId);
-      const mapDef = MAP_REGISTRY[scenario]?.find(m => m.id === pendingNavigation.mapId);
-      if (mapDef?.isRealWorld) setGraphSize('medium');
-    } else if (pendingNavigation.type === 'gameboard') {
-      setGameBoard(pendingNavigation.boardId);
-      setMapId('synthetic');
+  const requestSizingChange = useCallback((field: keyof GraphSizing, value: number, status: string, saved: boolean) => {
+    if (status === 'done' && !saved) {
+      setPendingNavigation({ type: 'sizing', field, value });
+    } else {
+      updateSyntheticSizing(field, value);
     }
-    setPendingNavigation(null);
-  }, [pendingNavigation, onBack, scenario]);
+  }, [updateSyntheticSizing]);
 
   // ── Synthetic size stepper actions ────────────────────────────────────────────
   const stepNodesUp = useCallback(() => {
@@ -360,6 +355,30 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
   const stepEdgesDown = useCallback(() => {
     updateSyntheticSizing('edges', generatedEdgeCount - 1);
   }, [generatedEdgeCount, updateSyntheticSizing]);
+
+  const confirmPendingNavigation = useCallback(() => {
+    if (!pendingNavigation) return;
+    if (pendingNavigation.type === 'back') {
+      onBack?.();
+    } else if (pendingNavigation.type === 'map') {
+      setMapId(pendingNavigation.mapId);
+      const mapDef = MAP_REGISTRY[scenario]?.find(m => m.id === pendingNavigation.mapId);
+      if (mapDef?.isRealWorld) setGraphSize('medium');
+    } else if (pendingNavigation.type === 'gameboard') {
+      setGameBoard(pendingNavigation.boardId);
+      setMapId('synthetic');
+    } else if (pendingNavigation.type === 'sizing') {
+      updateSyntheticSizing(pendingNavigation.field, pendingNavigation.value);
+    } else if (pendingNavigation.type === 'sizing_step') {
+      if (pendingNavigation.action === 'nodesUp') stepNodesUp();
+      else if (pendingNavigation.action === 'nodesDown') stepNodesDown();
+      else if (pendingNavigation.action === 'edgesUp') stepEdgesUp();
+      else if (pendingNavigation.action === 'edgesDown') stepEdgesDown();
+    }
+    setPendingNavigation(null);
+  }, [pendingNavigation, onBack, scenario, mapId, gameBoard, stepNodesUp, stepNodesDown, stepEdgesUp, stepEdgesDown, updateSyntheticSizing]);
+
+
 
   // ── DB / History Logic ────────────────────────────────────────────────────────
   const loadHistory = useCallback(async () => {
@@ -691,6 +710,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     requestBack,
     requestMapChange,
     requestBoardChange,
+    requestSizingChange,
     confirmPendingNavigation,
 
     // Synthetic size stepper actions

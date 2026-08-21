@@ -115,6 +115,9 @@ export interface SimulationState {
   stepEdgesUp: () => void;
   stepEdgesDown: () => void;
 
+  requestSizingChange: (field: keyof GraphSizing, value: number, status: string, saved: boolean) => void;
+  requestSizingStep: (action: 'nodesUp' | 'nodesDown' | 'edgesUp' | 'edgesDown', status: string, saved: boolean) => void;
+
   deliveryMode: 'anycast' | 'multicast';
   setDeliveryMode: (mode: 'anycast' | 'multicast') => void;
 }
@@ -242,6 +245,19 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
     };
   }, [scenario, model.mapId, model.seed, model.gameBoard, model.graphSize, model.syntheticSizing, model.networkRoutingMode, model.sourceDevice, model.destinationDevices, model.deliveryMode, model.evacuationSourceId, JSON.stringify(model.robotAssignments), controller.stopAnimation]);
 
+  // ── Block page refresh/close when unsaved ─────────────────────────────────
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (controller.status === 'done' && !model.isCurrentSaved) {
+        e.preventDefault();
+        e.returnValue = ''; // Standard way to trigger the browser's confirmation dialog
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [controller.status, model.isCurrentSaved]);
+
   // Wrapper for confirmSaveResult to inject controller state
   const confirmSaveResult = () => {
     model.confirmSaveResult();
@@ -341,6 +357,17 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
     requestMapChange: model.requestMapChange,
     requestBoardChange: model.requestBoardChange,
     confirmPendingNavigation: model.confirmPendingNavigation,
+    requestSizingChange: model.requestSizingChange,
+    requestSizingStep: (action: 'nodesUp' | 'nodesDown' | 'edgesUp' | 'edgesDown', status: string, saved: boolean) => {
+      if (status === 'done' && !saved) {
+        model.setPendingNavigation({ type: 'sizing_step', action });
+      } else {
+        if (action === 'nodesUp') model.stepNodesUp();
+        else if (action === 'nodesDown') model.stepNodesDown();
+        else if (action === 'edgesUp') model.stepEdgesUp();
+        else if (action === 'edgesDown') model.stepEdgesDown();
+      }
+    },
 
     stepNodesUp: model.stepNodesUp,
     stepNodesDown: model.stepNodesDown,
