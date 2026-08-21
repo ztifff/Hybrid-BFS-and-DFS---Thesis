@@ -20,6 +20,9 @@ export interface HistoryEntry {
     destinationDevices?: string[];
     robotAssignments?: any[];
     evacuationSourceId?: string | null;
+    trafficSourceId?: string | null;
+    trafficDestinationIds?: string[];
+    gameAISourceId?: string | null;
     syntheticSizing?: { nodes: number; edges: number };
     activeAlgorithms?: { bfs: boolean; dfs: boolean; hybrid: boolean };
   };

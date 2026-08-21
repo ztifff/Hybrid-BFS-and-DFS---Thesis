@@ -35,115 +35,115 @@ export const MetricsPanel: React.FC<Props> = ({
   const gridCols = activeCount === 1 ? 'grid-cols-1' : activeCount === 2 ? 'grid-cols-2' : 'grid-cols-3';
 
   const renderAlgoColumn = (algoId: AlgorithmType, name: string) => {
-      const isActive = activeAlgorithms[algoId];
-      const color = ALGORITHMS.find(a => a.id === algoId)?.color || '#fff';
-      const stepData = activeSteps[algoId];
-      const resultData = multiResults?.[algoId];
+    const isActive = activeAlgorithms[algoId];
+    const color = ALGORITHMS.find(a => a.id === algoId)?.color || '#fff';
+    const stepData = activeSteps[algoId];
+    const resultData = multiResults?.[algoId];
 
-      // Guard against Step 0 to ensure a clean visual slate before running
-      const isStart = stepIndex === 0;
+    // Guard against Step 0 to ensure a clean visual slate before running
+    const isStart = stepIndex === 0;
 
-      const exploredCount = (stepIndex === 0) ? 0 : (status === 'done' && resultData ? resultData.metrics.nodesExplored : (stepData?.explored.length || 0));
-      
-      const actualDistance = (stepIndex === 0)
-        ? 0
-        : (status === 'done' && resultData
-            ? resultData.metrics.pathLength
-            : Math.max(0, (stepData?.path.length || 0) - 1));
+    const exploredCount = (stepIndex === 0) ? 0 : (status === 'done' && resultData ? resultData.metrics.nodesExplored : (stepData?.explored.length || 0));
 
-      const optimality = (actualDistance > 0 && optimalPathLength && optimalPathLength > 0)
-        ? getPathOptimality(actualDistance, optimalPathLength)
-        : { ratio: 0, label: 'N/A', color: '#64748b' };
-      
-      const hasDeliveredCounts = stepData?.deliveredBoxCounts !== undefined;
-      let completion = { percentage: 0, label: '0.0%' };
-      if (!isStart) {
-        if (scenario === 'robotics' && mapId === 'aws' && hasDeliveredCounts && stepData?.deliveredBoxCounts) {
-          const totalDelivered = Object.values(stepData.deliveredBoxCounts).reduce((a, b) => a + b, 0);
-          const pct = Math.min(100, (totalDelivered / 12) * 100);
-          completion = { percentage: pct, label: `${pct.toFixed(1)}%` };
-        } else if (status === 'done' && resultData && resultData.metrics.completionRate !== undefined) {
-          completion = { percentage: resultData.metrics.completionRate, label: `${resultData.metrics.completionRate.toFixed(1)}%` };
-        } else {
-          completion = getCompletionRate(exploredCount, totalNodes);
-        }
+    const actualDistance = (stepIndex === 0)
+      ? 0
+      : (status === 'done' && resultData
+        ? resultData.metrics.pathLength
+        : Math.max(0, (stepData?.path.length || 0) - 1));
+
+    const optimality = (actualDistance > 0 && optimalPathLength && optimalPathLength > 0)
+      ? getPathOptimality(actualDistance, optimalPathLength)
+      : { ratio: 0, label: 'N/A', color: '#64748b' };
+
+    const hasDeliveredCounts = stepData?.deliveredBoxCounts !== undefined;
+    let completion = { percentage: 0, label: '0.0%' };
+    if (!isStart) {
+      if (scenario === 'robotics' && mapId === 'aws' && hasDeliveredCounts && stepData?.deliveredBoxCounts) {
+        const totalDelivered = Object.values(stepData.deliveredBoxCounts).reduce((a, b) => a + b, 0);
+        const pct = Math.min(100, (totalDelivered / 12) * 100);
+        completion = { percentage: pct, label: `${pct.toFixed(1)}%` };
+      } else if (status === 'done' && resultData && resultData.metrics.completionRate !== undefined) {
+        completion = { percentage: resultData.metrics.completionRate, label: `${resultData.metrics.completionRate.toFixed(1)}%` };
+      } else {
+        completion = getCompletionRate(exploredCount, totalNodes);
       }
+    }
 
-      const adaptability = isStart 
-        ? { score: 0, label: '-', color: '#64748b' } 
-        : getAdaptabilityScore(status, resultData?.metrics || null, algoId, multiResults?.hybrid.dynamicEvents, stepIndex, completion.percentage);
+    const adaptability = isStart
+      ? { score: 0, label: '-', color: '#64748b' }
+      : getAdaptabilityScore(status, resultData?.metrics || null, algoId, multiResults?.hybrid.dynamicEvents, stepIndex, completion.percentage);
 
 
-      // ── Real-time memory estimate ───────────────────────────────────────────
-      // The backend only returns a single `memoryUsed` figure in `resultData`
-      // which represents the PEAK value at the very end of the run.
-      // To show a live, growing reading we re-apply the same formula the
-      // backend uses (estimateMemory) with the per-step counts available here.
-      // Formula: ((nodesExplored + frontierSize) * nodeBytes * multiplier) / 1024
-      //   nodeBytes  = 128 B (per visited node) 
-      //   multiplier = 1.5 (BFS/Hybrid overhead for queue pointers) / 1.0 (DFS)
-      const NODE_BYTES = 128;
-      const multiplier = algoId === 'dfs' ? 1.0 : 1.5;
-      const liveExplored = stepData?.explored.length ?? 0;
-      const liveFrontier = stepData?.frontier.length ?? 0;
-      const liveMemoryKB = ((liveExplored + liveFrontier) * NODE_BYTES * multiplier) / 1024;
+    // ── Real-time memory estimate ───────────────────────────────────────────
+    // The backend only returns a single `memoryUsed` figure in `resultData`
+    // which represents the PEAK value at the very end of the run.
+    // To show a live, growing reading we re-apply the same formula the
+    // backend uses (estimateMemory) with the per-step counts available here.
+    // Formula: ((nodesExplored + frontierSize) * nodeBytes * multiplier) / 1024
+    //   nodeBytes  = 128 B (per visited node) 
+    //   multiplier = 1.5 (BFS/Hybrid overhead for queue pointers) / 1.0 (DFS)
+    const NODE_BYTES = 128;
+    const multiplier = algoId === 'dfs' ? 1.0 : 1.5;
+    const liveExplored = stepData?.explored.length ?? 0;
+    const liveFrontier = stepData?.frontier.length ?? 0;
+    const liveMemoryKB = ((liveExplored + liveFrontier) * NODE_BYTES * multiplier) / 1024;
 
-      const displayMemory = isStart
-        ? '0.000 MB'
-        : status === 'done' && resultData
-          ? getMemoryInMB(resultData.metrics.memoryUsed)
-          : getMemoryInMB(liveMemoryKB);
+    const displayMemory = isStart
+      ? '0.000 MB'
+      : status === 'done' && resultData
+        ? getMemoryInMB(resultData.metrics.memoryUsed)
+        : getMemoryInMB(liveMemoryKB);
 
-      // Hidden algorithm — don't render the column at all
-      if (!isActive) return null;
+    // Hidden algorithm — don't render the column at all
+    if (!isActive) return null;
 
-      return (
-          <div className="flex flex-col gap-2 text-center border-r border-gray-700/50 last:border-0 px-1">
-              <div className="font-bold text-sm truncate pb-1 border-b border-gray-700/50" style={{ color }}>{name}</div>
-              
-              <div className="flex flex-col pt-1">
-                  <div className="text-[9px] text-gray-500 uppercase tracking-wider">Visited Nodes</div>
-                  <div className="text-sm font-bold text-gray-200">
-                    {exploredCount}
-                  </div>
-              </div>
+    return (
+      <div className="flex flex-col gap-2 text-center border-r border-gray-700/50 last:border-0 px-1">
+        <div className="font-bold text-sm truncate pb-1 border-b border-gray-700/50" style={{ color }}>{name}</div>
 
-              <div className="flex flex-col">
-                  <div className="text-[9px] text-gray-500 uppercase tracking-wider">Completion</div>
-                  <div className="text-sm font-bold text-blue-300">
-                    {completion.label}
-                  </div>
-              </div>
-
-              <div className="flex flex-col">
-                  <div className="text-[9px] text-gray-500 uppercase tracking-wider">
-                    {scenario === 'network' ? 'Total Latency' : scenario === 'traffic' ? 'Travel Time' : scenario === 'evacuation' ? 'Evac Time' : scenario === 'gameai' ? 'Moves' : 'Distance'}
-                  </div>
-                  <div className="text-sm font-bold text-gray-200">
-                    {status === 'done' && resultData 
-                      ? `${resultData.metrics.totalLatency.toFixed(scenario === 'gameai' ? 0 : 1)}${scenario === 'network' ? ' ms' : scenario === 'robotics' ? ' m' : scenario === 'traffic' ? ' min' : scenario === 'evacuation' ? ' s' : ''}` 
-                      : stepData?.currentLatency !== undefined 
-                        ? `${stepData.currentLatency.toFixed(scenario === 'gameai' ? 0 : 1)}${scenario === 'network' ? ' ms' : scenario === 'robotics' ? ' m' : scenario === 'traffic' ? ' min' : scenario === 'evacuation' ? ' s' : ''}` 
-                        : '-'}
-                  </div>
-              </div>
-
-              <div className="flex flex-col">
-                  <div className="text-[9px] text-gray-500 uppercase tracking-wider">Optimal %</div>
-                  <div className="text-sm font-bold" style={{ color: optimality.color }}>{optimality.label}</div>
-              </div>
-
-              <div className="flex flex-col">
-                  <div className="text-[9px] text-gray-500 uppercase tracking-wider">Memory</div>
-                  <div className="text-sm font-bold text-gray-200">{displayMemory}</div>
-              </div>
-
-              <div className="flex flex-col">
-                  <div className="text-[9px] text-gray-500 uppercase tracking-wider">Adaptability</div>
-                  <div className="text-sm font-bold" style={{ color: adaptability.color }}>{adaptability.score}</div>
-              </div>
+        <div className="flex flex-col pt-1">
+          <div className="text-[9px] text-gray-500 uppercase tracking-wider">Visited Nodes</div>
+          <div className="text-sm font-bold text-gray-200">
+            {exploredCount}
           </div>
-      );
+        </div>
+
+        <div className="flex flex-col">
+          <div className="text-[9px] text-gray-500 uppercase tracking-wider">Completion</div>
+          <div className="text-sm font-bold text-blue-300">
+            {completion.label}
+          </div>
+        </div>
+
+        <div className="flex flex-col">
+          <div className="text-[9px] text-gray-500 uppercase tracking-wider">
+            {scenario === 'network' ? 'Total Latency' : scenario === 'traffic' ? 'Travel Time' : scenario === 'evacuation' ? 'Evac Time' : scenario === 'gameai' ? 'Moves' : 'Distance'}
+          </div>
+          <div className="text-sm font-bold text-gray-200">
+            {status === 'done' && resultData
+              ? `${resultData.metrics.totalLatency.toFixed(scenario === 'gameai' ? 0 : 1)}${scenario === 'network' ? ' ms' : scenario === 'robotics' ? ' m' : scenario === 'traffic' ? ' min' : scenario === 'evacuation' ? ' s' : ''}`
+              : stepData?.currentLatency !== undefined
+                ? `${stepData.currentLatency.toFixed(scenario === 'gameai' ? 0 : 1)}${scenario === 'network' ? ' ms' : scenario === 'robotics' ? ' m' : scenario === 'traffic' ? ' min' : scenario === 'evacuation' ? ' s' : ''}`
+                : '-'}
+          </div>
+        </div>
+
+        <div className="flex flex-col">
+          <div className="text-[9px] text-gray-500 uppercase tracking-wider">Optimal %</div>
+          <div className="text-sm font-bold" style={{ color: optimality.color }}>{optimality.label}</div>
+        </div>
+
+        <div className="flex flex-col">
+          <div className="text-[9px] text-gray-500 uppercase tracking-wider">Memory</div>
+          <div className="text-sm font-bold text-gray-200">{displayMemory}</div>
+        </div>
+
+        <div className="flex flex-col">
+          <div className="text-[9px] text-gray-500 uppercase tracking-wider">Adaptability</div>
+          <div className="text-sm font-bold" style={{ color: adaptability.color }}>{adaptability.score}</div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -174,9 +174,9 @@ export const MetricsPanel: React.FC<Props> = ({
       </div>
 
       <div className={`grid ${gridCols} bg-black/30 rounded-lg p-2 border border-white/5 shadow-inner`}>
-          {renderAlgoColumn('bfs', 'BFS')}
-          {renderAlgoColumn('dfs', 'DFS')}
-          {renderAlgoColumn('hybrid', 'HYBRID')}
+        {renderAlgoColumn('bfs', 'BFS')}
+        {renderAlgoColumn('dfs', 'DFS')}
+        {renderAlgoColumn('hybrid', 'HYBRID')}
       </div>
 
       {status === 'done' && multiResults && (
@@ -187,7 +187,7 @@ export const MetricsPanel: React.FC<Props> = ({
           </div>
         ) : (
           <div className="text-center text-xs text-green-400 bg-green-900/20 border border-green-500/30 p-2 rounded-lg shadow-glow-green">
-            <span className="sm:hidden">✅ </span>Simulation Complete. See Final Report below.
+            <span className="sm:hidden">✅ </span>Simulation Complete
           </div>
         )
       )}

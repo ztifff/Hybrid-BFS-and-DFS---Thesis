@@ -120,9 +120,19 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
   // Evacuation: user-selectable starting room (applies to 'city' and 'building' maps)
   const [evacuationSourceId, setEvacuationSourceId] = useState<string | null>(null);
 
+  // Traffic: user-selectable starting point and destination
+  const [trafficSourceId, setTrafficSourceId] = useState<string | null>(null);
+  const [trafficDestinationIds, setTrafficDestinationIds] = useState<string[]>([]);
+
+  // Game AI: user-selectable starting point (first row nodes)
+  const [gameAISourceId, setGameAISourceId] = useState<string | null>(null);
+
   useEffect(() => {
     setEvacuationSourceId(null);
-  }, [mapId, scenario]);
+    setTrafficSourceId(null);
+    setTrafficDestinationIds([]);
+    setGameAISourceId(null);
+  }, [mapId, scenario, gameBoard]);
 
   // ✅ Multi-Agent Robotics: Per-robot destination assignments
   const [robotAssignments, setRobotAssignments] = useState<RobotAssignment[]>([
@@ -304,6 +314,12 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
       setPendingNavigation({ type: 'map', mapId: newMapId });
     } else {
       setMapId(newMapId);
+      setTrafficSourceId(null);
+      setTrafficDestinationIds([]);
+      setSourceDevice('');
+      setDestinationDevices([]);
+      setEvacuationSourceId(null);
+      setGameAISourceId(null);
       const mapDef = MAP_REGISTRY[scenario]?.find(m => m.id === newMapId);
       if (mapDef?.isRealWorld) setGraphSize('medium');
     }
@@ -492,6 +508,9 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
         destinationDevices,
         robotAssignments,
         evacuationSourceId,
+        trafficSourceId,
+        trafficDestinationIds,
+        gameAISourceId,
         syntheticSizing: {
           nodes: currentGraph.nodes.length,
           edges: Math.floor(currentGraph.edges.filter(e => e.type !== 'wireless').length / 2)
@@ -548,6 +567,17 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
           graphParams.set('customSourceId', evacuationSourceId);
         }
 
+        // Traffic: pass user-selected custom source and destination
+        if (scenario === 'traffic') {
+          if (trafficSourceId) graphParams.set('customSourceId', trafficSourceId);
+          if (trafficDestinationIds.length > 0) graphParams.set('customDestinationIds', JSON.stringify(trafficDestinationIds));
+        }
+
+        // Game AI: pass user-selected starting point
+        if (scenario === 'gameai' && gameAISourceId) {
+          graphParams.set('customSourceId', gameAISourceId);
+        }
+
         const response = await fetch(`https://backend-1e4y.onrender.com/api/network/graph?${graphParams}`);
         console.log("[DEBUG] Fetching network graph... URL:", `https://backend-1e4y.onrender.com/api/network/graph?${graphParams}`);
         if (!response.ok) throw new Error(`Graph API Error: ${response.statusText}`);
@@ -565,7 +595,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     };
     fetchGraphStructure();
     return () => { isMounted = false; };
-  }, [scenario, mapId, gameBoard, graphSize, seed, syntheticSizing.nodes, syntheticSizing.edges, networkRoutingMode, sourceDevice, sourceDevices, destinationDevices, destinationDevices_robotics, evacuationSourceId]);
+  }, [scenario, mapId, gameBoard, graphSize, seed, syntheticSizing.nodes, syntheticSizing.edges, networkRoutingMode, sourceDevice, sourceDevices, destinationDevices, destinationDevices_robotics, evacuationSourceId, trafficSourceId, trafficDestinationIds, gameAISourceId]);
 
   // Synchronize custom endpoints if the map changes or if they are invalid
   useEffect(() => {
@@ -687,6 +717,9 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     isComputing, setIsComputing,
     totalSteps,
     evacuationSourceId, setEvacuationSourceId,
+    trafficSourceId, setTrafficSourceId,
+    trafficDestinationIds, setTrafficDestinationIds,
+    gameAISourceId, setGameAISourceId,
 
     // ── Extracted from SimulationView ──────────────────────────────────────────
     // Derived view values

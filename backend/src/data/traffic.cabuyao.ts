@@ -3,7 +3,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
   "nodes": [
     {
       "id": "osm_n_3147550985",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 119,
       "y": 262,
@@ -11,7 +11,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1517444750",
-      "label": "🚗 Local Link Section #4750",
+      "label": "Local Link Section #4750",
       "type": "street",
       "x": 115,
       "y": 273,
@@ -19,7 +19,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_9913105780",
-      "label": "🛑 Jct: Sports Avenue & Volleyball Street",
+      "label": "Jct: Sports Avenue & Volleyball Street",
       "type": "intersection",
       "x": 498,
       "y": 307,
@@ -27,7 +27,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050902607",
-      "label": "🛑 Jct: Sports Avenue & Volleyball Street",
+      "label": "Jct: Sports Avenue & Volleyball Street",
       "type": "intersection",
       "x": 489,
       "y": 292,
@@ -35,7 +35,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1103202967",
-      "label": "🛑 Jct: Mayapa Road & National Highway 1",
+      "label": "Jct: Mayapa Road & National Highway 1",
       "type": "intersection",
       "x": 724,
       "y": 737,
@@ -43,7 +43,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344092938",
-      "label": "🛑 Jct: Mayapa Road & San Pedro Street",
+      "label": "Jct: Mayapa Road & San Pedro Street",
       "type": "intersection",
       "x": 711,
       "y": 745,
@@ -51,7 +51,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344092906",
-      "label": "🛑 Jct: Mayapa Road & San Pedro Street",
+      "label": "Jct: Mayapa Road & San Pedro Street",
       "type": "intersection",
       "x": 700,
       "y": 752,
@@ -59,7 +59,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344091870",
-      "label": "🛑 Jct: Mayapa Road & New Canlubang Vim",
+      "label": "Jct: Mayapa Road & New Canlubang Vim",
       "type": "intersection",
       "x": 684,
       "y": 762,
@@ -67,7 +67,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344091898",
-      "label": "🛑 Jct: Mayapa Road & New Canlubang Vim",
+      "label": "Jct: Mayapa Road & New Canlubang Vim",
       "type": "intersection",
       "x": 668,
       "y": 769,
@@ -75,7 +75,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_26506157",
-      "label": "📍 Mayapa Road",
+      "label": "Mayapa Road",
       "type": "street",
       "x": 654,
       "y": 775,
@@ -83,7 +83,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2123708405",
-      "label": "📍 Mayapa Road",
+      "label": "Mayapa Road",
       "type": "street",
       "x": 628,
       "y": 779,
@@ -91,7 +91,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_26506243",
-      "label": "🛑 Jct: South Luzon Expressway & Mayapa Road",
+      "label": "Jct: South Luzon Expressway & Mayapa Road",
       "type": "intersection",
       "x": 608,
       "y": 775,
@@ -99,7 +99,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050901671",
-      "label": "🚗 Local Link Section #1671",
+      "label": "Local Link Section #1671",
       "type": "street",
       "x": 522,
       "y": 419,
@@ -107,7 +107,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253762959",
-      "label": "🚗 Local Link Section #2959",
+      "label": "Local Link Section #2959",
       "type": "street",
       "x": 523,
       "y": 408,
@@ -115,7 +115,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253769766",
-      "label": "🚗 Local Link Section #9766",
+      "label": "Local Link Section #9766",
       "type": "street",
       "x": 508,
       "y": 399,
@@ -123,7 +123,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253768429",
-      "label": "📍 Asia Brewery Road",
+      "label": "Asia Brewery Road",
       "type": "street",
       "x": 485,
       "y": 385,
@@ -131,7 +131,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253512231",
-      "label": "🛑 Jct: National Highway 1 & Ebron-Tenorio Compound",
+      "label": "Jct: National Highway 1 & Ebron-Tenorio Compound",
       "type": "intersection",
       "x": 600,
       "y": 543,
@@ -139,7 +139,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8382970368",
-      "label": "🛑 Jct: National Highway 1 & RFM Road",
+      "label": "Jct: National Highway 1 & RFM Road",
       "type": "intersection",
       "x": 595,
       "y": 532,
@@ -147,7 +147,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090471234",
-      "label": "🛑 Jct: National Highway 1 & Mahogany Street",
+      "label": "Jct: National Highway 1 & Mahogany Street",
       "type": "intersection",
       "x": 590,
       "y": 518,
@@ -155,7 +155,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1097894924",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 586,
       "y": 502,
@@ -163,7 +163,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253795639",
-      "label": "🛑 Jct: National Highway 1 & Katapatan Avenue",
+      "label": "Jct: National Highway 1 & Katapatan Avenue",
       "type": "intersection",
       "x": 581,
       "y": 478,
@@ -171,7 +171,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8382888133",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 578,
       "y": 468,
@@ -179,7 +179,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364004996",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 576,
       "y": 457,
@@ -187,7 +187,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493156",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 572,
       "y": 437,
@@ -195,7 +195,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1366309764",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 570,
       "y": 428,
@@ -203,7 +203,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1483243677",
-      "label": "🛑 Jct: National Highway 1 & J. P. Rizal Street",
+      "label": "Jct: National Highway 1 & J. P. Rizal Street",
       "type": "intersection",
       "x": 567,
       "y": 411,
@@ -211,7 +211,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3633158566",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 246,
       "y": 60,
@@ -219,7 +219,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1055963228",
-      "label": "🚗 Local Link Section #3228",
+      "label": "Local Link Section #3228",
       "type": "street",
       "x": 212,
       "y": 74,
@@ -227,7 +227,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5175775023",
-      "label": "📍 Biñan - Santa Rosa Access Road",
+      "label": "Biñan - Santa Rosa Access Road",
       "type": "street",
       "x": 172,
       "y": 110,
@@ -235,7 +235,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1076881439",
-      "label": "🛑 Jct: Ursula Drive & Cataquiz Road",
+      "label": "Jct: Ursula Drive & Cataquiz Road",
       "type": "intersection",
       "x": 401,
       "y": 51,
@@ -243,7 +243,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3258065961",
-      "label": "🛑 Jct: Ursula Drive & Cataquiz Road",
+      "label": "Jct: Ursula Drive & Cataquiz Road",
       "type": "intersection",
       "x": 438,
       "y": 45,
@@ -251,7 +251,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253792458",
-      "label": "🛑 Jct: P. Añonuevo Street & Doctor Zavalla Street",
+      "label": "Jct: P. Añonuevo Street & Doctor Zavalla Street",
       "type": "intersection",
       "x": 383,
       "y": 100,
@@ -259,7 +259,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253769758",
-      "label": "🛑 Jct: P. Añonuevo Street & Doctor Zavalla Street",
+      "label": "Jct: P. Añonuevo Street & Doctor Zavalla Street",
       "type": "intersection",
       "x": 379,
       "y": 84,
@@ -267,7 +267,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253806151",
-      "label": "🛑 Jct: Santan Street & Brilliant Street",
+      "label": "Jct: Santan Street & Brilliant Street",
       "type": "intersection",
       "x": 553,
       "y": 373,
@@ -275,7 +275,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5300811099",
-      "label": "🛑 Jct: F. B. Bailon Road & National Highway 1",
+      "label": "Jct: F. B. Bailon Road & National Highway 1",
       "type": "intersection",
       "x": 530,
       "y": 378,
@@ -283,7 +283,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_13942433809",
-      "label": "🛑 Jct: Excellence Avenue & Integrity Avenue",
+      "label": "Jct: Excellence Avenue & Integrity Avenue",
       "type": "intersection",
       "x": 133,
       "y": 781,
@@ -291,7 +291,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5423001444",
-      "label": "🛑 Jct: Excellence Avenue & Productivity Drive",
+      "label": "Jct: Excellence Avenue & Productivity Drive",
       "type": "intersection",
       "x": 163,
       "y": 773,
@@ -299,7 +299,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093766120",
-      "label": "🛑 Jct: Excellence Avenue & Technology Alley",
+      "label": "Jct: Excellence Avenue & Technology Alley",
       "type": "intersection",
       "x": 225,
       "y": 755,
@@ -307,7 +307,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253767655",
-      "label": "🛑 Jct: Gregorio del Pilar Street & Andres Bonifacio Street",
+      "label": "Jct: Gregorio del Pilar Street & Andres Bonifacio Street",
       "type": "intersection",
       "x": 559,
       "y": 334,
@@ -315,7 +315,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_10035905141",
-      "label": "🏫 Cabuyao City Hall (Central Core)",
+      "label": "Cabuyao City Hall (Central Core)",
       "type": "origin",
       "x": 530,
       "y": 336,
@@ -323,7 +323,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253763815",
-      "label": "🛑 Jct: Governor F. Gomez Street & Aplaya Road",
+      "label": "Jct: Governor F. Gomez Street & Aplaya Road",
       "type": "intersection",
       "x": 509,
       "y": 74,
@@ -331,7 +331,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1048438902",
-      "label": "📍 Governor F. Gomez Street",
+      "label": "Governor F. Gomez Street",
       "type": "street",
       "x": 487,
       "y": 78,
@@ -339,7 +339,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253790514",
-      "label": "🛑 Jct: Governor F. Gomez Street & Camia Street",
+      "label": "Jct: Governor F. Gomez Street & Camia Street",
       "type": "intersection",
       "x": 448,
       "y": 83,
@@ -347,7 +347,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253787506",
-      "label": "🛑 Jct: Governor F. Gomez Street & Zavalla Street",
+      "label": "Jct: Governor F. Gomez Street & Zavalla Street",
       "type": "intersection",
       "x": 426,
       "y": 86,
@@ -355,7 +355,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5304830941",
-      "label": "🛑 Jct: Governor F. Gomez Street & Tatlong Hari Street",
+      "label": "Jct: Governor F. Gomez Street & Tatlong Hari Street",
       "type": "intersection",
       "x": 403,
       "y": 83,
@@ -363,7 +363,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1048377401",
-      "label": "🚗 Local Link Section #7401",
+      "label": "Local Link Section #7401",
       "type": "street",
       "x": 412,
       "y": 110,
@@ -371,7 +371,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253504352",
-      "label": "🛑 Jct: Hera Drive & Rhodes Drive",
+      "label": "Jct: Hera Drive & Rhodes Drive",
       "type": "intersection",
       "x": 409,
       "y": 127,
@@ -379,7 +379,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1076881103",
-      "label": "🛑 Jct: Tatlong Hari Street & Dia Leyco Road",
+      "label": "Jct: Tatlong Hari Street & Dia Leyco Road",
       "type": "intersection",
       "x": 400,
       "y": 69,
@@ -387,7 +387,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1056264768",
-      "label": "📍 Asia Brewery Road",
+      "label": "Asia Brewery Road",
       "type": "street",
       "x": 442,
       "y": 406,
@@ -395,7 +395,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253507822",
-      "label": "📍 Asia Brewery Road",
+      "label": "Asia Brewery Road",
       "type": "street",
       "x": 456,
       "y": 402,
@@ -403,7 +403,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_364626900",
-      "label": "🛑 Jct: Asia Brewery Road & National Highway 1",
+      "label": "Jct: Asia Brewery Road & National Highway 1",
       "type": "intersection",
       "x": 513,
       "y": 369,
@@ -411,7 +411,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253770973",
-      "label": "📍 Escoda Street",
+      "label": "Escoda Street",
       "type": "street",
       "x": 896,
       "y": 512,
@@ -419,7 +419,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253795616",
-      "label": "📍 Rizal Street",
+      "label": "Rizal Street",
       "type": "street",
       "x": 816,
       "y": 530,
@@ -427,7 +427,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493014",
-      "label": "🛑 Jct: Felix Limcaoco Street & A. Mabini Street",
+      "label": "Jct: Felix Limcaoco Street & A. Mabini Street",
       "type": "intersection",
       "x": 560,
       "y": 316,
@@ -435,7 +435,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8675121266",
-      "label": "🛑 Jct: Felix Limcaoco Street & Manuel Quezon Street",
+      "label": "Jct: Felix Limcaoco Street & Manuel Quezon Street",
       "type": "intersection",
       "x": 531,
       "y": 323,
@@ -443,7 +443,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253797131",
-      "label": "🛑 Jct: NIA Road & Sergio Osmeña Street",
+      "label": "Jct: NIA Road & Sergio Osmeña Street",
       "type": "intersection",
       "x": 580,
       "y": 342,
@@ -451,7 +451,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088492870",
-      "label": "🛑 Jct: NIA Road & Gold Street",
+      "label": "Jct: NIA Road & Gold Street",
       "type": "intersection",
       "x": 587,
       "y": 354,
@@ -459,7 +459,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088494381",
-      "label": "📍 NIA Road",
+      "label": "NIA Road",
       "type": "street",
       "x": 600,
       "y": 372,
@@ -467,7 +467,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8384453706",
-      "label": "📍 NIA Road",
+      "label": "NIA Road",
       "type": "street",
       "x": 614,
       "y": 394,
@@ -475,7 +475,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1483243681",
-      "label": "📍 NIA Road",
+      "label": "NIA Road",
       "type": "street",
       "x": 624,
       "y": 408,
@@ -483,7 +483,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1078096743",
-      "label": "🚗 Local Link Section #6743",
+      "label": "Local Link Section #6743",
       "type": "street",
       "x": 235,
       "y": 748,
@@ -491,7 +491,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8682869979",
-      "label": "🚗 Local Link Section #9979",
+      "label": "Local Link Section #9979",
       "type": "street",
       "x": 254,
       "y": 741,
@@ -499,7 +499,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2952641685",
-      "label": "🛑 Jct: Cherry Blossoms Street & Sunflower Street",
+      "label": "Jct: Cherry Blossoms Street & Sunflower Street",
       "type": "intersection",
       "x": 493,
       "y": 112,
@@ -507,7 +507,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2952641649",
-      "label": "🛑 Jct: Cherry Blossoms Street & Sutter Avenue",
+      "label": "Jct: Cherry Blossoms Street & Sutter Avenue",
       "type": "intersection",
       "x": 475,
       "y": 117,
@@ -515,7 +515,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253789213",
-      "label": "🛑 Jct: Burgos Street & Caingin Road",
+      "label": "Jct: Burgos Street & Caingin Road",
       "type": "intersection",
       "x": 581,
       "y": 205,
@@ -523,7 +523,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_10047043855",
-      "label": "📍 Burgos Street",
+      "label": "Burgos Street",
       "type": "street",
       "x": 582,
       "y": 216,
@@ -531,7 +531,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3355433094",
-      "label": "📍 Burgos Street",
+      "label": "Burgos Street",
       "type": "street",
       "x": 585,
       "y": 227,
@@ -539,7 +539,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8318561583",
-      "label": "📍 Burgos Street",
+      "label": "Burgos Street",
       "type": "street",
       "x": 587,
       "y": 240,
@@ -547,7 +547,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_7919870440",
-      "label": "📍 Burgos Street",
+      "label": "Burgos Street",
       "type": "street",
       "x": 591,
       "y": 267,
@@ -555,7 +555,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3320427865",
-      "label": "🛑 Jct: Burgos Street & N. Basaca Street",
+      "label": "Jct: Burgos Street & N. Basaca Street",
       "type": "intersection",
       "x": 583,
       "y": 278,
@@ -563,7 +563,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087754901",
-      "label": "📍 Burgos Street",
+      "label": "Burgos Street",
       "type": "street",
       "x": 565,
       "y": 294,
@@ -571,7 +571,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_12856624548",
-      "label": "🛑 Jct: Burgos Street & Juan Luna Street",
+      "label": "Jct: Burgos Street & Juan Luna Street",
       "type": "intersection",
       "x": 552,
       "y": 303,
@@ -579,7 +579,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2054367701",
-      "label": "🛑 Jct: Maka-Diyos Street & Makakalikasan Street",
+      "label": "Jct: Maka-Diyos Street & Makakalikasan Street",
       "type": "intersection",
       "x": 246,
       "y": 783,
@@ -587,7 +587,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253783149",
-      "label": "🚗 Local Link Section #3149",
+      "label": "Local Link Section #3149",
       "type": "street",
       "x": 468,
       "y": 417,
@@ -595,7 +595,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253510673",
-      "label": "🛑 Jct: P. Casañas Street & Francisco Mercado Street",
+      "label": "Jct: P. Casañas Street & Francisco Mercado Street",
       "type": "intersection",
       "x": 1033,
       "y": 769,
@@ -603,7 +603,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253806172",
-      "label": "🛑 Jct: Francisco Mercado Street & S. V. Rizal Street",
+      "label": "Jct: Francisco Mercado Street & S. V. Rizal Street",
       "type": "intersection",
       "x": 1014,
       "y": 765,
@@ -611,7 +611,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_291556607",
-      "label": "🛑 Jct: Champaca Street & Amapola Street",
+      "label": "Jct: Champaca Street & Amapola Street",
       "type": "intersection",
       "x": 360,
       "y": 781,
@@ -619,7 +619,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092877140",
-      "label": "🛑 Jct: Champaca Street & Gladiola Street",
+      "label": "Jct: Champaca Street & Gladiola Street",
       "type": "intersection",
       "x": 368,
       "y": 793,
@@ -627,7 +627,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1014155643",
-      "label": "🛑 Jct: Parian Road & P. Alihan Street",
+      "label": "Jct: Parian Road & P. Alihan Street",
       "type": "intersection",
       "x": 915,
       "y": 788,
@@ -635,7 +635,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1014155640",
-      "label": "📍 Parian Road",
+      "label": "Parian Road",
       "type": "street",
       "x": 900,
       "y": 783,
@@ -643,7 +643,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1041059779",
-      "label": "🛑 Jct: Parian Road & National Highway 1",
+      "label": "Jct: Parian Road & National Highway 1",
       "type": "intersection",
       "x": 866,
       "y": 774,
@@ -651,7 +651,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1041059279",
-      "label": "🛑 Jct: Parian Road & National Highway 1",
+      "label": "Jct: Parian Road & National Highway 1",
       "type": "intersection",
       "x": 835,
       "y": 767,
@@ -659,7 +659,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253771564",
-      "label": "🛑 Jct: P. Vallejo Street & Arambulo Street",
+      "label": "Jct: P. Vallejo Street & Arambulo Street",
       "type": "intersection",
       "x": 356,
       "y": 99,
@@ -667,7 +667,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5304830946",
-      "label": "🛑 Jct: P. Vallejo Street & Rizal Boulevard",
+      "label": "Jct: P. Vallejo Street & Rizal Boulevard",
       "type": "intersection",
       "x": 398,
       "y": 95,
@@ -675,7 +675,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493516",
-      "label": "🛑 Jct: RFM Road & Ebron-Tenorio Compound",
+      "label": "Jct: RFM Road & Ebron-Tenorio Compound",
       "type": "intersection",
       "x": 610,
       "y": 525,
@@ -683,7 +683,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1483143609",
-      "label": "🛑 Jct: RFM Road & Pomelo Street",
+      "label": "Jct: RFM Road & Pomelo Street",
       "type": "intersection",
       "x": 655,
       "y": 519,
@@ -691,7 +691,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2329021178",
-      "label": "🛑 Jct: A. Mabini Street & Manuel Quezon Street",
+      "label": "Jct: A. Mabini Street & Manuel Quezon Street",
       "type": "intersection",
       "x": 537,
       "y": 313,
@@ -699,7 +699,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253783843",
-      "label": "🛑 Jct: C. A. Yulo Avenue & Progress Avenue",
+      "label": "Jct: C. A. Yulo Avenue & Progress Avenue",
       "type": "intersection",
       "x": 236,
       "y": 723,
@@ -707,7 +707,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253510892",
-      "label": "📍 Silangan Airstrip Road",
+      "label": "Silangan Airstrip Road",
       "type": "street",
       "x": 220,
       "y": 711,
@@ -715,7 +715,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1583467968",
-      "label": "🚗 Local Link Section #7968",
+      "label": "Local Link Section #7968",
       "type": "street",
       "x": 198,
       "y": 703,
@@ -723,7 +723,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1076881529",
-      "label": "🛑 Jct: Dia Leyco Road & Ursula Drive",
+      "label": "Jct: Dia Leyco Road & Ursula Drive",
       "type": "intersection",
       "x": 472,
       "y": 49,
@@ -731,7 +731,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050903065",
-      "label": "🚗 Local Link Section #3065",
+      "label": "Local Link Section #3065",
       "type": "street",
       "x": 439,
       "y": 448,
@@ -739,7 +739,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050902096",
-      "label": "🚗 Local Link Section #2096",
+      "label": "Local Link Section #2096",
       "type": "street",
       "x": 466,
       "y": 439,
@@ -747,7 +747,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_293364431",
-      "label": "🛑 Jct: Mamplasan Road & National Highway 1",
+      "label": "Jct: Mamplasan Road & National Highway 1",
       "type": "intersection",
       "x": 290,
       "y": 136,
@@ -755,7 +755,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8387162157",
-      "label": "📍 Mamplasan Road",
+      "label": "Mamplasan Road",
       "type": "street",
       "x": 285,
       "y": 146,
@@ -763,7 +763,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8387151975",
-      "label": "📍 Mamplasan Road",
+      "label": "Mamplasan Road",
       "type": "street",
       "x": 273,
       "y": 155,
@@ -771,7 +771,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050526025",
-      "label": "📍 Mamplasan Road",
+      "label": "Mamplasan Road",
       "type": "street",
       "x": 257,
       "y": 165,
@@ -779,7 +779,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8317961284",
-      "label": "📍 Mamplasan Road",
+      "label": "Mamplasan Road",
       "type": "street",
       "x": 240,
       "y": 169,
@@ -787,7 +787,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050525948",
-      "label": "📍 Mamplasan Road",
+      "label": "Mamplasan Road",
       "type": "street",
       "x": 210,
       "y": 176,
@@ -795,7 +795,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253510424",
-      "label": "🛑 Jct: Sergio Osmeña Street & Miguel Malvar Street",
+      "label": "Jct: Sergio Osmeña Street & Miguel Malvar Street",
       "type": "intersection",
       "x": 552,
       "y": 324,
@@ -803,7 +803,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253791683",
-      "label": "🛑 Jct: Calle La Palma & Calle Valencia",
+      "label": "Jct: Calle La Palma & Calle Valencia",
       "type": "intersection",
       "x": 181,
       "y": 676,
@@ -811,7 +811,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091051019",
-      "label": "🛑 Jct: Jose A. Yulo Boulevard & South Road",
+      "label": "Jct: Jose A. Yulo Boulevard & South Road",
       "type": "intersection",
       "x": 169,
       "y": 657,
@@ -819,7 +819,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088494005",
-      "label": "🛑 Jct: Katapatan Avenue & Masayahin Street",
+      "label": "Jct: Katapatan Avenue & Masayahin Street",
       "type": "intersection",
       "x": 602,
       "y": 475,
@@ -827,7 +827,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493419",
-      "label": "🛑 Jct: Katapatan Avenue & Matalino Street",
+      "label": "Jct: Katapatan Avenue & Matalino Street",
       "type": "intersection",
       "x": 635,
       "y": 470,
@@ -835,7 +835,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2128608725",
-      "label": "🛑 Jct: Katapatan Avenue & Marikit Street",
+      "label": "Jct: Katapatan Avenue & Marikit Street",
       "type": "intersection",
       "x": 662,
       "y": 466,
@@ -843,7 +843,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1076609464",
-      "label": "🛑 Jct: Narra Road & Tindalo Street",
+      "label": "Jct: Narra Road & Tindalo Street",
       "type": "intersection",
       "x": 1135,
       "y": 669,
@@ -851,7 +851,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1076609053",
-      "label": "🛑 Jct: Narra Road & Ipil-Ipil Street",
+      "label": "Jct: Narra Road & Ipil-Ipil Street",
       "type": "intersection",
       "x": 1125,
       "y": 657,
@@ -859,7 +859,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1348830501",
-      "label": "📍 Narra Road",
+      "label": "Narra Road",
       "type": "street",
       "x": 1117,
       "y": 646,
@@ -867,7 +867,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1348830521",
-      "label": "📍 Narra Road",
+      "label": "Narra Road",
       "type": "street",
       "x": 1108,
       "y": 634,
@@ -875,7 +875,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8679321285",
-      "label": "📍 Narra Road",
+      "label": "Narra Road",
       "type": "street",
       "x": 1096,
       "y": 619,
@@ -883,7 +883,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090471182",
-      "label": "🛑 Jct: Narra Road & D. Lucius Street",
+      "label": "Jct: Narra Road & D. Lucius Street",
       "type": "intersection",
       "x": 1085,
       "y": 607,
@@ -891,7 +891,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2664585578",
-      "label": "🛑 Jct: Santa Rosa-Tagaytay Road & Felix Reyes Street",
+      "label": "Jct: Santa Rosa-Tagaytay Road & Felix Reyes Street",
       "type": "intersection",
       "x": 148,
       "y": 271,
@@ -899,7 +899,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_287840686",
-      "label": "🛑 Jct: Santa Rosa-Tagaytay Road & South Luzon Expressway",
+      "label": "Jct: Santa Rosa-Tagaytay Road & South Luzon Expressway",
       "type": "intersection",
       "x": 134,
       "y": 280,
@@ -907,7 +907,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1416812018",
-      "label": "🛑 Jct: National Highway 1 & National Highway",
+      "label": "Jct: National Highway 1 & National Highway",
       "type": "intersection",
       "x": 885,
       "y": 817,
@@ -915,7 +915,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093836164",
-      "label": "🛑 Jct: National Highway & Carnation Street",
+      "label": "Jct: National Highway & Carnation Street",
       "type": "intersection",
       "x": 896,
       "y": 826,
@@ -923,7 +923,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_949532223",
-      "label": "🛑 Jct: National Highway & Sampaguita Street",
+      "label": "Jct: National Highway & Sampaguita Street",
       "type": "intersection",
       "x": 912,
       "y": 839,
@@ -931,7 +931,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_290583562",
-      "label": "🚗 Local Link Section #3562",
+      "label": "Local Link Section #3562",
       "type": "street",
       "x": 498,
       "y": 316,
@@ -939,7 +939,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8675107963",
-      "label": "🛑 Jct: Burgos Street & J. P. Rizal Street",
+      "label": "Jct: Burgos Street & J. P. Rizal Street",
       "type": "intersection",
       "x": 517,
       "y": 317,
@@ -947,7 +947,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253796784",
-      "label": "🛑 Jct: Banlic - Mamatid Road & Vermilion Drive",
+      "label": "Jct: Banlic - Mamatid Road & Vermilion Drive",
       "type": "intersection",
       "x": 1067,
       "y": 591,
@@ -955,7 +955,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8385958500",
-      "label": "🛑 Jct: Banlic - Mamatid Road & Lilac Street",
+      "label": "Jct: Banlic - Mamatid Road & Lilac Street",
       "type": "intersection",
       "x": 1046,
       "y": 601,
@@ -963,7 +963,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253789249",
-      "label": "📍 Banlic - Mamatid Road",
+      "label": "Banlic - Mamatid Road",
       "type": "street",
       "x": 1030,
       "y": 605,
@@ -971,7 +971,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5217971714",
-      "label": "📍 Banlic - Mamatid Road",
+      "label": "Banlic - Mamatid Road",
       "type": "street",
       "x": 1007,
       "y": 610,
@@ -979,7 +979,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_12069397131",
-      "label": "📍 Banlic - Mamatid Road",
+      "label": "Banlic - Mamatid Road",
       "type": "street",
       "x": 986,
       "y": 611,
@@ -987,7 +987,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090447758",
-      "label": "📍 Banlic - Mamatid Road",
+      "label": "Banlic - Mamatid Road",
       "type": "street",
       "x": 965,
       "y": 615,
@@ -995,7 +995,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6870067575",
-      "label": "📍 Banlic - Mamatid Road",
+      "label": "Banlic - Mamatid Road",
       "type": "street",
       "x": 949,
       "y": 616,
@@ -1003,7 +1003,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090411102",
-      "label": "🛑 Jct: Banlic - Mamatid Road & Taguig Street",
+      "label": "Jct: Banlic - Mamatid Road & Taguig Street",
       "type": "intersection",
       "x": 911,
       "y": 619,
@@ -1011,7 +1011,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253792289",
-      "label": "🛑 Jct: Banlic - Mamatid Road & Cedar Street",
+      "label": "Jct: Banlic - Mamatid Road & Cedar Street",
       "type": "intersection",
       "x": 892,
       "y": 620,
@@ -1019,7 +1019,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090201185",
-      "label": "🛑 Jct: Banlic - Mamatid Road & Purok 1 Road",
+      "label": "Jct: Banlic - Mamatid Road & Purok 1 Road",
       "type": "intersection",
       "x": 870,
       "y": 620,
@@ -1027,7 +1027,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090264543",
-      "label": "📍 Banlic - Mamatid Road",
+      "label": "Banlic - Mamatid Road",
       "type": "street",
       "x": 843,
       "y": 622,
@@ -1035,7 +1035,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090922436",
-      "label": "📍 Banlic - Mamatid Road",
+      "label": "Banlic - Mamatid Road",
       "type": "street",
       "x": 812,
       "y": 628,
@@ -1043,7 +1043,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090201162",
-      "label": "🛑 Jct: Banlic - Mamatid Road & NIA Road",
+      "label": "Jct: Banlic - Mamatid Road & NIA Road",
       "type": "intersection",
       "x": 779,
       "y": 640,
@@ -1051,7 +1051,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050902257",
-      "label": "🚗 Local Link Section #2257",
+      "label": "Local Link Section #2257",
       "type": "street",
       "x": 479,
       "y": 460,
@@ -1059,7 +1059,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253508312",
-      "label": "🚗 Local Link Section #8312",
+      "label": "Local Link Section #8312",
       "type": "street",
       "x": 489,
       "y": 473,
@@ -1067,7 +1067,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8278248659",
-      "label": "🚗 Local Link Section #8659",
+      "label": "Local Link Section #8659",
       "type": "street",
       "x": 490,
       "y": 428,
@@ -1075,7 +1075,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3730297481",
-      "label": "📍 Carpena Street",
+      "label": "Carpena Street",
       "type": "street",
       "x": 531,
       "y": 304,
@@ -1083,7 +1083,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1061894589",
-      "label": "🛑 Jct: Jubilation Loop & Greenfield Parkway",
+      "label": "Jct: Jubilation Loop & Greenfield Parkway",
       "type": "intersection",
       "x": 88,
       "y": 58,
@@ -1091,7 +1091,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_300476773",
-      "label": "📍 Jubilation Loop",
+      "label": "Jubilation Loop",
       "type": "street",
       "x": 133,
       "y": 6,
@@ -1099,7 +1099,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5194160695",
-      "label": "🛑 Jct: Arambulo Street & Daang PUP",
+      "label": "Jct: Arambulo Street & Daang PUP",
       "type": "intersection",
       "x": 351,
       "y": 89,
@@ -1107,7 +1107,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1041059756",
-      "label": "🛑 Jct: Lawa Road & Batino Bypass Road",
+      "label": "Jct: Lawa Road & Batino Bypass Road",
       "type": "intersection",
       "x": 731,
       "y": 848,
@@ -1115,7 +1115,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1041059273",
-      "label": "📍 Lawa Road",
+      "label": "Lawa Road",
       "type": "street",
       "x": 745,
       "y": 842,
@@ -1123,7 +1123,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1377407182",
-      "label": "📍 Lawa Road",
+      "label": "Lawa Road",
       "type": "street",
       "x": 767,
       "y": 837,
@@ -1131,7 +1131,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1041059026",
-      "label": "🛑 Jct: Lawa Road & Orchid Street",
+      "label": "Jct: Lawa Road & Orchid Street",
       "type": "intersection",
       "x": 784,
       "y": 831,
@@ -1139,7 +1139,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1377407264",
-      "label": "🛑 Jct: Lawa Road & Orchid Street",
+      "label": "Jct: Lawa Road & Orchid Street",
       "type": "intersection",
       "x": 797,
       "y": 825,
@@ -1147,7 +1147,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091541966",
-      "label": "🛑 Jct: Lawa Road & Lotus Street",
+      "label": "Jct: Lawa Road & Lotus Street",
       "type": "intersection",
       "x": 808,
       "y": 813,
@@ -1155,7 +1155,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344096853",
-      "label": "📍 Lawa Road",
+      "label": "Lawa Road",
       "type": "street",
       "x": 817,
       "y": 804,
@@ -1163,7 +1163,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5304980719",
-      "label": "📍 Lawa Road",
+      "label": "Lawa Road",
       "type": "street",
       "x": 823,
       "y": 793,
@@ -1171,7 +1171,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_26506152",
-      "label": "🛑 Jct: National Highway 1 & CMC Avenue",
+      "label": "Jct: National Highway 1 & CMC Avenue",
       "type": "intersection",
       "x": 874,
       "y": 809,
@@ -1179,7 +1179,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_487448017",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 57,
       "y": 185,
@@ -1187,7 +1187,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_487447990",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 71,
       "y": 201,
@@ -1195,7 +1195,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8758972498",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 93,
       "y": 228,
@@ -1203,7 +1203,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_323077733",
-      "label": "📍 Pulo-Diezmo Road",
+      "label": "Pulo-Diezmo Road",
       "type": "street",
       "x": 408,
       "y": 577,
@@ -1211,7 +1211,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_287838057",
-      "label": "🛑 Jct: Pulo-Diezmo Road & South Luzon Expressway",
+      "label": "Jct: Pulo-Diezmo Road & South Luzon Expressway",
       "type": "intersection",
       "x": 391,
       "y": 580,
@@ -1219,7 +1219,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_323077717",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 413,
       "y": 595,
@@ -1227,7 +1227,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_358797789",
-      "label": "🛑 Jct: Eton City Access Road & South Luzon Expressway",
+      "label": "Jct: Eton City Access Road & South Luzon Expressway",
       "type": "intersection",
       "x": 287,
       "y": 465,
@@ -1235,7 +1235,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2030091259",
-      "label": "🛑 Jct: Eton City Access Road & Greenfield Parkway",
+      "label": "Jct: Eton City Access Road & Greenfield Parkway",
       "type": "intersection",
       "x": 248,
       "y": 476,
@@ -1243,7 +1243,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2030091356",
-      "label": "🛑 Jct: Eton City Access Road & Asia Brewery Road",
+      "label": "Jct: Eton City Access Road & Asia Brewery Road",
       "type": "intersection",
       "x": 333,
       "y": 451,
@@ -1251,7 +1251,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1080106799",
-      "label": "📍 Star Avenue",
+      "label": "Star Avenue",
       "type": "street",
       "x": 24,
       "y": 256,
@@ -1259,7 +1259,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_668671383",
-      "label": "🛑 Jct: Star Avenue & LIIP Avenue",
+      "label": "Jct: Star Avenue & LIIP Avenue",
       "type": "intersection",
       "x": 62,
       "y": 243,
@@ -1267,7 +1267,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_360187530",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 578,
       "y": 759,
@@ -1275,7 +1275,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_360187708",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 570,
       "y": 750,
@@ -1283,7 +1283,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_287838639",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 559,
       "y": 740,
@@ -1291,7 +1291,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6645459406",
-      "label": "🛑 Jct: South Luzon Expressway & Mayapa Road",
+      "label": "Jct: South Luzon Expressway & Mayapa Road",
       "type": "intersection",
       "x": 585,
       "y": 769,
@@ -1299,7 +1299,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_666537222",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 460,
       "y": 644,
@@ -1307,7 +1307,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_447738404",
-      "label": "🛑 Jct: Silangan Access Road & South Luzon Expressway",
+      "label": "Jct: Silangan Access Road & South Luzon Expressway",
       "type": "intersection",
       "x": 476,
       "y": 656,
@@ -1315,7 +1315,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8759121398",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 487,
       "y": 671,
@@ -1323,7 +1323,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_668741340",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 379,
       "y": 566,
@@ -1331,7 +1331,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_360189056",
-      "label": "🛑 Jct: South Luzon Expressway & Masbate Street",
+      "label": "Jct: South Luzon Expressway & Masbate Street",
       "type": "intersection",
       "x": 369,
       "y": 552,
@@ -1339,7 +1339,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1078541573",
-      "label": "🛑 Jct: South Luzon Expressway & Palawan Street",
+      "label": "Jct: South Luzon Expressway & Palawan Street",
       "type": "intersection",
       "x": 336,
       "y": 517,
@@ -1347,7 +1347,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_360189415",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 279,
       "y": 453,
@@ -1355,7 +1355,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8758972473",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 300,
       "y": 478,
@@ -1363,7 +1363,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_496055179",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 245,
       "y": 408,
@@ -1371,7 +1371,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_496055562",
-      "label": "🛑 Jct: South Luzon Expressway & South Lake Drive",
+      "label": "Jct: South Luzon Expressway & South Lake Drive",
       "type": "intersection",
       "x": 233,
       "y": 393,
@@ -1379,7 +1379,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_378732430",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 216,
       "y": 374,
@@ -1387,7 +1387,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_360190589",
-      "label": "🛑 Jct: South Luzon Expressway & Carnation Avenue",
+      "label": "Jct: South Luzon Expressway & Carnation Avenue",
       "type": "intersection",
       "x": 147,
       "y": 290,
@@ -1395,7 +1395,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_315995816",
-      "label": "🛑 Jct: Zircon Road & Chalcedony Road",
+      "label": "Jct: Zircon Road & Chalcedony Road",
       "type": "intersection",
       "x": 303,
       "y": 220,
@@ -1403,7 +1403,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_7257036114",
-      "label": "🛑 Jct: Zircon Road & Emerald Road",
+      "label": "Jct: Zircon Road & Emerald Road",
       "type": "intersection",
       "x": 318,
       "y": 223,
@@ -1411,7 +1411,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050658904",
-      "label": "🛑 Jct: Sardonyx Road & Pearl Road",
+      "label": "Jct: Sardonyx Road & Pearl Road",
       "type": "intersection",
       "x": 305,
       "y": 211,
@@ -1419,7 +1419,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_360193697",
-      "label": "🛑 Jct: Garnet Road & Rizal Boulevard",
+      "label": "Jct: Garnet Road & Rizal Boulevard",
       "type": "intersection",
       "x": 334,
       "y": 211,
@@ -1427,7 +1427,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8302506118",
-      "label": "📍 Kabesang Moldes Street",
+      "label": "Kabesang Moldes Street",
       "type": "street",
       "x": 287,
       "y": 198,
@@ -1435,7 +1435,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8386141735",
-      "label": "📍 Kabesang Moldes Street",
+      "label": "Kabesang Moldes Street",
       "type": "street",
       "x": 240,
       "y": 202,
@@ -1443,7 +1443,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253771526",
-      "label": "🛑 Jct: Kabesang Moldes Street & Macabling Road",
+      "label": "Jct: Kabesang Moldes Street & Macabling Road",
       "type": "intersection",
       "x": 203,
       "y": 194,
@@ -1451,7 +1451,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_360195006",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 316,
       "y": 180,
@@ -1459,7 +1459,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_360194896",
-      "label": "🛑 Jct: National Highway 1 & Kabesang Moldes Street",
+      "label": "Jct: National Highway 1 & Kabesang Moldes Street",
       "type": "intersection",
       "x": 322,
       "y": 191,
@@ -1467,7 +1467,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253769276",
-      "label": "🛑 Jct: Felix Reyes Street & National Highway 1",
+      "label": "Jct: Felix Reyes Street & National Highway 1",
       "type": "intersection",
       "x": 336,
       "y": 197,
@@ -1475,7 +1475,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_295367872",
-      "label": "🛑 Jct: Saint Francis Avenue & Macabling Road",
+      "label": "Jct: Saint Francis Avenue & Macabling Road",
       "type": "intersection",
       "x": 304,
       "y": 159,
@@ -1483,7 +1483,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088066664",
-      "label": "📍 Macabling Road",
+      "label": "Macabling Road",
       "type": "street",
       "x": 279,
       "y": 168,
@@ -1491,7 +1491,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1077038081",
-      "label": "🚗 Local Link Section #8081",
+      "label": "Local Link Section #8081",
       "type": "street",
       "x": 593,
       "y": 420,
@@ -1499,7 +1499,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8382888121",
-      "label": "🚗 Local Link Section #8121",
+      "label": "Local Link Section #8121",
       "type": "street",
       "x": 525,
       "y": 467,
@@ -1507,7 +1507,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1483243500",
-      "label": "🚗 Local Link Section #3500",
+      "label": "Local Link Section #3500",
       "type": "street",
       "x": 516,
       "y": 479,
@@ -1515,7 +1515,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253763623",
-      "label": "🛑 Jct: San Isidro - Mahogany Road & San Isidro Road",
+      "label": "Jct: San Isidro - Mahogany Road & San Isidro Road",
       "type": "intersection",
       "x": 636,
       "y": 598,
@@ -1523,7 +1523,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_364629570",
-      "label": "🛑 Jct: San Isidro - Mahogany Road & San Isidro - Pulo Bypass Road",
+      "label": "Jct: San Isidro - Mahogany Road & San Isidro - Pulo Bypass Road",
       "type": "intersection",
       "x": 564,
       "y": 606,
@@ -1531,7 +1531,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253508418",
-      "label": "🛑 Jct: Bermuda Drive & National Highway 1",
+      "label": "Jct: Bermuda Drive & National Highway 1",
       "type": "intersection",
       "x": 688,
       "y": 656,
@@ -1539,7 +1539,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_364629755",
-      "label": "🛑 Jct: Bermuda Drive & Rial Street",
+      "label": "Jct: Bermuda Drive & Rial Street",
       "type": "intersection",
       "x": 660,
       "y": 666,
@@ -1547,7 +1547,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253499548",
-      "label": "🛑 Jct: Camella Bermuda Road & National Highway 1",
+      "label": "Jct: Camella Bermuda Road & National Highway 1",
       "type": "intersection",
       "x": 702,
       "y": 669,
@@ -1555,7 +1555,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090922587",
-      "label": "🛑 Jct: Camella Bermuda Road & Peseta Street",
+      "label": "Jct: Camella Bermuda Road & Peseta Street",
       "type": "intersection",
       "x": 680,
       "y": 677,
@@ -1563,7 +1563,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_364630547",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 708,
       "y": 708,
@@ -1571,7 +1571,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1261615067",
-      "label": "🚗 Local Link Section #5067",
+      "label": "Local Link Section #5067",
       "type": "street",
       "x": 691,
       "y": 715,
@@ -1579,7 +1579,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253496064",
-      "label": "🛑 Jct: National Highway 1 & Saint Christopher I Road",
+      "label": "Jct: National Highway 1 & Saint Christopher I Road",
       "type": "intersection",
       "x": 703,
       "y": 726,
@@ -1587,7 +1587,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_364630496",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 713,
       "y": 693,
@@ -1595,7 +1595,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_364925431",
-      "label": "🛑 Jct: California Street & National Highway 1",
+      "label": "Jct: California Street & National Highway 1",
       "type": "intersection",
       "x": 744,
       "y": 740,
@@ -1603,7 +1603,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1103203099",
-      "label": "📍 California Street",
+      "label": "California Street",
       "type": "street",
       "x": 735,
       "y": 749,
@@ -1611,7 +1611,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1103203007",
-      "label": "🛑 Jct: California Street & New Jersey Street",
+      "label": "Jct: California Street & New Jersey Street",
       "type": "intersection",
       "x": 725,
       "y": 765,
@@ -1619,7 +1619,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_364925505",
-      "label": "🛑 Jct: National Highway 1 & San Jose Avenue",
+      "label": "Jct: National Highway 1 & San Jose Avenue",
       "type": "intersection",
       "x": 795,
       "y": 754,
@@ -1627,7 +1627,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6326091732",
-      "label": "🛑 Jct: Apron Street & Compass Street",
+      "label": "Jct: Apron Street & Compass Street",
       "type": "intersection",
       "x": 774,
       "y": 758,
@@ -1635,7 +1635,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344096923",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 860,
       "y": 783,
@@ -1643,7 +1643,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1262890347",
-      "label": "🛑 Jct: National Highway 1 & Mabolo Street",
+      "label": "Jct: National Highway 1 & Mabolo Street",
       "type": "intersection",
       "x": 816,
       "y": 760,
@@ -1651,7 +1651,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_315995713",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 776,
       "y": 749,
@@ -1659,7 +1659,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1968539227",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 759,
       "y": 744,
@@ -1667,7 +1667,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050660001",
-      "label": "🚗 Local Link Section #0001",
+      "label": "Local Link Section #0001",
       "type": "street",
       "x": 362,
       "y": 186,
@@ -1675,7 +1675,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_378648101",
-      "label": "🛑 Jct: Captain Perlas Street & Saint Jude Street",
+      "label": "Jct: Captain Perlas Street & Saint Jude Street",
       "type": "intersection",
       "x": 353,
       "y": 173,
@@ -1683,7 +1683,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2519481068",
-      "label": "📍 Captain Perlas Street",
+      "label": "Captain Perlas Street",
       "type": "street",
       "x": 443,
       "y": 169,
@@ -1691,7 +1691,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050660083",
-      "label": "📍 Captain Perlas Street",
+      "label": "Captain Perlas Street",
       "type": "street",
       "x": 416,
       "y": 169,
@@ -1699,7 +1699,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_7245356609",
-      "label": "🛑 Jct: Captain Perlas Street & Granada",
+      "label": "Jct: Captain Perlas Street & Granada",
       "type": "intersection",
       "x": 390,
       "y": 163,
@@ -1707,7 +1707,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253790089",
-      "label": "🛑 Jct: Saint Francis Avenue & Saint Jude Street",
+      "label": "Jct: Saint Francis Avenue & Saint Jude Street",
       "type": "intersection",
       "x": 359,
       "y": 162,
@@ -1715,7 +1715,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050658237",
-      "label": "🛑 Jct: Saint Francis Avenue & Saint Andrew Street",
+      "label": "Jct: Saint Francis Avenue & Saint Andrew Street",
       "type": "intersection",
       "x": 338,
       "y": 161,
@@ -1723,7 +1723,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_10936287299",
-      "label": "🛑 Jct: Saint Francis Avenue & Saint Andrew Street",
+      "label": "Jct: Saint Francis Avenue & Saint Andrew Street",
       "type": "intersection",
       "x": 321,
       "y": 161,
@@ -1731,7 +1731,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1048376901",
-      "label": "🛑 Jct: Granada & Rizal Boulevard",
+      "label": "Jct: Granada & Rizal Boulevard",
       "type": "intersection",
       "x": 371,
       "y": 156,
@@ -1739,7 +1739,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1048375736",
-      "label": "🛑 Jct: Lucero Street & Primo Gomez Street",
+      "label": "Jct: Lucero Street & Primo Gomez Street",
       "type": "intersection",
       "x": 419,
       "y": 97,
@@ -1747,7 +1747,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_378730379",
-      "label": "🛑 Jct: Batino Bypass Road & South Luzon Expressway",
+      "label": "Jct: Batino Bypass Road & South Luzon Expressway",
       "type": "intersection",
       "x": 656,
       "y": 842,
@@ -1755,7 +1755,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_419019700",
-      "label": "🛑 Jct: Batino Bypass Road & Integrity Street",
+      "label": "Jct: Batino Bypass Road & Integrity Street",
       "type": "intersection",
       "x": 639,
       "y": 846,
@@ -1763,7 +1763,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_378730524",
-      "label": "📍 Batino Bypass Road",
+      "label": "Batino Bypass Road",
       "type": "street",
       "x": 672,
       "y": 839,
@@ -1771,7 +1771,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8759121357",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 675,
       "y": 858,
@@ -1779,7 +1779,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6645459405",
-      "label": "🛑 Jct: South Luzon Expressway & Prinza Road",
+      "label": "Jct: South Luzon Expressway & Prinza Road",
       "type": "intersection",
       "x": 692,
       "y": 875,
@@ -1787,7 +1787,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_671191783",
-      "label": "🛑 Jct: South Luzon Expressway & Cattleya Avenue",
+      "label": "Jct: South Luzon Expressway & Cattleya Avenue",
       "type": "intersection",
       "x": 155,
       "y": 300,
@@ -1795,7 +1795,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8758981665",
-      "label": "🛑 Jct: South Luzon Expressway & Mamplasan Road",
+      "label": "Jct: South Luzon Expressway & Mamplasan Road",
       "type": "intersection",
       "x": 105,
       "y": 238,
@@ -1803,7 +1803,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_12182202",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 51,
       "y": 175,
@@ -1811,7 +1811,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_378732955",
-      "label": "🛑 Jct: South Luzon Expressway & Mamplasan Road",
+      "label": "Jct: South Luzon Expressway & Mamplasan Road",
       "type": "intersection",
       "x": 110,
       "y": 248,
@@ -1819,7 +1819,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_981137712",
-      "label": "🛑 Jct: Cooperative Street & Confident Street",
+      "label": "Jct: Cooperative Street & Confident Street",
       "type": "intersection",
       "x": 650,
       "y": 858,
@@ -1827,7 +1827,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_378730734",
-      "label": "🛑 Jct: South Luzon Expressway & Doctora Kanluran",
+      "label": "Jct: South Luzon Expressway & Doctora Kanluran",
       "type": "intersection",
       "x": 607,
       "y": 791,
@@ -1835,7 +1835,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_669207480",
-      "label": "📍 Silangan Access Road",
+      "label": "Silangan Access Road",
       "type": "street",
       "x": 451,
       "y": 664,
@@ -1843,7 +1843,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_761881215",
-      "label": "🛑 Jct: Silangan Access Road & Precious Drive",
+      "label": "Jct: Silangan Access Road & Precious Drive",
       "type": "intersection",
       "x": 410,
       "y": 669,
@@ -1851,7 +1851,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6914125741",
-      "label": "📍 Provincial Road",
+      "label": "Provincial Road",
       "type": "street",
       "x": 12,
       "y": 623,
@@ -1859,7 +1859,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091158337",
-      "label": "🛑 Jct: Provincial Road & Wells Street",
+      "label": "Jct: Provincial Road & Wells Street",
       "type": "intersection",
       "x": 53,
       "y": 636,
@@ -1867,7 +1867,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8344930790",
-      "label": "📍 Provincial Road",
+      "label": "Provincial Road",
       "type": "street",
       "x": 98,
       "y": 630,
@@ -1875,7 +1875,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1056468487",
-      "label": "📍 Provincial Road",
+      "label": "Provincial Road",
       "type": "street",
       "x": 117,
       "y": 632,
@@ -1883,7 +1883,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_10798635279",
-      "label": "🚗 Local Link Section #5279",
+      "label": "Local Link Section #5279",
       "type": "street",
       "x": 343,
       "y": 559,
@@ -1891,7 +1891,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_12839178903",
-      "label": "🚗 Local Link Section #8903",
+      "label": "Local Link Section #8903",
       "type": "street",
       "x": 346,
       "y": 570,
@@ -1899,7 +1899,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2384929037",
-      "label": "🛑 Jct: Pulo Road & Pulo-Diezmo Road",
+      "label": "Jct: Pulo Road & Pulo-Diezmo Road",
       "type": "intersection",
       "x": 350,
       "y": 581,
@@ -1907,7 +1907,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_472659677",
-      "label": "🛑 Jct: Mayapa Road & Batino Road",
+      "label": "Jct: Mayapa Road & Batino Road",
       "type": "intersection",
       "x": 592,
       "y": 778,
@@ -1915,7 +1915,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_668420384",
-      "label": "🛑 Jct: Winridge Street & South Luzon Expressway",
+      "label": "Jct: Winridge Street & South Luzon Expressway",
       "type": "intersection",
       "x": 41,
       "y": 167,
@@ -1923,7 +1923,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_668420389",
-      "label": "🚗 Local Link Section #0389",
+      "label": "Local Link Section #0389",
       "type": "street",
       "x": 37,
       "y": 157,
@@ -1931,7 +1931,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_668741359",
-      "label": "🚗 Local Link Section #1359",
+      "label": "Local Link Section #1359",
       "type": "street",
       "x": 328,
       "y": 561,
@@ -1939,7 +1939,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8347593857",
-      "label": "🚗 Local Link Section #3857",
+      "label": "Local Link Section #3857",
       "type": "street",
       "x": 198,
       "y": 563,
@@ -1947,7 +1947,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_668741304",
-      "label": "🚗 Local Link Section #1304",
+      "label": "Local Link Section #1304",
       "type": "street",
       "x": 221,
       "y": 577,
@@ -1955,7 +1955,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091075170",
-      "label": "🚗 Local Link Section #5170",
+      "label": "Local Link Section #5170",
       "type": "street",
       "x": 213,
       "y": 585,
@@ -1963,7 +1963,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091075123",
-      "label": "🚗 Local Link Section #5123",
+      "label": "Local Link Section #5123",
       "type": "street",
       "x": 197,
       "y": 590,
@@ -1971,7 +1971,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091075106",
-      "label": "🚗 Local Link Section #5106",
+      "label": "Local Link Section #5106",
       "type": "street",
       "x": 179,
       "y": 592,
@@ -1979,7 +1979,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_668741323",
-      "label": "🚗 Local Link Section #1323",
+      "label": "Local Link Section #1323",
       "type": "street",
       "x": 328,
       "y": 575,
@@ -1987,7 +1987,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_668741346",
-      "label": "🚗 Local Link Section #1346",
+      "label": "Local Link Section #1346",
       "type": "street",
       "x": 305,
       "y": 554,
@@ -1995,7 +1995,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_454358054",
-      "label": "📍 Sandpiper Street",
+      "label": "Sandpiper Street",
       "type": "street",
       "x": 292,
       "y": 546,
@@ -2003,7 +2003,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_668741370",
-      "label": "🚗 Local Link Section #1370",
+      "label": "Local Link Section #1370",
       "type": "street",
       "x": 325,
       "y": 550,
@@ -2011,7 +2011,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8344902126",
-      "label": "📍 Sandpiper Street",
+      "label": "Sandpiper Street",
       "type": "street",
       "x": 310,
       "y": 545,
@@ -2019,7 +2019,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_669207443",
-      "label": "📍 Productivity Drive",
+      "label": "Productivity Drive",
       "type": "street",
       "x": 173,
       "y": 785,
@@ -2027,7 +2027,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_13237604409",
-      "label": "🛑 Jct: Productivity Drive & Technology Alley",
+      "label": "Jct: Productivity Drive & Technology Alley",
       "type": "intersection",
       "x": 222,
       "y": 771,
@@ -2035,7 +2035,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253494022",
-      "label": "🛑 Jct: Progress Avenue & Integrity Avenue",
+      "label": "Jct: Progress Avenue & Integrity Avenue",
       "type": "intersection",
       "x": 111,
       "y": 755,
@@ -2043,7 +2043,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_669207437",
-      "label": "🛑 Jct: Progress Avenue & Carmelray Boulevard",
+      "label": "Jct: Progress Avenue & Carmelray Boulevard",
       "type": "intersection",
       "x": 56,
       "y": 798,
@@ -2051,7 +2051,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2030091208",
-      "label": "📍 Eton City Exit",
+      "label": "Eton City Exit",
       "type": "street",
       "x": 356,
       "y": 484,
@@ -2059,7 +2059,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2030091144",
-      "label": "🚗 Local Link Section #1144",
+      "label": "Local Link Section #1144",
       "type": "street",
       "x": 330,
       "y": 492,
@@ -2067,7 +2067,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2384929033",
-      "label": "🛑 Jct: Pulo Road & Park Drive",
+      "label": "Jct: Pulo Road & Park Drive",
       "type": "intersection",
       "x": 290,
       "y": 584,
@@ -2075,7 +2075,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_668741317",
-      "label": "📍 Pulo Road",
+      "label": "Pulo Road",
       "type": "street",
       "x": 332,
       "y": 586,
@@ -2083,7 +2083,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_670364989",
-      "label": "📍 Jose A. Yulo Boulevard",
+      "label": "Jose A. Yulo Boulevard",
       "type": "street",
       "x": -108,
       "y": 733,
@@ -2091,7 +2091,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2859339477",
-      "label": "🛑 Jct: Jose A. Yulo Boulevard & Calle Madrid",
+      "label": "Jct: Jose A. Yulo Boulevard & Calle Madrid",
       "type": "intersection",
       "x": 147,
       "y": 659,
@@ -2099,7 +2099,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253770329",
-      "label": "🛑 Jct: Kinsville Road & Chipeco Avenue",
+      "label": "Jct: Kinsville Road & Chipeco Avenue",
       "type": "intersection",
       "x": 960,
       "y": 814,
@@ -2107,7 +2107,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093817328",
-      "label": "🚗 Local Link Section #7328",
+      "label": "Local Link Section #7328",
       "type": "street",
       "x": 946,
       "y": 819,
@@ -2115,7 +2115,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_683046784",
-      "label": "🛑 Jct: Carnation Street & Sampaguita Street",
+      "label": "Jct: Carnation Street & Sampaguita Street",
       "type": "intersection",
       "x": 930,
       "y": 825,
@@ -2123,7 +2123,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1085598794",
-      "label": "🛑 Jct: Kinsville Road & Teodora Alonzo Street",
+      "label": "Jct: Kinsville Road & Teodora Alonzo Street",
       "type": "intersection",
       "x": 972,
       "y": 804,
@@ -2131,7 +2131,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_683046801",
-      "label": "🛑 Jct: Kinsville Road & Brosas Street",
+      "label": "Jct: Kinsville Road & Brosas Street",
       "type": "intersection",
       "x": 1001,
       "y": 793,
@@ -2139,7 +2139,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_683046813",
-      "label": "🛑 Jct: Brosas Street & S. V. Rizal Street",
+      "label": "Jct: Brosas Street & S. V. Rizal Street",
       "type": "intersection",
       "x": 1022,
       "y": 784,
@@ -2147,7 +2147,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_683047206",
-      "label": "🛑 Jct: Juliano Street & Laureola Subdivision",
+      "label": "Jct: Juliano Street & Laureola Subdivision",
       "type": "intersection",
       "x": 1051,
       "y": 774,
@@ -2155,7 +2155,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_683047301",
-      "label": "🛑 Jct: Jasmin Street & San Jose-Bucal Diversion Road",
+      "label": "Jct: Jasmin Street & San Jose-Bucal Diversion Road",
       "type": "intersection",
       "x": 1095,
       "y": 777,
@@ -2163,7 +2163,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1014149739",
-      "label": "📍 Jasmin Street",
+      "label": "Jasmin Street",
       "type": "street",
       "x": 1125,
       "y": 774,
@@ -2171,7 +2171,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_683047307",
-      "label": "🛑 Jct: Waling-Waling Street & Cattleya Street",
+      "label": "Jct: Waling-Waling Street & Cattleya Street",
       "type": "intersection",
       "x": 1076,
       "y": 773,
@@ -2179,7 +2179,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_312513873",
-      "label": "📍 Sitio Masikap",
+      "label": "Sitio Masikap",
       "type": "street",
       "x": 850,
       "y": 878,
@@ -2187,7 +2187,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5532701692",
-      "label": "🛑 Jct: Sitio Masikap & National Highway",
+      "label": "Jct: Sitio Masikap & National Highway",
       "type": "intersection",
       "x": 926,
       "y": 850,
@@ -2195,7 +2195,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6981975057",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 448,
       "y": 630,
@@ -2203,7 +2203,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2030091316",
-      "label": "📍 Eton City Exit",
+      "label": "Eton City Exit",
       "type": "street",
       "x": 353,
       "y": 464,
@@ -2211,7 +2211,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2664585593",
-      "label": "📍 Felix Reyes Street",
+      "label": "Felix Reyes Street",
       "type": "street",
       "x": 170,
       "y": 262,
@@ -2219,7 +2219,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_668420405",
-      "label": "🛑 Jct: Greenfield Parkway & Brent Drive",
+      "label": "Jct: Greenfield Parkway & Brent Drive",
       "type": "intersection",
       "x": 42,
       "y": 142,
@@ -2227,7 +2227,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_668671446",
-      "label": "📍 LIIP Avenue",
+      "label": "LIIP Avenue",
       "type": "street",
       "x": 48,
       "y": 215,
@@ -2235,7 +2235,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1080309356",
-      "label": "🛑 Jct: LIIP Avenue & Mamplasan Street",
+      "label": "Jct: LIIP Avenue & Mamplasan Street",
       "type": "intersection",
       "x": 52,
       "y": 232,
@@ -2243,7 +2243,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253501656",
-      "label": "🛑 Jct: LIIP Avenue & Ganado Main Road",
+      "label": "Jct: LIIP Avenue & Ganado Main Road",
       "type": "intersection",
       "x": 76,
       "y": 257,
@@ -2251,7 +2251,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253795635",
-      "label": "🛑 Jct: LIIP Avenue & Ganado Main Road",
+      "label": "Jct: LIIP Avenue & Ganado Main Road",
       "type": "intersection",
       "x": 38,
       "y": 270,
@@ -2259,7 +2259,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_949532065",
-      "label": "📍 SM City Calamba Bypass Road",
+      "label": "SM City Calamba Bypass Road",
       "type": "street",
       "x": 882,
       "y": 842,
@@ -2267,7 +2267,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_949532132",
-      "label": "🛑 Jct: SM City Calamba Bypass Road & Cadena de Amor Street",
+      "label": "Jct: SM City Calamba Bypass Road & Cadena de Amor Street",
       "type": "intersection",
       "x": 898,
       "y": 843,
@@ -2275,7 +2275,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851446",
-      "label": "🛑 Jct: Gotesco Street & Maryland Street",
+      "label": "Jct: Gotesco Street & Maryland Street",
       "type": "intersection",
       "x": 535,
       "y": 798,
@@ -2283,7 +2283,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2125304820",
-      "label": "🛑 Jct: Gotesco Street & Berlin Street",
+      "label": "Jct: Gotesco Street & Berlin Street",
       "type": "intersection",
       "x": 551,
       "y": 816,
@@ -2291,7 +2291,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_419019706",
-      "label": "🛑 Jct: Ciudad de Calamba Road & Seoul Street",
+      "label": "Jct: Ciudad de Calamba Road & Seoul Street",
       "type": "intersection",
       "x": 574,
       "y": 860,
@@ -2299,7 +2299,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_419019742",
-      "label": "📍 Ciudad de Calamba Road",
+      "label": "Ciudad de Calamba Road",
       "type": "street",
       "x": 548,
       "y": 899,
@@ -2307,7 +2307,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851647",
-      "label": "🛑 Jct: Batino Road & Baylor Street",
+      "label": "Jct: Batino Road & Baylor Street",
       "type": "intersection",
       "x": 623,
       "y": 849,
@@ -2315,7 +2315,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2142182175",
-      "label": "🛑 Jct: Batino Road & Baylor Street",
+      "label": "Jct: Batino Road & Baylor Street",
       "type": "intersection",
       "x": 616,
       "y": 838,
@@ -2323,7 +2323,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2126011167",
-      "label": "🛑 Jct: Batino Road & Harvard Street",
+      "label": "Jct: Batino Road & Harvard Street",
       "type": "intersection",
       "x": 607,
       "y": 824,
@@ -2331,7 +2331,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851474",
-      "label": "🛑 Jct: Batino Road & Doctora Silangan Street",
+      "label": "Jct: Batino Road & Doctora Silangan Street",
       "type": "intersection",
       "x": 598,
       "y": 802,
@@ -2339,7 +2339,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8302473308",
-      "label": "🛑 Jct: Jose Yulo Sr. Street & Maxmar Street",
+      "label": "Jct: Jose Yulo Sr. Street & Maxmar Street",
       "type": "intersection",
       "x": 1037,
       "y": 782,
@@ -2347,7 +2347,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1014149767",
-      "label": "📍 Maxmar Street",
+      "label": "Maxmar Street",
       "type": "street",
       "x": 1050,
       "y": 788,
@@ -2355,7 +2355,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5217743020",
-      "label": "🛑 Jct: Elepaño Street & General Lim Street",
+      "label": "Jct: Elepaño Street & General Lim Street",
       "type": "intersection",
       "x": 999,
       "y": 777,
@@ -2363,7 +2363,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253789392",
-      "label": "🛑 Jct: P. Alihan Street & Chipeco Avenue",
+      "label": "Jct: P. Alihan Street & Chipeco Avenue",
       "type": "intersection",
       "x": 934,
       "y": 787,
@@ -2371,7 +2371,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1014214805",
-      "label": "🚗 Local Link Section #4805",
+      "label": "Local Link Section #4805",
       "type": "street",
       "x": 988,
       "y": 862,
@@ -2379,7 +2379,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1014214780",
-      "label": "🛑 Jct: Larino Street & Chipeco Avenue",
+      "label": "Jct: Larino Street & Chipeco Avenue",
       "type": "intersection",
       "x": 984,
       "y": 848,
@@ -2387,7 +2387,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1483243741",
-      "label": "🛑 Jct: Barangay Dita Road & Malitlit Barangay Road",
+      "label": "Jct: Barangay Dita Road & Malitlit Barangay Road",
       "type": "intersection",
       "x": 390,
       "y": 352,
@@ -2395,7 +2395,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088223228",
-      "label": "📍 Barangay Dita Road",
+      "label": "Barangay Dita Road",
       "type": "street",
       "x": 391,
       "y": 335,
@@ -2403,7 +2403,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_9375022755",
-      "label": "🛑 Jct: Barangay Dita Road & National Highway 1",
+      "label": "Jct: Barangay Dita Road & National Highway 1",
       "type": "intersection",
       "x": 392,
       "y": 307,
@@ -2411,7 +2411,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1042133939",
-      "label": "🛑 Jct: Paradiso Street & Marbella Street",
+      "label": "Jct: Paradiso Street & Marbella Street",
       "type": "intersection",
       "x": 280,
       "y": 288,
@@ -2419,7 +2419,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1042133927",
-      "label": "🛑 Jct: Paradiso Street & Marbella Street",
+      "label": "Jct: Paradiso Street & Marbella Street",
       "type": "intersection",
       "x": 253,
       "y": 291,
@@ -2427,7 +2427,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1042133873",
-      "label": "🛑 Jct: Aranjuez Street & Estoril Street",
+      "label": "Jct: Aranjuez Street & Estoril Street",
       "type": "intersection",
       "x": 246,
       "y": 273,
@@ -2435,7 +2435,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1042133950",
-      "label": "🛑 Jct: Estoril Street & Aqueda Street",
+      "label": "Jct: Estoril Street & Aqueda Street",
       "type": "intersection",
       "x": 270,
       "y": 279,
@@ -2443,7 +2443,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_4589104043",
-      "label": "🛑 Jct: Dominican Avenue & Monserat Street",
+      "label": "Jct: Dominican Avenue & Monserat Street",
       "type": "intersection",
       "x": 253,
       "y": 303,
@@ -2451,7 +2451,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253797092",
-      "label": "📍 Macabling Road",
+      "label": "Macabling Road",
       "type": "street",
       "x": 255,
       "y": 179,
@@ -2459,7 +2459,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1055964157",
-      "label": "📍 Macabling Road",
+      "label": "Macabling Road",
       "type": "street",
       "x": 224,
       "y": 188,
@@ -2467,7 +2467,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1042133854",
-      "label": "🛑 Jct: RSBS Boulevard & Main Road",
+      "label": "Jct: RSBS Boulevard & Main Road",
       "type": "intersection",
       "x": 220,
       "y": 259,
@@ -2475,7 +2475,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1042133942",
-      "label": "🛑 Jct: Meridian Avenue & Felix Reyes Street",
+      "label": "Jct: Meridian Avenue & Felix Reyes Street",
       "type": "intersection",
       "x": 214,
       "y": 246,
@@ -2483,7 +2483,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1042133816",
-      "label": "🛑 Jct: Majorca Street & Marigold Avenue",
+      "label": "Jct: Majorca Street & Marigold Avenue",
       "type": "intersection",
       "x": 237,
       "y": 286,
@@ -2491,7 +2491,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050658590",
-      "label": "🛑 Jct: Rhodes Drive & Athena Drive",
+      "label": "Jct: Rhodes Drive & Athena Drive",
       "type": "intersection",
       "x": 394,
       "y": 138,
@@ -2499,7 +2499,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087664044",
-      "label": "🛑 Jct: Mitsubishi Street & Maserati Street",
+      "label": "Jct: Mitsubishi Street & Maserati Street",
       "type": "intersection",
       "x": 464,
       "y": 137,
@@ -2507,7 +2507,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1048376924",
-      "label": "🛑 Jct: Maserati Street & Sutter Avenue",
+      "label": "Jct: Maserati Street & Sutter Avenue",
       "type": "intersection",
       "x": 452,
       "y": 130,
@@ -2515,7 +2515,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2952641519",
-      "label": "🛑 Jct: Sutter Avenue & Isuzu Street",
+      "label": "Jct: Sutter Avenue & Isuzu Street",
       "type": "intersection",
       "x": 502,
       "y": 121,
@@ -2523,7 +2523,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087611926",
-      "label": "🚗 Local Link Section #1926",
+      "label": "Local Link Section #1926",
       "type": "street",
       "x": 370,
       "y": 109,
@@ -2531,7 +2531,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253765067",
-      "label": "🛑 Jct: Rizal Boulevard & Olympus Circle",
+      "label": "Jct: Rizal Boulevard & Olympus Circle",
       "type": "intersection",
       "x": 385,
       "y": 120,
@@ -2539,7 +2539,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1048376742",
-      "label": "🛑 Jct: Sampaguita Street & Dahlia Street",
+      "label": "Jct: Sampaguita Street & Dahlia Street",
       "type": "intersection",
       "x": 449,
       "y": 120,
@@ -2547,7 +2547,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2952641705",
-      "label": "🛑 Jct: Sampaguita Street & Milflora Street",
+      "label": "Jct: Sampaguita Street & Milflora Street",
       "type": "intersection",
       "x": 445,
       "y": 109,
@@ -2555,7 +2555,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1048376324",
-      "label": "🛑 Jct: Sampaguita Street & Dahlia Street",
+      "label": "Jct: Sampaguita Street & Dahlia Street",
       "type": "intersection",
       "x": 442,
       "y": 100,
@@ -2563,7 +2563,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_12244215480",
-      "label": "🛑 Jct: Poseidon Drive & Houston Street",
+      "label": "Jct: Poseidon Drive & Houston Street",
       "type": "intersection",
       "x": 436,
       "y": 141,
@@ -2571,7 +2571,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253791626",
-      "label": "🛑 Jct: Proserpina Drive & Poseidon Drive",
+      "label": "Jct: Proserpina Drive & Poseidon Drive",
       "type": "intersection",
       "x": 432,
       "y": 129,
@@ -2579,7 +2579,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2952641677",
-      "label": "🛑 Jct: Sunflower Street & Eucalyptus Street",
+      "label": "Jct: Sunflower Street & Eucalyptus Street",
       "type": "intersection",
       "x": 461,
       "y": 113,
@@ -2587,7 +2587,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1048377692",
-      "label": "📍 Governor F. Gomez Street",
+      "label": "Governor F. Gomez Street",
       "type": "street",
       "x": 528,
       "y": 72,
@@ -2595,7 +2595,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_378652323",
-      "label": "🛑 Jct: Masiit & Rizal Boulevard",
+      "label": "Jct: Masiit & Rizal Boulevard",
       "type": "intersection",
       "x": 374,
       "y": 140,
@@ -2603,7 +2603,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1048375796",
-      "label": "🛑 Jct: Durian Circle & Granada",
+      "label": "Jct: Durian Circle & Granada",
       "type": "intersection",
       "x": 391,
       "y": 152,
@@ -2611,7 +2611,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1048438762",
-      "label": "🛑 Jct: Ilang-Ilang Street & Garden Avenue",
+      "label": "Jct: Ilang-Ilang Street & Garden Avenue",
       "type": "intersection",
       "x": 459,
       "y": 91,
@@ -2619,7 +2619,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_378656953",
-      "label": "🛑 Jct: Jasmine Street & Rizal Boulevard",
+      "label": "Jct: Jasmine Street & Rizal Boulevard",
       "type": "intersection",
       "x": 380,
       "y": 65,
@@ -2627,7 +2627,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1048438683",
-      "label": "📍 Jasmine Street",
+      "label": "Jasmine Street",
       "type": "street",
       "x": 376,
       "y": 54,
@@ -2635,7 +2635,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_12375043830",
-      "label": "🛑 Jct: Rizal Boulevard & Cypress Street",
+      "label": "Jct: Rizal Boulevard & Cypress Street",
       "type": "intersection",
       "x": 364,
       "y": 67,
@@ -2643,7 +2643,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_660910323",
-      "label": "🚗 Local Link Section #0323",
+      "label": "Local Link Section #0323",
       "type": "street",
       "x": 360,
       "y": 57,
@@ -2651,7 +2651,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1048438662",
-      "label": "🚗 Local Link Section #8662",
+      "label": "Local Link Section #8662",
       "type": "street",
       "x": 501,
       "y": 84,
@@ -2659,7 +2659,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090471165",
-      "label": "🛑 Jct: Tsuenwan Road & Alisbury Road",
+      "label": "Jct: Tsuenwan Road & Alisbury Road",
       "type": "intersection",
       "x": 509,
       "y": 519,
@@ -2667,7 +2667,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090471043",
-      "label": "🛑 Jct: Mongnok Road & Avocado Street",
+      "label": "Jct: Mongnok Road & Avocado Street",
       "type": "intersection",
       "x": 542,
       "y": 514,
@@ -2675,7 +2675,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_692988324",
-      "label": "🛑 Jct: Yakal Street & Queens Road",
+      "label": "Jct: Yakal Street & Queens Road",
       "type": "intersection",
       "x": 561,
       "y": 512,
@@ -2683,7 +2683,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1530533753",
-      "label": "📍 Daystar Main Road",
+      "label": "Daystar Main Road",
       "type": "street",
       "x": 129,
       "y": 352,
@@ -2691,7 +2691,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_9904610464",
-      "label": "🛑 Jct: Daystar Main Road & Santa Rosa-Tagaytay Road",
+      "label": "Jct: Daystar Main Road & Santa Rosa-Tagaytay Road",
       "type": "intersection",
       "x": 69,
       "y": 351,
@@ -2699,7 +2699,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1080254705",
-      "label": "🛑 Jct: Ganado Main Road & Hargrave Street",
+      "label": "Jct: Ganado Main Road & Hargrave Street",
       "type": "intersection",
       "x": 55,
       "y": 293,
@@ -2707,7 +2707,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6136518830",
-      "label": "📍 Ganado Main Road",
+      "label": "Ganado Main Road",
       "type": "street",
       "x": 94,
       "y": 258,
@@ -2715,7 +2715,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050526119",
-      "label": "🛑 Jct: NMPI Road & South Lake Drive",
+      "label": "Jct: NMPI Road & South Lake Drive",
       "type": "intersection",
       "x": 170,
       "y": 359,
@@ -2723,7 +2723,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050526365",
-      "label": "🚗 Local Link Section #6365",
+      "label": "Local Link Section #6365",
       "type": "street",
       "x": 161,
       "y": 348,
@@ -2731,7 +2731,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050526100",
-      "label": "🚗 Local Link Section #6100",
+      "label": "Local Link Section #6100",
       "type": "street",
       "x": 181,
       "y": 342,
@@ -2739,7 +2739,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050526586",
-      "label": "🛑 Jct: NMPI Road & Main Street",
+      "label": "Jct: NMPI Road & Main Street",
       "type": "intersection",
       "x": 73,
       "y": 374,
@@ -2747,7 +2747,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050526077",
-      "label": "🚗 Local Link Section #6077",
+      "label": "Local Link Section #6077",
       "type": "street",
       "x": 193,
       "y": 356,
@@ -2755,7 +2755,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2265566496",
-      "label": "🛑 Jct: Mamplasan Road & Road 04",
+      "label": "Jct: Mamplasan Road & Road 04",
       "type": "intersection",
       "x": 162,
       "y": 214,
@@ -2763,7 +2763,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253506589",
-      "label": "📍 Mamplasan Road",
+      "label": "Mamplasan Road",
       "type": "street",
       "x": 140,
       "y": 234,
@@ -2771,7 +2771,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050658367",
-      "label": "🛑 Jct: Atlanta Street & Portland Street",
+      "label": "Jct: Atlanta Street & Portland Street",
       "type": "intersection",
       "x": 415,
       "y": 146,
@@ -2779,7 +2779,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050659126",
-      "label": "🚗 Local Link Section #9126",
+      "label": "Local Link Section #9126",
       "type": "street",
       "x": 391,
       "y": 176,
@@ -2787,7 +2787,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050660430",
-      "label": "🚗 Local Link Section #0430",
+      "label": "Local Link Section #0430",
       "type": "street",
       "x": 380,
       "y": 182,
@@ -2795,7 +2795,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050659694",
-      "label": "🛑 Jct: Royal Palm Street & Paseo Dela Joya",
+      "label": "Jct: Royal Palm Street & Paseo Dela Joya",
       "type": "intersection",
       "x": 380,
       "y": 202,
@@ -2803,7 +2803,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050900540",
-      "label": "🚗 Local Link Section #0540",
+      "label": "Local Link Section #0540",
       "type": "street",
       "x": 363,
       "y": 205,
@@ -2811,7 +2811,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253763843",
-      "label": "📍 Rizal Boulevard",
+      "label": "Rizal Boulevard",
       "type": "street",
       "x": 391,
       "y": 109,
@@ -2819,7 +2819,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087611634",
-      "label": "📍 Rizal Boulevard",
+      "label": "Rizal Boulevard",
       "type": "street",
       "x": 380,
       "y": 129,
@@ -2827,7 +2827,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050899035",
-      "label": "🛑 Jct: Paseo Dela Joya & Dap~Dap",
+      "label": "Jct: Paseo Dela Joya & Dap~Dap",
       "type": "intersection",
       "x": 416,
       "y": 202,
@@ -2835,7 +2835,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050901619",
-      "label": "🛑 Jct: Paseo Dela Joya & Dap~Dap",
+      "label": "Jct: Paseo Dela Joya & Dap~Dap",
       "type": "intersection",
       "x": 398,
       "y": 206,
@@ -2843,7 +2843,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050898727",
-      "label": "📍 Bell Flower Street",
+      "label": "Bell Flower Street",
       "type": "street",
       "x": 428,
       "y": 295,
@@ -2851,7 +2851,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088118875",
-      "label": "🚗 Local Link Section #8875",
+      "label": "Local Link Section #8875",
       "type": "street",
       "x": 433,
       "y": 283,
@@ -2859,7 +2859,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_364626519",
-      "label": "🛑 Jct: Achillea Street & National Highway 1",
+      "label": "Jct: Achillea Street & National Highway 1",
       "type": "intersection",
       "x": 387,
       "y": 283,
@@ -2867,7 +2867,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050901094",
-      "label": "📍 Bell Flower Street",
+      "label": "Bell Flower Street",
       "type": "street",
       "x": 416,
       "y": 283,
@@ -2875,7 +2875,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050900075",
-      "label": "🚗 Local Link Section #0075",
+      "label": "Local Link Section #0075",
       "type": "street",
       "x": 449,
       "y": 288,
@@ -2883,7 +2883,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050901228",
-      "label": "📍 Papaya Street",
+      "label": "Papaya Street",
       "type": "street",
       "x": 474,
       "y": 288,
@@ -2891,7 +2891,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050901047",
-      "label": "📍 Papaya Street",
+      "label": "Papaya Street",
       "type": "street",
       "x": 473,
       "y": 272,
@@ -2899,7 +2899,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050900176",
-      "label": "🚗 Local Link Section #0176",
+      "label": "Local Link Section #0176",
       "type": "street",
       "x": 456,
       "y": 270,
@@ -2907,7 +2907,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3904758154",
-      "label": "🛑 Jct: Chess Street & Mahogany Street",
+      "label": "Jct: Chess Street & Mahogany Street",
       "type": "intersection",
       "x": 510,
       "y": 300,
@@ -2915,7 +2915,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050902874",
-      "label": "📍 Paseo Dela Joya",
+      "label": "Paseo Dela Joya",
       "type": "street",
       "x": 391,
       "y": 231,
@@ -2923,7 +2923,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050899784",
-      "label": "🛑 Jct: Royal Palm Street & Paseo Dela Joya",
+      "label": "Jct: Royal Palm Street & Paseo Dela Joya",
       "type": "intersection",
       "x": 393,
       "y": 220,
@@ -2931,7 +2931,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050899984",
-      "label": "🛑 Jct: Blueberry Street & Mahogany Street",
+      "label": "Jct: Blueberry Street & Mahogany Street",
       "type": "intersection",
       "x": 515,
       "y": 284,
@@ -2939,7 +2939,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050901933",
-      "label": "🛑 Jct: Blueberry Street & Plum Street",
+      "label": "Jct: Blueberry Street & Plum Street",
       "type": "intersection",
       "x": 504,
       "y": 270,
@@ -2947,7 +2947,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050900512",
-      "label": "🛑 Jct: Paseo Dela Joya & Blue Palm Street",
+      "label": "Jct: Paseo Dela Joya & Blue Palm Street",
       "type": "intersection",
       "x": 370,
       "y": 228,
@@ -2955,7 +2955,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050898689",
-      "label": "🛑 Jct: Blue Palm Street & Royal Palm Street",
+      "label": "Jct: Blue Palm Street & Royal Palm Street",
       "type": "intersection",
       "x": 374,
       "y": 212,
@@ -2963,7 +2963,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253510675",
-      "label": "🚗 Local Link Section #0675",
+      "label": "Local Link Section #0675",
       "type": "street",
       "x": 508,
       "y": 436,
@@ -2971,7 +2971,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050902196",
-      "label": "🛑 Jct: Papaya Street & Plum Street",
+      "label": "Jct: Papaya Street & Plum Street",
       "type": "intersection",
       "x": 497,
       "y": 283,
@@ -2979,7 +2979,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050901341",
-      "label": "📍 Gold Avenue",
+      "label": "Gold Avenue",
       "type": "street",
       "x": 447,
       "y": 262,
@@ -2987,7 +2987,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050902999",
-      "label": "🚗 Local Link Section #2999",
+      "label": "Local Link Section #2999",
       "type": "street",
       "x": 520,
       "y": 272,
@@ -2995,7 +2995,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050900051",
-      "label": "🚗 Local Link Section #0051",
+      "label": "Local Link Section #0051",
       "type": "street",
       "x": 532,
       "y": 288,
@@ -3003,7 +3003,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050902385",
-      "label": "📍 Paseo Dela Joya",
+      "label": "Paseo Dela Joya",
       "type": "street",
       "x": 434,
       "y": 206,
@@ -3011,7 +3011,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5042098719",
-      "label": "📍 Asia Brewery Road",
+      "label": "Asia Brewery Road",
       "type": "street",
       "x": 364,
       "y": 442,
@@ -3019,7 +3019,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050901805",
-      "label": "🚗 Local Link Section #1805",
+      "label": "Local Link Section #1805",
       "type": "street",
       "x": 489,
       "y": 273,
@@ -3027,7 +3027,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1050901898",
-      "label": "🛑 Jct: Paseo Dela Joya & National Highway 1",
+      "label": "Jct: Paseo Dela Joya & National Highway 1",
       "type": "intersection",
       "x": 345,
       "y": 220,
@@ -3035,7 +3035,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1054123832",
-      "label": "🚗 Local Link Section #3832",
+      "label": "Local Link Section #3832",
       "type": "street",
       "x": 469,
       "y": 75,
@@ -3043,7 +3043,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1054123852",
-      "label": "📍 Aplaya Road",
+      "label": "Aplaya Road",
       "type": "street",
       "x": 489,
       "y": 68,
@@ -3051,7 +3051,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1055963161",
-      "label": "🛑 Jct: Silver & Copper",
+      "label": "Jct: Silver & Copper",
       "type": "intersection",
       "x": 198,
       "y": 68,
@@ -3059,7 +3059,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1055964074",
-      "label": "🛑 Jct: Silver & Copper",
+      "label": "Jct: Silver & Copper",
       "type": "intersection",
       "x": 207,
       "y": 59,
@@ -3067,7 +3067,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1055963330",
-      "label": "🚗 Local Link Section #3330",
+      "label": "Local Link Section #3330",
       "type": "street",
       "x": 191,
       "y": 78,
@@ -3075,7 +3075,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_9932659851",
-      "label": "📍 Rizal Boulevard",
+      "label": "Rizal Boulevard",
       "type": "street",
       "x": 286,
       "y": 44,
@@ -3083,7 +3083,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1055963751",
-      "label": "🚗 Local Link Section #3751",
+      "label": "Local Link Section #3751",
       "type": "street",
       "x": 283,
       "y": 35,
@@ -3091,7 +3091,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1055962658",
-      "label": "🛑 Jct: Almacega & Talisay",
+      "label": "Jct: Almacega & Talisay",
       "type": "intersection",
       "x": 303,
       "y": 43,
@@ -3099,7 +3099,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1055963479",
-      "label": "🛑 Jct: Almacega & Talisay",
+      "label": "Jct: Almacega & Talisay",
       "type": "intersection",
       "x": 298,
       "y": 32,
@@ -3107,7 +3107,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1055963498",
-      "label": "🛑 Jct: Waling Waling Street & Rizal Boulevard",
+      "label": "Jct: Waling Waling Street & Rizal Boulevard",
       "type": "intersection",
       "x": 330,
       "y": 54,
@@ -3115,7 +3115,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1055963644",
-      "label": "🛑 Jct: Camia Street & Jasmin Street",
+      "label": "Jct: Camia Street & Jasmin Street",
       "type": "intersection",
       "x": 345,
       "y": 42,
@@ -3123,7 +3123,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1055963188",
-      "label": "📍 Lauan",
+      "label": "Lauan",
       "type": "street",
       "x": 314,
       "y": 29,
@@ -3131,7 +3131,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1055963669",
-      "label": "📍 Lauan",
+      "label": "Lauan",
       "type": "street",
       "x": 318,
       "y": 40,
@@ -3139,7 +3139,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1055963883",
-      "label": "🚗 Local Link Section #3883",
+      "label": "Local Link Section #3883",
       "type": "street",
       "x": 179,
       "y": 206,
@@ -3147,7 +3147,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1055962761",
-      "label": "📍 Road 4",
+      "label": "Road 4",
       "type": "street",
       "x": 361,
       "y": 44,
@@ -3155,7 +3155,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_9198666256",
-      "label": "🚗 Local Link Section #6256",
+      "label": "Local Link Section #6256",
       "type": "street",
       "x": 268,
       "y": 60,
@@ -3163,7 +3163,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1055963773",
-      "label": "📍 3rd Street",
+      "label": "3rd Street",
       "type": "street",
       "x": 285,
       "y": 55,
@@ -3171,7 +3171,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1056261581",
-      "label": "🛑 Jct: San Gabriel Street & San Leonardo Street",
+      "label": "Jct: San Gabriel Street & San Leonardo Street",
       "type": "intersection",
       "x": 36,
       "y": 431,
@@ -3179,7 +3179,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1056264358",
-      "label": "🛑 Jct: Coolidge Street & San Gabriel Street",
+      "label": "Jct: Coolidge Street & San Gabriel Street",
       "type": "intersection",
       "x": 53,
       "y": 432,
@@ -3187,7 +3187,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1056264328",
-      "label": "📍 Santa Ana Street",
+      "label": "Santa Ana Street",
       "type": "street",
       "x": 16,
       "y": 428,
@@ -3195,7 +3195,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1041059327",
-      "label": "📍 Malitlit Barangay Road",
+      "label": "Malitlit Barangay Road",
       "type": "street",
       "x": 391,
       "y": 398,
@@ -3203,7 +3203,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1056264175",
-      "label": "📍 Malitlit - Eton Access Road",
+      "label": "Malitlit - Eton Access Road",
       "type": "street",
       "x": 376,
       "y": 409,
@@ -3211,7 +3211,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091118669",
-      "label": "🚗 Local Link Section #8669",
+      "label": "Local Link Section #8669",
       "type": "street",
       "x": 134,
       "y": 649,
@@ -3219,7 +3219,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1599621403",
-      "label": "🚗 Local Link Section #1403",
+      "label": "Local Link Section #1403",
       "type": "street",
       "x": -48,
       "y": 583,
@@ -3227,7 +3227,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1599621513",
-      "label": "🚗 Local Link Section #1513",
+      "label": "Local Link Section #1513",
       "type": "street",
       "x": 57,
       "y": 555,
@@ -3235,7 +3235,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_300476799",
-      "label": "🛑 Jct: Greenfield Parkway & San Pablo Street",
+      "label": "Jct: Greenfield Parkway & San Pablo Street",
       "type": "intersection",
       "x": 75,
       "y": 77,
@@ -3243,7 +3243,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087954238",
-      "label": "🛑 Jct: Greenfield Parkway & Mondo Drive",
+      "label": "Jct: Greenfield Parkway & Mondo Drive",
       "type": "intersection",
       "x": 69,
       "y": 92,
@@ -3251,7 +3251,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090536047",
-      "label": "🛑 Jct: San Isidro - Pulo Bypass Road & Via Molino",
+      "label": "Jct: San Isidro - Pulo Bypass Road & Via Molino",
       "type": "intersection",
       "x": 559,
       "y": 593,
@@ -3259,7 +3259,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1076609247",
-      "label": "🛑 Jct: San Isidro - Pulo Bypass Road & Via Molino",
+      "label": "Jct: San Isidro - Pulo Bypass Road & Via Molino",
       "type": "intersection",
       "x": 554,
       "y": 582,
@@ -3267,7 +3267,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2120961108",
-      "label": "📍 San Isidro - Pulo Bypass Road",
+      "label": "San Isidro - Pulo Bypass Road",
       "type": "street",
       "x": 534,
       "y": 564,
@@ -3275,7 +3275,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1076608511",
-      "label": "🛑 Jct: San Isidro - Pulo Bypass Road & Pulo-Diezmo Road",
+      "label": "Jct: San Isidro - Pulo Bypass Road & Pulo-Diezmo Road",
       "type": "intersection",
       "x": 531,
       "y": 555,
@@ -3283,7 +3283,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8679280858",
-      "label": "🚗 Local Link Section #0858",
+      "label": "Local Link Section #0858",
       "type": "street",
       "x": 1059,
       "y": 578,
@@ -3291,7 +3291,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253492837",
-      "label": "📍 Mabuhay City Avenue",
+      "label": "Mabuhay City Avenue",
       "type": "street",
       "x": 1054,
       "y": 567,
@@ -3299,7 +3299,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090433930",
-      "label": "🚗 Local Link Section #3930",
+      "label": "Local Link Section #3930",
       "type": "street",
       "x": 1046,
       "y": 552,
@@ -3307,7 +3307,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8387210131",
-      "label": "🛑 Jct: Mayakil Street & Batanes Lane",
+      "label": "Jct: Mayakil Street & Batanes Lane",
       "type": "intersection",
       "x": 1041,
       "y": 541,
@@ -3315,7 +3315,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253800022",
-      "label": "🚗 Local Link Section #0022",
+      "label": "Local Link Section #0022",
       "type": "street",
       "x": 1030,
       "y": 516,
@@ -3323,7 +3323,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253799588",
-      "label": "🚗 Local Link Section #9588",
+      "label": "Local Link Section #9588",
       "type": "street",
       "x": 1025,
       "y": 504,
@@ -3331,7 +3331,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253800466",
-      "label": "🚗 Local Link Section #0466",
+      "label": "Local Link Section #0466",
       "type": "street",
       "x": 1020,
       "y": 496,
@@ -3339,7 +3339,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8247115683",
-      "label": "🚗 Local Link Section #5683",
+      "label": "Local Link Section #5683",
       "type": "street",
       "x": 1015,
       "y": 484,
@@ -3347,7 +3347,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3500337557",
-      "label": "🚗 Local Link Section #7557",
+      "label": "Local Link Section #7557",
       "type": "street",
       "x": 1009,
       "y": 472,
@@ -3355,7 +3355,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8247115681",
-      "label": "🚗 Local Link Section #5681",
+      "label": "Local Link Section #5681",
       "type": "street",
       "x": 994,
       "y": 451,
@@ -3363,7 +3363,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8247101971",
-      "label": "🚗 Local Link Section #1971",
+      "label": "Local Link Section #1971",
       "type": "street",
       "x": 987,
       "y": 441,
@@ -3371,7 +3371,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8246981646",
-      "label": "🚗 Local Link Section #1646",
+      "label": "Local Link Section #1646",
       "type": "street",
       "x": 978,
       "y": 431,
@@ -3379,7 +3379,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8247101996",
-      "label": "🚗 Local Link Section #1996",
+      "label": "Local Link Section #1996",
       "type": "street",
       "x": 967,
       "y": 421,
@@ -3387,7 +3387,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253772516",
-      "label": "🚗 Local Link Section #2516",
+      "label": "Local Link Section #2516",
       "type": "street",
       "x": 959,
       "y": 412,
@@ -3395,7 +3395,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8247102000",
-      "label": "🚗 Local Link Section #2000",
+      "label": "Local Link Section #2000",
       "type": "street",
       "x": 945,
       "y": 395,
@@ -3403,7 +3403,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253500831",
-      "label": "🚗 Local Link Section #0831",
+      "label": "Local Link Section #0831",
       "type": "street",
       "x": 932,
       "y": 387,
@@ -3411,7 +3411,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8386121344",
-      "label": "🚗 Local Link Section #1344",
+      "label": "Local Link Section #1344",
       "type": "street",
       "x": 917,
       "y": 383,
@@ -3419,7 +3419,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8386110654",
-      "label": "🚗 Local Link Section #0654",
+      "label": "Local Link Section #0654",
       "type": "street",
       "x": 885,
       "y": 376,
@@ -3427,7 +3427,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090124875",
-      "label": "🚗 Local Link Section #4875",
+      "label": "Local Link Section #4875",
       "type": "street",
       "x": 851,
       "y": 355,
@@ -3435,7 +3435,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8386045810",
-      "label": "🚗 Local Link Section #5810",
+      "label": "Local Link Section #5810",
       "type": "street",
       "x": 830,
       "y": 343,
@@ -3443,7 +3443,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8386203387",
-      "label": "🚗 Local Link Section #3387",
+      "label": "Local Link Section #3387",
       "type": "street",
       "x": 810,
       "y": 333,
@@ -3451,7 +3451,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253794111",
-      "label": "📍 Marinig Road",
+      "label": "Marinig Road",
       "type": "street",
       "x": 783,
       "y": 317,
@@ -3459,7 +3459,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8386279823",
-      "label": "🚗 Local Link Section #9823",
+      "label": "Local Link Section #9823",
       "type": "street",
       "x": 765,
       "y": 304,
@@ -3467,7 +3467,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253763902",
-      "label": "🚗 Local Link Section #3902",
+      "label": "Local Link Section #3902",
       "type": "street",
       "x": 739,
       "y": 291,
@@ -3475,7 +3475,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1076609545",
-      "label": "📍 Narra Road",
+      "label": "Narra Road",
       "type": "street",
       "x": 1110,
       "y": 733,
@@ -3483,7 +3483,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6128195386",
-      "label": "📍 Narra Road",
+      "label": "Narra Road",
       "type": "street",
       "x": 1110,
       "y": 723,
@@ -3491,7 +3491,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094245199",
-      "label": "🛑 Jct: Narra Road & Katmon",
+      "label": "Jct: Narra Road & Katmon",
       "type": "intersection",
       "x": 1124,
       "y": 711,
@@ -3499,7 +3499,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094242935",
-      "label": "🛑 Jct: Narra Road & Kamagong Street",
+      "label": "Jct: Narra Road & Kamagong Street",
       "type": "intersection",
       "x": 1140,
       "y": 706,
@@ -3507,7 +3507,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094243984",
-      "label": "🛑 Jct: Narra Road & Sanggumay Street",
+      "label": "Jct: Narra Road & Sanggumay Street",
       "type": "intersection",
       "x": 1153,
       "y": 693,
@@ -3515,7 +3515,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1076608318",
-      "label": "🛑 Jct: Narra Road & Almon Street",
+      "label": "Jct: Narra Road & Almon Street",
       "type": "intersection",
       "x": 1143,
       "y": 680,
@@ -3523,7 +3523,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1076609091",
-      "label": "🛑 Jct: Narra Road & San Juan Road",
+      "label": "Jct: Narra Road & San Juan Road",
       "type": "intersection",
       "x": 1111,
       "y": 748,
@@ -3531,7 +3531,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1076881783",
-      "label": "📍 Road 4",
+      "label": "Road 4",
       "type": "street",
       "x": 380,
       "y": 41,
@@ -3539,7 +3539,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1076880942",
-      "label": "🚗 Local Link Section #0942",
+      "label": "Local Link Section #0942",
       "type": "street",
       "x": 375,
       "y": 31,
@@ -3547,7 +3547,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8310771317",
-      "label": "🚗 Local Link Section #1317",
+      "label": "Local Link Section #1317",
       "type": "street",
       "x": 436,
       "y": 72,
@@ -3555,7 +3555,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1076882048",
-      "label": "🚗 Local Link Section #2048",
+      "label": "Local Link Section #2048",
       "type": "street",
       "x": 454,
       "y": 69,
@@ -3563,7 +3563,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1486950999",
-      "label": "🚗 Local Link Section #0999",
+      "label": "Local Link Section #0999",
       "type": "street",
       "x": 470,
       "y": 66,
@@ -3571,7 +3571,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1076882108",
-      "label": "📍 Tatlong Hari Street",
+      "label": "Tatlong Hari Street",
       "type": "street",
       "x": 402,
       "y": 41,
@@ -3579,7 +3579,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1076881934",
-      "label": "🚗 Local Link Section #1934",
+      "label": "Local Link Section #1934",
       "type": "street",
       "x": 465,
       "y": 29,
@@ -3587,7 +3587,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1076881017",
-      "label": "🚗 Local Link Section #1017",
+      "label": "Local Link Section #1017",
       "type": "street",
       "x": 442,
       "y": 62,
@@ -3595,7 +3595,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1076899616",
-      "label": "🛑 Jct: Rhb Lane & Enrique Drive",
+      "label": "Jct: Rhb Lane & Enrique Drive",
       "type": "intersection",
       "x": 513,
       "y": 342,
@@ -3603,7 +3603,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5254949748",
-      "label": "🛑 Jct: Rhb Lane & National Highway 1",
+      "label": "Jct: Rhb Lane & National Highway 1",
       "type": "intersection",
       "x": 492,
       "y": 350,
@@ -3611,7 +3611,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253500621",
-      "label": "📍 San Isidro Road",
+      "label": "San Isidro Road",
       "type": "street",
       "x": 666,
       "y": 594,
@@ -3619,7 +3619,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6433345707",
-      "label": "📍 San Isidro Road",
+      "label": "San Isidro Road",
       "type": "street",
       "x": 696,
       "y": 588,
@@ -3627,7 +3627,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6433345703",
-      "label": "📍 San Isidro Road",
+      "label": "San Isidro Road",
       "type": "street",
       "x": 717,
       "y": 583,
@@ -3635,7 +3635,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253764336",
-      "label": "🛑 Jct: San Isidro Road & NIA Road",
+      "label": "Jct: San Isidro Road & NIA Road",
       "type": "intersection",
       "x": 739,
       "y": 573,
@@ -3643,7 +3643,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1076899486",
-      "label": "📍 Limcauco Street",
+      "label": "Limcauco Street",
       "type": "street",
       "x": 551,
       "y": 343,
@@ -3651,7 +3651,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253801035",
-      "label": "🛑 Jct: Limcauco Street & J. P. Rizal Street",
+      "label": "Jct: Limcauco Street & J. P. Rizal Street",
       "type": "intersection",
       "x": 539,
       "y": 349,
@@ -3659,7 +3659,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_7080557139",
-      "label": "📍 Rizal Boulevard",
+      "label": "Rizal Boulevard",
       "type": "street",
       "x": 341,
       "y": 181,
@@ -3667,7 +3667,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1966158017",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 467,
       "y": 343,
@@ -3675,7 +3675,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364004963",
-      "label": "🛑 Jct: National Highway 1 & Rose Street",
+      "label": "Jct: National Highway 1 & Rose Street",
       "type": "intersection",
       "x": 439,
       "y": 327,
@@ -3683,7 +3683,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1966158088",
-      "label": "🛑 Jct: National Highway 1 & Hudson Street",
+      "label": "Jct: National Highway 1 & Hudson Street",
       "type": "intersection",
       "x": 420,
       "y": 316,
@@ -3691,7 +3691,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253512571",
-      "label": "🛑 Jct: Acacia Street & Jose Yulo Sr. Avenue",
+      "label": "Jct: Acacia Street & Jose Yulo Sr. Avenue",
       "type": "intersection",
       "x": 384,
       "y": 776,
@@ -3699,7 +3699,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253503520",
-      "label": "🛑 Jct: Acacia Street & Begonia Street",
+      "label": "Jct: Acacia Street & Begonia Street",
       "type": "intersection",
       "x": 401,
       "y": 784,
@@ -3707,7 +3707,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1080117353",
-      "label": "🛑 Jct: Hargrave Street & Holt Avenue",
+      "label": "Jct: Hargrave Street & Holt Avenue",
       "type": "intersection",
       "x": 35,
       "y": 294,
@@ -3715,7 +3715,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1080117658",
-      "label": "🛑 Jct: Inglewood Street & Rosecran Street",
+      "label": "Jct: Inglewood Street & Rosecran Street",
       "type": "intersection",
       "x": 33,
       "y": 304,
@@ -3723,7 +3723,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1080117334",
-      "label": "🛑 Jct: Spencer Street & Cliford Street",
+      "label": "Jct: Spencer Street & Cliford Street",
       "type": "intersection",
       "x": 52,
       "y": 306,
@@ -3731,7 +3731,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1080117420",
-      "label": "📍 Comblum Avenue",
+      "label": "Comblum Avenue",
       "type": "street",
       "x": 26,
       "y": 314,
@@ -3739,7 +3739,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_11145789625",
-      "label": "🚗 Local Link Section #9625",
+      "label": "Local Link Section #9625",
       "type": "street",
       "x": 37,
       "y": 283,
@@ -3747,7 +3747,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1080117368",
-      "label": "🛑 Jct: Pa Los Verde Street & Comblum Avenue",
+      "label": "Jct: Pa Los Verde Street & Comblum Avenue",
       "type": "intersection",
       "x": 65,
       "y": 300,
@@ -3755,7 +3755,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_10023283937",
-      "label": "🚗 Local Link Section #3937",
+      "label": "Local Link Section #3937",
       "type": "street",
       "x": -74,
       "y": 319,
@@ -3763,7 +3763,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1080309358",
-      "label": "📍 Mamplasan Street",
+      "label": "Mamplasan Street",
       "type": "street",
       "x": 21,
       "y": 234,
@@ -3771,7 +3771,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8696310505",
-      "label": "📍 Mamplasan Street",
+      "label": "Mamplasan Street",
       "type": "street",
       "x": 73,
       "y": 225,
@@ -3779,7 +3779,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1080309292",
-      "label": "🛑 Jct: Jaguar Street & Santa Rosa-Tagaytay Road",
+      "label": "Jct: Jaguar Street & Santa Rosa-Tagaytay Road",
       "type": "intersection",
       "x": 74,
       "y": 322,
@@ -3787,7 +3787,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2127176408",
-      "label": "🛑 Jct: Jaguar Street & Santa Rosa-Tagaytay Road",
+      "label": "Jct: Jaguar Street & Santa Rosa-Tagaytay Road",
       "type": "intersection",
       "x": 62,
       "y": 333,
@@ -3795,7 +3795,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1080309177",
-      "label": "🚗 Local Link Section #9177",
+      "label": "Local Link Section #9177",
       "type": "street",
       "x": 41,
       "y": 225,
@@ -3803,7 +3803,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1056263535",
-      "label": "🛑 Jct: San Leonardo Street & Westmont Street",
+      "label": "Jct: San Leonardo Street & Westmont Street",
       "type": "intersection",
       "x": 60,
       "y": 424,
@@ -3811,7 +3811,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1080331551",
-      "label": "🛑 Jct: San Leonardo Street & Santa Rosa-Tagaytay Road",
+      "label": "Jct: San Leonardo Street & Santa Rosa-Tagaytay Road",
       "type": "intersection",
       "x": -9,
       "y": 424,
@@ -3819,7 +3819,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1080331522",
-      "label": "🛑 Jct: Westmont Street & Shasta Street",
+      "label": "Jct: Westmont Street & Shasta Street",
       "type": "intersection",
       "x": 40,
       "y": 422,
@@ -3827,7 +3827,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1080368412",
-      "label": "🚗 Local Link Section #8412",
+      "label": "Local Link Section #8412",
       "type": "street",
       "x": 87,
       "y": 387,
@@ -3835,7 +3835,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1080368365",
-      "label": "🚗 Local Link Section #8365",
+      "label": "Local Link Section #8365",
       "type": "street",
       "x": 72,
       "y": 384,
@@ -3843,7 +3843,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2522868690",
-      "label": "🚗 Local Link Section #8690",
+      "label": "Local Link Section #8690",
       "type": "street",
       "x": 89,
       "y": 406,
@@ -3851,7 +3851,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_9904610451",
-      "label": "🚗 Local Link Section #0451",
+      "label": "Local Link Section #0451",
       "type": "street",
       "x": 96,
       "y": 323,
@@ -3859,7 +3859,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1080552206",
-      "label": "🚗 Local Link Section #2206",
+      "label": "Local Link Section #2206",
       "type": "street",
       "x": 114,
       "y": 320,
@@ -3867,7 +3867,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1080552257",
-      "label": "📍 Santa Rosa-Tagaytay Road",
+      "label": "Santa Rosa-Tagaytay Road",
       "type": "street",
       "x": 113,
       "y": 311,
@@ -3875,7 +3875,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1238714251",
-      "label": "🛑 Jct: Jasmine Street & Rosal Street",
+      "label": "Jct: Jasmine Street & Rosal Street",
       "type": "intersection",
       "x": 914,
       "y": 823,
@@ -3883,7 +3883,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1014149889",
-      "label": "🛑 Jct: Teodora Alonzo Street & P. Burgos Street",
+      "label": "Jct: Teodora Alonzo Street & P. Burgos Street",
       "type": "intersection",
       "x": 971,
       "y": 788,
@@ -3891,7 +3891,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8311171383",
-      "label": "🛑 Jct: Platinum Street & Lithium Street",
+      "label": "Jct: Platinum Street & Lithium Street",
       "type": "intersection",
       "x": 314,
       "y": 74,
@@ -3899,7 +3899,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1085937401",
-      "label": "🛑 Jct: Platinum Street & Lithium Street",
+      "label": "Jct: Platinum Street & Lithium Street",
       "type": "intersection",
       "x": 327,
       "y": 66,
@@ -3907,7 +3907,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1085937177",
-      "label": "🛑 Jct: Uranium Street & Platinum Street",
+      "label": "Jct: Uranium Street & Platinum Street",
       "type": "intersection",
       "x": 311,
       "y": 85,
@@ -3915,7 +3915,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1085937114",
-      "label": "📍 Platinum Street",
+      "label": "Platinum Street",
       "type": "street",
       "x": 297,
       "y": 81,
@@ -3923,7 +3923,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8383225695",
-      "label": "📍 3rd Street",
+      "label": "3rd Street",
       "type": "street",
       "x": 295,
       "y": 63,
@@ -3931,7 +3931,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1085937199",
-      "label": "📍 Rizal Boulevard",
+      "label": "Rizal Boulevard",
       "type": "street",
       "x": 313,
       "y": 57,
@@ -3939,7 +3939,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087611572",
-      "label": "🚗 Local Link Section #1572",
+      "label": "Local Link Section #1572",
       "type": "street",
       "x": 327,
       "y": 119,
@@ -3947,7 +3947,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087611930",
-      "label": "🚗 Local Link Section #1930",
+      "label": "Local Link Section #1930",
       "type": "street",
       "x": 331,
       "y": 109,
@@ -3955,7 +3955,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087611932",
-      "label": "🚗 Local Link Section #1932",
+      "label": "Local Link Section #1932",
       "type": "street",
       "x": 346,
       "y": 115,
@@ -3963,7 +3963,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_10020420820",
-      "label": "🚗 Local Link Section #0820",
+      "label": "Local Link Section #0820",
       "type": "street",
       "x": 367,
       "y": 123,
@@ -3971,7 +3971,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087611622",
-      "label": "🚗 Local Link Section #1622",
+      "label": "Local Link Section #1622",
       "type": "street",
       "x": 339,
       "y": 125,
@@ -3979,7 +3979,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5185052120",
-      "label": "🛑 Jct: Metrogate Drive & Arcillas Boulevard",
+      "label": "Jct: Metrogate Drive & Arcillas Boulevard",
       "type": "intersection",
       "x": 277,
       "y": 113,
@@ -3987,7 +3987,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087611769",
-      "label": "🚗 Local Link Section #1769",
+      "label": "Local Link Section #1769",
       "type": "street",
       "x": 297,
       "y": 110,
@@ -3995,7 +3995,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087611569",
-      "label": "📍 Arcillas Boulevard",
+      "label": "Arcillas Boulevard",
       "type": "street",
       "x": 316,
       "y": 106,
@@ -4003,7 +4003,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5722008944",
-      "label": "🚗 Local Link Section #8944",
+      "label": "Local Link Section #8944",
       "type": "street",
       "x": 302,
       "y": 119,
@@ -4011,7 +4011,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087663850",
-      "label": "🚗 Local Link Section #3850",
+      "label": "Local Link Section #3850",
       "type": "street",
       "x": 407,
       "y": 178,
@@ -4019,7 +4019,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8383551871",
-      "label": "🚗 Local Link Section #1871",
+      "label": "Local Link Section #1871",
       "type": "street",
       "x": 420,
       "y": 184,
@@ -4027,7 +4027,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087664074",
-      "label": "🚗 Local Link Section #4074",
+      "label": "Local Link Section #4074",
       "type": "street",
       "x": 333,
       "y": 172,
@@ -4035,7 +4035,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087663884",
-      "label": "🛑 Jct: Ford Street & Isuzu Street",
+      "label": "Jct: Ford Street & Isuzu Street",
       "type": "intersection",
       "x": 475,
       "y": 130,
@@ -4043,7 +4043,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087663862",
-      "label": "🛑 Jct: Zircon Street & Turquoise Street",
+      "label": "Jct: Zircon Street & Turquoise Street",
       "type": "intersection",
       "x": 440,
       "y": 158,
@@ -4051,7 +4051,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087663864",
-      "label": "🚗 Local Link Section #3864",
+      "label": "Local Link Section #3864",
       "type": "street",
       "x": 418,
       "y": 159,
@@ -4059,7 +4059,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087663723",
-      "label": "🚗 Local Link Section #3723",
+      "label": "Local Link Section #3723",
       "type": "street",
       "x": 377,
       "y": 172,
@@ -4067,7 +4067,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_12335941435",
-      "label": "🛑 Jct: Marigold Street & Rosemary Street",
+      "label": "Jct: Marigold Street & Rosemary Street",
       "type": "intersection",
       "x": 505,
       "y": 93,
@@ -4075,7 +4075,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087663731",
-      "label": "🛑 Jct: Hibiscus Street & Ivy Street",
+      "label": "Jct: Hibiscus Street & Ivy Street",
       "type": "intersection",
       "x": 481,
       "y": 91,
@@ -4083,7 +4083,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2952641482",
-      "label": "🛑 Jct: Honda Street & Garden Avenue",
+      "label": "Jct: Honda Street & Garden Avenue",
       "type": "intersection",
       "x": 499,
       "y": 135,
@@ -4091,7 +4091,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087663768",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 310,
       "y": 170,
@@ -4099,7 +4099,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087700816",
-      "label": "🚗 Local Link Section #0816",
+      "label": "Local Link Section #0816",
       "type": "street",
       "x": 404,
       "y": 244,
@@ -4107,7 +4107,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087701027",
-      "label": "📍 Myna Street",
+      "label": "Myna Street",
       "type": "street",
       "x": 379,
       "y": 240,
@@ -4115,7 +4115,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087721712",
-      "label": "🚗 Local Link Section #1712",
+      "label": "Local Link Section #1712",
       "type": "street",
       "x": 485,
       "y": 213,
@@ -4123,7 +4123,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087701116",
-      "label": "📍 Phase 1 Main Road",
+      "label": "Phase 1 Main Road",
       "type": "street",
       "x": 461,
       "y": 216,
@@ -4131,7 +4131,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087700979",
-      "label": "📍 Phase 1 Main Road",
+      "label": "Phase 1 Main Road",
       "type": "street",
       "x": 449,
       "y": 222,
@@ -4139,7 +4139,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087701089",
-      "label": "🚗 Local Link Section #1089",
+      "label": "Local Link Section #1089",
       "type": "street",
       "x": 430,
       "y": 223,
@@ -4147,7 +4147,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087700874",
-      "label": "📍 Phase 1 Main Road",
+      "label": "Phase 1 Main Road",
       "type": "street",
       "x": 437,
       "y": 232,
@@ -4155,7 +4155,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087700634",
-      "label": "🛑 Jct: Russia Street & Gold Avenue",
+      "label": "Jct: Russia Street & Gold Avenue",
       "type": "intersection",
       "x": 439,
       "y": 243,
@@ -4163,7 +4163,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087700723",
-      "label": "🛑 Jct: Russia Street & Gold Avenue",
+      "label": "Jct: Russia Street & Gold Avenue",
       "type": "intersection",
       "x": 419,
       "y": 248,
@@ -4171,7 +4171,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087700987",
-      "label": "📍 Gold Avenue",
+      "label": "Gold Avenue",
       "type": "street",
       "x": 395,
       "y": 254,
@@ -4179,7 +4179,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087700726",
-      "label": "🚗 Local Link Section #0726",
+      "label": "Local Link Section #0726",
       "type": "street",
       "x": 479,
       "y": 204,
@@ -4187,7 +4187,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087701115",
-      "label": "🚗 Local Link Section #1115",
+      "label": "Local Link Section #1115",
       "type": "street",
       "x": 418,
       "y": 259,
@@ -4195,7 +4195,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087700734",
-      "label": "🛑 Jct: Phase 2 Main Road & Gold Avenue",
+      "label": "Jct: Phase 2 Main Road & Gold Avenue",
       "type": "intersection",
       "x": 452,
       "y": 235,
@@ -4203,7 +4203,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087721809",
-      "label": "📍 Phase 2 Main Road",
+      "label": "Phase 2 Main Road",
       "type": "street",
       "x": 483,
       "y": 236,
@@ -4211,7 +4211,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087700645",
-      "label": "🚗 Local Link Section #0645",
+      "label": "Local Link Section #0645",
       "type": "street",
       "x": 413,
       "y": 233,
@@ -4219,7 +4219,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087700785",
-      "label": "📍 Phase 1 Main Road",
+      "label": "Phase 1 Main Road",
       "type": "street",
       "x": 458,
       "y": 205,
@@ -4227,7 +4227,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087700881",
-      "label": "🚗 Local Link Section #0881",
+      "label": "Local Link Section #0881",
       "type": "street",
       "x": 467,
       "y": 194,
@@ -4235,7 +4235,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087701104",
-      "label": "📍 Gold Avenue",
+      "label": "Gold Avenue",
       "type": "street",
       "x": 437,
       "y": 254,
@@ -4243,7 +4243,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2519480618",
-      "label": "🚗 Local Link Section #0618",
+      "label": "Local Link Section #0618",
       "type": "street",
       "x": 508,
       "y": 198,
@@ -4251,7 +4251,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6334482663",
-      "label": "🚗 Local Link Section #2663",
+      "label": "Local Link Section #2663",
       "type": "street",
       "x": 529,
       "y": 199,
@@ -4259,7 +4259,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6335874860",
-      "label": "🚗 Local Link Section #4860",
+      "label": "Local Link Section #4860",
       "type": "street",
       "x": 547,
       "y": 200,
@@ -4267,7 +4267,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087721846",
-      "label": "🚗 Local Link Section #1846",
+      "label": "Local Link Section #1846",
       "type": "street",
       "x": 501,
       "y": 233,
@@ -4275,7 +4275,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087721856",
-      "label": "🚗 Local Link Section #1856",
+      "label": "Local Link Section #1856",
       "type": "street",
       "x": 496,
       "y": 243,
@@ -4283,7 +4283,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087721860",
-      "label": "🚗 Local Link Section #1860",
+      "label": "Local Link Section #1860",
       "type": "street",
       "x": 475,
       "y": 244,
@@ -4291,7 +4291,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087722068",
-      "label": "🚗 Local Link Section #2068",
+      "label": "Local Link Section #2068",
       "type": "street",
       "x": 620,
       "y": 239,
@@ -4299,7 +4299,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087722166",
-      "label": "🚗 Local Link Section #2166",
+      "label": "Local Link Section #2166",
       "type": "street",
       "x": 614,
       "y": 248,
@@ -4307,7 +4307,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087722065",
-      "label": "🚗 Local Link Section #2065",
+      "label": "Local Link Section #2065",
       "type": "street",
       "x": 515,
       "y": 260,
@@ -4315,7 +4315,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087721841",
-      "label": "🚗 Local Link Section #1841",
+      "label": "Local Link Section #1841",
       "type": "street",
       "x": 598,
       "y": 247,
@@ -4323,7 +4323,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087722139",
-      "label": "🚗 Local Link Section #2139",
+      "label": "Local Link Section #2139",
       "type": "street",
       "x": 492,
       "y": 253,
@@ -4331,7 +4331,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087722039",
-      "label": "🚗 Local Link Section #2039",
+      "label": "Local Link Section #2039",
       "type": "street",
       "x": 478,
       "y": 261,
@@ -4339,7 +4339,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087722077",
-      "label": "🛑 Jct: Spencer's Street & Kenz's Street",
+      "label": "Jct: Spencer's Street & Kenz's Street",
       "type": "intersection",
       "x": 659,
       "y": 255,
@@ -4347,7 +4347,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5281537123",
-      "label": "🛑 Jct: Spencer's Street & Kenz's Street",
+      "label": "Jct: Spencer's Street & Kenz's Street",
       "type": "intersection",
       "x": 681,
       "y": 253,
@@ -4355,7 +4355,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087721863",
-      "label": "🚗 Local Link Section #1863",
+      "label": "Local Link Section #1863",
       "type": "street",
       "x": 511,
       "y": 248,
@@ -4363,7 +4363,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087754802",
-      "label": "🚗 Local Link Section #4802",
+      "label": "Local Link Section #4802",
       "type": "street",
       "x": 580,
       "y": 315,
@@ -4371,7 +4371,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087755053",
-      "label": "🛑 Jct: Maria Cecilia & Abigail Street",
+      "label": "Jct: Maria Cecilia & Abigail Street",
       "type": "intersection",
       "x": 599,
       "y": 318,
@@ -4379,7 +4379,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087754770",
-      "label": "🛑 Jct: El Sol Avenue & Thiara",
+      "label": "Jct: El Sol Avenue & Thiara",
       "type": "intersection",
       "x": 608,
       "y": 328,
@@ -4387,7 +4387,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087754777",
-      "label": "🛑 Jct: El Sol Avenue & Marinig Road",
+      "label": "Jct: El Sol Avenue & Marinig Road",
       "type": "intersection",
       "x": 624,
       "y": 333,
@@ -4395,7 +4395,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087754968",
-      "label": "🛑 Jct: El Sol Avenue & Thiara",
+      "label": "Jct: El Sol Avenue & Thiara",
       "type": "intersection",
       "x": 620,
       "y": 317,
@@ -4403,7 +4403,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087754762",
-      "label": "🛑 Jct: El Sol Avenue & Maria Cecilia",
+      "label": "Jct: El Sol Avenue & Maria Cecilia",
       "type": "intersection",
       "x": 623,
       "y": 307,
@@ -4411,7 +4411,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087754975",
-      "label": "🚗 Local Link Section #4975",
+      "label": "Local Link Section #4975",
       "type": "street",
       "x": 634,
       "y": 299,
@@ -4419,7 +4419,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087754778",
-      "label": "🚗 Local Link Section #4778",
+      "label": "Local Link Section #4778",
       "type": "street",
       "x": 648,
       "y": 294,
@@ -4427,7 +4427,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087754883",
-      "label": "📍 Maria Cecilia",
+      "label": "Maria Cecilia",
       "type": "street",
       "x": 663,
       "y": 290,
@@ -4435,7 +4435,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087755025",
-      "label": "📍 El Sol Avenue",
+      "label": "El Sol Avenue",
       "type": "street",
       "x": 613,
       "y": 297,
@@ -4443,7 +4443,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087754924",
-      "label": "🚗 Local Link Section #4924",
+      "label": "Local Link Section #4924",
       "type": "street",
       "x": 598,
       "y": 308,
@@ -4451,7 +4451,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087754994",
-      "label": "🚗 Local Link Section #4994",
+      "label": "Local Link Section #4994",
       "type": "street",
       "x": 637,
       "y": 321,
@@ -4459,7 +4459,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087754971",
-      "label": "🚗 Local Link Section #4971",
+      "label": "Local Link Section #4971",
       "type": "street",
       "x": 556,
       "y": 283,
@@ -4467,7 +4467,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087754786",
-      "label": "🛑 Jct: Maria Cecilia & Milan Street",
+      "label": "Jct: Maria Cecilia & Milan Street",
       "type": "intersection",
       "x": 687,
       "y": 286,
@@ -4475,7 +4475,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087754874",
-      "label": "📍 El Sol Avenue",
+      "label": "El Sol Avenue",
       "type": "street",
       "x": 613,
       "y": 284,
@@ -4483,7 +4483,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087754955",
-      "label": "🚗 Local Link Section #4955",
+      "label": "Local Link Section #4955",
       "type": "street",
       "x": 645,
       "y": 310,
@@ -4491,7 +4491,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087754998",
-      "label": "🚗 Local Link Section #4998",
+      "label": "Local Link Section #4998",
       "type": "street",
       "x": 577,
       "y": 301,
@@ -4499,7 +4499,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087772331",
-      "label": "🛑 Jct: Milan Street & Annexa Boulevard",
+      "label": "Jct: Milan Street & Annexa Boulevard",
       "type": "intersection",
       "x": 699,
       "y": 298,
@@ -4507,7 +4507,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087772293",
-      "label": "🚗 Local Link Section #2293",
+      "label": "Local Link Section #2293",
       "type": "street",
       "x": 680,
       "y": 277,
@@ -4515,7 +4515,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087772703",
-      "label": "🛑 Jct: Orchid Street & Annexa Boulevard",
+      "label": "Jct: Orchid Street & Annexa Boulevard",
       "type": "intersection",
       "x": 721,
       "y": 295,
@@ -4523,7 +4523,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087772343",
-      "label": "📍 Orchid Street",
+      "label": "Orchid Street",
       "type": "street",
       "x": 723,
       "y": 307,
@@ -4531,7 +4531,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087772227",
-      "label": "🚗 Local Link Section #2227",
+      "label": "Local Link Section #2227",
       "type": "street",
       "x": 675,
       "y": 298,
@@ -4539,7 +4539,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087772471",
-      "label": "🛑 Jct: Berlin Street & Manchester Street",
+      "label": "Jct: Berlin Street & Manchester Street",
       "type": "intersection",
       "x": 704,
       "y": 289,
@@ -4547,7 +4547,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087772515",
-      "label": "📍 St. Joseph Village",
+      "label": "St. Joseph Village",
       "type": "street",
       "x": 664,
       "y": 306,
@@ -4555,7 +4555,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087772645",
-      "label": "📍 Won Street",
+      "label": "Won Street",
       "type": "street",
       "x": 688,
       "y": 309,
@@ -4563,7 +4563,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087772345",
-      "label": "🚗 Local Link Section #2345",
+      "label": "Local Link Section #2345",
       "type": "street",
       "x": 706,
       "y": 307,
@@ -4571,7 +4571,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253798741",
-      "label": "🛑 Jct: St. Joseph Village & Marinig Road",
+      "label": "Jct: St. Joseph Village & Marinig Road",
       "type": "intersection",
       "x": 683,
       "y": 330,
@@ -4579,7 +4579,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087772628",
-      "label": "📍 St. Joseph Village",
+      "label": "St. Joseph Village",
       "type": "street",
       "x": 670,
       "y": 315,
@@ -4587,7 +4587,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087772317",
-      "label": "🚗 Local Link Section #2317",
+      "label": "Local Link Section #2317",
       "type": "street",
       "x": 739,
       "y": 302,
@@ -4595,7 +4595,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087721749",
-      "label": "🚗 Local Link Section #1749",
+      "label": "Local Link Section #1749",
       "type": "street",
       "x": 693,
       "y": 265,
@@ -4603,7 +4603,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087793372",
-      "label": "🚗 Local Link Section #3372",
+      "label": "Local Link Section #3372",
       "type": "street",
       "x": 72,
       "y": 60,
@@ -4611,7 +4611,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_10017757195",
-      "label": "📍 Jubilation Loop",
+      "label": "Jubilation Loop",
       "type": "street",
       "x": 68,
       "y": 49,
@@ -4619,7 +4619,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_7905889448",
-      "label": "🚗 Local Link Section #9448",
+      "label": "Local Link Section #9448",
       "type": "street",
       "x": 79,
       "y": 38,
@@ -4627,7 +4627,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087793115",
-      "label": "🛑 Jct: San Pablo Street & Peneltone Street",
+      "label": "Jct: San Pablo Street & Peneltone Street",
       "type": "intersection",
       "x": 58,
       "y": 72,
@@ -4635,7 +4635,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087793344",
-      "label": "🚗 Local Link Section #3344",
+      "label": "Local Link Section #3344",
       "type": "street",
       "x": 66,
       "y": 29,
@@ -4643,7 +4643,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087793124",
-      "label": "🚗 Local Link Section #3124",
+      "label": "Local Link Section #3124",
       "type": "street",
       "x": 55,
       "y": 55,
@@ -4651,7 +4651,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087805119",
-      "label": "🚗 Local Link Section #5119",
+      "label": "Local Link Section #5119",
       "type": "street",
       "x": 117,
       "y": 41,
@@ -4659,7 +4659,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087805065",
-      "label": "🚗 Local Link Section #5065",
+      "label": "Local Link Section #5065",
       "type": "street",
       "x": 106,
       "y": 52,
@@ -4667,7 +4667,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087804995",
-      "label": "🚗 Local Link Section #4995",
+      "label": "Local Link Section #4995",
       "type": "street",
       "x": 122,
       "y": 59,
@@ -4675,7 +4675,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087793049",
-      "label": "📍 San Pablo Street",
+      "label": "San Pablo Street",
       "type": "street",
       "x": 41,
       "y": 72,
@@ -4683,7 +4683,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087804964",
-      "label": "🛑 Jct: Monza Street & Napoli Street",
+      "label": "Jct: Monza Street & Napoli Street",
       "type": "intersection",
       "x": 134,
       "y": 48,
@@ -4691,7 +4691,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087804992",
-      "label": "🛑 Jct: Monza Street & Napoli Street",
+      "label": "Jct: Monza Street & Napoli Street",
       "type": "intersection",
       "x": 151,
       "y": 43,
@@ -4699,7 +4699,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087805153",
-      "label": "🛑 Jct: Napoli Street & Padova Street",
+      "label": "Jct: Napoli Street & Padova Street",
       "type": "intersection",
       "x": 162,
       "y": 49,
@@ -4707,7 +4707,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3593776202",
-      "label": "🚗 Local Link Section #6202",
+      "label": "Local Link Section #6202",
       "type": "street",
       "x": 95,
       "y": 69,
@@ -4715,7 +4715,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087805154",
-      "label": "🛑 Jct: Aberta Street & Mondo Drive",
+      "label": "Jct: Aberta Street & Mondo Drive",
       "type": "intersection",
       "x": 104,
       "y": 81,
@@ -4723,7 +4723,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087804974",
-      "label": "📍 Mercado Street",
+      "label": "Mercado Street",
       "type": "street",
       "x": 177,
       "y": 41,
@@ -4731,7 +4731,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5305514384",
-      "label": "🛣️ SLEX North Bound (Santa Rosa Entry)",
+      "label": "SLEX North Bound (Santa Rosa Entry)",
       "type": "highway",
       "x": 226,
       "y": 28,
@@ -4739,7 +4739,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1562122303",
-      "label": "🚗 Local Link Section #2303",
+      "label": "Local Link Section #2303",
       "type": "street",
       "x": 134,
       "y": 27,
@@ -4747,7 +4747,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087954451",
-      "label": "🛑 Jct: Evergreen Street & Birch Street",
+      "label": "Jct: Evergreen Street & Birch Street",
       "type": "intersection",
       "x": 113,
       "y": 91,
@@ -4755,7 +4755,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087954285",
-      "label": "🛑 Jct: Evergreen Street & Birch Street",
+      "label": "Jct: Evergreen Street & Birch Street",
       "type": "intersection",
       "x": 114,
       "y": 101,
@@ -4763,7 +4763,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087954328",
-      "label": "🛑 Jct: Evergreen Street & Dogwood Street",
+      "label": "Jct: Evergreen Street & Dogwood Street",
       "type": "intersection",
       "x": 118,
       "y": 113,
@@ -4771,7 +4771,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087953909",
-      "label": "🛑 Jct: Evergreen Street & Rain Tree Lane",
+      "label": "Jct: Evergreen Street & Rain Tree Lane",
       "type": "intersection",
       "x": 119,
       "y": 126,
@@ -4779,7 +4779,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087979978",
-      "label": "🛑 Jct: Brent Drive & Atlas Street",
+      "label": "Jct: Brent Drive & Atlas Street",
       "type": "intersection",
       "x": 84,
       "y": 155,
@@ -4787,7 +4787,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1562121657",
-      "label": "📍 Brent Drive",
+      "label": "Brent Drive",
       "type": "street",
       "x": 78,
       "y": 141,
@@ -4795,7 +4795,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3425118661",
-      "label": "🛑 Jct: Brent Drive & Greenfield Parkway",
+      "label": "Jct: Brent Drive & Greenfield Parkway",
       "type": "intersection",
       "x": 55,
       "y": 134,
@@ -4803,7 +4803,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087953980",
-      "label": "🛑 Jct: Maple Drive & Sycamore Drive",
+      "label": "Jct: Maple Drive & Sycamore Drive",
       "type": "intersection",
       "x": 138,
       "y": 113,
@@ -4811,7 +4811,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087954062",
-      "label": "🛑 Jct: Redwood Lane & Rain Tree Lane",
+      "label": "Jct: Redwood Lane & Rain Tree Lane",
       "type": "intersection",
       "x": 135,
       "y": 127,
@@ -4819,7 +4819,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087954394",
-      "label": "🛑 Jct: Ferragamo Street & Aberta Street",
+      "label": "Jct: Ferragamo Street & Aberta Street",
       "type": "intersection",
       "x": 129,
       "y": 82,
@@ -4827,7 +4827,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_10060513853",
-      "label": "📍 Basswood Street",
+      "label": "Basswood Street",
       "type": "street",
       "x": 130,
       "y": 105,
@@ -4835,7 +4835,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087979615",
-      "label": "🛑 Jct: Winridge Street & Frontier Street",
+      "label": "Jct: Winridge Street & Frontier Street",
       "type": "intersection",
       "x": 65,
       "y": 170,
@@ -4843,7 +4843,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087979799",
-      "label": "🛑 Jct: Newton Street & Frontier Street",
+      "label": "Jct: Newton Street & Frontier Street",
       "type": "intersection",
       "x": 87,
       "y": 173,
@@ -4851,7 +4851,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087979732",
-      "label": "📍 Newton Street",
+      "label": "Newton Street",
       "type": "street",
       "x": 92,
       "y": 182,
@@ -4859,7 +4859,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087979943",
-      "label": "🛑 Jct: Fair Oak Street & Hawthorn Street",
+      "label": "Jct: Fair Oak Street & Hawthorn Street",
       "type": "intersection",
       "x": 116,
       "y": 181,
@@ -4867,7 +4867,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_11481559732",
-      "label": "🛑 Jct: Fair Oak Street & Mahogany Street",
+      "label": "Jct: Fair Oak Street & Mahogany Street",
       "type": "intersection",
       "x": 110,
       "y": 167,
@@ -4875,7 +4875,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087979783",
-      "label": "🚗 Local Link Section #9783",
+      "label": "Local Link Section #9783",
       "type": "street",
       "x": 87,
       "y": 198,
@@ -4883,7 +4883,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087979790",
-      "label": "📍 Central Avenue",
+      "label": "Central Avenue",
       "type": "street",
       "x": 102,
       "y": 157,
@@ -4891,7 +4891,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087979829",
-      "label": "🚗 Local Link Section #9829",
+      "label": "Local Link Section #9829",
       "type": "street",
       "x": 124,
       "y": 157,
@@ -4899,7 +4899,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087979994",
-      "label": "🚗 Local Link Section #9994",
+      "label": "Local Link Section #9994",
       "type": "street",
       "x": 78,
       "y": 190,
@@ -4907,7 +4907,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088066302",
-      "label": "📍 Meridian Avenue",
+      "label": "Meridian Avenue",
       "type": "street",
       "x": 199,
       "y": 227,
@@ -4915,7 +4915,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088066630",
-      "label": "📍 Meridian Avenue",
+      "label": "Meridian Avenue",
       "type": "street",
       "x": 195,
       "y": 216,
@@ -4923,7 +4923,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088066731",
-      "label": "🚗 Local Link Section #6731",
+      "label": "Local Link Section #6731",
       "type": "street",
       "x": 371,
       "y": 281,
@@ -4931,7 +4931,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088066651",
-      "label": "🛑 Jct: Meridian Avenue & 1st Street",
+      "label": "Jct: Meridian Avenue & 1st Street",
       "type": "intersection",
       "x": 215,
       "y": 229,
@@ -4939,7 +4939,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088066351",
-      "label": "🚗 Local Link Section #6351",
+      "label": "Local Link Section #6351",
       "type": "street",
       "x": 181,
       "y": 230,
@@ -4947,7 +4947,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088066504",
-      "label": "🛑 Jct: Topaz Street & Emerald Street",
+      "label": "Jct: Topaz Street & Emerald Street",
       "type": "intersection",
       "x": 278,
       "y": 312,
@@ -4955,7 +4955,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088066647",
-      "label": "🛑 Jct: Pearl Street & Topaz Street",
+      "label": "Jct: Pearl Street & Topaz Street",
       "type": "intersection",
       "x": 283,
       "y": 324,
@@ -4963,7 +4963,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088066949",
-      "label": "🛑 Jct: Pearl Street & Alabaster Street",
+      "label": "Jct: Pearl Street & Alabaster Street",
       "type": "intersection",
       "x": 247,
       "y": 322,
@@ -4971,7 +4971,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088066984",
-      "label": "🛑 Jct: Pearl Street & Alexandrite Street",
+      "label": "Jct: Pearl Street & Alexandrite Street",
       "type": "intersection",
       "x": 258,
       "y": 329,
@@ -4979,7 +4979,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1589231691",
-      "label": "🛑 Jct: 1st Street & 3rd Street",
+      "label": "Jct: 1st Street & 3rd Street",
       "type": "intersection",
       "x": 238,
       "y": 227,
@@ -4987,7 +4987,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088066992",
-      "label": "🛑 Jct: 1st Street & 3rd Street",
+      "label": "Jct: 1st Street & 3rd Street",
       "type": "intersection",
       "x": 258,
       "y": 222,
@@ -4995,7 +4995,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8386099590",
-      "label": "🛑 Jct: 1st Street & 3rd Street",
+      "label": "Jct: 1st Street & 3rd Street",
       "type": "intersection",
       "x": 268,
       "y": 209,
@@ -5003,7 +5003,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088066659",
-      "label": "🚗 Local Link Section #6659",
+      "label": "Local Link Section #6659",
       "type": "street",
       "x": 234,
       "y": 179,
@@ -5011,7 +5011,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088066418",
-      "label": "🛑 Jct: Alexandrite Street & Alabaster Street",
+      "label": "Jct: Alexandrite Street & Alabaster Street",
       "type": "intersection",
       "x": 261,
       "y": 314,
@@ -5019,7 +5019,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088066236",
-      "label": "🚗 Local Link Section #6236",
+      "label": "Local Link Section #6236",
       "type": "street",
       "x": 333,
       "y": 274,
@@ -5027,7 +5027,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088066649",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 356,
       "y": 268,
@@ -5035,7 +5035,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088066706",
-      "label": "🛑 Jct: Emerald Street & RSBS Boulevard",
+      "label": "Jct: Emerald Street & RSBS Boulevard",
       "type": "intersection",
       "x": 243,
       "y": 311,
@@ -5043,7 +5043,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088066858",
-      "label": "🛑 Jct: Onyx Street & Sardonyx Street",
+      "label": "Jct: Onyx Street & Sardonyx Street",
       "type": "intersection",
       "x": 273,
       "y": 336,
@@ -5051,7 +5051,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088066578",
-      "label": "🛑 Jct: Jerez Street & Ebro Street",
+      "label": "Jct: Jerez Street & Ebro Street",
       "type": "intersection",
       "x": 291,
       "y": 303,
@@ -5059,7 +5059,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088066720",
-      "label": "🚗 Local Link Section #6720",
+      "label": "Local Link Section #6720",
       "type": "street",
       "x": 244,
       "y": 215,
@@ -5067,7 +5067,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088066255",
-      "label": "🛑 Jct: Gold Avenue & National Highway 1",
+      "label": "Jct: Gold Avenue & National Highway 1",
       "type": "intersection",
       "x": 365,
       "y": 260,
@@ -5075,7 +5075,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3120389667",
-      "label": "🛑 Jct: Titus Street & 1 Chronicles",
+      "label": "Jct: Titus Street & 1 Chronicles",
       "type": "intersection",
       "x": 311,
       "y": 331,
@@ -5083,7 +5083,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088077844",
-      "label": "🛑 Jct: Anastasha Street & Henry VIII Street",
+      "label": "Jct: Anastasha Street & Henry VIII Street",
       "type": "intersection",
       "x": 305,
       "y": 293,
@@ -5091,7 +5091,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088077995",
-      "label": "🛑 Jct: 2 Chronicles & Ezekiel Street",
+      "label": "Jct: 2 Chronicles & Ezekiel Street",
       "type": "intersection",
       "x": 291,
       "y": 341,
@@ -5099,7 +5099,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088077942",
-      "label": "🛑 Jct: Czarina Street & Louis XIV Street",
+      "label": "Jct: Czarina Street & Louis XIV Street",
       "type": "intersection",
       "x": 326,
       "y": 293,
@@ -5107,7 +5107,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3120209045",
-      "label": "🛑 Jct: Main Road & RSBS Boulevard",
+      "label": "Jct: Main Road & RSBS Boulevard",
       "type": "intersection",
       "x": 261,
       "y": 343,
@@ -5115,7 +5115,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088077944",
-      "label": "🚗 Local Link Section #7944",
+      "label": "Local Link Section #7944",
       "type": "street",
       "x": 333,
       "y": 333,
@@ -5123,7 +5123,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088077836",
-      "label": "🚗 Local Link Section #7836",
+      "label": "Local Link Section #7836",
       "type": "street",
       "x": 351,
       "y": 326,
@@ -5131,7 +5131,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088077950",
-      "label": "🛑 Jct: Imperial Drive & Phillip II Street",
+      "label": "Jct: Imperial Drive & Phillip II Street",
       "type": "intersection",
       "x": 319,
       "y": 303,
@@ -5139,7 +5139,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088110771",
-      "label": "🛑 Jct: Main Road & Villa Caceres Avenue",
+      "label": "Jct: Main Road & Villa Caceres Avenue",
       "type": "intersection",
       "x": 269,
       "y": 260,
@@ -5147,7 +5147,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_4590193184",
-      "label": "📍 Main Road",
+      "label": "Main Road",
       "type": "street",
       "x": 289,
       "y": 259,
@@ -5155,7 +5155,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088110776",
-      "label": "🚗 Local Link Section #0776",
+      "label": "Local Link Section #0776",
       "type": "street",
       "x": 308,
       "y": 251,
@@ -5163,7 +5163,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088110822",
-      "label": "🚗 Local Link Section #0822",
+      "label": "Local Link Section #0822",
       "type": "street",
       "x": 312,
       "y": 262,
@@ -5171,7 +5171,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088110920",
-      "label": "🚗 Local Link Section #0920",
+      "label": "Local Link Section #0920",
       "type": "street",
       "x": 294,
       "y": 268,
@@ -5179,7 +5179,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088110807",
-      "label": "🛑 Jct: Main Road & Villa Caceres Avenue",
+      "label": "Jct: Main Road & Villa Caceres Avenue",
       "type": "intersection",
       "x": 246,
       "y": 261,
@@ -5187,7 +5187,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088110634",
-      "label": "📍 Main Road",
+      "label": "Main Road",
       "type": "street",
       "x": 331,
       "y": 234,
@@ -5195,7 +5195,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088110623",
-      "label": "🚗 Local Link Section #0623",
+      "label": "Local Link Section #0623",
       "type": "street",
       "x": 333,
       "y": 246,
@@ -5203,7 +5203,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088110689",
-      "label": "🚗 Local Link Section #0689",
+      "label": "Local Link Section #0689",
       "type": "street",
       "x": 317,
       "y": 272,
@@ -5211,7 +5211,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088110599",
-      "label": "📍 Main Road",
+      "label": "Main Road",
       "type": "street",
       "x": 309,
       "y": 240,
@@ -5219,7 +5219,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088118923",
-      "label": "🚗 Local Link Section #8923",
+      "label": "Local Link Section #8923",
       "type": "street",
       "x": 410,
       "y": 272,
@@ -5227,7 +5227,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088118868",
-      "label": "🚗 Local Link Section #8868",
+      "label": "Local Link Section #8868",
       "type": "street",
       "x": 426,
       "y": 271,
@@ -5235,7 +5235,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_9913105774",
-      "label": "🛑 Jct: Narra Avenue & J. P. Rizal Street",
+      "label": "Jct: Narra Avenue & J. P. Rizal Street",
       "type": "intersection",
       "x": 467,
       "y": 306,
@@ -5243,7 +5243,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088134303",
-      "label": "🛑 Jct: Narra Avenue & Caimito Street",
+      "label": "Jct: Narra Avenue & Caimito Street",
       "type": "intersection",
       "x": 472,
       "y": 315,
@@ -5251,7 +5251,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088134368",
-      "label": "🛑 Jct: Narra Avenue & Acacia Street",
+      "label": "Jct: Narra Avenue & Acacia Street",
       "type": "intersection",
       "x": 452,
       "y": 314,
@@ -5259,7 +5259,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088134428",
-      "label": "🚗 Local Link Section #4428",
+      "label": "Local Link Section #4428",
       "type": "street",
       "x": 494,
       "y": 330,
@@ -5267,7 +5267,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8679335962",
-      "label": "🛑 Jct: Narra Avenue & J. P. Rizal Street",
+      "label": "Jct: Narra Avenue & J. P. Rizal Street",
       "type": "intersection",
       "x": 442,
       "y": 306,
@@ -5275,7 +5275,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088134334",
-      "label": "🛑 Jct: Santan Street & F. B. Bailon Road",
+      "label": "Jct: Santan Street & F. B. Bailon Road",
       "type": "intersection",
       "x": 528,
       "y": 359,
@@ -5283,7 +5283,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088134477",
-      "label": "📍 F. B. Bailon Road",
+      "label": "F. B. Bailon Road",
       "type": "street",
       "x": 531,
       "y": 368,
@@ -5291,7 +5291,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5185746122",
-      "label": "🛑 Jct: Marcelo H. Del Pilar Street & Callejon",
+      "label": "Jct: Marcelo H. Del Pilar Street & Callejon",
       "type": "intersection",
       "x": 993,
       "y": 764,
@@ -5299,7 +5299,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088188613",
-      "label": "🛑 Jct: Marcelo H. Del Pilar Street & Lopez Jaena Street",
+      "label": "Jct: Marcelo H. Del Pilar Street & Lopez Jaena Street",
       "type": "intersection",
       "x": 978,
       "y": 771,
@@ -5307,7 +5307,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093836433",
-      "label": "🛑 Jct: L.E. Boulevard & Banahaw Street",
+      "label": "Jct: L.E. Boulevard & Banahaw Street",
       "type": "intersection",
       "x": 983,
       "y": 813,
@@ -5315,7 +5315,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088188839",
-      "label": "📍 Larino Street",
+      "label": "Larino Street",
       "type": "street",
       "x": 953,
       "y": 841,
@@ -5323,7 +5323,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088188140",
-      "label": "🛑 Jct: Larino Street & Chipeco Avenue",
+      "label": "Jct: Larino Street & Chipeco Avenue",
       "type": "intersection",
       "x": 968,
       "y": 837,
@@ -5331,7 +5331,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088188776",
-      "label": "📍 Lechuga Street",
+      "label": "Lechuga Street",
       "type": "street",
       "x": 1012,
       "y": 853,
@@ -5339,7 +5339,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088223338",
-      "label": "🚗 Local Link Section #3338",
+      "label": "Local Link Section #3338",
       "type": "street",
       "x": 405,
       "y": 365,
@@ -5347,7 +5347,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088223346",
-      "label": "🛑 Jct: Rose Street & Cattleya Street",
+      "label": "Jct: Rose Street & Cattleya Street",
       "type": "intersection",
       "x": 433,
       "y": 348,
@@ -5355,7 +5355,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088223372",
-      "label": "🛑 Jct: Cattleya Street & Sampaguita Street",
+      "label": "Jct: Cattleya Street & Sampaguita Street",
       "type": "intersection",
       "x": 410,
       "y": 336,
@@ -5363,7 +5363,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088250014",
-      "label": "🚗 Local Link Section #0014",
+      "label": "Local Link Section #0014",
       "type": "street",
       "x": 414,
       "y": 356,
@@ -5371,7 +5371,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088250236",
-      "label": "🛑 Jct: Ezekiel Street & Zechariah Street",
+      "label": "Jct: Ezekiel Street & Zechariah Street",
       "type": "intersection",
       "x": 314,
       "y": 346,
@@ -5379,7 +5379,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088250317",
-      "label": "🛑 Jct: 1 Thessalonians Street & 3 John Street",
+      "label": "Jct: 1 Thessalonians Street & 3 John Street",
       "type": "intersection",
       "x": 292,
       "y": 366,
@@ -5387,7 +5387,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088077794",
-      "label": "🛑 Jct: 1 Thessalonians Street & RSBS Boulevard",
+      "label": "Jct: 1 Thessalonians Street & RSBS Boulevard",
       "type": "intersection",
       "x": 270,
       "y": 360,
@@ -5395,7 +5395,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088250397",
-      "label": "🚗 Local Link Section #0397",
+      "label": "Local Link Section #0397",
       "type": "street",
       "x": 248,
       "y": 369,
@@ -5403,7 +5403,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088249924",
-      "label": "🚗 Local Link Section #9924",
+      "label": "Local Link Section #9924",
       "type": "street",
       "x": 260,
       "y": 387,
@@ -5411,7 +5411,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088250127",
-      "label": "🛑 Jct: Zechariah Street & Songs of Solomon Street",
+      "label": "Jct: Zechariah Street & Songs of Solomon Street",
       "type": "intersection",
       "x": 301,
       "y": 352,
@@ -5419,7 +5419,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088250069",
-      "label": "🚗 Local Link Section #0069",
+      "label": "Local Link Section #0069",
       "type": "street",
       "x": 245,
       "y": 378,
@@ -5427,7 +5427,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088250153",
-      "label": "🛑 Jct: 3 John Street & 2 Thessalonians Street",
+      "label": "Jct: 3 John Street & 2 Thessalonians Street",
       "type": "intersection",
       "x": 286,
       "y": 375,
@@ -5435,7 +5435,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088250334",
-      "label": "📍 RSBS Boulevard",
+      "label": "RSBS Boulevard",
       "type": "street",
       "x": 284,
       "y": 388,
@@ -5443,7 +5443,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088250178",
-      "label": "🚗 Local Link Section #0178",
+      "label": "Local Link Section #0178",
       "type": "street",
       "x": 286,
       "y": 399,
@@ -5451,7 +5451,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088250167",
-      "label": "🛑 Jct: John Street & Luke Street",
+      "label": "Jct: John Street & Luke Street",
       "type": "intersection",
       "x": 312,
       "y": 373,
@@ -5459,7 +5459,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088250557",
-      "label": "📍 Luke Street",
+      "label": "Luke Street",
       "type": "street",
       "x": 283,
       "y": 350,
@@ -5467,7 +5467,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088250357",
-      "label": "🛑 Jct: Duhat Street & RSBS Boulevard",
+      "label": "Jct: Duhat Street & RSBS Boulevard",
       "type": "intersection",
       "x": 308,
       "y": 400,
@@ -5475,7 +5475,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1041059228",
-      "label": "📍 RSBS Boulevard",
+      "label": "RSBS Boulevard",
       "type": "street",
       "x": 265,
       "y": 369,
@@ -5483,7 +5483,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088250532",
-      "label": "🚗 Local Link Section #0532",
+      "label": "Local Link Section #0532",
       "type": "street",
       "x": 418,
       "y": 380,
@@ -5491,7 +5491,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8310531387",
-      "label": "🚗 Local Link Section #1387",
+      "label": "Local Link Section #1387",
       "type": "street",
       "x": 420,
       "y": 369,
@@ -5499,7 +5499,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088250039",
-      "label": "📍 RSBS Boulevard",
+      "label": "RSBS Boulevard",
       "type": "street",
       "x": 302,
       "y": 387,
@@ -5507,7 +5507,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088286593",
-      "label": "🛑 Jct: Songs of Solomon Street & 1 Corinthians Street",
+      "label": "Jct: Songs of Solomon Street & 1 Corinthians Street",
       "type": "intersection",
       "x": 312,
       "y": 362,
@@ -5515,7 +5515,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088286905",
-      "label": "🛑 Jct: Songs of Solomon Street & Joshua Street",
+      "label": "Jct: Songs of Solomon Street & Joshua Street",
       "type": "intersection",
       "x": 338,
       "y": 359,
@@ -5523,7 +5523,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3076897973",
-      "label": "🛑 Jct: Songs of Solomon Street & Zircon Street",
+      "label": "Jct: Songs of Solomon Street & Zircon Street",
       "type": "intersection",
       "x": 354,
       "y": 356,
@@ -5531,7 +5531,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088286696",
-      "label": "🛑 Jct: Songs of Solomon Street & Alexandrite Street",
+      "label": "Jct: Songs of Solomon Street & Alexandrite Street",
       "type": "intersection",
       "x": 373,
       "y": 355,
@@ -5539,7 +5539,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088250023",
-      "label": "📍 Malitlit - Eton Access Road",
+      "label": "Malitlit - Eton Access Road",
       "type": "street",
       "x": 411,
       "y": 390,
@@ -5547,7 +5547,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088250050",
-      "label": "🛑 Jct: Sweden Street & Mexico Street",
+      "label": "Jct: Sweden Street & Mexico Street",
       "type": "intersection",
       "x": 270,
       "y": 402,
@@ -5555,7 +5555,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088286485",
-      "label": "🛑 Jct: Sampaguita Street & Oliva Street",
+      "label": "Jct: Sampaguita Street & Oliva Street",
       "type": "intersection",
       "x": 332,
       "y": 420,
@@ -5563,7 +5563,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088286673",
-      "label": "🛑 Jct: Oliva Street & Atis Street",
+      "label": "Jct: Oliva Street & Atis Street",
       "type": "intersection",
       "x": 313,
       "y": 423,
@@ -5571,7 +5571,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088286558",
-      "label": "🚗 Local Link Section #6558",
+      "label": "Local Link Section #6558",
       "type": "street",
       "x": 340,
       "y": 348,
@@ -5579,7 +5579,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088286839",
-      "label": "🛑 Jct: Mansanas Street & Atis Street",
+      "label": "Jct: Mansanas Street & Atis Street",
       "type": "intersection",
       "x": 307,
       "y": 409,
@@ -5587,7 +5587,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088286946",
-      "label": "🛑 Jct: Atis Street & Malitlit - Eton Access Road",
+      "label": "Jct: Atis Street & Malitlit - Eton Access Road",
       "type": "intersection",
       "x": 345,
       "y": 412,
@@ -5595,7 +5595,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088286929",
-      "label": "🛑 Jct: Opal Street & Alexandrite Street",
+      "label": "Jct: Opal Street & Alexandrite Street",
       "type": "intersection",
       "x": 361,
       "y": 368,
@@ -5603,7 +5603,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088286681",
-      "label": "🛑 Jct: Brazil Street & Spain Street",
+      "label": "Jct: Brazil Street & Spain Street",
       "type": "intersection",
       "x": 293,
       "y": 418,
@@ -5611,7 +5611,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088286886",
-      "label": "🛑 Jct: Belgium Street & Brazil Street",
+      "label": "Jct: Belgium Street & Brazil Street",
       "type": "intersection",
       "x": 274,
       "y": 416,
@@ -5619,7 +5619,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088286452",
-      "label": "🛑 Jct: Ezra Street & Hebrews Street",
+      "label": "Jct: Ezra Street & Hebrews Street",
       "type": "intersection",
       "x": 328,
       "y": 368,
@@ -5627,7 +5627,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6383999114",
-      "label": "📍 1 Timothy Street",
+      "label": "1 Timothy Street",
       "type": "street",
       "x": 326,
       "y": 377,
@@ -5635,7 +5635,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6384054899",
-      "label": "🛑 Jct: Guyabano Street & Kaimito Street",
+      "label": "Jct: Guyabano Street & Kaimito Street",
       "type": "intersection",
       "x": 328,
       "y": 404,
@@ -5643,7 +5643,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6383999106",
-      "label": "🛑 Jct: Ephesians Street & Galatians Street",
+      "label": "Jct: Ephesians Street & Galatians Street",
       "type": "intersection",
       "x": 342,
       "y": 372,
@@ -5651,7 +5651,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088286733",
-      "label": "🛑 Jct: Spain Street & France Street",
+      "label": "Jct: Spain Street & France Street",
       "type": "intersection",
       "x": 279,
       "y": 425,
@@ -5659,7 +5659,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088286988",
-      "label": "🚗 Local Link Section #6988",
+      "label": "Local Link Section #6988",
       "type": "street",
       "x": 324,
       "y": 355,
@@ -5667,7 +5667,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088299312",
-      "label": "🛑 Jct: Ezekiel Street & Daniel Street",
+      "label": "Jct: Ezekiel Street & Daniel Street",
       "type": "intersection",
       "x": 230,
       "y": 128,
@@ -5675,7 +5675,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088299365",
-      "label": "🛑 Jct: Ezekiel Street & Metrogate Drive",
+      "label": "Jct: Ezekiel Street & Metrogate Drive",
       "type": "intersection",
       "x": 244,
       "y": 117,
@@ -5683,7 +5683,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088299395",
-      "label": "📍 Metrogate Drive",
+      "label": "Metrogate Drive",
       "type": "street",
       "x": 199,
       "y": 130,
@@ -5691,7 +5691,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088299441",
-      "label": "🛑 Jct: Gideon Street & Metrogate Drive",
+      "label": "Jct: Gideon Street & Metrogate Drive",
       "type": "intersection",
       "x": 214,
       "y": 127,
@@ -5699,7 +5699,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088299415",
-      "label": "🛑 Jct: John Street & Luke Street",
+      "label": "Jct: John Street & Luke Street",
       "type": "intersection",
       "x": 211,
       "y": 112,
@@ -5707,7 +5707,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088299368",
-      "label": "🛑 Jct: Matthew Street & Peter Street",
+      "label": "Jct: Matthew Street & Peter Street",
       "type": "intersection",
       "x": 226,
       "y": 105,
@@ -5715,7 +5715,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088299339",
-      "label": "🛑 Jct: Peter Street & Saul Street",
+      "label": "Jct: Peter Street & Saul Street",
       "type": "intersection",
       "x": 220,
       "y": 95,
@@ -5723,7 +5723,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088299536",
-      "label": "🚗 Local Link Section #9536",
+      "label": "Local Link Section #9536",
       "type": "street",
       "x": 374,
       "y": 399,
@@ -5731,7 +5731,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3148338350",
-      "label": "🚗 Local Link Section #8350",
+      "label": "Local Link Section #8350",
       "type": "street",
       "x": 239,
       "y": 336,
@@ -5739,7 +5739,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088315814",
-      "label": "🚗 Local Link Section #5814",
+      "label": "Local Link Section #5814",
       "type": "street",
       "x": 223,
       "y": 336,
@@ -5747,7 +5747,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088315734",
-      "label": "🚗 Local Link Section #5734",
+      "label": "Local Link Section #5734",
       "type": "street",
       "x": 202,
       "y": 336,
@@ -5755,7 +5755,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088315809",
-      "label": "📍 Emerald Street",
+      "label": "Emerald Street",
       "type": "street",
       "x": 234,
       "y": 351,
@@ -5763,7 +5763,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088315983",
-      "label": "🚗 Local Link Section #5983",
+      "label": "Local Link Section #5983",
       "type": "street",
       "x": 216,
       "y": 323,
@@ -5771,7 +5771,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088316111",
-      "label": "🚗 Local Link Section #6111",
+      "label": "Local Link Section #6111",
       "type": "street",
       "x": 210,
       "y": 345,
@@ -5779,7 +5779,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088494462",
-      "label": "🛑 Jct: Zaragoza & Coruña",
+      "label": "Jct: Zaragoza & Coruña",
       "type": "intersection",
       "x": 731,
       "y": 619,
@@ -5787,7 +5787,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493769",
-      "label": "🛑 Jct: Zaragoza & Ferrol",
+      "label": "Jct: Zaragoza & Ferrol",
       "type": "intersection",
       "x": 713,
       "y": 622,
@@ -5795,7 +5795,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493886",
-      "label": "📍 Gold Street",
+      "label": "Gold Street",
       "type": "street",
       "x": 588,
       "y": 364,
@@ -5803,7 +5803,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493216",
-      "label": "🛑 Jct: Caceres & Cartagena",
+      "label": "Jct: Caceres & Cartagena",
       "type": "intersection",
       "x": 725,
       "y": 605,
@@ -5811,7 +5811,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088494180",
-      "label": "🛑 Jct: Caceres & Cartagena",
+      "label": "Jct: Caceres & Cartagena",
       "type": "intersection",
       "x": 706,
       "y": 608,
@@ -5819,7 +5819,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493903",
-      "label": "🚗 Local Link Section #3903",
+      "label": "Local Link Section #3903",
       "type": "street",
       "x": 680,
       "y": 587,
@@ -5827,7 +5827,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2692684007",
-      "label": "🛑 Jct: Carnation Street & Camia Street",
+      "label": "Jct: Carnation Street & Camia Street",
       "type": "intersection",
       "x": 692,
       "y": 602,
@@ -5835,7 +5835,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088492814",
-      "label": "🚗 Local Link Section #2814",
+      "label": "Local Link Section #2814",
       "type": "street",
       "x": 597,
       "y": 448,
@@ -5843,7 +5843,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493291",
-      "label": "🛑 Jct: Ronda & Bilbao",
+      "label": "Jct: Ronda & Bilbao",
       "type": "intersection",
       "x": 701,
       "y": 628,
@@ -5851,7 +5851,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493497",
-      "label": "📍 Road 2",
+      "label": "Road 2",
       "type": "street",
       "x": 652,
       "y": 589,
@@ -5859,7 +5859,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493080",
-      "label": "🚗 Local Link Section #3080",
+      "label": "Local Link Section #3080",
       "type": "street",
       "x": 589,
       "y": 432,
@@ -5867,7 +5867,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493660",
-      "label": "🚗 Local Link Section #3660",
+      "label": "Local Link Section #3660",
       "type": "street",
       "x": 694,
       "y": 579,
@@ -5875,7 +5875,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088492976",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 673,
       "y": 639,
@@ -5883,7 +5883,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493942",
-      "label": "🚗 Local Link Section #3942",
+      "label": "Local Link Section #3942",
       "type": "street",
       "x": 688,
       "y": 635,
@@ -5891,7 +5891,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493418",
-      "label": "🚗 Local Link Section #3418",
+      "label": "Local Link Section #3418",
       "type": "street",
       "x": 580,
       "y": 448,
@@ -5899,7 +5899,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088494466",
-      "label": "🛑 Jct: Caceres & Carnation Street",
+      "label": "Jct: Caceres & Carnation Street",
       "type": "intersection",
       "x": 690,
       "y": 614,
@@ -5907,7 +5907,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493163",
-      "label": "📍 J. P. Rizal Street",
+      "label": "J. P. Rizal Street",
       "type": "street",
       "x": 580,
       "y": 400,
@@ -5915,7 +5915,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493827",
-      "label": "🚗 Local Link Section #3827",
+      "label": "Local Link Section #3827",
       "type": "street",
       "x": 715,
       "y": 597,
@@ -5923,7 +5923,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088494219",
-      "label": "🚗 Local Link Section #4219",
+      "label": "Local Link Section #4219",
       "type": "street",
       "x": 731,
       "y": 594,
@@ -5931,7 +5931,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493246",
-      "label": "🛑 Jct: Matalino Street & Matatag Street",
+      "label": "Jct: Matalino Street & Matatag Street",
       "type": "intersection",
       "x": 631,
       "y": 436,
@@ -5939,7 +5939,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493888",
-      "label": "🛑 Jct: Matatag Street & Masagana Street",
+      "label": "Jct: Matatag Street & Masagana Street",
       "type": "intersection",
       "x": 640,
       "y": 449,
@@ -5947,7 +5947,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493789",
-      "label": "🚗 Local Link Section #3789",
+      "label": "Local Link Section #3789",
       "type": "street",
       "x": 609,
       "y": 361,
@@ -5955,7 +5955,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088494192",
-      "label": "🚗 Local Link Section #4192",
+      "label": "Local Link Section #4192",
       "type": "street",
       "x": 661,
       "y": 505,
@@ -5963,7 +5963,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088494031",
-      "label": "📍 NIA Road",
+      "label": "NIA Road",
       "type": "street",
       "x": 702,
       "y": 510,
@@ -5971,7 +5971,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493617",
-      "label": "🚗 Local Link Section #3617",
+      "label": "Local Link Section #3617",
       "type": "street",
       "x": 702,
       "y": 500,
@@ -5979,7 +5979,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088494101",
-      "label": "🛑 Jct: Begonia Street & Daffodil Street",
+      "label": "Jct: Begonia Street & Daffodil Street",
       "type": "intersection",
       "x": 674,
       "y": 604,
@@ -5987,7 +5987,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493042",
-      "label": "🛑 Jct: F. B. Bailon Road & J. P. Rizal Street",
+      "label": "Jct: F. B. Bailon Road & J. P. Rizal Street",
       "type": "intersection",
       "x": 545,
       "y": 359,
@@ -5995,7 +5995,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493710",
-      "label": "🛑 Jct: Gold Street & Gem Street",
+      "label": "Jct: Gold Street & Gem Street",
       "type": "intersection",
       "x": 565,
       "y": 361,
@@ -6003,7 +6003,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493739",
-      "label": "🚗 Local Link Section #3739",
+      "label": "Local Link Section #3739",
       "type": "street",
       "x": 720,
       "y": 504,
@@ -6011,7 +6011,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493379",
-      "label": "🛑 Jct: Huelva & Mieres",
+      "label": "Jct: Huelva & Mieres",
       "type": "intersection",
       "x": 715,
       "y": 634,
@@ -6019,7 +6019,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088494454",
-      "label": "🛑 Jct: Jade Street & J. P. Rizal Street",
+      "label": "Jct: Jade Street & J. P. Rizal Street",
       "type": "intersection",
       "x": 571,
       "y": 378,
@@ -6027,7 +6027,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1483142352",
-      "label": "🛑 Jct: Huelva & Valladolid",
+      "label": "Jct: Huelva & Valladolid",
       "type": "intersection",
       "x": 736,
       "y": 629,
@@ -6035,7 +6035,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088494316",
-      "label": "📍 Matalino Street",
+      "label": "Matalino Street",
       "type": "street",
       "x": 628,
       "y": 454,
@@ -6043,7 +6043,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493870",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 661,
       "y": 627,
@@ -6051,7 +6051,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088492815",
-      "label": "🛑 Jct: Road 2 & Road 11",
+      "label": "Jct: Road 2 & Road 11",
       "type": "intersection",
       "x": 663,
       "y": 576,
@@ -6059,7 +6059,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088493309",
-      "label": "🚗 Local Link Section #3309",
+      "label": "Local Link Section #3309",
       "type": "street",
       "x": 684,
       "y": 507,
@@ -6067,7 +6067,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115357",
-      "label": "🚗 Local Link Section #5357",
+      "label": "Local Link Section #5357",
       "type": "street",
       "x": 830,
       "y": 352,
@@ -6075,7 +6075,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8299010755",
-      "label": "🚗 Local Link Section #0755",
+      "label": "Local Link Section #0755",
       "type": "street",
       "x": 763,
       "y": 411,
@@ -6083,7 +6083,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115917",
-      "label": "🚗 Local Link Section #5917",
+      "label": "Local Link Section #5917",
       "type": "street",
       "x": 768,
       "y": 422,
@@ -6091,7 +6091,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115781",
-      "label": "🚗 Local Link Section #5781",
+      "label": "Local Link Section #5781",
       "type": "street",
       "x": 701,
       "y": 408,
@@ -6099,7 +6099,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115742",
-      "label": "🚗 Local Link Section #5742",
+      "label": "Local Link Section #5742",
       "type": "street",
       "x": 723,
       "y": 405,
@@ -6107,7 +6107,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_11515831953",
-      "label": "🚗 Local Link Section #1953",
+      "label": "Local Link Section #1953",
       "type": "street",
       "x": 743,
       "y": 400,
@@ -6115,7 +6115,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090116063",
-      "label": "🚗 Local Link Section #6063",
+      "label": "Local Link Section #6063",
       "type": "street",
       "x": 750,
       "y": 355,
@@ -6123,7 +6123,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115541",
-      "label": "🚗 Local Link Section #5541",
+      "label": "Local Link Section #5541",
       "type": "street",
       "x": 764,
       "y": 351,
@@ -6131,7 +6131,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115883",
-      "label": "🚗 Local Link Section #5883",
+      "label": "Local Link Section #5883",
       "type": "street",
       "x": 813,
       "y": 369,
@@ -6139,7 +6139,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090116062",
-      "label": "🚗 Local Link Section #6062",
+      "label": "Local Link Section #6062",
       "type": "street",
       "x": 833,
       "y": 364,
@@ -6147,7 +6147,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115828",
-      "label": "🚗 Local Link Section #5828",
+      "label": "Local Link Section #5828",
       "type": "street",
       "x": 721,
       "y": 351,
@@ -6155,7 +6155,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115956",
-      "label": "🚗 Local Link Section #5956",
+      "label": "Local Link Section #5956",
       "type": "street",
       "x": 746,
       "y": 343,
@@ -6163,7 +6163,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115739",
-      "label": "🚗 Local Link Section #5739",
+      "label": "Local Link Section #5739",
       "type": "street",
       "x": 777,
       "y": 334,
@@ -6171,7 +6171,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115688",
-      "label": "🚗 Local Link Section #5688",
+      "label": "Local Link Section #5688",
       "type": "street",
       "x": 762,
       "y": 341,
@@ -6179,7 +6179,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115815",
-      "label": "🚗 Local Link Section #5815",
+      "label": "Local Link Section #5815",
       "type": "street",
       "x": 747,
       "y": 417,
@@ -6187,7 +6187,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115599",
-      "label": "🚗 Local Link Section #5599",
+      "label": "Local Link Section #5599",
       "type": "street",
       "x": 750,
       "y": 434,
@@ -6195,7 +6195,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115422",
-      "label": "🚗 Local Link Section #5422",
+      "label": "Local Link Section #5422",
       "type": "street",
       "x": 720,
       "y": 428,
@@ -6203,7 +6203,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115607",
-      "label": "🚗 Local Link Section #5607",
+      "label": "Local Link Section #5607",
       "type": "street",
       "x": 717,
       "y": 418,
@@ -6211,7 +6211,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115703",
-      "label": "🚗 Local Link Section #5703",
+      "label": "Local Link Section #5703",
       "type": "street",
       "x": 734,
       "y": 454,
@@ -6219,7 +6219,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115969",
-      "label": "🚗 Local Link Section #5969",
+      "label": "Local Link Section #5969",
       "type": "street",
       "x": 788,
       "y": 422,
@@ -6227,7 +6227,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115783",
-      "label": "🚗 Local Link Section #5783",
+      "label": "Local Link Section #5783",
       "type": "street",
       "x": 813,
       "y": 417,
@@ -6235,7 +6235,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115390",
-      "label": "🚗 Local Link Section #5390",
+      "label": "Local Link Section #5390",
       "type": "street",
       "x": 764,
       "y": 384,
@@ -6243,7 +6243,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090116012",
-      "label": "🚗 Local Link Section #6012",
+      "label": "Local Link Section #6012",
       "type": "street",
       "x": 756,
       "y": 374,
@@ -6251,7 +6251,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115493",
-      "label": "🚗 Local Link Section #5493",
+      "label": "Local Link Section #5493",
       "type": "street",
       "x": 806,
       "y": 348,
@@ -6259,7 +6259,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115424",
-      "label": "🚗 Local Link Section #5424",
+      "label": "Local Link Section #5424",
       "type": "street",
       "x": 735,
       "y": 374,
@@ -6267,7 +6267,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115618",
-      "label": "🚗 Local Link Section #5618",
+      "label": "Local Link Section #5618",
       "type": "street",
       "x": 738,
       "y": 426,
@@ -6275,7 +6275,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115997",
-      "label": "🚗 Local Link Section #5997",
+      "label": "Local Link Section #5997",
       "type": "street",
       "x": 815,
       "y": 357,
@@ -6283,7 +6283,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115636",
-      "label": "🚗 Local Link Section #5636",
+      "label": "Local Link Section #5636",
       "type": "street",
       "x": 805,
       "y": 426,
@@ -6291,7 +6291,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090116081",
-      "label": "🚗 Local Link Section #6081",
+      "label": "Local Link Section #6081",
       "type": "street",
       "x": 684,
       "y": 416,
@@ -6299,7 +6299,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115845",
-      "label": "🚗 Local Link Section #5845",
+      "label": "Local Link Section #5845",
       "type": "street",
       "x": 767,
       "y": 433,
@@ -6307,7 +6307,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115717",
-      "label": "🚗 Local Link Section #5717",
+      "label": "Local Link Section #5717",
       "type": "street",
       "x": 689,
       "y": 425,
@@ -6315,7 +6315,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115356",
-      "label": "🚗 Local Link Section #5356",
+      "label": "Local Link Section #5356",
       "type": "street",
       "x": 690,
       "y": 391,
@@ -6323,7 +6323,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090124882",
-      "label": "📍 Marinig Road",
+      "label": "Marinig Road",
       "type": "street",
       "x": 758,
       "y": 313,
@@ -6331,7 +6331,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090192112",
-      "label": "🛑 Jct: Saint Peter Avenue & Saint Paul Street",
+      "label": "Jct: Saint Peter Avenue & Saint Paul Street",
       "type": "intersection",
       "x": 891,
       "y": 414,
@@ -6339,7 +6339,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090191968",
-      "label": "🚗 Local Link Section #1968",
+      "label": "Local Link Section #1968",
       "type": "street",
       "x": 905,
       "y": 406,
@@ -6347,7 +6347,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253805941",
-      "label": "🛑 Jct: Saint Lawrence Street & Saint Frederick Street",
+      "label": "Jct: Saint Lawrence Street & Saint Frederick Street",
       "type": "intersection",
       "x": 891,
       "y": 390,
@@ -6355,7 +6355,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090192090",
-      "label": "🚗 Local Link Section #2090",
+      "label": "Local Link Section #2090",
       "type": "street",
       "x": 909,
       "y": 396,
@@ -6363,7 +6363,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090192098",
-      "label": "🚗 Local Link Section #2098",
+      "label": "Local Link Section #2098",
       "type": "street",
       "x": 968,
       "y": 485,
@@ -6371,7 +6371,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090192117",
-      "label": "🚗 Local Link Section #2117",
+      "label": "Local Link Section #2117",
       "type": "street",
       "x": 974,
       "y": 476,
@@ -6379,7 +6379,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090191926",
-      "label": "🚗 Local Link Section #1926",
+      "label": "Local Link Section #1926",
       "type": "street",
       "x": 923,
       "y": 402,
@@ -6387,7 +6387,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090192057",
-      "label": "🚗 Local Link Section #2057",
+      "label": "Local Link Section #2057",
       "type": "street",
       "x": 881,
       "y": 401,
@@ -6395,7 +6395,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090191989",
-      "label": "🛑 Jct: West Aquamarine Street & Topas Street",
+      "label": "Jct: West Aquamarine Street & Topas Street",
       "type": "intersection",
       "x": 621,
       "y": 484,
@@ -6403,7 +6403,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090192135",
-      "label": "🛑 Jct: West Aquamarine Street & East Emerald Street",
+      "label": "Jct: West Aquamarine Street & East Emerald Street",
       "type": "intersection",
       "x": 627,
       "y": 496,
@@ -6411,7 +6411,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090192029",
-      "label": "📍 NIA Road",
+      "label": "NIA Road",
       "type": "street",
       "x": 671,
       "y": 479,
@@ -6419,7 +6419,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_7441953209",
-      "label": "🚗 Local Link Section #3209",
+      "label": "Local Link Section #3209",
       "type": "street",
       "x": 687,
       "y": 475,
@@ -6427,7 +6427,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090191988",
-      "label": "🚗 Local Link Section #1988",
+      "label": "Local Link Section #1988",
       "type": "street",
       "x": 761,
       "y": 461,
@@ -6435,7 +6435,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115999",
-      "label": "🚗 Local Link Section #5999",
+      "label": "Local Link Section #5999",
       "type": "street",
       "x": 778,
       "y": 459,
@@ -6443,7 +6443,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090192102",
-      "label": "🚗 Local Link Section #2102",
+      "label": "Local Link Section #2102",
       "type": "street",
       "x": 774,
       "y": 470,
@@ -6451,7 +6451,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090192060",
-      "label": "🛑 Jct: Tamarillo Street & Apricot Street",
+      "label": "Jct: Tamarillo Street & Apricot Street",
       "type": "intersection",
       "x": 625,
       "y": 516,
@@ -6459,7 +6459,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090191970",
-      "label": "🚗 Local Link Section #1970",
+      "label": "Local Link Section #1970",
       "type": "street",
       "x": 616,
       "y": 507,
@@ -6467,7 +6467,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090192083",
-      "label": "🛑 Jct: Silver Street & Ametyst Street",
+      "label": "Jct: Silver Street & Ametyst Street",
       "type": "intersection",
       "x": 644,
       "y": 495,
@@ -6475,7 +6475,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253764609",
-      "label": "📍 NIA Road",
+      "label": "NIA Road",
       "type": "street",
       "x": 722,
       "y": 554,
@@ -6483,7 +6483,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253786673",
-      "label": "🚗 Local Link Section #6673",
+      "label": "Local Link Section #6673",
       "type": "street",
       "x": 765,
       "y": 542,
@@ -6491,7 +6491,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090192061",
-      "label": "🛑 Jct: East Emerald Street & Peridot Street",
+      "label": "Jct: East Emerald Street & Peridot Street",
       "type": "intersection",
       "x": 633,
       "y": 506,
@@ -6499,7 +6499,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090192156",
-      "label": "🛑 Jct: Bronze Street & Ametyst Street",
+      "label": "Jct: Bronze Street & Ametyst Street",
       "type": "intersection",
       "x": 637,
       "y": 486,
@@ -6507,7 +6507,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090192070",
-      "label": "🛑 Jct: Bogoda & Belum",
+      "label": "Jct: Bogoda & Belum",
       "type": "intersection",
       "x": 837,
       "y": 452,
@@ -6515,7 +6515,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090192088",
-      "label": "🛑 Jct: Bogoda & Borra",
+      "label": "Jct: Bogoda & Borra",
       "type": "intersection",
       "x": 850,
       "y": 445,
@@ -6523,7 +6523,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090192071",
-      "label": "🛑 Jct: Bogoda & Kampot",
+      "label": "Jct: Bogoda & Kampot",
       "type": "intersection",
       "x": 856,
       "y": 433,
@@ -6531,7 +6531,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090201118",
-      "label": "🚗 Local Link Section #1118",
+      "label": "Local Link Section #1118",
       "type": "street",
       "x": 809,
       "y": 656,
@@ -6539,7 +6539,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090201295",
-      "label": "🚗 Local Link Section #1295",
+      "label": "Local Link Section #1295",
       "type": "street",
       "x": 803,
       "y": 647,
@@ -6547,7 +6547,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090201158",
-      "label": "📍 San Cristobal - Banlic Road",
+      "label": "San Cristobal - Banlic Road",
       "type": "street",
       "x": 805,
       "y": 667,
@@ -6555,7 +6555,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090201232",
-      "label": "🚗 Local Link Section #1232",
+      "label": "Local Link Section #1232",
       "type": "street",
       "x": 839,
       "y": 659,
@@ -6563,7 +6563,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090201186",
-      "label": "🚗 Local Link Section #1186",
+      "label": "Local Link Section #1186",
       "type": "street",
       "x": 856,
       "y": 666,
@@ -6571,7 +6571,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090201268",
-      "label": "🚗 Local Link Section #1268",
+      "label": "Local Link Section #1268",
       "type": "street",
       "x": 847,
       "y": 651,
@@ -6579,7 +6579,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090201244",
-      "label": "🚗 Local Link Section #1244",
+      "label": "Local Link Section #1244",
       "type": "street",
       "x": 865,
       "y": 646,
@@ -6587,7 +6587,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090201104",
-      "label": "🚗 Local Link Section #1104",
+      "label": "Local Link Section #1104",
       "type": "street",
       "x": 841,
       "y": 642,
@@ -6595,7 +6595,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090201123",
-      "label": "🚗 Local Link Section #1123",
+      "label": "Local Link Section #1123",
       "type": "street",
       "x": 830,
       "y": 649,
@@ -6603,7 +6603,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090201298",
-      "label": "🚗 Local Link Section #1298",
+      "label": "Local Link Section #1298",
       "type": "street",
       "x": 764,
       "y": 632,
@@ -6611,7 +6611,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090201233",
-      "label": "🚗 Local Link Section #1233",
+      "label": "Local Link Section #1233",
       "type": "street",
       "x": 786,
       "y": 652,
@@ -6619,7 +6619,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090201166",
-      "label": "🚗 Local Link Section #1166",
+      "label": "Local Link Section #1166",
       "type": "street",
       "x": 822,
       "y": 641,
@@ -6627,7 +6627,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090201229",
-      "label": "📍 Purok 1 Road",
+      "label": "Purok 1 Road",
       "type": "street",
       "x": 875,
       "y": 662,
@@ -6635,7 +6635,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090265157",
-      "label": "🛑 Jct: Durian Trail & Foxglove Street",
+      "label": "Jct: Durian Trail & Foxglove Street",
       "type": "intersection",
       "x": 827,
       "y": 581,
@@ -6643,7 +6643,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090265567",
-      "label": "🛑 Jct: Joshua Street & Redwood Street",
+      "label": "Jct: Joshua Street & Redwood Street",
       "type": "intersection",
       "x": 820,
       "y": 570,
@@ -6651,7 +6651,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090264899",
-      "label": "🛑 Jct: Joshua Street & Yakal Avenue",
+      "label": "Jct: Joshua Street & Yakal Avenue",
       "type": "intersection",
       "x": 786,
       "y": 583,
@@ -6659,7 +6659,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090265163",
-      "label": "🛑 Jct: Joshua Street & Tsampaka Street",
+      "label": "Jct: Joshua Street & Tsampaka Street",
       "type": "intersection",
       "x": 808,
       "y": 579,
@@ -6667,7 +6667,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090264547",
-      "label": "🛑 Jct: Locu Street & Eucalyptus Street",
+      "label": "Jct: Locu Street & Eucalyptus Street",
       "type": "intersection",
       "x": 786,
       "y": 570,
@@ -6675,7 +6675,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090264290",
-      "label": "🛑 Jct: Black Bean Street & Blue Gray Street",
+      "label": "Jct: Black Bean Street & Blue Gray Street",
       "type": "intersection",
       "x": 808,
       "y": 589,
@@ -6683,7 +6683,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090264506",
-      "label": "🛑 Jct: Black Bean Street & Yakal Avenue",
+      "label": "Jct: Black Bean Street & Yakal Avenue",
       "type": "intersection",
       "x": 791,
       "y": 592,
@@ -6691,7 +6691,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090264346",
-      "label": "🚗 Local Link Section #4346",
+      "label": "Local Link Section #4346",
       "type": "street",
       "x": 756,
       "y": 579,
@@ -6699,7 +6699,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090264940",
-      "label": "🛑 Jct: Maroon Trail & Navajo Loop",
+      "label": "Jct: Maroon Trail & Navajo Loop",
       "type": "intersection",
       "x": 767,
       "y": 593,
@@ -6707,7 +6707,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090264583",
-      "label": "🚗 Local Link Section #4583",
+      "label": "Local Link Section #4583",
       "type": "street",
       "x": 828,
       "y": 618,
@@ -6715,7 +6715,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090264627",
-      "label": "🛑 Jct: Raspberry Street & Yakal Avenue",
+      "label": "Jct: Raspberry Street & Yakal Avenue",
       "type": "intersection",
       "x": 783,
       "y": 606,
@@ -6723,7 +6723,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090264693",
-      "label": "🛑 Jct: Rizal Street & Dizon Street",
+      "label": "Jct: Rizal Street & Dizon Street",
       "type": "intersection",
       "x": 836,
       "y": 573,
@@ -6731,7 +6731,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090264617",
-      "label": "🛑 Jct: Vivid Blue Street & Bole Street",
+      "label": "Jct: Vivid Blue Street & Bole Street",
       "type": "intersection",
       "x": 843,
       "y": 583,
@@ -6739,7 +6739,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090264464",
-      "label": "🚗 Local Link Section #4464",
+      "label": "Local Link Section #4464",
       "type": "street",
       "x": 847,
       "y": 608,
@@ -6747,7 +6747,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090265001",
-      "label": "🚗 Local Link Section #5001",
+      "label": "Local Link Section #5001",
       "type": "street",
       "x": 865,
       "y": 607,
@@ -6755,7 +6755,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090264289",
-      "label": "🚗 Local Link Section #4289",
+      "label": "Local Link Section #4289",
       "type": "street",
       "x": 739,
       "y": 564,
@@ -6763,7 +6763,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8383272223",
-      "label": "🛑 Jct: Sycamore Street & Silverberry Street",
+      "label": "Jct: Sycamore Street & Silverberry Street",
       "type": "intersection",
       "x": 893,
       "y": 605,
@@ -6771,7 +6771,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090264331",
-      "label": "🛑 Jct: Escoda Street & Hibok-Hibok Street",
+      "label": "Jct: Escoda Street & Hibok-Hibok Street",
       "type": "intersection",
       "x": 882,
       "y": 585,
@@ -6779,7 +6779,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090264439",
-      "label": "🛑 Jct: Mabuhay Road & Escoda Street",
+      "label": "Jct: Mabuhay Road & Escoda Street",
       "type": "intersection",
       "x": 929,
       "y": 557,
@@ -6787,7 +6787,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090265082",
-      "label": "🚗 Local Link Section #5082",
+      "label": "Local Link Section #5082",
       "type": "street",
       "x": 976,
       "y": 547,
@@ -6795,7 +6795,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090265311",
-      "label": "🚗 Local Link Section #5311",
+      "label": "Local Link Section #5311",
       "type": "street",
       "x": 993,
       "y": 544,
@@ -6803,7 +6803,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8386081052",
-      "label": "🛑 Jct: Arenal Lane & Mayakil Street",
+      "label": "Jct: Arenal Lane & Mayakil Street",
       "type": "intersection",
       "x": 1018,
       "y": 539,
@@ -6811,7 +6811,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6358789466",
-      "label": "🛑 Jct: Escoda Street & Garcia Street",
+      "label": "Jct: Escoda Street & Garcia Street",
       "type": "intersection",
       "x": 910,
       "y": 580,
@@ -6819,7 +6819,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8679580077",
-      "label": "🛑 Jct: Escoda Street & Paliparan Street",
+      "label": "Jct: Escoda Street & Paliparan Street",
       "type": "intersection",
       "x": 935,
       "y": 574,
@@ -6827,7 +6827,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090264567",
-      "label": "📍 Bible",
+      "label": "Bible",
       "type": "street",
       "x": 753,
       "y": 569,
@@ -6835,7 +6835,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090372176",
-      "label": "🚗 Local Link Section #2176",
+      "label": "Local Link Section #2176",
       "type": "street",
       "x": 854,
       "y": 569,
@@ -6843,7 +6843,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090371845",
-      "label": "🛑 Jct: Olmedo Loop & Mapa Street",
+      "label": "Jct: Olmedo Loop & Mapa Street",
       "type": "intersection",
       "x": 900,
       "y": 568,
@@ -6851,7 +6851,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090371731",
-      "label": "🛑 Jct: Cabrera Loop & Joya Loop",
+      "label": "Jct: Cabrera Loop & Joya Loop",
       "type": "intersection",
       "x": 872,
       "y": 565,
@@ -6859,7 +6859,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090372205",
-      "label": "🛑 Jct: Hibok-Hibok Street & Joya Loop",
+      "label": "Jct: Hibok-Hibok Street & Joya Loop",
       "type": "intersection",
       "x": 890,
       "y": 575,
@@ -6867,7 +6867,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090371791",
-      "label": "🛑 Jct: Vivid Blue Street & Bole Street",
+      "label": "Jct: Vivid Blue Street & Bole Street",
       "type": "intersection",
       "x": 848,
       "y": 594,
@@ -6875,7 +6875,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090371844",
-      "label": "📍 Iriga Street",
+      "label": "Iriga Street",
       "type": "street",
       "x": 895,
       "y": 553,
@@ -6883,7 +6883,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090371944",
-      "label": "🛑 Jct: Amorsolo Loop & Iriga Street",
+      "label": "Jct: Amorsolo Loop & Iriga Street",
       "type": "intersection",
       "x": 876,
       "y": 551,
@@ -6891,7 +6891,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090371847",
-      "label": "🛑 Jct: Lukban Loop & Amorsolo Loop",
+      "label": "Jct: Lukban Loop & Amorsolo Loop",
       "type": "intersection",
       "x": 862,
       "y": 556,
@@ -6899,7 +6899,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090371924",
-      "label": "📍 Escoda Street",
+      "label": "Escoda Street",
       "type": "street",
       "x": 800,
       "y": 606,
@@ -6907,7 +6907,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090371867",
-      "label": "🛑 Jct: Chocolate Street & Blue Berry Street",
+      "label": "Jct: Chocolate Street & Blue Berry Street",
       "type": "intersection",
       "x": 830,
       "y": 594,
@@ -6915,7 +6915,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090371942",
-      "label": "🚗 Local Link Section #1942",
+      "label": "Local Link Section #1942",
       "type": "street",
       "x": 867,
       "y": 576,
@@ -6923,7 +6923,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090372267",
-      "label": "🚗 Local Link Section #2267",
+      "label": "Local Link Section #2267",
       "type": "street",
       "x": 885,
       "y": 543,
@@ -6931,7 +6931,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090411043",
-      "label": "🛑 Jct: Salapan Street & Binondo Street",
+      "label": "Jct: Salapan Street & Binondo Street",
       "type": "intersection",
       "x": 959,
       "y": 588,
@@ -6939,7 +6939,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090411694",
-      "label": "🛑 Jct: Binondo Street & Ermita Street",
+      "label": "Jct: Binondo Street & Ermita Street",
       "type": "intersection",
       "x": 981,
       "y": 577,
@@ -6947,7 +6947,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090411409",
-      "label": "🛑 Jct: Binondo Street & Samar Street",
+      "label": "Jct: Binondo Street & Samar Street",
       "type": "intersection",
       "x": 998,
       "y": 574,
@@ -6955,7 +6955,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090433864",
-      "label": "🛑 Jct: Binondo Street & Ermita Street",
+      "label": "Jct: Binondo Street & Ermita Street",
       "type": "intersection",
       "x": 1019,
       "y": 571,
@@ -6963,7 +6963,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090412025",
-      "label": "📍 Samar Street",
+      "label": "Samar Street",
       "type": "street",
       "x": 997,
       "y": 585,
@@ -6971,7 +6971,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090411626",
-      "label": "🛑 Jct: Mabuhay City Avenue & Pinewood Street",
+      "label": "Jct: Mabuhay City Avenue & Pinewood Street",
       "type": "intersection",
       "x": 916,
       "y": 596,
@@ -6979,7 +6979,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090411448",
-      "label": "🛑 Jct: Taguig Street & Mabuhay City Avenue",
+      "label": "Jct: Taguig Street & Mabuhay City Avenue",
       "type": "intersection",
       "x": 924,
       "y": 611,
@@ -6987,7 +6987,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090411836",
-      "label": "🛑 Jct: Lipa Street & Makati Street",
+      "label": "Jct: Lipa Street & Makati Street",
       "type": "intersection",
       "x": 935,
       "y": 604,
@@ -6995,7 +6995,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090411911",
-      "label": "📍 Culi T Street",
+      "label": "Culi T Street",
       "type": "street",
       "x": 975,
       "y": 589,
@@ -7003,7 +7003,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090411541",
-      "label": "🛑 Jct: Sycamore Street & Pinewood Street",
+      "label": "Jct: Sycamore Street & Pinewood Street",
       "type": "intersection",
       "x": 908,
       "y": 610,
@@ -7011,7 +7011,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2123675793",
-      "label": "🛑 Jct: Lipa Street & Tanauan Street",
+      "label": "Jct: Lipa Street & Tanauan Street",
       "type": "intersection",
       "x": 957,
       "y": 599,
@@ -7019,7 +7019,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090411824",
-      "label": "🛑 Jct: Makati Street & Paliparan Street",
+      "label": "Jct: Makati Street & Paliparan Street",
       "type": "intersection",
       "x": 933,
       "y": 593,
@@ -7027,7 +7027,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090433844",
-      "label": "📍 Samar Street",
+      "label": "Samar Street",
       "type": "street",
       "x": 1009,
       "y": 593,
@@ -7035,7 +7035,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090434005",
-      "label": "🛑 Jct: Samar Street & Manadi Street",
+      "label": "Jct: Samar Street & Manadi Street",
       "type": "intersection",
       "x": 1032,
       "y": 591,
@@ -7043,7 +7043,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090411854",
-      "label": "🛑 Jct: Marinduque Street & Marilao Street",
+      "label": "Jct: Marinduque Street & Marilao Street",
       "type": "intersection",
       "x": 961,
       "y": 575,
@@ -7051,7 +7051,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090411730",
-      "label": "🚗 Local Link Section #1730",
+      "label": "Local Link Section #1730",
       "type": "street",
       "x": 956,
       "y": 563,
@@ -7059,7 +7059,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090411753",
-      "label": "🛑 Jct: Marinduque Street & Pandan Street",
+      "label": "Jct: Marinduque Street & Pandan Street",
       "type": "intersection",
       "x": 994,
       "y": 563,
@@ -7067,7 +7067,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090433755",
-      "label": "🛑 Jct: Bucid Lane & Sibuyan Street",
+      "label": "Jct: Bucid Lane & Sibuyan Street",
       "type": "intersection",
       "x": 1030,
       "y": 554,
@@ -7075,7 +7075,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090434127",
-      "label": "📍 Manadi Street",
+      "label": "Manadi Street",
       "type": "street",
       "x": 1025,
       "y": 583,
@@ -7083,7 +7083,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090433698",
-      "label": "🛑 Jct: Pandan Street & Mayakil Street",
+      "label": "Jct: Pandan Street & Mayakil Street",
       "type": "intersection",
       "x": 1010,
       "y": 550,
@@ -7091,7 +7091,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090434108",
-      "label": "🛑 Jct: Sibuyan Street & Leyte Street",
+      "label": "Jct: Sibuyan Street & Leyte Street",
       "type": "intersection",
       "x": 1039,
       "y": 565,
@@ -7099,7 +7099,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090433725",
-      "label": "🛑 Jct: Bongot Lane & Manadi Street",
+      "label": "Jct: Bongot Lane & Manadi Street",
       "type": "intersection",
       "x": 1015,
       "y": 560,
@@ -7107,7 +7107,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090471027",
-      "label": "🚗 Local Link Section #1027",
+      "label": "Local Link Section #1027",
       "type": "street",
       "x": 1041,
       "y": 579,
@@ -7115,7 +7115,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090471392",
-      "label": "🚗 Local Link Section #1392",
+      "label": "Local Link Section #1392",
       "type": "street",
       "x": 711,
       "y": 574,
@@ -7123,7 +7123,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090471370",
-      "label": "🚗 Local Link Section #1370",
+      "label": "Local Link Section #1370",
       "type": "street",
       "x": 529,
       "y": 507,
@@ -7131,7 +7131,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090471305",
-      "label": "🛑 Jct: Chestnut Street & Alisbury Road",
+      "label": "Jct: Chestnut Street & Alisbury Road",
       "type": "intersection",
       "x": 537,
       "y": 527,
@@ -7139,7 +7139,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090471301",
-      "label": "🛑 Jct: Yakal Street & Maple Street",
+      "label": "Jct: Yakal Street & Maple Street",
       "type": "intersection",
       "x": 559,
       "y": 524,
@@ -7147,7 +7147,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090471199",
-      "label": "🚗 Local Link Section #1199",
+      "label": "Local Link Section #1199",
       "type": "street",
       "x": 697,
       "y": 566,
@@ -7155,7 +7155,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090471281",
-      "label": "📍 Queens Road",
+      "label": "Queens Road",
       "type": "street",
       "x": 553,
       "y": 504,
@@ -7163,7 +7163,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1348830497",
-      "label": "📍 Narra Road",
+      "label": "Narra Road",
       "type": "street",
       "x": 1077,
       "y": 598,
@@ -7171,7 +7171,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090498933",
-      "label": "🛑 Jct: Masbate Street & Palawan Street",
+      "label": "Jct: Masbate Street & Palawan Street",
       "type": "intersection",
       "x": 349,
       "y": 529,
@@ -7179,7 +7179,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090498768",
-      "label": "🛑 Jct: Masbate Street & Samar Street",
+      "label": "Jct: Masbate Street & Samar Street",
       "type": "intersection",
       "x": 375,
       "y": 529,
@@ -7187,7 +7187,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090499007",
-      "label": "🛑 Jct: Manibong Street & Negros Street",
+      "label": "Jct: Manibong Street & Negros Street",
       "type": "intersection",
       "x": 405,
       "y": 525,
@@ -7195,7 +7195,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090498752",
-      "label": "🛑 Jct: Samar Street & Manibong Street",
+      "label": "Jct: Samar Street & Manibong Street",
       "type": "intersection",
       "x": 381,
       "y": 517,
@@ -7203,7 +7203,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090498882",
-      "label": "🛑 Jct: Surigao Street & Samar Street",
+      "label": "Jct: Surigao Street & Samar Street",
       "type": "intersection",
       "x": 365,
       "y": 511,
@@ -7211,7 +7211,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090498787",
-      "label": "🛑 Jct: Palawan Street & South Luzon Expressway",
+      "label": "Jct: Palawan Street & South Luzon Expressway",
       "type": "intersection",
       "x": 333,
       "y": 505,
@@ -7219,7 +7219,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090499018",
-      "label": "🚗 Local Link Section #9018",
+      "label": "Local Link Section #9018",
       "type": "street",
       "x": 350,
       "y": 503,
@@ -7227,7 +7227,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090498917",
-      "label": "🛑 Jct: Samar Street & Romblon Street",
+      "label": "Jct: Samar Street & Romblon Street",
       "type": "intersection",
       "x": 400,
       "y": 536,
@@ -7235,7 +7235,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090498770",
-      "label": "🛑 Jct: Negros Street & Pilas Street",
+      "label": "Jct: Negros Street & Pilas Street",
       "type": "intersection",
       "x": 400,
       "y": 514,
@@ -7243,7 +7243,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090498866",
-      "label": "📍 Lahoy Street",
+      "label": "Lahoy Street",
       "type": "street",
       "x": 359,
       "y": 520,
@@ -7251,7 +7251,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090498639",
-      "label": "🚗 Local Link Section #8639",
+      "label": "Local Link Section #8639",
       "type": "street",
       "x": 381,
       "y": 507,
@@ -7259,7 +7259,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090499008",
-      "label": "🛑 Jct: Mindoro Street & Maricaban Street",
+      "label": "Jct: Mindoro Street & Maricaban Street",
       "type": "intersection",
       "x": 380,
       "y": 542,
@@ -7267,7 +7267,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090517023",
-      "label": "🛑 Jct: Road 5 & Balabac Street",
+      "label": "Jct: Road 5 & Balabac Street",
       "type": "intersection",
       "x": 412,
       "y": 549,
@@ -7275,7 +7275,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090517117",
-      "label": "📍 Road 5",
+      "label": "Road 5",
       "type": "street",
       "x": 385,
       "y": 557,
@@ -7283,7 +7283,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090517135",
-      "label": "🛑 Jct: Cagayan Street & Biliran Street",
+      "label": "Jct: Cagayan Street & Biliran Street",
       "type": "intersection",
       "x": 420,
       "y": 533,
@@ -7291,7 +7291,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090517152",
-      "label": "🛑 Jct: Calaguia Street & Cagayan Street",
+      "label": "Jct: Calaguia Street & Cagayan Street",
       "type": "intersection",
       "x": 431,
       "y": 524,
@@ -7299,7 +7299,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2731083111",
-      "label": "🛑 Jct: Cagayan Street & Bohol Street",
+      "label": "Jct: Cagayan Street & Bohol Street",
       "type": "intersection",
       "x": 449,
       "y": 527,
@@ -7307,7 +7307,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090517057",
-      "label": "🛑 Jct: Calusa Street & Bohol Street",
+      "label": "Jct: Calusa Street & Bohol Street",
       "type": "intersection",
       "x": 438,
       "y": 534,
@@ -7315,7 +7315,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090517087",
-      "label": "🛑 Jct: Bohol Street & Basilan Street",
+      "label": "Jct: Bohol Street & Basilan Street",
       "type": "intersection",
       "x": 427,
       "y": 563,
@@ -7323,7 +7323,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090517120",
-      "label": "🛑 Jct: Bohol Street & Busuanga Street",
+      "label": "Jct: Bohol Street & Busuanga Street",
       "type": "intersection",
       "x": 446,
       "y": 552,
@@ -7331,7 +7331,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090517047",
-      "label": "🛑 Jct: Pulo-Diezmo Road & Main Avenue",
+      "label": "Jct: Pulo-Diezmo Road & Main Avenue",
       "type": "intersection",
       "x": 424,
       "y": 574,
@@ -7339,7 +7339,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090516988",
-      "label": "🛑 Jct: Boracay Street & Catanduanes Street",
+      "label": "Jct: Boracay Street & Catanduanes Street",
       "type": "intersection",
       "x": 423,
       "y": 516,
@@ -7347,7 +7347,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090522554",
-      "label": "🚗 Local Link Section #2554",
+      "label": "Local Link Section #2554",
       "type": "street",
       "x": 455,
       "y": 560,
@@ -7355,7 +7355,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090522525",
-      "label": "📍 Pulo-Diezmo Road",
+      "label": "Pulo-Diezmo Road",
       "type": "street",
       "x": 481,
       "y": 557,
@@ -7363,7 +7363,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090522661",
-      "label": "🛑 Jct: Emerald Street & Pulo-Diezmo Road",
+      "label": "Jct: Emerald Street & Pulo-Diezmo Road",
       "type": "intersection",
       "x": 579,
       "y": 546,
@@ -7371,7 +7371,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090522604",
-      "label": "🚗 Local Link Section #2604",
+      "label": "Local Link Section #2604",
       "type": "street",
       "x": 670,
       "y": 541,
@@ -7379,7 +7379,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090522520",
-      "label": "🚗 Local Link Section #2520",
+      "label": "Local Link Section #2520",
       "type": "street",
       "x": 638,
       "y": 545,
@@ -7387,7 +7387,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090522688",
-      "label": "🛑 Jct: Pomelo Street & Avocado Street",
+      "label": "Jct: Pomelo Street & Avocado Street",
       "type": "intersection",
       "x": 617,
       "y": 535,
@@ -7395,7 +7395,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090522542",
-      "label": "🛑 Jct: Pomelo Street & Banana Street",
+      "label": "Jct: Pomelo Street & Banana Street",
       "type": "intersection",
       "x": 661,
       "y": 532,
@@ -7403,7 +7403,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090522631",
-      "label": "🛑 Jct: Pomelo Street & Chico Street",
+      "label": "Jct: Pomelo Street & Chico Street",
       "type": "intersection",
       "x": 692,
       "y": 531,
@@ -7411,7 +7411,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090522617",
-      "label": "🚗 Local Link Section #2617",
+      "label": "Local Link Section #2617",
       "type": "street",
       "x": 496,
       "y": 532,
@@ -7419,7 +7419,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8382992429",
-      "label": "🚗 Local Link Section #2429",
+      "label": "Local Link Section #2429",
       "type": "street",
       "x": 506,
       "y": 540,
@@ -7427,7 +7427,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090522593",
-      "label": "🚗 Local Link Section #2593",
+      "label": "Local Link Section #2593",
       "type": "street",
       "x": 498,
       "y": 550,
@@ -7435,7 +7435,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8383123165",
-      "label": "🚗 Local Link Section #3165",
+      "label": "Local Link Section #3165",
       "type": "street",
       "x": 514,
       "y": 555,
@@ -7443,7 +7443,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090528372",
-      "label": "🛑 Jct: Narra Street & Molave Street",
+      "label": "Jct: Narra Street & Molave Street",
       "type": "intersection",
       "x": 611,
       "y": 561,
@@ -7451,7 +7451,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090528371",
-      "label": "🚗 Local Link Section #8371",
+      "label": "Local Link Section #8371",
       "type": "street",
       "x": 651,
       "y": 554,
@@ -7459,7 +7459,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090528380",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 624,
       "y": 581,
@@ -7467,7 +7467,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090528356",
-      "label": "🚗 Local Link Section #8356",
+      "label": "Local Link Section #8356",
       "type": "street",
       "x": 608,
       "y": 585,
@@ -7475,7 +7475,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090528258",
-      "label": "🚗 Local Link Section #8258",
+      "label": "Local Link Section #8258",
       "type": "street",
       "x": 615,
       "y": 594,
@@ -7483,7 +7483,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090528317",
-      "label": "📍 Narra Street",
+      "label": "Narra Street",
       "type": "street",
       "x": 571,
       "y": 576,
@@ -7491,7 +7491,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090528331",
-      "label": "🚗 Local Link Section #8331",
+      "label": "Local Link Section #8331",
       "type": "street",
       "x": 599,
       "y": 593,
@@ -7499,7 +7499,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090528265",
-      "label": "📍 Narra Street",
+      "label": "Narra Street",
       "type": "street",
       "x": 558,
       "y": 570,
@@ -7507,7 +7507,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090528273",
-      "label": "📍 Narra Street",
+      "label": "Narra Street",
       "type": "street",
       "x": 591,
       "y": 564,
@@ -7515,7 +7515,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090528249",
-      "label": "🚗 Local Link Section #8249",
+      "label": "Local Link Section #8249",
       "type": "street",
       "x": 572,
       "y": 565,
@@ -7523,7 +7523,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090535968",
-      "label": "🛑 Jct: Via Nouva & Via Correnti",
+      "label": "Jct: Via Nouva & Via Correnti",
       "type": "intersection",
       "x": 541,
       "y": 603,
@@ -7531,7 +7531,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090536011",
-      "label": "🛑 Jct: Via Valentia & Via Cosenza",
+      "label": "Jct: Via Valentia & Via Cosenza",
       "type": "intersection",
       "x": 502,
       "y": 586,
@@ -7539,7 +7539,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090535946",
-      "label": "🛑 Jct: Via Valentia & Via Cosenza",
+      "label": "Jct: Via Valentia & Via Cosenza",
       "type": "intersection",
       "x": 529,
       "y": 582,
@@ -7547,7 +7547,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090554140",
-      "label": "🛑 Jct: San Isidro - Mahogany Road & Mahogany 2 Main Road",
+      "label": "Jct: San Isidro - Mahogany Road & Mahogany 2 Main Road",
       "type": "intersection",
       "x": 524,
       "y": 611,
@@ -7555,7 +7555,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090536065",
-      "label": "🛑 Jct: Via Molino & Via Benebento",
+      "label": "Jct: Via Molino & Via Benebento",
       "type": "intersection",
       "x": 541,
       "y": 590,
@@ -7563,7 +7563,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090535993",
-      "label": "🛑 Jct: Via Pesaro & Mahogany 2 Main Road",
+      "label": "Jct: Via Pesaro & Mahogany 2 Main Road",
       "type": "intersection",
       "x": 530,
       "y": 596,
@@ -7571,7 +7571,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090553910",
-      "label": "📍 Mahogany 2 Main Road",
+      "label": "Mahogany 2 Main Road",
       "type": "street",
       "x": 507,
       "y": 605,
@@ -7579,7 +7579,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090553850",
-      "label": "🚗 Local Link Section #3850",
+      "label": "Local Link Section #3850",
       "type": "street",
       "x": 515,
       "y": 624,
@@ -7587,7 +7587,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090553940",
-      "label": "🚗 Local Link Section #3940",
+      "label": "Local Link Section #3940",
       "type": "street",
       "x": 510,
       "y": 595,
@@ -7595,7 +7595,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090554127",
-      "label": "🚗 Local Link Section #4127",
+      "label": "Local Link Section #4127",
       "type": "street",
       "x": 507,
       "y": 615,
@@ -7603,7 +7603,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090591156",
-      "label": "🚗 Local Link Section #1156",
+      "label": "Local Link Section #1156",
       "type": "street",
       "x": 102,
       "y": 482,
@@ -7611,7 +7611,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090591048",
-      "label": "🚗 Local Link Section #1048",
+      "label": "Local Link Section #1048",
       "type": "street",
       "x": 106,
       "y": 493,
@@ -7619,7 +7619,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1416881920",
-      "label": "📍 Greenfield Parkway",
+      "label": "Greenfield Parkway",
       "type": "street",
       "x": 113,
       "y": 474,
@@ -7627,7 +7627,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090590876",
-      "label": "📍 Greenfield Parkway",
+      "label": "Greenfield Parkway",
       "type": "street",
       "x": 82,
       "y": 479,
@@ -7635,7 +7635,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090590878",
-      "label": "🚗 Local Link Section #0878",
+      "label": "Local Link Section #0878",
       "type": "street",
       "x": 89,
       "y": 488,
@@ -7643,7 +7643,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090663472",
-      "label": "🚗 Local Link Section #3472",
+      "label": "Local Link Section #3472",
       "type": "street",
       "x": -81,
       "y": 561,
@@ -7651,7 +7651,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2264140375",
-      "label": "🚗 Local Link Section #0375",
+      "label": "Local Link Section #0375",
       "type": "street",
       "x": 68,
       "y": 521,
@@ -7659,7 +7659,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8042537687",
-      "label": "🚗 Local Link Section #7687",
+      "label": "Local Link Section #7687",
       "type": "street",
       "x": 165,
       "y": 487,
@@ -7667,7 +7667,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090904539",
-      "label": "🚗 Local Link Section #4539",
+      "label": "Local Link Section #4539",
       "type": "street",
       "x": 757,
       "y": 681,
@@ -7675,7 +7675,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090904798",
-      "label": "🛑 Jct: Marigold Street & Orchid Street",
+      "label": "Jct: Marigold Street & Orchid Street",
       "type": "intersection",
       "x": 781,
       "y": 691,
@@ -7683,7 +7683,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090904710",
-      "label": "🚗 Local Link Section #4710",
+      "label": "Local Link Section #4710",
       "type": "street",
       "x": 730,
       "y": 671,
@@ -7691,7 +7691,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090904478",
-      "label": "🚗 Local Link Section #4478",
+      "label": "Local Link Section #4478",
       "type": "street",
       "x": 747,
       "y": 668,
@@ -7699,7 +7699,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090904443",
-      "label": "🚗 Local Link Section #4443",
+      "label": "Local Link Section #4443",
       "type": "street",
       "x": 771,
       "y": 662,
@@ -7707,7 +7707,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1261615380",
-      "label": "📍 San Cristobal - Banlic Road",
+      "label": "San Cristobal - Banlic Road",
       "type": "street",
       "x": 781,
       "y": 671,
@@ -7715,7 +7715,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090904838",
-      "label": "📍 Orchid Street",
+      "label": "Orchid Street",
       "type": "street",
       "x": 784,
       "y": 681,
@@ -7723,7 +7723,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364003900",
-      "label": "🚗 Local Link Section #3900",
+      "label": "Local Link Section #3900",
       "type": "street",
       "x": 749,
       "y": 691,
@@ -7731,7 +7731,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090904645",
-      "label": "📍 San Cristobal - Banlic Road",
+      "label": "San Cristobal - Banlic Road",
       "type": "street",
       "x": 733,
       "y": 680,
@@ -7739,7 +7739,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090922383",
-      "label": "🚗 Local Link Section #2383",
+      "label": "Local Link Section #2383",
       "type": "street",
       "x": 719,
       "y": 649,
@@ -7747,7 +7747,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090922393",
-      "label": "📍 Banlic - Mamatid Road",
+      "label": "Banlic - Mamatid Road",
       "type": "street",
       "x": 728,
       "y": 659,
@@ -7755,7 +7755,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090922398",
-      "label": "🛑 Jct: Ringgit Street & Won Street",
+      "label": "Jct: Ringgit Street & Won Street",
       "type": "intersection",
       "x": 663,
       "y": 675,
@@ -7763,7 +7763,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090922506",
-      "label": "🛑 Jct: Franc Street & Dollar Street",
+      "label": "Jct: Franc Street & Dollar Street",
       "type": "intersection",
       "x": 671,
       "y": 687,
@@ -7771,7 +7771,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091050857",
-      "label": "🛑 Jct: Hologram & River Drive",
+      "label": "Jct: Hologram & River Drive",
       "type": "intersection",
       "x": 352,
       "y": 617,
@@ -7779,7 +7779,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091052369",
-      "label": "🛑 Jct: Hologram & River Drive",
+      "label": "Jct: Hologram & River Drive",
       "type": "intersection",
       "x": 359,
       "y": 637,
@@ -7787,7 +7787,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2271660201",
-      "label": "🚗 Local Link Section #0201",
+      "label": "Local Link Section #0201",
       "type": "street",
       "x": 180,
       "y": 648,
@@ -7795,7 +7795,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091052708",
-      "label": "🚗 Local Link Section #2708",
+      "label": "Local Link Section #2708",
       "type": "street",
       "x": 174,
       "y": 625,
@@ -7803,7 +7803,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8682010437",
-      "label": "🚗 Local Link Section #0437",
+      "label": "Local Link Section #0437",
       "type": "street",
       "x": 162,
       "y": 638,
@@ -7811,7 +7811,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091051726",
-      "label": "🛑 Jct: Fusion Street & Park Drive",
+      "label": "Jct: Fusion Street & Park Drive",
       "type": "intersection",
       "x": 304,
       "y": 615,
@@ -7819,7 +7819,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091051770",
-      "label": "🛑 Jct: Fusion Street & Park Drive",
+      "label": "Jct: Fusion Street & Park Drive",
       "type": "intersection",
       "x": 295,
       "y": 596,
@@ -7827,7 +7827,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091050682",
-      "label": "🛑 Jct: Circuit Street & Main Avenue",
+      "label": "Jct: Circuit Street & Main Avenue",
       "type": "intersection",
       "x": 244,
       "y": 622,
@@ -7835,7 +7835,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091052383",
-      "label": "📍 Circuit Street",
+      "label": "Circuit Street",
       "type": "street",
       "x": 236,
       "y": 608,
@@ -7843,7 +7843,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2865745358",
-      "label": "📍 River Drive",
+      "label": "River Drive",
       "type": "street",
       "x": 364,
       "y": 609,
@@ -7851,7 +7851,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091051196",
-      "label": "🛑 Jct: Gyro & Main Avenue",
+      "label": "Jct: Gyro & Main Avenue",
       "type": "intersection",
       "x": 326,
       "y": 617,
@@ -7859,7 +7859,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091051452",
-      "label": "📍 Gyro",
+      "label": "Gyro",
       "type": "street",
       "x": 333,
       "y": 644,
@@ -7867,7 +7867,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091050780",
-      "label": "📍 Diode",
+      "label": "Diode",
       "type": "street",
       "x": 263,
       "y": 597,
@@ -7875,7 +7875,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6494277739",
-      "label": "🛑 Jct: Diode & Main Avenue",
+      "label": "Jct: Diode & Main Avenue",
       "type": "intersection",
       "x": 271,
       "y": 619,
@@ -7883,7 +7883,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2859339666",
-      "label": "🛑 Jct: Diode & Park Drive Extension",
+      "label": "Jct: Diode & Park Drive Extension",
       "type": "intersection",
       "x": 268,
       "y": 644,
@@ -7891,7 +7891,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091052589",
-      "label": "🛑 Jct: Philips Avenue & South Road",
+      "label": "Jct: Philips Avenue & South Road",
       "type": "intersection",
       "x": 200,
       "y": 660,
@@ -7899,7 +7899,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091051392",
-      "label": "🛑 Jct: Philips Avenue & Binary",
+      "label": "Jct: Philips Avenue & Binary",
       "type": "intersection",
       "x": 227,
       "y": 657,
@@ -7907,7 +7907,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091051539",
-      "label": "🛑 Jct: Main Avenue & Ampere Street",
+      "label": "Jct: Main Avenue & Ampere Street",
       "type": "intersection",
       "x": 190,
       "y": 627,
@@ -7915,7 +7915,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091050960",
-      "label": "🛑 Jct: Main Avenue & Binary",
+      "label": "Jct: Main Avenue & Binary",
       "type": "intersection",
       "x": 217,
       "y": 624,
@@ -7923,7 +7923,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091052484",
-      "label": "📍 Park Drive",
+      "label": "Park Drive",
       "type": "street",
       "x": 279,
       "y": 592,
@@ -7931,7 +7931,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091052317",
-      "label": "📍 Ampere Street",
+      "label": "Ampere Street",
       "type": "street",
       "x": 197,
       "y": 612,
@@ -7939,7 +7939,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091075112",
-      "label": "🚗 Local Link Section #5112",
+      "label": "Local Link Section #5112",
       "type": "street",
       "x": 239,
       "y": 581,
@@ -7947,7 +7947,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091075142",
-      "label": "🚗 Local Link Section #5142",
+      "label": "Local Link Section #5142",
       "type": "street",
       "x": 227,
       "y": 595,
@@ -7955,7 +7955,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091083850",
-      "label": "🚗 Local Link Section #3850",
+      "label": "Local Link Section #3850",
       "type": "street",
       "x": 150,
       "y": 645,
@@ -7963,7 +7963,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091083852",
-      "label": "🚗 Local Link Section #3852",
+      "label": "Local Link Section #3852",
       "type": "street",
       "x": 129,
       "y": 641,
@@ -7971,7 +7971,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091118401",
-      "label": "🚗 Local Link Section #8401",
+      "label": "Local Link Section #8401",
       "type": "street",
       "x": 106,
       "y": 654,
@@ -7979,7 +7979,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091118682",
-      "label": "📍 Canterbury Street",
+      "label": "Canterbury Street",
       "type": "street",
       "x": 42,
       "y": 662,
@@ -7987,7 +7987,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091118755",
-      "label": "🚗 Local Link Section #8755",
+      "label": "Local Link Section #8755",
       "type": "street",
       "x": -5,
       "y": 664,
@@ -7995,7 +7995,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091158638",
-      "label": "🛑 Jct: Canterbury Street & Cambridge Avenue",
+      "label": "Jct: Canterbury Street & Cambridge Avenue",
       "type": "intersection",
       "x": 40,
       "y": 650,
@@ -8003,7 +8003,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1418824677",
-      "label": "🛑 Jct: Worcester Street & Manchester Lane",
+      "label": "Jct: Worcester Street & Manchester Lane",
       "type": "intersection",
       "x": 70,
       "y": 648,
@@ -8011,7 +8011,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_10817174901",
-      "label": "🛑 Jct: Manchester Lane & Birmingham Street",
+      "label": "Jct: Manchester Lane & Birmingham Street",
       "type": "intersection",
       "x": 92,
       "y": 645,
@@ -8019,7 +8019,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091158308",
-      "label": "📍 Wakefield Street",
+      "label": "Wakefield Street",
       "type": "street",
       "x": 76,
       "y": 639,
@@ -8027,7 +8027,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091507235",
-      "label": "🚗 Local Link Section #7235",
+      "label": "Local Link Section #7235",
       "type": "street",
       "x": 381,
       "y": 654,
@@ -8035,7 +8035,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091507587",
-      "label": "📍 Precious Drive",
+      "label": "Precious Drive",
       "type": "street",
       "x": 387,
       "y": 665,
@@ -8043,7 +8043,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_10958891571",
-      "label": "📍 Precious Drive",
+      "label": "Precious Drive",
       "type": "street",
       "x": 427,
       "y": 634,
@@ -8051,7 +8051,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091507723",
-      "label": "📍 Precious Drive",
+      "label": "Precious Drive",
       "type": "street",
       "x": 423,
       "y": 654,
@@ -8059,7 +8059,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091507237",
-      "label": "📍 Precious Drive",
+      "label": "Precious Drive",
       "type": "street",
       "x": 360,
       "y": 671,
@@ -8067,7 +8067,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091507343",
-      "label": "📍 Precious Drive",
+      "label": "Precious Drive",
       "type": "street",
       "x": 328,
       "y": 672,
@@ -8075,7 +8075,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091507525",
-      "label": "🚗 Local Link Section #7525",
+      "label": "Local Link Section #7525",
       "type": "street",
       "x": 405,
       "y": 659,
@@ -8083,7 +8083,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091507472",
-      "label": "🚗 Local Link Section #7472",
+      "label": "Local Link Section #7472",
       "type": "street",
       "x": 398,
       "y": 647,
@@ -8091,7 +8091,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091507303",
-      "label": "🚗 Local Link Section #7303",
+      "label": "Local Link Section #7303",
       "type": "street",
       "x": 398,
       "y": 632,
@@ -8099,7 +8099,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091507203",
-      "label": "🚗 Local Link Section #7203",
+      "label": "Local Link Section #7203",
       "type": "street",
       "x": 315,
       "y": 678,
@@ -8107,7 +8107,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091507593",
-      "label": "🚗 Local Link Section #7593",
+      "label": "Local Link Section #7593",
       "type": "street",
       "x": 318,
       "y": 690,
@@ -8115,7 +8115,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091507376",
-      "label": "🚗 Local Link Section #7376",
+      "label": "Local Link Section #7376",
       "type": "street",
       "x": 356,
       "y": 652,
@@ -8123,7 +8123,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091507726",
-      "label": "🚗 Local Link Section #7726",
+      "label": "Local Link Section #7726",
       "type": "street",
       "x": 297,
       "y": 680,
@@ -8131,7 +8131,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091507195",
-      "label": "🚗 Local Link Section #7195",
+      "label": "Local Link Section #7195",
       "type": "street",
       "x": 301,
       "y": 691,
@@ -8139,7 +8139,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091507398",
-      "label": "🚗 Local Link Section #7398",
+      "label": "Local Link Section #7398",
       "type": "street",
       "x": 358,
       "y": 661,
@@ -8147,7 +8147,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091507736",
-      "label": "🚗 Local Link Section #7736",
+      "label": "Local Link Section #7736",
       "type": "street",
       "x": 322,
       "y": 659,
@@ -8155,7 +8155,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091507727",
-      "label": "🚗 Local Link Section #7727",
+      "label": "Local Link Section #7727",
       "type": "street",
       "x": 377,
       "y": 643,
@@ -8163,7 +8163,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091507129",
-      "label": "🚗 Local Link Section #7129",
+      "label": "Local Link Section #7129",
       "type": "street",
       "x": 417,
       "y": 645,
@@ -8171,7 +8171,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091507285",
-      "label": "🚗 Local Link Section #7285",
+      "label": "Local Link Section #7285",
       "type": "street",
       "x": 311,
       "y": 699,
@@ -8179,7 +8179,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091507193",
-      "label": "🛑 Jct: Doña Cecilia Yulo Avenue & C. A. Yulo Avenue",
+      "label": "Jct: Doña Cecilia Yulo Avenue & C. A. Yulo Avenue",
       "type": "intersection",
       "x": 412,
       "y": 687,
@@ -8187,7 +8187,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091542007",
-      "label": "📍 Doña Cecilia Yulo Avenue",
+      "label": "Doña Cecilia Yulo Avenue",
       "type": "street",
       "x": 425,
       "y": 715,
@@ -8195,7 +8195,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_13380024633",
-      "label": "📍 Silangan Access Road",
+      "label": "Silangan Access Road",
       "type": "street",
       "x": 380,
       "y": 674,
@@ -8203,7 +8203,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_9587736720",
-      "label": "🛑 Jct: Denver Street & Boston Street",
+      "label": "Jct: Denver Street & Boston Street",
       "type": "intersection",
       "x": 569,
       "y": 819,
@@ -8211,7 +8211,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2271659820",
-      "label": "🛑 Jct: Maryland Street & Don Bosco Street",
+      "label": "Jct: Maryland Street & Don Bosco Street",
       "type": "intersection",
       "x": 523,
       "y": 785,
@@ -8219,7 +8219,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851525",
-      "label": "🛑 Jct: Gumamela Street & Rosal Street",
+      "label": "Jct: Gumamela Street & Rosal Street",
       "type": "intersection",
       "x": 567,
       "y": 785,
@@ -8227,7 +8227,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851575",
-      "label": "🛑 Jct: Savio Street & Mayapa Road",
+      "label": "Jct: Savio Street & Mayapa Road",
       "type": "intersection",
       "x": 550,
       "y": 787,
@@ -8235,7 +8235,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851413",
-      "label": "🛑 Jct: Gumamela Street & Sunflower Street",
+      "label": "Jct: Gumamela Street & Sunflower Street",
       "type": "intersection",
       "x": 577,
       "y": 809,
@@ -8243,7 +8243,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8386203814",
-      "label": "🛑 Jct: Gumamela Street & Molave Street",
+      "label": "Jct: Gumamela Street & Molave Street",
       "type": "intersection",
       "x": 569,
       "y": 798,
@@ -8251,7 +8251,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851715",
-      "label": "📍 Santol Street",
+      "label": "Santol Street",
       "type": "street",
       "x": 474,
       "y": 737,
@@ -8259,7 +8259,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851671",
-      "label": "📍 Santol Street",
+      "label": "Santol Street",
       "type": "street",
       "x": 479,
       "y": 722,
@@ -8267,7 +8267,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851219",
-      "label": "🛑 Jct: Molave Street & Yakal Street",
+      "label": "Jct: Molave Street & Yakal Street",
       "type": "intersection",
       "x": 553,
       "y": 801,
@@ -8275,7 +8275,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851566",
-      "label": "🛑 Jct: Don Bosco Street & Sampaguita Street",
+      "label": "Jct: Don Bosco Street & Sampaguita Street",
       "type": "intersection",
       "x": 501,
       "y": 780,
@@ -8283,7 +8283,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851500",
-      "label": "🛑 Jct: Don Bosco Street & Sampaguita Street",
+      "label": "Jct: Don Bosco Street & Sampaguita Street",
       "type": "intersection",
       "x": 489,
       "y": 792,
@@ -8291,7 +8291,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_11209567834",
-      "label": "📍 Don Bosco Street",
+      "label": "Don Bosco Street",
       "type": "street",
       "x": 467,
       "y": 799,
@@ -8299,7 +8299,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8292407364",
-      "label": "📍 Don Bosco Street",
+      "label": "Don Bosco Street",
       "type": "street",
       "x": 447,
       "y": 806,
@@ -8307,7 +8307,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8292407368",
-      "label": "📍 Don Bosco Street",
+      "label": "Don Bosco Street",
       "type": "street",
       "x": 431,
       "y": 810,
@@ -8315,7 +8315,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8386425229",
-      "label": "📍 Don Bosco Street",
+      "label": "Don Bosco Street",
       "type": "street",
       "x": 408,
       "y": 818,
@@ -8323,7 +8323,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851468",
-      "label": "📍 Don Bosco Street",
+      "label": "Don Bosco Street",
       "type": "street",
       "x": 387,
       "y": 824,
@@ -8331,7 +8331,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851363",
-      "label": "🚗 Local Link Section #1363",
+      "label": "Local Link Section #1363",
       "type": "street",
       "x": 542,
       "y": 741,
@@ -8339,7 +8339,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851634",
-      "label": "🚗 Local Link Section #1634",
+      "label": "Local Link Section #1634",
       "type": "street",
       "x": 525,
       "y": 742,
@@ -8347,7 +8347,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851293",
-      "label": "🚗 Local Link Section #1293",
+      "label": "Local Link Section #1293",
       "type": "street",
       "x": 498,
       "y": 743,
@@ -8355,7 +8355,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851635",
-      "label": "🚗 Local Link Section #1635",
+      "label": "Local Link Section #1635",
       "type": "street",
       "x": 498,
       "y": 724,
@@ -8363,7 +8363,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851412",
-      "label": "🚗 Local Link Section #1412",
+      "label": "Local Link Section #1412",
       "type": "street",
       "x": 514,
       "y": 730,
@@ -8371,7 +8371,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851447",
-      "label": "🚗 Local Link Section #1447",
+      "label": "Local Link Section #1447",
       "type": "street",
       "x": 531,
       "y": 753,
@@ -8379,7 +8379,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851721",
-      "label": "📍 San Lorenzo Ruiz Street",
+      "label": "San Lorenzo Ruiz Street",
       "type": "street",
       "x": 532,
       "y": 772,
@@ -8387,7 +8387,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851398",
-      "label": "🛑 Jct: Sylvia Street & Cristina Street",
+      "label": "Jct: Sylvia Street & Cristina Street",
       "type": "intersection",
       "x": 529,
       "y": 814,
@@ -8395,7 +8395,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851409",
-      "label": "📍 Santo Domingo Road",
+      "label": "Santo Domingo Road",
       "type": "street",
       "x": 520,
       "y": 803,
@@ -8403,7 +8403,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851799",
-      "label": "🛑 Jct: Cairo Street & Brussels Street",
+      "label": "Jct: Cairo Street & Brussels Street",
       "type": "intersection",
       "x": 560,
       "y": 829,
@@ -8411,7 +8411,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8383318755",
-      "label": "🛑 Jct: Cairo Street & Denver Street",
+      "label": "Jct: Cairo Street & Denver Street",
       "type": "intersection",
       "x": 579,
       "y": 832,
@@ -8419,7 +8419,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_13287950375",
-      "label": "🛑 Jct: Mayapa Road & Doña Cecilia Yulo Avenue",
+      "label": "Jct: Mayapa Road & Doña Cecilia Yulo Avenue",
       "type": "intersection",
       "x": 472,
       "y": 783,
@@ -8427,7 +8427,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851292",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 534,
       "y": 727,
@@ -8435,7 +8435,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851342",
-      "label": "🛑 Jct: Seoul Street & Miami Street",
+      "label": "Jct: Seoul Street & Miami Street",
       "type": "intersection",
       "x": 554,
       "y": 845,
@@ -8443,7 +8443,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851405",
-      "label": "🚗 Local Link Section #1405",
+      "label": "Local Link Section #1405",
       "type": "street",
       "x": 514,
       "y": 748,
@@ -8451,7 +8451,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8299408617",
-      "label": "🛑 Jct: Miami Street & Sylvia Street",
+      "label": "Jct: Miami Street & Sylvia Street",
       "type": "intersection",
       "x": 533,
       "y": 828,
@@ -8459,7 +8459,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851228",
-      "label": "🛑 Jct: Miami Street & Madrid Street",
+      "label": "Jct: Miami Street & Madrid Street",
       "type": "intersection",
       "x": 537,
       "y": 840,
@@ -8467,7 +8467,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851308",
-      "label": "🛑 Jct: Taipei Street & Rome Street",
+      "label": "Jct: Taipei Street & Rome Street",
       "type": "intersection",
       "x": 532,
       "y": 853,
@@ -8475,7 +8475,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851345",
-      "label": "🚗 Local Link Section #1345",
+      "label": "Local Link Section #1345",
       "type": "street",
       "x": 513,
       "y": 672,
@@ -8483,7 +8483,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8384340315",
-      "label": "🚗 Local Link Section #0315",
+      "label": "Local Link Section #0315",
       "type": "street",
       "x": 531,
       "y": 684,
@@ -8491,7 +8491,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5150839382",
-      "label": "🚗 Local Link Section #9382",
+      "label": "Local Link Section #9382",
       "type": "street",
       "x": 553,
       "y": 690,
@@ -8499,7 +8499,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2874405958",
-      "label": "📍 Mamatid Silangan link",
+      "label": "Mamatid Silangan link",
       "type": "street",
       "x": 562,
       "y": 681,
@@ -8507,7 +8507,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851673",
-      "label": "🚗 Local Link Section #1673",
+      "label": "Local Link Section #1673",
       "type": "street",
       "x": 533,
       "y": 674,
@@ -8515,7 +8515,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851619",
-      "label": "🛑 Jct: Vatican Street & Toronto Street",
+      "label": "Jct: Vatican Street & Toronto Street",
       "type": "intersection",
       "x": 538,
       "y": 862,
@@ -8523,7 +8523,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851377",
-      "label": "🛑 Jct: Sylvia Street & Cristina Street",
+      "label": "Jct: Sylvia Street & Cristina Street",
       "type": "intersection",
       "x": 505,
       "y": 831,
@@ -8531,7 +8531,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1563296400",
-      "label": "🚗 Local Link Section #6400",
+      "label": "Local Link Section #6400",
       "type": "street",
       "x": 474,
       "y": 763,
@@ -8539,7 +8539,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1563296395",
-      "label": "🚗 Local Link Section #6395",
+      "label": "Local Link Section #6395",
       "type": "street",
       "x": 499,
       "y": 762,
@@ -8547,7 +8547,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851808",
-      "label": "🚗 Local Link Section #1808",
+      "label": "Local Link Section #1808",
       "type": "street",
       "x": 527,
       "y": 762,
@@ -8555,7 +8555,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851223",
-      "label": "🚗 Local Link Section #1223",
+      "label": "Local Link Section #1223",
       "type": "street",
       "x": 489,
       "y": 733,
@@ -8563,7 +8563,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851251",
-      "label": "🛑 Jct: Cristina Street & Ever Street",
+      "label": "Jct: Cristina Street & Ever Street",
       "type": "intersection",
       "x": 516,
       "y": 821,
@@ -8571,7 +8571,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851230",
-      "label": "🛑 Jct: Kamatsile Street & Piña Street",
+      "label": "Jct: Kamatsile Street & Piña Street",
       "type": "intersection",
       "x": 458,
       "y": 741,
@@ -8579,7 +8579,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851306",
-      "label": "🛑 Jct: Moscow Street & Athens Street",
+      "label": "Jct: Moscow Street & Athens Street",
       "type": "intersection",
       "x": 567,
       "y": 838,
@@ -8587,7 +8587,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851403",
-      "label": "📍 Seattle Street",
+      "label": "Seattle Street",
       "type": "street",
       "x": 556,
       "y": 862,
@@ -8595,7 +8595,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851724",
-      "label": "🛑 Jct: Vienna Street & Yale Street",
+      "label": "Jct: Vienna Street & Yale Street",
       "type": "intersection",
       "x": 515,
       "y": 862,
@@ -8603,7 +8603,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851385",
-      "label": "🚗 Local Link Section #1385",
+      "label": "Local Link Section #1385",
       "type": "street",
       "x": 516,
       "y": 852,
@@ -8611,7 +8611,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851740",
-      "label": "📍 Santo Domingo Road",
+      "label": "Santo Domingo Road",
       "type": "street",
       "x": 470,
       "y": 820,
@@ -8619,7 +8619,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8292639337",
-      "label": "🚗 Local Link Section #9337",
+      "label": "Local Link Section #9337",
       "type": "street",
       "x": 487,
       "y": 823,
@@ -8627,7 +8627,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851690",
-      "label": "🛑 Jct: Tesco Street & Santo Domingo Road",
+      "label": "Jct: Tesco Street & Santo Domingo Road",
       "type": "intersection",
       "x": 505,
       "y": 808,
@@ -8635,7 +8635,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851504",
-      "label": "🛑 Jct: Piña Street & Doña Cecilia Yulo Avenue",
+      "label": "Jct: Piña Street & Doña Cecilia Yulo Avenue",
       "type": "intersection",
       "x": 449,
       "y": 732,
@@ -8643,7 +8643,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851227",
-      "label": "📍 Mayapa Road",
+      "label": "Mayapa Road",
       "type": "street",
       "x": 537,
       "y": 781,
@@ -8651,7 +8651,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851317",
-      "label": "📍 Doña Cecilia Yulo Avenue",
+      "label": "Doña Cecilia Yulo Avenue",
       "type": "street",
       "x": 473,
       "y": 751,
@@ -8659,7 +8659,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092851387",
-      "label": "🛑 Jct: Mapagong Road & South Luzon Expressway",
+      "label": "Jct: Mapagong Road & South Luzon Expressway",
       "type": "intersection",
       "x": 525,
       "y": 719,
@@ -8667,7 +8667,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092865107",
-      "label": "📍 Majada Avenue",
+      "label": "Majada Avenue",
       "type": "street",
       "x": 448,
       "y": 831,
@@ -8675,7 +8675,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1563295863",
-      "label": "🚗 Local Link Section #5863",
+      "label": "Local Link Section #5863",
       "type": "street",
       "x": 463,
       "y": 847,
@@ -8683,7 +8683,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092864993",
-      "label": "🚗 Local Link Section #4993",
+      "label": "Local Link Section #4993",
       "type": "street",
       "x": 468,
       "y": 836,
@@ -8691,7 +8691,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092864971",
-      "label": "🚗 Local Link Section #4971",
+      "label": "Local Link Section #4971",
       "type": "street",
       "x": 482,
       "y": 843,
@@ -8699,7 +8699,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092877034",
-      "label": "🚗 Local Link Section #7034",
+      "label": "Local Link Section #7034",
       "type": "street",
       "x": 449,
       "y": 854,
@@ -8707,7 +8707,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092877008",
-      "label": "📍 Majada Avenue",
+      "label": "Majada Avenue",
       "type": "street",
       "x": 428,
       "y": 844,
@@ -8715,7 +8715,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092877109",
-      "label": "📍 Majada Avenue",
+      "label": "Majada Avenue",
       "type": "street",
       "x": 246,
       "y": 929,
@@ -8723,7 +8723,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8314124943",
-      "label": "📍 Majada Avenue",
+      "label": "Majada Avenue",
       "type": "street",
       "x": 399,
       "y": 858,
@@ -8731,7 +8731,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253771902",
-      "label": "📍 Majada Avenue",
+      "label": "Majada Avenue",
       "type": "street",
       "x": 412,
       "y": 852,
@@ -8739,7 +8739,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093628721",
-      "label": "🛑 Jct: Kapayapaan Road & Saint Jerome Street",
+      "label": "Jct: Kapayapaan Road & Saint Jerome Street",
       "type": "intersection",
       "x": 217,
       "y": 806,
@@ -8747,7 +8747,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093625302",
-      "label": "🛑 Jct: Fatima Street & Saint Jerome Street",
+      "label": "Jct: Fatima Street & Saint Jerome Street",
       "type": "intersection",
       "x": 196,
       "y": 810,
@@ -8755,7 +8755,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093625110",
-      "label": "📍 Don Bosco Street",
+      "label": "Don Bosco Street",
       "type": "street",
       "x": 306,
       "y": 847,
@@ -8763,7 +8763,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8292639343",
-      "label": "📍 Don Bosco Street",
+      "label": "Don Bosco Street",
       "type": "street",
       "x": 323,
       "y": 843,
@@ -8771,7 +8771,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8292407359",
-      "label": "📍 Don Bosco Street",
+      "label": "Don Bosco Street",
       "type": "street",
       "x": 352,
       "y": 835,
@@ -8779,7 +8779,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093628519",
-      "label": "📍 Don Bosco Street",
+      "label": "Don Bosco Street",
       "type": "street",
       "x": 368,
       "y": 830,
@@ -8787,7 +8787,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093625688",
-      "label": "🛑 Jct: Saint Michael Street & Unity Avenue",
+      "label": "Jct: Saint Michael Street & Unity Avenue",
       "type": "intersection",
       "x": 209,
       "y": 796,
@@ -8795,7 +8795,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093627115",
-      "label": "🛑 Jct: Saint Augustine Street & Saint Lorenzo Ruiz Street",
+      "label": "Jct: Saint Augustine Street & Saint Lorenzo Ruiz Street",
       "type": "intersection",
       "x": 207,
       "y": 827,
@@ -8803,7 +8803,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6392029505",
-      "label": "🛑 Jct: Fatima Street & Saint Augustine Street",
+      "label": "Jct: Fatima Street & Saint Augustine Street",
       "type": "intersection",
       "x": 190,
       "y": 825,
@@ -8811,7 +8811,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093628865",
-      "label": "📍 Maka-Diyos Street",
+      "label": "Maka-Diyos Street",
       "type": "street",
       "x": 233,
       "y": 789,
@@ -8819,7 +8819,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093730433",
-      "label": "🛑 Jct: Molave Street & Saint Benedict Street",
+      "label": "Jct: Molave Street & Saint Benedict Street",
       "type": "intersection",
       "x": 259,
       "y": 846,
@@ -8827,7 +8827,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093730494",
-      "label": "🛑 Jct: Molave Street & Palmera Street",
+      "label": "Jct: Molave Street & Palmera Street",
       "type": "intersection",
       "x": 277,
       "y": 841,
@@ -8835,7 +8835,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093625954",
-      "label": "🛑 Jct: Saint Luke Street & Saint Roque Street",
+      "label": "Jct: Saint Luke Street & Saint Roque Street",
       "type": "intersection",
       "x": 182,
       "y": 815,
@@ -8843,7 +8843,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093626924",
-      "label": "🛑 Jct: Garnet Street & Don Ramon Yulo Jr. Street",
+      "label": "Jct: Garnet Street & Don Ramon Yulo Jr. Street",
       "type": "intersection",
       "x": 208,
       "y": 848,
@@ -8851,7 +8851,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093625314",
-      "label": "🛑 Jct: Don Ramon Yulo Jr. Street & Maria Elena Street",
+      "label": "Jct: Don Ramon Yulo Jr. Street & Maria Elena Street",
       "type": "intersection",
       "x": 190,
       "y": 853,
@@ -8859,7 +8859,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093627043",
-      "label": "🛑 Jct: Maria Rosana Street & Don Ramon Yulo Sr. Street",
+      "label": "Jct: Maria Rosana Street & Don Ramon Yulo Sr. Street",
       "type": "intersection",
       "x": 192,
       "y": 863,
@@ -8867,7 +8867,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093627894",
-      "label": "🛑 Jct: Maria Rosana Street & Saint Mary Street",
+      "label": "Jct: Maria Rosana Street & Saint Mary Street",
       "type": "intersection",
       "x": 211,
       "y": 858,
@@ -8875,7 +8875,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093627005",
-      "label": "🛑 Jct: Estrada Street & Aguinaldo Street",
+      "label": "Jct: Estrada Street & Aguinaldo Street",
       "type": "intersection",
       "x": 221,
       "y": 839,
@@ -8883,7 +8883,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6396445230",
-      "label": "🛑 Jct: Roxas Street & Visayas Street",
+      "label": "Jct: Roxas Street & Visayas Street",
       "type": "intersection",
       "x": 224,
       "y": 826,
@@ -8891,7 +8891,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253493181",
-      "label": "🛑 Jct: Kapayapaan Road & Waling-Waling Street",
+      "label": "Jct: Kapayapaan Road & Waling-Waling Street",
       "type": "intersection",
       "x": 259,
       "y": 806,
@@ -8899,7 +8899,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093730607",
-      "label": "🛑 Jct: Kapayapaan Road & Kapayapaan Avenue",
+      "label": "Jct: Kapayapaan Road & Kapayapaan Avenue",
       "type": "intersection",
       "x": 241,
       "y": 810,
@@ -8907,7 +8907,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093626667",
-      "label": "🛑 Jct: Kapayapaan Road & Jesus Miguel Street",
+      "label": "Jct: Kapayapaan Road & Jesus Miguel Street",
       "type": "intersection",
       "x": 210,
       "y": 817,
@@ -8915,7 +8915,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093627448",
-      "label": "🛑 Jct: Diamond Street & Garnet Street",
+      "label": "Jct: Diamond Street & Garnet Street",
       "type": "intersection",
       "x": 237,
       "y": 846,
@@ -8923,7 +8923,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093730448",
-      "label": "🛑 Jct: Kapayapaan Avenue & Jasmin Street",
+      "label": "Jct: Kapayapaan Avenue & Jasmin Street",
       "type": "intersection",
       "x": 243,
       "y": 819,
@@ -8931,7 +8931,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1563295973",
-      "label": "🛑 Jct: Kapayapaan Avenue & Visayas Street",
+      "label": "Jct: Kapayapaan Avenue & Visayas Street",
       "type": "intersection",
       "x": 248,
       "y": 828,
@@ -8939,7 +8939,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093628974",
-      "label": "🛑 Jct: Unity Avenue & Integrity Avenue",
+      "label": "Jct: Unity Avenue & Integrity Avenue",
       "type": "intersection",
       "x": 169,
       "y": 807,
@@ -8947,7 +8947,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093627490",
-      "label": "🚗 Local Link Section #7490",
+      "label": "Local Link Section #7490",
       "type": "street",
       "x": 193,
       "y": 838,
@@ -8955,7 +8955,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093626156",
-      "label": "🛑 Jct: Makakalikasan Street & Maka-Diyos Street",
+      "label": "Jct: Makakalikasan Street & Maka-Diyos Street",
       "type": "intersection",
       "x": 251,
       "y": 794,
@@ -8963,7 +8963,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093625244",
-      "label": "🚗 Local Link Section #5244",
+      "label": "Local Link Section #5244",
       "type": "street",
       "x": 193,
       "y": 801,
@@ -8971,7 +8971,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093730520",
-      "label": "🛑 Jct: CRV Street & Saint Mary Street",
+      "label": "Jct: CRV Street & Saint Mary Street",
       "type": "intersection",
       "x": 237,
       "y": 856,
@@ -8979,7 +8979,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093730452",
-      "label": "🛑 Jct: Jasmin Street & Rosal Street",
+      "label": "Jct: Jasmin Street & Rosal Street",
       "type": "intersection",
       "x": 261,
       "y": 816,
@@ -8987,7 +8987,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364001722",
-      "label": "📍 Don Bosco Street",
+      "label": "Don Bosco Street",
       "type": "street",
       "x": 286,
       "y": 853,
@@ -8995,7 +8995,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093730617",
-      "label": "🛑 Jct: Chicago Street & Rose Street",
+      "label": "Jct: Chicago Street & Rose Street",
       "type": "intersection",
       "x": 264,
       "y": 826,
@@ -9003,7 +9003,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6448113496",
-      "label": "🚗 Local Link Section #3496",
+      "label": "Local Link Section #3496",
       "type": "street",
       "x": 121,
       "y": 859,
@@ -9011,7 +9011,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093743776",
-      "label": "🛣️ SLEX South Bound (Calamba Entry)",
+      "label": "SLEX South Bound (Calamba Entry)",
       "type": "highway",
       "x": 107,
       "y": 868,
@@ -9019,7 +9019,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093743714",
-      "label": "🚗 Local Link Section #3714",
+      "label": "Local Link Section #3714",
       "type": "street",
       "x": 175,
       "y": 874,
@@ -9027,7 +9027,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093743643",
-      "label": "📍 Carmelray Boulevard",
+      "label": "Carmelray Boulevard",
       "type": "street",
       "x": 138,
       "y": 859,
@@ -9035,7 +9035,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093743631",
-      "label": "📍 Courage Street",
+      "label": "Courage Street",
       "type": "street",
       "x": 116,
       "y": 878,
@@ -9043,7 +9043,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1214341228",
-      "label": "📍 Courage Street",
+      "label": "Courage Street",
       "type": "street",
       "x": 97,
       "y": 855,
@@ -9051,7 +9051,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093755726",
-      "label": "📍 Carmelray Boulevard",
+      "label": "Carmelray Boulevard",
       "type": "street",
       "x": 124,
       "y": 842,
@@ -9059,7 +9059,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093755462",
-      "label": "📍 Courage Street",
+      "label": "Courage Street",
       "type": "street",
       "x": 84,
       "y": 847,
@@ -9067,7 +9067,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093755799",
-      "label": "📍 Carmelray Boulevard",
+      "label": "Carmelray Boulevard",
       "type": "street",
       "x": 117,
       "y": 833,
@@ -9075,7 +9075,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093755720",
-      "label": "📍 Courage Street",
+      "label": "Courage Street",
       "type": "street",
       "x": 66,
       "y": 845,
@@ -9083,7 +9083,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1214342846",
-      "label": "🚗 Local Link Section #2846",
+      "label": "Local Link Section #2846",
       "type": "street",
       "x": 111,
       "y": 848,
@@ -9091,7 +9091,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093755486",
-      "label": "📍 Courage Street",
+      "label": "Courage Street",
       "type": "street",
       "x": 56,
       "y": 836,
@@ -9099,7 +9099,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093755630",
-      "label": "📍 Knowledge Avenue",
+      "label": "Knowledge Avenue",
       "type": "street",
       "x": 52,
       "y": 826,
@@ -9107,7 +9107,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093755717",
-      "label": "🚗 Local Link Section #5717",
+      "label": "Local Link Section #5717",
       "type": "street",
       "x": 75,
       "y": 833,
@@ -9115,7 +9115,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_11728782090",
-      "label": "🚗 Local Link Section #2090",
+      "label": "Local Link Section #2090",
       "type": "street",
       "x": 88,
       "y": 828,
@@ -9123,7 +9123,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093755516",
-      "label": "🛑 Jct: Unity Avenue & Carmelray Boulevard",
+      "label": "Jct: Unity Avenue & Carmelray Boulevard",
       "type": "intersection",
       "x": 112,
       "y": 822,
@@ -9131,7 +9131,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093765999",
-      "label": "📍 Knowledge Avenue",
+      "label": "Knowledge Avenue",
       "type": "street",
       "x": 40,
       "y": 842,
@@ -9139,7 +9139,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_656465541",
-      "label": "📍 Cooperative Street",
+      "label": "Cooperative Street",
       "type": "street",
       "x": 604,
       "y": 874,
@@ -9147,7 +9147,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8257521389",
-      "label": "🛑 Jct: Saint Joseph Street & Saint Dominic Street",
+      "label": "Jct: Saint Joseph Street & Saint Dominic Street",
       "type": "intersection",
       "x": 1147,
       "y": 724,
@@ -9155,7 +9155,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094104426",
-      "label": "🛑 Jct: Saint Joseph Street & Saint Catherine Street",
+      "label": "Jct: Saint Joseph Street & Saint Catherine Street",
       "type": "intersection",
       "x": 1148,
       "y": 734,
@@ -9163,7 +9163,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093817416",
-      "label": "🛑 Jct: Elepaño II & Chipeco Avenue",
+      "label": "Jct: Elepaño II & Chipeco Avenue",
       "type": "intersection",
       "x": 939,
       "y": 810,
@@ -9171,7 +9171,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093836260",
-      "label": "📍 L. E. Avenue",
+      "label": "L. E. Avenue",
       "type": "street",
       "x": 1027,
       "y": 823,
@@ -9179,7 +9179,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093836310",
-      "label": "🛑 Jct: L. E. Avenue & Petunia Street",
+      "label": "Jct: L. E. Avenue & Petunia Street",
       "type": "intersection",
       "x": 1020,
       "y": 814,
@@ -9187,7 +9187,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093836257",
-      "label": "🛑 Jct: L. E. Avenue & Carnation Street",
+      "label": "Jct: L. E. Avenue & Carnation Street",
       "type": "intersection",
       "x": 1013,
       "y": 806,
@@ -9195,7 +9195,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093836254",
-      "label": "🛑 Jct: Petunia Street & Jasmin Street",
+      "label": "Jct: Petunia Street & Jasmin Street",
       "type": "intersection",
       "x": 1004,
       "y": 813,
@@ -9203,7 +9203,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_289889518",
-      "label": "🛑 Jct: National Highway & SM City Calamba Bypass Road",
+      "label": "Jct: National Highway & SM City Calamba Bypass Road",
       "type": "intersection",
       "x": 874,
       "y": 828,
@@ -9211,7 +9211,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093836029",
-      "label": "🚗 Local Link Section #6029",
+      "label": "Local Link Section #6029",
       "type": "street",
       "x": 848,
       "y": 828,
@@ -9219,7 +9219,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093836391",
-      "label": "🛑 Jct: Elepaño I & Mabini Street",
+      "label": "Jct: Elepaño I & Mabini Street",
       "type": "intersection",
       "x": 947,
       "y": 794,
@@ -9227,7 +9227,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093836236",
-      "label": "🛑 Jct: Lopez Jaena Street & P. Burgos Street",
+      "label": "Jct: Lopez Jaena Street & P. Burgos Street",
       "type": "intersection",
       "x": 987,
       "y": 784,
@@ -9235,7 +9235,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093836157",
-      "label": "📍 Banahaw Street",
+      "label": "Banahaw Street",
       "type": "street",
       "x": 1001,
       "y": 825,
@@ -9243,7 +9243,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094105029",
-      "label": "🛑 Jct: Apitong Street & Acacia Street",
+      "label": "Jct: Apitong Street & Acacia Street",
       "type": "intersection",
       "x": 1147,
       "y": 754,
@@ -9251,7 +9251,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094104822",
-      "label": "🛑 Jct: Apitong Street & Acacia Street",
+      "label": "Jct: Apitong Street & Acacia Street",
       "type": "intersection",
       "x": 1163,
       "y": 754,
@@ -9259,7 +9259,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094104254",
-      "label": "📍 Saint Catherine Street",
+      "label": "Saint Catherine Street",
       "type": "street",
       "x": 1171,
       "y": 737,
@@ -9267,7 +9267,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094104250",
-      "label": "🚗 Local Link Section #4250",
+      "label": "Local Link Section #4250",
       "type": "street",
       "x": 1185,
       "y": 724,
@@ -9275,7 +9275,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094104389",
-      "label": "🚗 Local Link Section #4389",
+      "label": "Local Link Section #4389",
       "type": "street",
       "x": 1002,
       "y": 692,
@@ -9283,7 +9283,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094104079",
-      "label": "🚗 Local Link Section #4079",
+      "label": "Local Link Section #4079",
       "type": "street",
       "x": 1022,
       "y": 688,
@@ -9291,7 +9291,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094105081",
-      "label": "🛑 Jct: Tagumpay & Ensayo",
+      "label": "Jct: Tagumpay & Ensayo",
       "type": "intersection",
       "x": 1050,
       "y": 696,
@@ -9299,7 +9299,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094104608",
-      "label": "🛑 Jct: Malikhain & Maasahan",
+      "label": "Jct: Malikhain & Maasahan",
       "type": "intersection",
       "x": 1039,
       "y": 687,
@@ -9307,7 +9307,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8385984311",
-      "label": "🚗 Local Link Section #4311",
+      "label": "Local Link Section #4311",
       "type": "street",
       "x": 1228,
       "y": 739,
@@ -9315,7 +9315,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094104610",
-      "label": "📍 Bañadero Road",
+      "label": "Bañadero Road",
       "type": "street",
       "x": 1017,
       "y": 753,
@@ -9323,7 +9323,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094104355",
-      "label": "📍 Bañadero Road",
+      "label": "Bañadero Road",
       "type": "street",
       "x": 1028,
       "y": 698,
@@ -9331,7 +9331,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253797994",
-      "label": "🛑 Jct: Cailles Street & San Juan Road",
+      "label": "Jct: Cailles Street & San Juan Road",
       "type": "intersection",
       "x": 1043,
       "y": 762,
@@ -9339,7 +9339,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094104196",
-      "label": "📍 Bañadero Road",
+      "label": "Bañadero Road",
       "type": "street",
       "x": 1010,
       "y": 700,
@@ -9347,7 +9347,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094104982",
-      "label": "🛑 Jct: Pursigido & Balanse",
+      "label": "Jct: Pursigido & Balanse",
       "type": "intersection",
       "x": 1056,
       "y": 685,
@@ -9355,7 +9355,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094119874",
-      "label": "🚗 Local Link Section #9874",
+      "label": "Local Link Section #9874",
       "type": "street",
       "x": 1117,
       "y": 675,
@@ -9363,7 +9363,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094119746",
-      "label": "🚗 Local Link Section #9746",
+      "label": "Local Link Section #9746",
       "type": "street",
       "x": 1125,
       "y": 686,
@@ -9371,7 +9371,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094119387",
-      "label": "🚗 Local Link Section #9387",
+      "label": "Local Link Section #9387",
       "type": "street",
       "x": 1091,
       "y": 687,
@@ -9379,7 +9379,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094119501",
-      "label": "🚗 Local Link Section #9501",
+      "label": "Local Link Section #9501",
       "type": "street",
       "x": 1055,
       "y": 657,
@@ -9387,7 +9387,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094119428",
-      "label": "📍 Saint Peregrine",
+      "label": "Saint Peregrine",
       "type": "street",
       "x": 1082,
       "y": 650,
@@ -9395,7 +9395,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094120066",
-      "label": "🚗 Local Link Section #0066",
+      "label": "Local Link Section #0066",
       "type": "street",
       "x": 1135,
       "y": 694,
@@ -9403,7 +9403,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094119739",
-      "label": "📍 Ipil-Ipil Street",
+      "label": "Ipil-Ipil Street",
       "type": "street",
       "x": 1060,
       "y": 674,
@@ -9411,7 +9411,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094119439",
-      "label": "📍 Ipil-Ipil Street",
+      "label": "Ipil-Ipil Street",
       "type": "street",
       "x": 967,
       "y": 645,
@@ -9419,7 +9419,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094120104",
-      "label": "📍 Ipil-Ipil Street",
+      "label": "Ipil-Ipil Street",
       "type": "street",
       "x": 997,
       "y": 678,
@@ -9427,7 +9427,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5217945691",
-      "label": "📍 Ipil-Ipil Street",
+      "label": "Ipil-Ipil Street",
       "type": "street",
       "x": 1030,
       "y": 671,
@@ -9435,7 +9435,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6159191425",
-      "label": "📍 Ipil-Ipil Street",
+      "label": "Ipil-Ipil Street",
       "type": "street",
       "x": 1074,
       "y": 666,
@@ -9443,7 +9443,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8266620861",
-      "label": "📍 Ipil-Ipil Street",
+      "label": "Ipil-Ipil Street",
       "type": "street",
       "x": 1092,
       "y": 665,
@@ -9451,7 +9451,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8257521344",
-      "label": "📍 Almon Street",
+      "label": "Almon Street",
       "type": "street",
       "x": 1160,
       "y": 676,
@@ -9459,7 +9459,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8257542662",
-      "label": "📍 Almon Street",
+      "label": "Almon Street",
       "type": "street",
       "x": 1244,
       "y": 662,
@@ -9467,7 +9467,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094246010",
-      "label": "📍 Sanggumay Street",
+      "label": "Sanggumay Street",
       "type": "street",
       "x": 1215,
       "y": 676,
@@ -9475,7 +9475,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094245534",
-      "label": "🚗 Local Link Section #5534",
+      "label": "Local Link Section #5534",
       "type": "street",
       "x": 1105,
       "y": 706,
@@ -9483,7 +9483,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094244146",
-      "label": "🚗 Local Link Section #4146",
+      "label": "Local Link Section #4146",
       "type": "street",
       "x": 1159,
       "y": 627,
@@ -9491,7 +9491,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094243035",
-      "label": "🚗 Local Link Section #3035",
+      "label": "Local Link Section #3035",
       "type": "street",
       "x": 1158,
       "y": 637,
@@ -9499,7 +9499,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094246150",
-      "label": "🚗 Local Link Section #6150",
+      "label": "Local Link Section #6150",
       "type": "street",
       "x": 1089,
       "y": 699,
@@ -9507,7 +9507,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_10824155798",
-      "label": "🚗 Local Link Section #5798",
+      "label": "Local Link Section #5798",
       "type": "street",
       "x": 1184,
       "y": 822,
@@ -9515,7 +9515,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094245517",
-      "label": "🚗 Local Link Section #5517",
+      "label": "Local Link Section #5517",
       "type": "street",
       "x": 1163,
       "y": 820,
@@ -9523,7 +9523,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_10584365112",
-      "label": "📍 San Jose-Bucal Diversion Road",
+      "label": "San Jose-Bucal Diversion Road",
       "type": "street",
       "x": 1102,
       "y": 827,
@@ -9531,7 +9531,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8201922124",
-      "label": "🛑 Jct: Chipeco Avenue & National Highway",
+      "label": "Jct: Chipeco Avenue & National Highway",
       "type": "intersection",
       "x": 965,
       "y": 881,
@@ -9539,7 +9539,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8248206750",
-      "label": "🚗 Local Link Section #6750",
+      "label": "Local Link Section #6750",
       "type": "street",
       "x": 1157,
       "y": 858,
@@ -9547,7 +9547,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094243291",
-      "label": "🌊 East Coastal Link (Bay/Lake Road)",
+      "label": "East Coastal Link (Bay/Lake Road)",
       "type": "highway",
       "x": 1196,
       "y": 759,
@@ -9555,7 +9555,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8257521383",
-      "label": "🚗 Local Link Section #1383",
+      "label": "Local Link Section #1383",
       "type": "street",
       "x": 1185,
       "y": 630,
@@ -9563,7 +9563,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8257521376",
-      "label": "🚗 Local Link Section #1376",
+      "label": "Local Link Section #1376",
       "type": "street",
       "x": 1141,
       "y": 645,
@@ -9571,7 +9571,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088187992",
-      "label": "📍 Lechuga Street",
+      "label": "Lechuga Street",
       "type": "street",
       "x": 1001,
       "y": 839,
@@ -9579,7 +9579,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1213012413",
-      "label": "🚗 Local Link Section #2413",
+      "label": "Local Link Section #2413",
       "type": "street",
       "x": 647,
       "y": 736,
@@ -9587,7 +9587,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1213012784",
-      "label": "🚗 Local Link Section #2784",
+      "label": "Local Link Section #2784",
       "type": "street",
       "x": 645,
       "y": 759,
@@ -9595,7 +9595,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1238550437",
-      "label": "🛑 Jct: Purok 10 & J. P. Rizal Street",
+      "label": "Jct: Purok 10 & J. P. Rizal Street",
       "type": "intersection",
       "x": 918,
       "y": 805,
@@ -9603,7 +9603,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253508137",
-      "label": "🛑 Jct: Teodora Alonzo Street & Diamond Street",
+      "label": "Jct: Teodora Alonzo Street & Diamond Street",
       "type": "intersection",
       "x": 964,
       "y": 778,
@@ -9611,7 +9611,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1238550553",
-      "label": "🚗 Local Link Section #0553",
+      "label": "Local Link Section #0553",
       "type": "street",
       "x": 932,
       "y": 798,
@@ -9619,7 +9619,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1238550522",
-      "label": "🛑 Jct: Diamond Street & Ruby Street",
+      "label": "Jct: Diamond Street & Ruby Street",
       "type": "intersection",
       "x": 949,
       "y": 771,
@@ -9627,7 +9627,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_28997754",
-      "label": "🛑 Jct: San Vicente Ferrer & National Highway 1",
+      "label": "Jct: San Vicente Ferrer & National Highway 1",
       "type": "intersection",
       "x": 838,
       "y": 858,
@@ -9635,7 +9635,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1261615048",
-      "label": "🚗 Local Link Section #5048",
+      "label": "Local Link Section #5048",
       "type": "street",
       "x": 1028,
       "y": 530,
@@ -9643,7 +9643,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8296017569",
-      "label": "🚗 Local Link Section #7569",
+      "label": "Local Link Section #7569",
       "type": "street",
       "x": 914,
       "y": 632,
@@ -9651,7 +9651,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090904779",
-      "label": "📍 San Cristobal - Banlic Road",
+      "label": "San Cristobal - Banlic Road",
       "type": "street",
       "x": 714,
       "y": 678,
@@ -9659,7 +9659,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5217948882",
-      "label": "🚗 Local Link Section #8882",
+      "label": "Local Link Section #8882",
       "type": "street",
       "x": 922,
       "y": 652,
@@ -9667,7 +9667,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8299949455",
-      "label": "🚗 Local Link Section #9455",
+      "label": "Local Link Section #9455",
       "type": "street",
       "x": 863,
       "y": 676,
@@ -9675,7 +9675,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8296017604",
-      "label": "🚗 Local Link Section #7604",
+      "label": "Local Link Section #7604",
       "type": "street",
       "x": 858,
       "y": 701,
@@ -9683,7 +9683,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1261615332",
-      "label": "🚗 Local Link Section #5332",
+      "label": "Local Link Section #5332",
       "type": "street",
       "x": 881,
       "y": 710,
@@ -9691,7 +9691,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8266621151",
-      "label": "🚗 Local Link Section #1151",
+      "label": "Local Link Section #1151",
       "type": "street",
       "x": 983,
       "y": 683,
@@ -9699,7 +9699,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1262890239",
-      "label": "📍 Lawa Road",
+      "label": "Lawa Road",
       "type": "street",
       "x": 837,
       "y": 786,
@@ -9707,7 +9707,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1262892503",
-      "label": "🛑 Jct: Sacramento Street & Mississippi Street",
+      "label": "Jct: Sacramento Street & Mississippi Street",
       "type": "intersection",
       "x": 741,
       "y": 762,
@@ -9715,7 +9715,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1262891799",
-      "label": "🛑 Jct: New Jersey Street & Ohio Street",
+      "label": "Jct: New Jersey Street & Ohio Street",
       "type": "intersection",
       "x": 753,
       "y": 781,
@@ -9723,7 +9723,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1262890552",
-      "label": "🛑 Jct: Illinois Street & New Jersey Street",
+      "label": "Jct: Illinois Street & New Jersey Street",
       "type": "intersection",
       "x": 741,
       "y": 772,
@@ -9731,7 +9731,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1262890763",
-      "label": "🛑 Jct: Sampaguita Street & Jasmin Street",
+      "label": "Jct: Sampaguita Street & Jasmin Street",
       "type": "intersection",
       "x": 850,
       "y": 761,
@@ -9739,7 +9739,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1262890982",
-      "label": "🛑 Jct: Arizona Street & Denmark Street",
+      "label": "Jct: Arizona Street & Denmark Street",
       "type": "intersection",
       "x": 731,
       "y": 792,
@@ -9747,7 +9747,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1262891457",
-      "label": "🛑 Jct: Denmark Street & Milwaukee Street",
+      "label": "Jct: Denmark Street & Milwaukee Street",
       "type": "intersection",
       "x": 714,
       "y": 787,
@@ -9755,7 +9755,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1262892251",
-      "label": "🛑 Jct: Denmark Street & Milwaukee Street",
+      "label": "Jct: Denmark Street & Milwaukee Street",
       "type": "intersection",
       "x": 700,
       "y": 783,
@@ -9763,7 +9763,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1262891319",
-      "label": "📍 Jasmin Street",
+      "label": "Jasmin Street",
       "type": "street",
       "x": 856,
       "y": 751,
@@ -9771,7 +9771,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1262890978",
-      "label": "🛑 Jct: Santan Street & Rosal Street",
+      "label": "Jct: Santan Street & Rosal Street",
       "type": "intersection",
       "x": 839,
       "y": 750,
@@ -9779,7 +9779,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1262891826",
-      "label": "🛑 Jct: Sapphire Street & NIA Road",
+      "label": "Jct: Sapphire Street & NIA Road",
       "type": "intersection",
       "x": 866,
       "y": 763,
@@ -9787,7 +9787,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1262890385",
-      "label": "🛑 Jct: Denver Street & Australia Street",
+      "label": "Jct: Denver Street & Australia Street",
       "type": "intersection",
       "x": 714,
       "y": 774,
@@ -9795,7 +9795,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1262891137",
-      "label": "🛑 Jct: Apron Street & New York Street",
+      "label": "Jct: Apron Street & New York Street",
       "type": "intersection",
       "x": 763,
       "y": 770,
@@ -9803,7 +9803,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1262892774",
-      "label": "🛑 Jct: Denver Street & Arizona Street",
+      "label": "Jct: Denver Street & Arizona Street",
       "type": "intersection",
       "x": 735,
       "y": 781,
@@ -9811,7 +9811,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364003977",
-      "label": "📍 Mabolo Street",
+      "label": "Mabolo Street",
       "type": "street",
       "x": 851,
       "y": 741,
@@ -9819,7 +9819,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5187567720",
-      "label": "📍 NIA Road",
+      "label": "NIA Road",
       "type": "street",
       "x": 918,
       "y": 755,
@@ -9827,7 +9827,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1348833528",
-      "label": "🛑 Jct: Bañadero Road & NIA Road",
+      "label": "Jct: Bañadero Road & NIA Road",
       "type": "intersection",
       "x": 1007,
       "y": 741,
@@ -9835,7 +9835,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094104877",
-      "label": "📍 Bañadero Road",
+      "label": "Bañadero Road",
       "type": "street",
       "x": 1000,
       "y": 730,
@@ -9843,7 +9843,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094104169",
-      "label": "📍 Bañadero Road",
+      "label": "Bañadero Road",
       "type": "street",
       "x": 994,
       "y": 718,
@@ -9851,7 +9851,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8266700620",
-      "label": "📍 Bañadero Road",
+      "label": "Bañadero Road",
       "type": "street",
       "x": 997,
       "y": 708,
@@ -9859,7 +9859,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1723794859",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 350,
       "y": 237,
@@ -9867,7 +9867,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_4518419709",
-      "label": "🚗 Local Link Section #9709",
+      "label": "Local Link Section #9709",
       "type": "street",
       "x": 665,
       "y": 791,
@@ -9875,7 +9875,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344091852",
-      "label": "🚗 Local Link Section #1852",
+      "label": "Local Link Section #1852",
       "type": "street",
       "x": 666,
       "y": 734,
@@ -9883,7 +9883,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344092913",
-      "label": "🚗 Local Link Section #2913",
+      "label": "Local Link Section #2913",
       "type": "street",
       "x": 672,
       "y": 744,
@@ -9891,7 +9891,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344092908",
-      "label": "🚗 Local Link Section #2908",
+      "label": "Local Link Section #2908",
       "type": "street",
       "x": 698,
       "y": 792,
@@ -9899,7 +9899,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344092858",
-      "label": "🛑 Jct: Orchid Street & Dahlia Street",
+      "label": "Jct: Orchid Street & Dahlia Street",
       "type": "intersection",
       "x": 782,
       "y": 806,
@@ -9907,7 +9907,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344092868",
-      "label": "🛑 Jct: Deacosta Street & Santo Niño Street",
+      "label": "Jct: Deacosta Street & Santo Niño Street",
       "type": "intersection",
       "x": 720,
       "y": 753,
@@ -9915,7 +9915,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344092951",
-      "label": "🚗 Local Link Section #2951",
+      "label": "Local Link Section #2951",
       "type": "street",
       "x": 766,
       "y": 803,
@@ -9923,7 +9923,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344092943",
-      "label": "🚗 Local Link Section #2943",
+      "label": "Local Link Section #2943",
       "type": "street",
       "x": 745,
       "y": 808,
@@ -9931,7 +9931,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1489356726",
-      "label": "🚗 Local Link Section #6726",
+      "label": "Local Link Section #6726",
       "type": "street",
       "x": 738,
       "y": 800,
@@ -9939,7 +9939,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1489356692",
-      "label": "🚗 Local Link Section #6692",
+      "label": "Local Link Section #6692",
       "type": "street",
       "x": 692,
       "y": 806,
@@ -9947,7 +9947,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344092911",
-      "label": "🚗 Local Link Section #2911",
+      "label": "Local Link Section #2911",
       "type": "street",
       "x": 725,
       "y": 806,
@@ -9955,7 +9955,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6326166440",
-      "label": "🚗 Local Link Section #6440",
+      "label": "Local Link Section #6440",
       "type": "street",
       "x": 676,
       "y": 725,
@@ -9963,7 +9963,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344096842",
-      "label": "🚗 Local Link Section #6842",
+      "label": "Local Link Section #6842",
       "type": "street",
       "x": 799,
       "y": 794,
@@ -9971,7 +9971,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344096695",
-      "label": "📍 Lotus Street",
+      "label": "Lotus Street",
       "type": "street",
       "x": 791,
       "y": 816,
@@ -9979,7 +9979,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344096843",
-      "label": "🚗 Local Link Section #6843",
+      "label": "Local Link Section #6843",
       "type": "street",
       "x": 834,
       "y": 808,
@@ -9987,7 +9987,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344096702",
-      "label": "🚗 Local Link Section #6702",
+      "label": "Local Link Section #6702",
       "type": "street",
       "x": 767,
       "y": 817,
@@ -9995,7 +9995,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344096672",
-      "label": "🚗 Local Link Section #6672",
+      "label": "Local Link Section #6672",
       "type": "street",
       "x": 798,
       "y": 804,
@@ -10003,7 +10003,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1489356925",
-      "label": "📍 Camia",
+      "label": "Camia",
       "type": "street",
       "x": 884,
       "y": 771,
@@ -10011,7 +10011,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344100372",
-      "label": "📍 NIA Road",
+      "label": "NIA Road",
       "type": "street",
       "x": 981,
       "y": 744,
@@ -10019,7 +10019,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344100144",
-      "label": "🛑 Jct: Ubas Street & Santol Street",
+      "label": "Jct: Ubas Street & Santol Street",
       "type": "intersection",
       "x": 970,
       "y": 751,
@@ -10027,7 +10027,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344099832",
-      "label": "🚗 Local Link Section #9832",
+      "label": "Local Link Section #9832",
       "type": "street",
       "x": 1070,
       "y": 693,
@@ -10035,7 +10035,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344099830",
-      "label": "🚗 Local Link Section #9830",
+      "label": "Local Link Section #9830",
       "type": "street",
       "x": 939,
       "y": 760,
@@ -10043,7 +10043,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344100080",
-      "label": "🚗 Local Link Section #0080",
+      "label": "Local Link Section #0080",
       "type": "street",
       "x": 966,
       "y": 761,
@@ -10051,7 +10051,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1348830484",
-      "label": "🚗 Local Link Section #0484",
+      "label": "Local Link Section #0484",
       "type": "street",
       "x": 1101,
       "y": 648,
@@ -10059,7 +10059,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_10182144328",
-      "label": "🚗 Local Link Section #4328",
+      "label": "Local Link Section #4328",
       "type": "street",
       "x": 1075,
       "y": 620,
@@ -10067,7 +10067,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1348830510",
-      "label": "🚗 Local Link Section #0510",
+      "label": "Local Link Section #0510",
       "type": "street",
       "x": 1086,
       "y": 586,
@@ -10075,7 +10075,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8257521374",
-      "label": "📍 Tindalo Street",
+      "label": "Tindalo Street",
       "type": "street",
       "x": 1150,
       "y": 653,
@@ -10083,7 +10083,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1348830505",
-      "label": "🚗 Local Link Section #0505",
+      "label": "Local Link Section #0505",
       "type": "street",
       "x": 1060,
       "y": 607,
@@ -10091,7 +10091,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8266892695",
-      "label": "🚗 Local Link Section #2695",
+      "label": "Local Link Section #2695",
       "type": "street",
       "x": 970,
       "y": 706,
@@ -10099,7 +10099,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253787320",
-      "label": "🚗 Local Link Section #7320",
+      "label": "Local Link Section #7320",
       "type": "street",
       "x": 350,
       "y": 762,
@@ -10107,7 +10107,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364001289",
-      "label": "🚗 Local Link Section #1289",
+      "label": "Local Link Section #1289",
       "type": "street",
       "x": 367,
       "y": 764,
@@ -10115,7 +10115,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364001806",
-      "label": "🚗 Local Link Section #1806",
+      "label": "Local Link Section #1806",
       "type": "street",
       "x": 400,
       "y": 747,
@@ -10123,7 +10123,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364001248",
-      "label": "🚗 Local Link Section #1248",
+      "label": "Local Link Section #1248",
       "type": "street",
       "x": 414,
       "y": 761,
@@ -10131,7 +10131,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364001589",
-      "label": "🛑 Jct: Granada Street & Gladiola Street",
+      "label": "Jct: Granada Street & Gladiola Street",
       "type": "intersection",
       "x": 329,
       "y": 806,
@@ -10139,7 +10139,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364001370",
-      "label": "🛑 Jct: Granada Street & Rambutan Street",
+      "label": "Jct: Granada Street & Rambutan Street",
       "type": "intersection",
       "x": 339,
       "y": 813,
@@ -10147,7 +10147,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_13324029198",
-      "label": "🛑 Jct: Dap-dap Street & Granada Street",
+      "label": "Jct: Dap-dap Street & Granada Street",
       "type": "intersection",
       "x": 364,
       "y": 813,
@@ -10155,7 +10155,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364001785",
-      "label": "🛑 Jct: Granada Street & Apitong Street",
+      "label": "Jct: Granada Street & Apitong Street",
       "type": "intersection",
       "x": 371,
       "y": 804,
@@ -10163,7 +10163,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364001737",
-      "label": "🚗 Local Link Section #1737",
+      "label": "Local Link Section #1737",
       "type": "street",
       "x": 432,
       "y": 741,
@@ -10171,7 +10171,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6396321447",
-      "label": "📍 Don Bosco Street",
+      "label": "Don Bosco Street",
       "type": "street",
       "x": 259,
       "y": 860,
@@ -10179,7 +10179,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364001744",
-      "label": "🛑 Jct: Lotus Street & Magnolia Street",
+      "label": "Jct: Lotus Street & Magnolia Street",
       "type": "intersection",
       "x": 297,
       "y": 797,
@@ -10187,7 +10187,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364001658",
-      "label": "🛑 Jct: Lotus Street & Rosal Street",
+      "label": "Jct: Lotus Street & Rosal Street",
       "type": "intersection",
       "x": 307,
       "y": 811,
@@ -10195,7 +10195,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364001652",
-      "label": "🚗 Local Link Section #1652",
+      "label": "Local Link Section #1652",
       "type": "street",
       "x": 416,
       "y": 751,
@@ -10203,7 +10203,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364003961",
-      "label": "📍 Sampaguita Street",
+      "label": "Sampaguita Street",
       "type": "street",
       "x": 771,
       "y": 791,
@@ -10211,7 +10211,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364003852",
-      "label": "🛑 Jct: Yakal Street & Sampaguita Street",
+      "label": "Jct: Yakal Street & Sampaguita Street",
       "type": "intersection",
       "x": 794,
       "y": 782,
@@ -10219,7 +10219,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6326166461",
-      "label": "📍 San Jose Avenue",
+      "label": "San Jose Avenue",
       "type": "street",
       "x": 789,
       "y": 763,
@@ -10227,7 +10227,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8383499749",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 637,
       "y": 609,
@@ -10235,7 +10235,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364005035",
-      "label": "🚗 Local Link Section #5035",
+      "label": "Local Link Section #5035",
       "type": "street",
       "x": 562,
       "y": 470,
@@ -10243,7 +10243,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1966260200",
-      "label": "🚗 Local Link Section #0200",
+      "label": "Local Link Section #0200",
       "type": "street",
       "x": 383,
       "y": 260,
@@ -10251,7 +10251,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1589231718",
-      "label": "🛑 Jct: Felix Reyes Street & Turquoise Road",
+      "label": "Jct: Felix Reyes Street & Turquoise Road",
       "type": "intersection",
       "x": 288,
       "y": 213,
@@ -10259,7 +10259,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1366309762",
-      "label": "🛑 Jct: National Highway 1 & J. P. Rizal Street",
+      "label": "Jct: National Highway 1 & J. P. Rizal Street",
       "type": "intersection",
       "x": 563,
       "y": 399,
@@ -10267,7 +10267,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1366309760",
-      "label": "🚗 Local Link Section #9760",
+      "label": "Local Link Section #9760",
       "type": "street",
       "x": 547,
       "y": 402,
@@ -10275,7 +10275,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1377407214",
-      "label": "🚗 Local Link Section #7214",
+      "label": "Local Link Section #7214",
       "type": "street",
       "x": 764,
       "y": 857,
@@ -10283,7 +10283,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2030091203",
-      "label": "🚗 Local Link Section #1203",
+      "label": "Local Link Section #1203",
       "type": "street",
       "x": 60,
       "y": 487,
@@ -10291,7 +10291,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344092822",
-      "label": "📍 Mapagong Road",
+      "label": "Mapagong Road",
       "type": "street",
       "x": 573,
       "y": 712,
@@ -10299,7 +10299,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344092900",
-      "label": "📍 Mapagong Road",
+      "label": "Mapagong Road",
       "type": "street",
       "x": 553,
       "y": 714,
@@ -10307,7 +10307,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364001300",
-      "label": "🚗 Local Link Section #1300",
+      "label": "Local Link Section #1300",
       "type": "street",
       "x": 429,
       "y": 758,
@@ -10315,7 +10315,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364003840",
-      "label": "🚗 Local Link Section #3840",
+      "label": "Local Link Section #3840",
       "type": "street",
       "x": 437,
       "y": 750,
@@ -10323,7 +10323,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364001815",
-      "label": "🚗 Local Link Section #1815",
+      "label": "Local Link Section #1815",
       "type": "street",
       "x": 399,
       "y": 758,
@@ -10331,7 +10331,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1377407146",
-      "label": "🛑 Jct: Holland Street & Great Britain Street",
+      "label": "Jct: Holland Street & Great Britain Street",
       "type": "intersection",
       "x": 718,
       "y": 858,
@@ -10339,7 +10339,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1377407134",
-      "label": "🛑 Jct: Holland Street & Great Britain Street",
+      "label": "Jct: Holland Street & Great Britain Street",
       "type": "intersection",
       "x": 720,
       "y": 868,
@@ -10347,7 +10347,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1377407247",
-      "label": "🛑 Jct: Europe Street & Prinza Road",
+      "label": "Jct: Europe Street & Prinza Road",
       "type": "intersection",
       "x": 702,
       "y": 867,
@@ -10355,7 +10355,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1483143997",
-      "label": "🚗 Local Link Section #3997",
+      "label": "Local Link Section #3997",
       "type": "street",
       "x": 707,
       "y": 489,
@@ -10363,7 +10363,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2123701150",
-      "label": "🚗 Local Link Section #1150",
+      "label": "Local Link Section #1150",
       "type": "street",
       "x": 820,
       "y": 718,
@@ -10371,7 +10371,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088492835",
-      "label": "🚗 Local Link Section #2835",
+      "label": "Local Link Section #2835",
       "type": "street",
       "x": 727,
       "y": 496,
@@ -10379,7 +10379,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_364629590",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 652,
       "y": 617,
@@ -10387,7 +10387,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090528313",
-      "label": "🚗 Local Link Section #8313",
+      "label": "Local Link Section #8313",
       "type": "street",
       "x": 583,
       "y": 585,
@@ -10395,7 +10395,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364005028",
-      "label": "🚗 Local Link Section #5028",
+      "label": "Local Link Section #5028",
       "type": "street",
       "x": 628,
       "y": 617,
@@ -10403,7 +10403,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_9368990027",
-      "label": "🚗 Local Link Section #0027",
+      "label": "Local Link Section #0027",
       "type": "street",
       "x": 672,
       "y": 615,
@@ -10411,7 +10411,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364005034",
-      "label": "📍 Cattleya Street",
+      "label": "Cattleya Street",
       "type": "street",
       "x": 444,
       "y": 340,
@@ -10419,7 +10419,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364005008",
-      "label": "🛑 Jct: Cattleya Street & Daisy Street",
+      "label": "Jct: Cattleya Street & Daisy Street",
       "type": "intersection",
       "x": 427,
       "y": 339,
@@ -10427,7 +10427,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088223296",
-      "label": "📍 Malitlit Barangay Road",
+      "label": "Malitlit Barangay Road",
       "type": "street",
       "x": 389,
       "y": 367,
@@ -10435,7 +10435,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5550368174",
-      "label": "🛑 Jct: Aplaya Road & Begonia Street",
+      "label": "Jct: Aplaya Road & Begonia Street",
       "type": "intersection",
       "x": 523,
       "y": 105,
@@ -10443,7 +10443,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364003850",
-      "label": "🛑 Jct: Yakal Street & Molave Street",
+      "label": "Jct: Yakal Street & Molave Street",
       "type": "intersection",
       "x": 780,
       "y": 777,
@@ -10451,7 +10451,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344092883",
-      "label": "🚗 Local Link Section #2883",
+      "label": "Local Link Section #2883",
       "type": "street",
       "x": 754,
       "y": 792,
@@ -10459,7 +10459,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344100366",
-      "label": "📍 Santol Street",
+      "label": "Santol Street",
       "type": "street",
       "x": 948,
       "y": 752,
@@ -10467,7 +10467,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1489356929",
-      "label": "🛑 Jct: Diamond Street & Pearl Street",
+      "label": "Jct: Diamond Street & Pearl Street",
       "type": "intersection",
       "x": 806,
       "y": 770,
@@ -10475,7 +10475,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1489357140",
-      "label": "🚗 Local Link Section #7140",
+      "label": "Local Link Section #7140",
       "type": "street",
       "x": 821,
       "y": 743,
@@ -10483,7 +10483,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1489357235",
-      "label": "🚗 Local Link Section #7235",
+      "label": "Local Link Section #7235",
       "type": "street",
       "x": 836,
       "y": 727,
@@ -10491,7 +10491,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344092844",
-      "label": "🚗 Local Link Section #2844",
+      "label": "Local Link Section #2844",
       "type": "street",
       "x": 710,
       "y": 800,
@@ -10499,7 +10499,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1348833333",
-      "label": "🚗 Local Link Section #3333",
+      "label": "Local Link Section #3333",
       "type": "street",
       "x": 964,
       "y": 722,
@@ -10507,7 +10507,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1348850248",
-      "label": "🚗 Local Link Section #0248",
+      "label": "Local Link Section #0248",
       "type": "street",
       "x": 933,
       "y": 769,
@@ -10515,7 +10515,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1530533686",
-      "label": "📍 Santa Rosa-Tagaytay Road",
+      "label": "Santa Rosa-Tagaytay Road",
       "type": "street",
       "x": 55,
       "y": 379,
@@ -10523,7 +10523,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094104880",
-      "label": "🛑 Jct: Mabini Street & San Juan Road",
+      "label": "Jct: Mabini Street & San Juan Road",
       "type": "intersection",
       "x": 1084,
       "y": 758,
@@ -10531,7 +10531,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253776255",
-      "label": "🛑 Jct: Blumentritt Street & San Juan Road",
+      "label": "Jct: Blumentritt Street & San Juan Road",
       "type": "intersection",
       "x": 1069,
       "y": 761,
@@ -10539,7 +10539,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093836154",
-      "label": "🚗 Local Link Section #6154",
+      "label": "Local Link Section #6154",
       "type": "street",
       "x": 982,
       "y": 822,
@@ -10547,7 +10547,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093836330",
-      "label": "🚗 Local Link Section #6330",
+      "label": "Local Link Section #6330",
       "type": "street",
       "x": 1035,
       "y": 808,
@@ -10555,7 +10555,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094104885",
-      "label": "🚗 Local Link Section #4885",
+      "label": "Local Link Section #4885",
       "type": "street",
       "x": 1102,
       "y": 758,
@@ -10563,7 +10563,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2030091108",
-      "label": "📍 Greenfield Parkway",
+      "label": "Greenfield Parkway",
       "type": "street",
       "x": 279,
       "y": 508,
@@ -10571,7 +10571,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2030091130",
-      "label": "🚗 Local Link Section #1130",
+      "label": "Local Link Section #1130",
       "type": "street",
       "x": 303,
       "y": 501,
@@ -10579,7 +10579,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_358799071",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 310,
       "y": 489,
@@ -10587,7 +10587,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1562121890",
-      "label": "🚗 Local Link Section #1890",
+      "label": "Local Link Section #1890",
       "type": "street",
       "x": 123,
       "y": 70,
@@ -10595,7 +10595,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1562121743",
-      "label": "📍 Spruce Lane",
+      "label": "Spruce Lane",
       "type": "street",
       "x": 149,
       "y": 121,
@@ -10603,7 +10603,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1092864964",
-      "label": "🚗 Local Link Section #4964",
+      "label": "Local Link Section #4964",
       "type": "street",
       "x": 475,
       "y": 854,
@@ -10611,7 +10611,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364001857",
-      "label": "📍 Woodstock Street",
+      "label": "Woodstock Street",
       "type": "street",
       "x": 363,
       "y": 845,
@@ -10619,7 +10619,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1563296351",
-      "label": "📍 Jose Yulo Sr. Avenue",
+      "label": "Jose Yulo Sr. Avenue",
       "type": "street",
       "x": 413,
       "y": 774,
@@ -10627,7 +10627,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6396320872",
-      "label": "🛑 Jct: Rambutan Street & Sampaloc Street",
+      "label": "Jct: Rambutan Street & Sampaloc Street",
       "type": "intersection",
       "x": 309,
       "y": 825,
@@ -10635,7 +10635,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364001756",
-      "label": "🛑 Jct: Rambutan Street & Mangga Street",
+      "label": "Jct: Rambutan Street & Mangga Street",
       "type": "intersection",
       "x": 289,
       "y": 834,
@@ -10643,7 +10643,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8383767153",
-      "label": "🚗 Local Link Section #7153",
+      "label": "Local Link Section #7153",
       "type": "street",
       "x": 261,
       "y": 869,
@@ -10651,7 +10651,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6396510226",
-      "label": "🛑 Jct: Anonas Street & Bangkal Street",
+      "label": "Jct: Anonas Street & Bangkal Street",
       "type": "intersection",
       "x": 396,
       "y": 793,
@@ -10659,7 +10659,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364001677",
-      "label": "🛑 Jct: Lawaan Street & Molave Street",
+      "label": "Jct: Lawaan Street & Molave Street",
       "type": "intersection",
       "x": 341,
       "y": 823,
@@ -10667,7 +10667,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364001467",
-      "label": "🛑 Jct: Hibiscus Street & Bougainvilla Street",
+      "label": "Jct: Hibiscus Street & Bougainvilla Street",
       "type": "intersection",
       "x": 336,
       "y": 797,
@@ -10675,7 +10675,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_4213670576",
-      "label": "🛑 Jct: Hibiscus Street & Dahlia Street",
+      "label": "Jct: Hibiscus Street & Dahlia Street",
       "type": "intersection",
       "x": 330,
       "y": 788,
@@ -10683,7 +10683,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1364001721",
-      "label": "🛑 Jct: Bangkal Street & Acacia Street",
+      "label": "Jct: Bangkal Street & Acacia Street",
       "type": "intersection",
       "x": 409,
       "y": 800,
@@ -10691,7 +10691,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_13378176479",
-      "label": "🛑 Jct: Binghamton Street & Purdue Street",
+      "label": "Jct: Binghamton Street & Purdue Street",
       "type": "intersection",
       "x": 590,
       "y": 859,
@@ -10699,7 +10699,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2265578647",
-      "label": "🚗 Local Link Section #8647",
+      "label": "Local Link Section #8647",
       "type": "street",
       "x": 429,
       "y": 856,
@@ -10707,7 +10707,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1294377851",
-      "label": "🚗 Local Link Section #7851",
+      "label": "Local Link Section #7851",
       "type": "street",
       "x": 419,
       "y": 864,
@@ -10715,7 +10715,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5150839158",
-      "label": "🚗 Local Link Section #9158",
+      "label": "Local Link Section #9158",
       "type": "street",
       "x": 186,
       "y": 686,
@@ -10723,7 +10723,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253792526",
-      "label": "🚗 Local Link Section #2526",
+      "label": "Local Link Section #2526",
       "type": "street",
       "x": 354,
       "y": 751,
@@ -10731,7 +10731,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1589177269",
-      "label": "🚗 Local Link Section #7269",
+      "label": "Local Link Section #7269",
       "type": "street",
       "x": 1093,
       "y": 715,
@@ -10739,7 +10739,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1589177402",
-      "label": "🚗 Local Link Section #7402",
+      "label": "Local Link Section #7402",
       "type": "street",
       "x": 1064,
       "y": 713,
@@ -10747,7 +10747,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8678589443",
-      "label": "🛑 Jct: Felix Reyes Street & Meridian Avenue",
+      "label": "Jct: Felix Reyes Street & Meridian Avenue",
       "type": "intersection",
       "x": 228,
       "y": 242,
@@ -10755,7 +10755,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1557092636",
-      "label": "📍 Bandola Street",
+      "label": "Bandola Street",
       "type": "street",
       "x": 984,
       "y": 798,
@@ -10763,7 +10763,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091052222",
-      "label": "📍 Binary",
+      "label": "Binary",
       "type": "street",
       "x": 210,
       "y": 606,
@@ -10771,7 +10771,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_12450729944",
-      "label": "📍 NIA Road",
+      "label": "NIA Road",
       "type": "street",
       "x": 715,
       "y": 545,
@@ -10779,7 +10779,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_12450603926",
-      "label": "📍 NIA Road",
+      "label": "NIA Road",
       "type": "street",
       "x": 747,
       "y": 592,
@@ -10787,7 +10787,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094104623",
-      "label": "📍 Lingga Road",
+      "label": "Lingga Road",
       "type": "street",
       "x": 1216,
       "y": 764,
@@ -10795,7 +10795,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_4232010780",
-      "label": "🛑 Jct: Lingga Road & San Jose Road",
+      "label": "Jct: Lingga Road & San Jose Road",
       "type": "intersection",
       "x": 1156,
       "y": 745,
@@ -10803,7 +10803,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1681018803",
-      "label": "📍 Santa Rosa-Tagaytay Road",
+      "label": "Santa Rosa-Tagaytay Road",
       "type": "street",
       "x": 77,
       "y": 339,
@@ -10811,7 +10811,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6363301634",
-      "label": "📍 Rizal Boulevard",
+      "label": "Rizal Boulevard",
       "type": "street",
       "x": 344,
       "y": 61,
@@ -10819,7 +10819,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1080552013",
-      "label": "🚗 Local Link Section #2013",
+      "label": "Local Link Section #2013",
       "type": "street",
       "x": 160,
       "y": 316,
@@ -10827,7 +10827,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1785982088",
-      "label": "🛑 Jct: Daffodils Lane & Cattleya Avenue",
+      "label": "Jct: Daffodils Lane & Cattleya Avenue",
       "type": "intersection",
       "x": 165,
       "y": 291,
@@ -10835,7 +10835,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1785982071",
-      "label": "🛑 Jct: Daffodils Lane & Marigold Avenue",
+      "label": "Jct: Daffodils Lane & Marigold Avenue",
       "type": "intersection",
       "x": 187,
       "y": 292,
@@ -10843,7 +10843,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1785981949",
-      "label": "🛑 Jct: Chrysanthemum Avenue & Dahlia Lane",
+      "label": "Jct: Chrysanthemum Avenue & Dahlia Lane",
       "type": "intersection",
       "x": 180,
       "y": 303,
@@ -10851,7 +10851,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1791201537",
-      "label": "📍 South Lake Drive",
+      "label": "South Lake Drive",
       "type": "street",
       "x": 189,
       "y": 437,
@@ -10859,7 +10859,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_11732314843",
-      "label": "🛑 Jct: South Lake Drive & Ibiza Street",
+      "label": "Jct: South Lake Drive & Ibiza Street",
       "type": "intersection",
       "x": 174,
       "y": 431,
@@ -10867,7 +10867,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1791202311",
-      "label": "🛑 Jct: Macau Street & South Lake Drive",
+      "label": "Jct: Macau Street & South Lake Drive",
       "type": "intersection",
       "x": 192,
       "y": 392,
@@ -10875,7 +10875,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1791202095",
-      "label": "🛑 Jct: Maui Street & South Lake Drive",
+      "label": "Jct: Maui Street & South Lake Drive",
       "type": "intersection",
       "x": 170,
       "y": 401,
@@ -10883,7 +10883,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1791201637",
-      "label": "🛑 Jct: South Lake Drive & Maldives Street",
+      "label": "Jct: South Lake Drive & Maldives Street",
       "type": "intersection",
       "x": 211,
       "y": 430,
@@ -10891,7 +10891,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1791201870",
-      "label": "🛑 Jct: South Lake Drive & Bali Street",
+      "label": "Jct: South Lake Drive & Bali Street",
       "type": "intersection",
       "x": 226,
       "y": 414,
@@ -10899,7 +10899,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1791202085",
-      "label": "🛑 Jct: South Lake Drive & Phuket Street",
+      "label": "Jct: South Lake Drive & Phuket Street",
       "type": "intersection",
       "x": 223,
       "y": 402,
@@ -10907,7 +10907,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3652540951",
-      "label": "📍 South Lake Drive",
+      "label": "South Lake Drive",
       "type": "street",
       "x": 185,
       "y": 380,
@@ -10915,7 +10915,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1791202067",
-      "label": "📍 Guam Street",
+      "label": "Guam Street",
       "type": "street",
       "x": 186,
       "y": 403,
@@ -10923,7 +10923,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1791201876",
-      "label": "🛑 Jct: South Lake Drive & Fiji Street",
+      "label": "Jct: South Lake Drive & Fiji Street",
       "type": "intersection",
       "x": 170,
       "y": 412,
@@ -10931,7 +10931,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_358800564",
-      "label": "📍 Greenfield Parkway",
+      "label": "Greenfield Parkway",
       "type": "street",
       "x": 185,
       "y": 453,
@@ -10939,7 +10939,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1791202539",
-      "label": "📍 Bahamas Street",
+      "label": "Bahamas Street",
       "type": "street",
       "x": 206,
       "y": 382,
@@ -10947,7 +10947,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1791243030",
-      "label": "🛑 Jct: Ibiza Street & Mauritius Street",
+      "label": "Jct: Ibiza Street & Mauritius Street",
       "type": "intersection",
       "x": 188,
       "y": 426,
@@ -10955,7 +10955,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1791243156",
-      "label": "📍 Fiji Street",
+      "label": "Fiji Street",
       "type": "street",
       "x": 192,
       "y": 415,
@@ -10963,7 +10963,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1791243109",
-      "label": "📍 Bermuda Street",
+      "label": "Bermuda Street",
       "type": "street",
       "x": 208,
       "y": 419,
@@ -10971,7 +10971,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115881",
-      "label": "🚗 Local Link Section #5881",
+      "label": "Local Link Section #5881",
       "type": "street",
       "x": 805,
       "y": 311,
@@ -10979,7 +10979,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3304367930",
-      "label": "📍 Marinig Road",
+      "label": "Marinig Road",
       "type": "street",
       "x": 709,
       "y": 327,
@@ -10987,7 +10987,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1953950741",
-      "label": "🛑 Jct: Argos Drive & Sikyon Drive",
+      "label": "Jct: Argos Drive & Sikyon Drive",
       "type": "intersection",
       "x": 158,
       "y": 172,
@@ -10995,7 +10995,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1953950734",
-      "label": "🛑 Jct: Argos Drive & Athens Drive",
+      "label": "Jct: Argos Drive & Athens Drive",
       "type": "intersection",
       "x": 184,
       "y": 165,
@@ -11003,7 +11003,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1953950718",
-      "label": "🚗 Local Link Section #0718",
+      "label": "Local Link Section #0718",
       "type": "street",
       "x": 134,
       "y": 172,
@@ -11011,7 +11011,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1953950854",
-      "label": "🛑 Jct: Athens Drive & North Delphi Drive",
+      "label": "Jct: Athens Drive & North Delphi Drive",
       "type": "intersection",
       "x": 193,
       "y": 155,
@@ -11019,7 +11019,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1953950847",
-      "label": "🚗 Local Link Section #0847",
+      "label": "Local Link Section #0847",
       "type": "street",
       "x": 195,
       "y": 173,
@@ -11027,7 +11027,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_12188804",
-      "label": "🛑 Jct: Diamond Road & Zircon Road",
+      "label": "Jct: Diamond Road & Zircon Road",
       "type": "intersection",
       "x": 292,
       "y": 230,
@@ -11035,7 +11035,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8266726251",
-      "label": "🚗 Local Link Section #6251",
+      "label": "Local Link Section #6251",
       "type": "street",
       "x": 1076,
       "y": 745,
@@ -11043,7 +11043,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1962922211",
-      "label": "🚗 Local Link Section #2211",
+      "label": "Local Link Section #2211",
       "type": "street",
       "x": 1062,
       "y": 751,
@@ -11051,7 +11051,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1088118915",
-      "label": "🛑 Jct: Achillea Street & J. P. Rizal Street",
+      "label": "Jct: Achillea Street & J. P. Rizal Street",
       "type": "intersection",
       "x": 410,
       "y": 292,
@@ -11059,7 +11059,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1966158674",
-      "label": "🛑 Jct: J. P. Rizal Street & National Highway 1",
+      "label": "Jct: J. P. Rizal Street & National Highway 1",
       "type": "intersection",
       "x": 387,
       "y": 293,
@@ -11067,7 +11067,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1966260287",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 359,
       "y": 251,
@@ -11075,7 +11075,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1966158633",
-      "label": "🛑 Jct: Hudson Street & Panama Street",
+      "label": "Jct: Hudson Street & Panama Street",
       "type": "intersection",
       "x": 412,
       "y": 302,
@@ -11083,7 +11083,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1966158081",
-      "label": "📍 Panama Street",
+      "label": "Panama Street",
       "type": "street",
       "x": 435,
       "y": 317,
@@ -11091,7 +11091,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1966259813",
-      "label": "🚗 Local Link Section #9813",
+      "label": "Local Link Section #9813",
       "type": "street",
       "x": 704,
       "y": 558,
@@ -11099,7 +11099,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1966259873",
-      "label": "🚗 Local Link Section #9873",
+      "label": "Local Link Section #9873",
       "type": "street",
       "x": 695,
       "y": 544,
@@ -11107,7 +11107,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1966259931",
-      "label": "🛑 Jct: Pomelo Street & Apple Street",
+      "label": "Jct: Pomelo Street & Apple Street",
       "type": "intersection",
       "x": 646,
       "y": 529,
@@ -11115,7 +11115,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1966259843",
-      "label": "🚗 Local Link Section #9843",
+      "label": "Local Link Section #9843",
       "type": "street",
       "x": 677,
       "y": 550,
@@ -11123,7 +11123,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1966259812",
-      "label": "🚗 Local Link Section #9812",
+      "label": "Local Link Section #9812",
       "type": "street",
       "x": 684,
       "y": 558,
@@ -11131,7 +11131,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1966259770",
-      "label": "🚗 Local Link Section #9770",
+      "label": "Local Link Section #9770",
       "type": "street",
       "x": 588,
       "y": 574,
@@ -11139,7 +11139,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1966259978",
-      "label": "🛑 Jct: Coconut Street & Rambutan Street",
+      "label": "Jct: Coconut Street & Rambutan Street",
       "type": "intersection",
       "x": 674,
       "y": 524,
@@ -11147,7 +11147,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1966259787",
-      "label": "🚗 Local Link Section #9787",
+      "label": "Local Link Section #9787",
       "type": "street",
       "x": 667,
       "y": 564,
@@ -11155,7 +11155,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3239033059",
-      "label": "🛑 Jct: National Highway 1 & Biñan - Santa Rosa Access Road",
+      "label": "Jct: National Highway 1 & Biñan - Santa Rosa Access Road",
       "type": "intersection",
       "x": 271,
       "y": 104,
@@ -11163,7 +11163,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_360197137",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 254,
       "y": 74,
@@ -11171,7 +11171,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5185052118",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 264,
       "y": 92,
@@ -11179,7 +11179,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8318259218",
-      "label": "📍 Biñan - Santa Rosa Access Road",
+      "label": "Biñan - Santa Rosa Access Road",
       "type": "street",
       "x": 168,
       "y": 122,
@@ -11187,7 +11187,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3239032998",
-      "label": "📍 Biñan - Santa Rosa Access Road",
+      "label": "Biñan - Santa Rosa Access Road",
       "type": "street",
       "x": 97,
       "y": 124,
@@ -11195,7 +11195,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_4369835363",
-      "label": "🛑 Jct: Biñan - Santa Rosa Access Road & Greenfield Parkway",
+      "label": "Jct: Biñan - Santa Rosa Access Road & Greenfield Parkway",
       "type": "intersection",
       "x": 67,
       "y": 124,
@@ -11203,7 +11203,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1056263531",
-      "label": "📍 Hillcrest Road",
+      "label": "Hillcrest Road",
       "type": "street",
       "x": 18,
       "y": 294,
@@ -11211,7 +11211,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2030091388",
-      "label": "📍 Asia Brewery Road",
+      "label": "Asia Brewery Road",
       "type": "street",
       "x": 349,
       "y": 447,
@@ -11219,7 +11219,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2030091308",
-      "label": "📍 Greenfield Parkway",
+      "label": "Greenfield Parkway",
       "type": "street",
       "x": 229,
       "y": 468,
@@ -11227,7 +11227,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_358800554",
-      "label": "📍 Greenfield Parkway",
+      "label": "Greenfield Parkway",
       "type": "street",
       "x": 222,
       "y": 459,
@@ -11235,7 +11235,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1416896496",
-      "label": "📍 Greenfield Parkway",
+      "label": "Greenfield Parkway",
       "type": "street",
       "x": 155,
       "y": 463,
@@ -11243,7 +11243,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2030091126",
-      "label": "📍 Greenfield Parkway",
+      "label": "Greenfield Parkway",
       "type": "street",
       "x": 259,
       "y": 503,
@@ -11251,7 +11251,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8042537199",
-      "label": "📍 Greenfield Parkway",
+      "label": "Greenfield Parkway",
       "type": "street",
       "x": 252,
       "y": 493,
@@ -11259,7 +11259,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2044485635",
-      "label": "🚗 Local Link Section #5635",
+      "label": "Local Link Section #5635",
       "type": "street",
       "x": 146,
       "y": 473,
@@ -11267,7 +11267,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2030091224",
-      "label": "🚗 Local Link Section #1224",
+      "label": "Local Link Section #1224",
       "type": "street",
       "x": 151,
       "y": 482,
@@ -11275,7 +11275,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2451528811",
-      "label": "🚗 Local Link Section #8811",
+      "label": "Local Link Section #8811",
       "type": "street",
       "x": 369,
       "y": 459,
@@ -11283,7 +11283,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2030091241",
-      "label": "🚗 Local Link Section #1241",
+      "label": "Local Link Section #1241",
       "type": "street",
       "x": 129,
       "y": 479,
@@ -11291,7 +11291,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2051220240",
-      "label": "📍 Industry Drive",
+      "label": "Industry Drive",
       "type": "street",
       "x": 114,
       "y": 729,
@@ -11299,7 +11299,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2051220244",
-      "label": "🛑 Jct: Industry Drive & Progress Avenue",
+      "label": "Jct: Industry Drive & Progress Avenue",
       "type": "intersection",
       "x": 130,
       "y": 749,
@@ -11307,7 +11307,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5423001428",
-      "label": "📍 Carmelray Boulevard",
+      "label": "Carmelray Boulevard",
       "type": "street",
       "x": 149,
       "y": 875,
@@ -11315,7 +11315,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2106608930",
-      "label": "🛑 Jct: Enterprise Drive & Integrity Avenue",
+      "label": "Jct: Enterprise Drive & Integrity Avenue",
       "type": "intersection",
       "x": 143,
       "y": 793,
@@ -11323,7 +11323,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2054336588",
-      "label": "🛑 Jct: Enterprise Drive & Innovation Drive",
+      "label": "Jct: Enterprise Drive & Innovation Drive",
       "type": "intersection",
       "x": 122,
       "y": 799,
@@ -11331,7 +11331,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2054336584",
-      "label": "🛑 Jct: Enterprise Drive & Innovation Drive",
+      "label": "Jct: Enterprise Drive & Innovation Drive",
       "type": "intersection",
       "x": 98,
       "y": 806,
@@ -11339,7 +11339,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2055144025",
-      "label": "🛑 Jct: Mamatid Silangan link & Silangan-Mamatid Link",
+      "label": "Jct: Mamatid Silangan link & Silangan-Mamatid Link",
       "type": "intersection",
       "x": 585,
       "y": 649,
@@ -11347,7 +11347,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091050747",
-      "label": "📍 Energy",
+      "label": "Energy",
       "type": "street",
       "x": 303,
       "y": 639,
@@ -11355,7 +11355,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1091507734",
-      "label": "📍 C. A. Yulo Avenue",
+      "label": "C. A. Yulo Avenue",
       "type": "street",
       "x": 497,
       "y": 684,
@@ -11363,7 +11363,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2054336589",
-      "label": "📍 Innovation Drive",
+      "label": "Innovation Drive",
       "type": "street",
       "x": 112,
       "y": 788,
@@ -11371,7 +11371,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_13363079729",
-      "label": "📍 Unity Avenue",
+      "label": "Unity Avenue",
       "type": "street",
       "x": 132,
       "y": 816,
@@ -11379,7 +11379,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253793363",
-      "label": "🚗 Local Link Section #3363",
+      "label": "Local Link Section #3363",
       "type": "street",
       "x": 300,
       "y": 753,
@@ -11387,7 +11387,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2106608666",
-      "label": "🚗 Local Link Section #8666",
+      "label": "Local Link Section #8666",
       "type": "street",
       "x": 282,
       "y": 748,
@@ -11395,7 +11395,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2106608845",
-      "label": "🚗 Local Link Section #8845",
+      "label": "Local Link Section #8845",
       "type": "street",
       "x": 364,
       "y": 742,
@@ -11403,7 +11403,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093743700",
-      "label": "🚗 Local Link Section #3700",
+      "label": "Local Link Section #3700",
       "type": "street",
       "x": 160,
       "y": 860,
@@ -11411,7 +11411,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2106610204",
-      "label": "📍 Silangan Airstrip Road",
+      "label": "Silangan Airstrip Road",
       "type": "street",
       "x": 272,
       "y": 677,
@@ -11419,7 +11419,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2110506572",
-      "label": "🚗 Local Link Section #6572",
+      "label": "Local Link Section #6572",
       "type": "street",
       "x": 320,
       "y": 751,
@@ -11427,7 +11427,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2110726701",
-      "label": "📍 Malitlit - Eton Access Road",
+      "label": "Malitlit - Eton Access Road",
       "type": "street",
       "x": 331,
       "y": 438,
@@ -11435,7 +11435,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2120915105",
-      "label": "🚗 Local Link Section #5105",
+      "label": "Local Link Section #5105",
       "type": "street",
       "x": 723,
       "y": 565,
@@ -11443,7 +11443,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2120941842",
-      "label": "🚗 Local Link Section #1842",
+      "label": "Local Link Section #1842",
       "type": "street",
       "x": 749,
       "y": 514,
@@ -11451,7 +11451,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3525951068",
-      "label": "🚗 Local Link Section #1068",
+      "label": "Local Link Section #1068",
       "type": "street",
       "x": 731,
       "y": 517,
@@ -11459,7 +11459,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8678811259",
-      "label": "📍 NIA Road",
+      "label": "NIA Road",
       "type": "street",
       "x": 707,
       "y": 527,
@@ -11467,7 +11467,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2123655007",
-      "label": "🛑 Jct: Saint Paul Street & Saint Jerome Street",
+      "label": "Jct: Saint Paul Street & Saint Jerome Street",
       "type": "intersection",
       "x": 871,
       "y": 419,
@@ -11475,7 +11475,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2123647215",
-      "label": "🚗 Local Link Section #7215",
+      "label": "Local Link Section #7215",
       "type": "street",
       "x": 874,
       "y": 388,
@@ -11483,7 +11483,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2123658668",
-      "label": "🛑 Jct: Saint Philip Street & Saint Adelaide Street",
+      "label": "Jct: Saint Philip Street & Saint Adelaide Street",
       "type": "intersection",
       "x": 880,
       "y": 439,
@@ -11491,7 +11491,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2123657199",
-      "label": "🛑 Jct: Saint Philip Street & Saint Christopher Street",
+      "label": "Jct: Saint Philip Street & Saint Christopher Street",
       "type": "intersection",
       "x": 894,
       "y": 443,
@@ -11499,7 +11499,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2123660728",
-      "label": "🛑 Jct: Saint Adelaide Street & Saint Hilary Loop Street",
+      "label": "Jct: Saint Adelaide Street & Saint Hilary Loop Street",
       "type": "intersection",
       "x": 891,
       "y": 428,
@@ -11507,7 +11507,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2123657202",
-      "label": "🛑 Jct: Saint Athanasius Street & Saint Peter Avenue",
+      "label": "Jct: Saint Athanasius Street & Saint Peter Avenue",
       "type": "intersection",
       "x": 869,
       "y": 450,
@@ -11515,7 +11515,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2123671872",
-      "label": "🚗 Local Link Section #1872",
+      "label": "Local Link Section #1872",
       "type": "street",
       "x": 1004,
       "y": 531,
@@ -11523,7 +11523,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8344662372",
-      "label": "🚗 Local Link Section #2372",
+      "label": "Local Link Section #2372",
       "type": "street",
       "x": 982,
       "y": 601,
@@ -11531,7 +11531,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2123718920",
-      "label": "🛑 Jct: Columbia Street & Duke Street",
+      "label": "Jct: Columbia Street & Duke Street",
       "type": "intersection",
       "x": 598,
       "y": 841,
@@ -11539,7 +11539,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2123731846",
-      "label": "📍 Binghamton Street",
+      "label": "Binghamton Street",
       "type": "street",
       "x": 583,
       "y": 847,
@@ -11547,7 +11547,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2125034631",
-      "label": "🚗 Local Link Section #4631",
+      "label": "Local Link Section #4631",
       "type": "street",
       "x": 589,
       "y": 627,
@@ -11555,7 +11555,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2125035698",
-      "label": "🚗 Local Link Section #5698",
+      "label": "Local Link Section #5698",
       "type": "street",
       "x": 565,
       "y": 626,
@@ -11563,7 +11563,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2125037065",
-      "label": "🚗 Local Link Section #7065",
+      "label": "Local Link Section #7065",
       "type": "street",
       "x": 603,
       "y": 633,
@@ -11571,7 +11571,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8302130304",
-      "label": "📍 Silangan-Mamatid Link",
+      "label": "Silangan-Mamatid Link",
       "type": "street",
       "x": 637,
       "y": 661,
@@ -11579,7 +11579,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6981963384",
-      "label": "📍 Silangan-Mamatid Link",
+      "label": "Silangan-Mamatid Link",
       "type": "street",
       "x": 539,
       "y": 650,
@@ -11587,7 +11587,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2874406038",
-      "label": "📍 Silangan-Mamatid Link",
+      "label": "Silangan-Mamatid Link",
       "type": "street",
       "x": 516,
       "y": 648,
@@ -11595,7 +11595,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_761881206",
-      "label": "🛑 Jct: Silangan Access Road & C. A. Yulo Avenue",
+      "label": "Jct: Silangan Access Road & C. A. Yulo Avenue",
       "type": "intersection",
       "x": 375,
       "y": 697,
@@ -11603,7 +11603,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_13382792221",
-      "label": "📍 C. A. Yulo Avenue",
+      "label": "C. A. Yulo Avenue",
       "type": "street",
       "x": 253,
       "y": 721,
@@ -11611,7 +11611,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8385956434",
-      "label": "📍 C. A. Yulo Avenue",
+      "label": "C. A. Yulo Avenue",
       "type": "street",
       "x": 269,
       "y": 719,
@@ -11619,7 +11619,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_13382792224",
-      "label": "📍 C. A. Yulo Avenue",
+      "label": "C. A. Yulo Avenue",
       "type": "street",
       "x": 312,
       "y": 713,
@@ -11627,7 +11627,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2125069800",
-      "label": "📍 Progress Avenue",
+      "label": "Progress Avenue",
       "type": "street",
       "x": 202,
       "y": 730,
@@ -11635,7 +11635,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8313146136",
-      "label": "🚗 Local Link Section #6136",
+      "label": "Local Link Section #6136",
       "type": "street",
       "x": 220,
       "y": 743,
@@ -11643,7 +11643,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2123717599",
-      "label": "🛑 Jct: Harvard Street & Ciudad de Calamba Road",
+      "label": "Jct: Harvard Street & Ciudad de Calamba Road",
       "type": "intersection",
       "x": 602,
       "y": 853,
@@ -11651,7 +11651,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6396510222",
-      "label": "🛑 Jct: Molave Street & Durian Street",
+      "label": "Jct: Molave Street & Durian Street",
       "type": "intersection",
       "x": 398,
       "y": 807,
@@ -11659,7 +11659,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_594381981",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 768,
       "y": 885,
@@ -11667,7 +11667,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2123680898",
-      "label": "📍 Duhat Loop",
+      "label": "Duhat Loop",
       "type": "street",
       "x": 884,
       "y": 597,
@@ -11675,7 +11675,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_13519144534",
-      "label": "🚗 Local Link Section #4534",
+      "label": "Local Link Section #4534",
       "type": "street",
       "x": 998,
       "y": 600,
@@ -11683,7 +11683,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1085937442",
-      "label": "🛑 Jct: Daang PUP & Graza Street",
+      "label": "Jct: Daang PUP & Graza Street",
       "type": "intersection",
       "x": 343,
       "y": 72,
@@ -11691,7 +11691,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2264140480",
-      "label": "🛑 Jct: United Boulevard & Grasslands Drive",
+      "label": "Jct: United Boulevard & Grasslands Drive",
       "type": "intersection",
       "x": 44,
       "y": 476,
@@ -11699,7 +11699,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2264140394",
-      "label": "📍 Grasslands Drive",
+      "label": "Grasslands Drive",
       "type": "street",
       "x": 36,
       "y": 491,
@@ -11707,7 +11707,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5420524406",
-      "label": "🚗 Local Link Section #4406",
+      "label": "Local Link Section #4406",
       "type": "street",
       "x": 54,
       "y": 510,
@@ -11715,7 +11715,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2264140341",
-      "label": "🚗 Local Link Section #0341",
+      "label": "Local Link Section #0341",
       "type": "street",
       "x": 40,
       "y": 529,
@@ -11723,7 +11723,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2264140297",
-      "label": "🚗 Local Link Section #0297",
+      "label": "Local Link Section #0297",
       "type": "street",
       "x": 24,
       "y": 533,
@@ -11731,7 +11731,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5420524336",
-      "label": "🚗 Local Link Section #4336",
+      "label": "Local Link Section #4336",
       "type": "street",
       "x": 60,
       "y": 498,
@@ -11739,7 +11739,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2265566472",
-      "label": "📍 Villa Caceres Avenue",
+      "label": "Villa Caceres Avenue",
       "type": "street",
       "x": 275,
       "y": 248,
@@ -11747,7 +11747,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2265566452",
-      "label": "📍 Villa Caceres Avenue",
+      "label": "Villa Caceres Avenue",
       "type": "street",
       "x": 258,
       "y": 253,
@@ -11755,7 +11755,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2265566484",
-      "label": "🚗 Local Link Section #6484",
+      "label": "Local Link Section #6484",
       "type": "street",
       "x": 142,
       "y": 219,
@@ -11763,7 +11763,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2265566534",
-      "label": "🚗 Local Link Section #6534",
+      "label": "Local Link Section #6534",
       "type": "street",
       "x": 181,
       "y": 193,
@@ -11771,7 +11771,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2265566595",
-      "label": "🚗 Local Link Section #6595",
+      "label": "Local Link Section #6595",
       "type": "street",
       "x": 242,
       "y": 158,
@@ -11779,7 +11779,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2265566530",
-      "label": "🚗 Local Link Section #6530",
+      "label": "Local Link Section #6530",
       "type": "street",
       "x": 165,
       "y": 197,
@@ -11787,7 +11787,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2265566424",
-      "label": "🛑 Jct: Anderson Street & RSBS Boulevard",
+      "label": "Jct: Anderson Street & RSBS Boulevard",
       "type": "intersection",
       "x": 226,
       "y": 279,
@@ -11795,7 +11795,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2265566409",
-      "label": "🛑 Jct: Queensway Street & Imperial Street",
+      "label": "Jct: Queensway Street & Imperial Street",
       "type": "intersection",
       "x": 211,
       "y": 284,
@@ -11803,7 +11803,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2265566475",
-      "label": "🚗 Local Link Section #6475",
+      "label": "Local Link Section #6475",
       "type": "street",
       "x": 243,
       "y": 246,
@@ -11811,7 +11811,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2265566514",
-      "label": "🛑 Jct: Road 04 & Road 05",
+      "label": "Jct: Road 04 & Road 05",
       "type": "intersection",
       "x": 142,
       "y": 205,
@@ -11819,7 +11819,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2265578702",
-      "label": "🚗 Local Link Section #8702",
+      "label": "Local Link Section #8702",
       "type": "street",
       "x": 507,
       "y": 844,
@@ -11827,7 +11827,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2265578663",
-      "label": "🚗 Local Link Section #8663",
+      "label": "Local Link Section #8663",
       "type": "street",
       "x": 491,
       "y": 853,
@@ -11835,7 +11835,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2265578599",
-      "label": "🚗 Local Link Section #8599",
+      "label": "Local Link Section #8599",
       "type": "street",
       "x": 490,
       "y": 864,
@@ -11843,7 +11843,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2382880139",
-      "label": "📍 Batino Bypass Road",
+      "label": "Batino Bypass Road",
       "type": "street",
       "x": 693,
       "y": 838,
@@ -11851,7 +11851,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_673875051",
-      "label": "🚗 Local Link Section #5051",
+      "label": "Local Link Section #5051",
       "type": "street",
       "x": 137,
       "y": 573,
@@ -11859,7 +11859,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2451528939",
-      "label": "🚗 Local Link Section #8939",
+      "label": "Local Link Section #8939",
       "type": "street",
       "x": 383,
       "y": 446,
@@ -11867,7 +11867,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2451528776",
-      "label": "🚗 Local Link Section #8776",
+      "label": "Local Link Section #8776",
       "type": "street",
       "x": 386,
       "y": 461,
@@ -11875,7 +11875,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_4728862447",
-      "label": "🚗 Local Link Section #2447",
+      "label": "Local Link Section #2447",
       "type": "street",
       "x": 396,
       "y": 453,
@@ -11883,7 +11883,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2451528710",
-      "label": "🚗 Local Link Section #8710",
+      "label": "Local Link Section #8710",
       "type": "street",
       "x": 368,
       "y": 469,
@@ -11891,7 +11891,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_4667940679",
-      "label": "🚗 Local Link Section #0679",
+      "label": "Local Link Section #0679",
       "type": "street",
       "x": 152,
       "y": 409,
@@ -11899,7 +11899,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2452518443",
-      "label": "🚗 Local Link Section #8443",
+      "label": "Local Link Section #8443",
       "type": "street",
       "x": 122,
       "y": 411,
@@ -11907,7 +11907,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2452518446",
-      "label": "🚗 Local Link Section #8446",
+      "label": "Local Link Section #8446",
       "type": "street",
       "x": 135,
       "y": 404,
@@ -11915,7 +11915,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2452518451",
-      "label": "🚗 Local Link Section #8451",
+      "label": "Local Link Section #8451",
       "type": "street",
       "x": 150,
       "y": 395,
@@ -11923,7 +11923,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3236093000",
-      "label": "🚗 Local Link Section #3000",
+      "label": "Local Link Section #3000",
       "type": "street",
       "x": 164,
       "y": 388,
@@ -11931,7 +11931,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8679335974",
-      "label": "🚗 Local Link Section #5974",
+      "label": "Local Link Section #5974",
       "type": "street",
       "x": 376,
       "y": 329,
@@ -11939,7 +11939,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3235966334",
-      "label": "🚗 Local Link Section #6334",
+      "label": "Local Link Section #6334",
       "type": "street",
       "x": 361,
       "y": 339,
@@ -11947,7 +11947,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2519480539",
-      "label": "🚗 Local Link Section #0539",
+      "label": "Local Link Section #0539",
       "type": "street",
       "x": 514,
       "y": 219,
@@ -11955,7 +11955,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2519480906",
-      "label": "🚗 Local Link Section #0906",
+      "label": "Local Link Section #0906",
       "type": "street",
       "x": 466,
       "y": 182,
@@ -11963,7 +11963,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2519480590",
-      "label": "🚗 Local Link Section #0590",
+      "label": "Local Link Section #0590",
       "type": "street",
       "x": 499,
       "y": 208,
@@ -11971,7 +11971,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2519480711",
-      "label": "📍 Caingin Road",
+      "label": "Caingin Road",
       "type": "street",
       "x": 566,
       "y": 192,
@@ -11979,7 +11979,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2519480757",
-      "label": "🚗 Local Link Section #0757",
+      "label": "Local Link Section #0757",
       "type": "street",
       "x": 544,
       "y": 188,
@@ -11987,7 +11987,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6334304521",
-      "label": "🚗 Local Link Section #4521",
+      "label": "Local Link Section #4521",
       "type": "street",
       "x": 536,
       "y": 177,
@@ -11995,7 +11995,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2519480738",
-      "label": "🚗 Local Link Section #0738",
+      "label": "Local Link Section #0738",
       "type": "street",
       "x": 524,
       "y": 189,
@@ -12003,7 +12003,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2519480888",
-      "label": "🚗 Local Link Section #0888",
+      "label": "Local Link Section #0888",
       "type": "street",
       "x": 509,
       "y": 183,
@@ -12011,7 +12011,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2519481080",
-      "label": "📍 Captain Perlas Street",
+      "label": "Captain Perlas Street",
       "type": "street",
       "x": 459,
       "y": 169,
@@ -12019,7 +12019,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2519481074",
-      "label": "🛑 Jct: Garnet Street & Emerald Street",
+      "label": "Jct: Garnet Street & Emerald Street",
       "type": "intersection",
       "x": 483,
       "y": 169,
@@ -12027,7 +12027,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2519480848",
-      "label": "🚗 Local Link Section #0848",
+      "label": "Local Link Section #0848",
       "type": "street",
       "x": 483,
       "y": 185,
@@ -12035,7 +12035,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6335874810",
-      "label": "🚗 Local Link Section #4810",
+      "label": "Local Link Section #4810",
       "type": "street",
       "x": 520,
       "y": 208,
@@ -12043,7 +12043,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2519480899",
-      "label": "🚗 Local Link Section #0899",
+      "label": "Local Link Section #0899",
       "type": "street",
       "x": 591,
       "y": 182,
@@ -12051,7 +12051,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2519481020",
-      "label": "🛑 Jct: Garnet Street & Onyx Street",
+      "label": "Jct: Garnet Street & Onyx Street",
       "type": "intersection",
       "x": 505,
       "y": 174,
@@ -12059,7 +12059,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2519480692",
-      "label": "🚗 Local Link Section #0692",
+      "label": "Local Link Section #0692",
       "type": "street",
       "x": 495,
       "y": 193,
@@ -12067,7 +12067,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8386286030",
-      "label": "🚗 Local Link Section #6030",
+      "label": "Local Link Section #6030",
       "type": "street",
       "x": 729,
       "y": 283,
@@ -12075,7 +12075,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_7500973373",
-      "label": "🚗 Local Link Section #3373",
+      "label": "Local Link Section #3373",
       "type": "street",
       "x": 710,
       "y": 272,
@@ -12083,7 +12083,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3559641293",
-      "label": "🛑 Jct: 7th Street & 5th Street",
+      "label": "Jct: 7th Street & 5th Street",
       "type": "intersection",
       "x": 150,
       "y": 379,
@@ -12091,7 +12091,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_358800584",
-      "label": "📍 United Boulevard",
+      "label": "United Boulevard",
       "type": "street",
       "x": 30,
       "y": 471,
@@ -12099,7 +12099,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1080552226",
-      "label": "⛰️ West Arterial Link (Silang Bypass)",
+      "label": "West Arterial Link (Silang Bypass)",
       "type": "highway",
       "x": 18,
       "y": 464,
@@ -12107,7 +12107,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2620781741",
-      "label": "🚗 Local Link Section #1741",
+      "label": "Local Link Section #1741",
       "type": "street",
       "x": 42,
       "y": 453,
@@ -12115,7 +12115,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_4667941292",
-      "label": "🚗 Local Link Section #1292",
+      "label": "Local Link Section #1292",
       "type": "street",
       "x": 53,
       "y": 446,
@@ -12123,7 +12123,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_4667941175",
-      "label": "🚗 Local Link Section #1175",
+      "label": "Local Link Section #1175",
       "type": "street",
       "x": 68,
       "y": 434,
@@ -12131,7 +12131,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2620781769",
-      "label": "🚗 Local Link Section #1769",
+      "label": "Local Link Section #1769",
       "type": "street",
       "x": 0,
       "y": 449,
@@ -12139,7 +12139,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2620781838",
-      "label": "🚗 Local Link Section #1838",
+      "label": "Local Link Section #1838",
       "type": "street",
       "x": 28,
       "y": 440,
@@ -12147,7 +12147,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2664585321",
-      "label": "📍 Kingwood Street",
+      "label": "Kingwood Street",
       "type": "street",
       "x": 57,
       "y": 345,
@@ -12155,7 +12155,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2664585357",
-      "label": "📍 Lilac Street",
+      "label": "Lilac Street",
       "type": "street",
       "x": 36,
       "y": 334,
@@ -12163,7 +12163,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090516943",
-      "label": "🛑 Jct: Burias Street & Cebu Street",
+      "label": "Jct: Burias Street & Cebu Street",
       "type": "intersection",
       "x": 437,
       "y": 509,
@@ -12171,7 +12171,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2760031403",
-      "label": "🛑 Jct: Mondo Drive & Calvin Street",
+      "label": "Jct: Mondo Drive & Calvin Street",
       "type": "intersection",
       "x": 91,
       "y": 87,
@@ -12179,7 +12179,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2760031420",
-      "label": "🚗 Local Link Section #1420",
+      "label": "Local Link Section #1420",
       "type": "street",
       "x": 88,
       "y": 105,
@@ -12187,7 +12187,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2859339373",
-      "label": "🛑 Jct: Calle Reinosa & Calle Córdoba",
+      "label": "Jct: Calle Reinosa & Calle Córdoba",
       "type": "intersection",
       "x": 134,
       "y": 674,
@@ -12195,7 +12195,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2859339365",
-      "label": "🛑 Jct: Calle Reinosa & Calle Sevilla",
+      "label": "Jct: Calle Reinosa & Calle Sevilla",
       "type": "intersection",
       "x": 139,
       "y": 686,
@@ -12203,7 +12203,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2859339413",
-      "label": "🛑 Jct: Calle Vitoria & Calle Barcelona",
+      "label": "Jct: Calle Vitoria & Calle Barcelona",
       "type": "intersection",
       "x": 161,
       "y": 665,
@@ -12211,7 +12211,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2859339411",
-      "label": "📍 Calle Sevilla",
+      "label": "Calle Sevilla",
       "type": "street",
       "x": 127,
       "y": 665,
@@ -12219,7 +12219,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1078541485",
-      "label": "🛑 Jct: Silangan Access Road & Silangan-Mamatid Link",
+      "label": "Jct: Silangan Access Road & Silangan-Mamatid Link",
       "type": "intersection",
       "x": 495,
       "y": 650,
@@ -12227,7 +12227,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_13401908786",
-      "label": "🚗 Local Link Section #8786",
+      "label": "Local Link Section #8786",
       "type": "street",
       "x": 506,
       "y": 635,
@@ -12235,7 +12235,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8314956031",
-      "label": "🚗 Local Link Section #6031",
+      "label": "Local Link Section #6031",
       "type": "street",
       "x": 542,
       "y": 629,
@@ -12243,7 +12243,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2952631120",
-      "label": "🛑 Jct: Garden Avenue & Lunar Street",
+      "label": "Jct: Garden Avenue & Lunar Street",
       "type": "intersection",
       "x": 501,
       "y": 155,
@@ -12251,7 +12251,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2952641633",
-      "label": "🚗 Local Link Section #1633",
+      "label": "Local Link Section #1633",
       "type": "street",
       "x": 429,
       "y": 120,
@@ -12259,7 +12259,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2952641835",
-      "label": "🛑 Jct: Hibiscus Street & Eucalyptus Street",
+      "label": "Jct: Hibiscus Street & Eucalyptus Street",
       "type": "intersection",
       "x": 481,
       "y": 105,
@@ -12267,7 +12267,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2952641668",
-      "label": "🛑 Jct: Lavender Street & Iris Street",
+      "label": "Jct: Lavender Street & Iris Street",
       "type": "intersection",
       "x": 517,
       "y": 114,
@@ -12275,7 +12275,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2952641500",
-      "label": "🛑 Jct: Venus Street & Jupiter Street",
+      "label": "Jct: Venus Street & Jupiter Street",
       "type": "intersection",
       "x": 522,
       "y": 125,
@@ -12283,7 +12283,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2952641240",
-      "label": "🛑 Jct: Zircon Street & Ruby Street",
+      "label": "Jct: Zircon Street & Ruby Street",
       "type": "intersection",
       "x": 458,
       "y": 153,
@@ -12291,7 +12291,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2952641236",
-      "label": "🚗 Local Link Section #1236",
+      "label": "Local Link Section #1236",
       "type": "street",
       "x": 474,
       "y": 153,
@@ -12299,7 +12299,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2952641304",
-      "label": "📍 Meteor Street",
+      "label": "Meteor Street",
       "type": "street",
       "x": 489,
       "y": 146,
@@ -12307,7 +12307,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2952641853",
-      "label": "🛑 Jct: Dama de Noche Street & Waterlily Street",
+      "label": "Jct: Dama de Noche Street & Waterlily Street",
       "type": "intersection",
       "x": 506,
       "y": 103,
@@ -12315,7 +12315,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2952641865",
-      "label": "🛑 Jct: Ivy Street & Bittersweet Street",
+      "label": "Jct: Ivy Street & Bittersweet Street",
       "type": "intersection",
       "x": 458,
       "y": 101,
@@ -12323,7 +12323,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2952641298",
-      "label": "🚗 Local Link Section #1298",
+      "label": "Local Link Section #1298",
       "type": "street",
       "x": 509,
       "y": 147,
@@ -12331,7 +12331,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090209310",
-      "label": "🚗 Local Link Section #9310",
+      "label": "Local Link Section #9310",
       "type": "street",
       "x": 802,
       "y": 637,
@@ -12339,7 +12339,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2972589658",
-      "label": "🚗 Local Link Section #9658",
+      "label": "Local Link Section #9658",
       "type": "street",
       "x": 339,
       "y": 101,
@@ -12347,7 +12347,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8315031439",
-      "label": "📍 CMC Avenue",
+      "label": "CMC Avenue",
       "type": "street",
       "x": 841,
       "y": 817,
@@ -12355,7 +12355,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2997333358",
-      "label": "🚗 Local Link Section #3358",
+      "label": "Local Link Section #3358",
       "type": "street",
       "x": 850,
       "y": 865,
@@ -12363,7 +12363,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1530533791",
-      "label": "🛑 Jct: Felix Reyes Street & RSBS Boulevard",
+      "label": "Jct: Felix Reyes Street & RSBS Boulevard",
       "type": "intersection",
       "x": 190,
       "y": 255,
@@ -12371,7 +12371,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_4796118962",
-      "label": "📍 Malitlit Barangay Road",
+      "label": "Malitlit Barangay Road",
       "type": "street",
       "x": 388,
       "y": 388,
@@ -12379,7 +12379,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1087953995",
-      "label": "📍 Greenfield Parkway",
+      "label": "Greenfield Parkway",
       "type": "street",
       "x": 62,
       "y": 104,
@@ -12387,7 +12387,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8302644890",
-      "label": "🛑 Jct: North Delphi Drive & North Thebes Drive",
+      "label": "Jct: North Delphi Drive & North Thebes Drive",
       "type": "intersection",
       "x": 196,
       "y": 141,
@@ -12395,7 +12395,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3500337556",
-      "label": "🚗 Local Link Section #7556",
+      "label": "Local Link Section #7556",
       "type": "street",
       "x": 1027,
       "y": 475,
@@ -12403,7 +12403,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3500346169",
-      "label": "🚗 Local Link Section #6169",
+      "label": "Local Link Section #6169",
       "type": "street",
       "x": 1014,
       "y": 463,
@@ -12411,7 +12411,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3525951645",
-      "label": "📍 NIA Road",
+      "label": "NIA Road",
       "type": "street",
       "x": 688,
       "y": 494,
@@ -12419,7 +12419,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3525951659",
-      "label": "🚗 Local Link Section #1659",
+      "label": "Local Link Section #1659",
       "type": "street",
       "x": 684,
       "y": 484,
@@ -12427,7 +12427,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8298906918",
-      "label": "🚗 Local Link Section #6918",
+      "label": "Local Link Section #6918",
       "type": "street",
       "x": 752,
       "y": 505,
@@ -12435,7 +12435,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8298906917",
-      "label": "🚗 Local Link Section #6917",
+      "label": "Local Link Section #6917",
       "type": "street",
       "x": 772,
       "y": 504,
@@ -12443,7 +12443,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3545925427",
-      "label": "🚗 Local Link Section #5427",
+      "label": "Local Link Section #5427",
       "type": "street",
       "x": 1015,
       "y": 660,
@@ -12451,7 +12451,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8266621125",
-      "label": "🚗 Local Link Section #1125",
+      "label": "Local Link Section #1125",
       "type": "street",
       "x": 1024,
       "y": 652,
@@ -12459,7 +12459,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3545925442",
-      "label": "🚗 Local Link Section #5442",
+      "label": "Local Link Section #5442",
       "type": "street",
       "x": 1036,
       "y": 658,
@@ -12467,7 +12467,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3545925419",
-      "label": "🚗 Local Link Section #5419",
+      "label": "Local Link Section #5419",
       "type": "street",
       "x": 1045,
       "y": 669,
@@ -12475,7 +12475,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_387127333",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 705,
       "y": 886,
@@ -12483,7 +12483,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3593775072",
-      "label": "🚗 Local Link Section #5072",
+      "label": "Local Link Section #5072",
       "type": "street",
       "x": 57,
       "y": 85,
@@ -12491,7 +12491,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3652540953",
-      "label": "🚗 Local Link Section #0953",
+      "label": "Local Link Section #0953",
       "type": "street",
       "x": 197,
       "y": 373,
@@ -12499,7 +12499,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3652541018",
-      "label": "🚗 Local Link Section #1018",
+      "label": "Local Link Section #1018",
       "type": "street",
       "x": 185,
       "y": 364,
@@ -12507,7 +12507,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8204483548",
-      "label": "📍 Marinig Road",
+      "label": "Marinig Road",
       "type": "street",
       "x": 725,
       "y": 325,
@@ -12515,7 +12515,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1021565938",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 623,
       "y": 806,
@@ -12523,7 +12523,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_295340208",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 529,
       "y": 710,
@@ -12531,7 +12531,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8758972511",
-      "label": "🛑 Jct: South Luzon Expressway & Greenfield Parkway",
+      "label": "Jct: South Luzon Expressway & Greenfield Parkway",
       "type": "intersection",
       "x": 22,
       "y": 153,
@@ -12539,7 +12539,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3425088087",
-      "label": "📍 Biñan - Santa Rosa Access Road",
+      "label": "Biñan - Santa Rosa Access Road",
       "type": "street",
       "x": 245,
       "y": 101,
@@ -12547,7 +12547,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_4518249830",
-      "label": "🛑 Jct: Yilong & Sulpan",
+      "label": "Jct: Yilong & Sulpan",
       "type": "intersection",
       "x": 840,
       "y": 423,
@@ -12555,7 +12555,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_4518249831",
-      "label": "🛑 Jct: Yilong & Tumbali",
+      "label": "Jct: Yilong & Tumbali",
       "type": "intersection",
       "x": 821,
       "y": 426,
@@ -12563,7 +12563,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_4518283229",
-      "label": "🚗 Local Link Section #3229",
+      "label": "Local Link Section #3229",
       "type": "street",
       "x": 936,
       "y": 628,
@@ -12571,7 +12571,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344091895",
-      "label": "🚗 Local Link Section #1895",
+      "label": "Local Link Section #1895",
       "type": "street",
       "x": 662,
       "y": 811,
@@ -12579,7 +12579,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_4667941099",
-      "label": "🚗 Local Link Section #1099",
+      "label": "Local Link Section #1099",
       "type": "street",
       "x": 86,
       "y": 433,
@@ -12587,7 +12587,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_4667940654",
-      "label": "🚗 Local Link Section #0654",
+      "label": "Local Link Section #0654",
       "type": "street",
       "x": 97,
       "y": 418,
@@ -12595,7 +12595,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_4667941134",
-      "label": "🚗 Local Link Section #1134",
+      "label": "Local Link Section #1134",
       "type": "street",
       "x": 78,
       "y": 424,
@@ -12603,7 +12603,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2452517430",
-      "label": "🚗 Local Link Section #7430",
+      "label": "Local Link Section #7430",
       "type": "street",
       "x": 76,
       "y": 414,
@@ -12611,7 +12611,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8042653219",
-      "label": "🚗 Local Link Section #3219",
+      "label": "Local Link Section #3219",
       "type": "street",
       "x": 108,
       "y": 406,
@@ -12619,7 +12619,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_4728862414",
-      "label": "🚗 Local Link Section #2414",
+      "label": "Local Link Section #2414",
       "type": "street",
       "x": 397,
       "y": 439,
@@ -12627,7 +12627,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_4728862440",
-      "label": "🚗 Local Link Section #2440",
+      "label": "Local Link Section #2440",
       "type": "street",
       "x": 414,
       "y": 458,
@@ -12635,7 +12635,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2664585552",
-      "label": "📍 Santa Rosa-Tagaytay Road",
+      "label": "Santa Rosa-Tagaytay Road",
       "type": "street",
       "x": 119,
       "y": 292,
@@ -12643,7 +12643,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2015074997",
-      "label": "🛑 Jct: Santa Rosa-Tagaytay Road & NMPI Road",
+      "label": "Jct: Santa Rosa-Tagaytay Road & NMPI Road",
       "type": "intersection",
       "x": 56,
       "y": 369,
@@ -12651,7 +12651,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5031532372",
-      "label": "🚗 Local Link Section #2372",
+      "label": "Local Link Section #2372",
       "type": "street",
       "x": 400,
       "y": 194,
@@ -12659,7 +12659,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5722009002",
-      "label": "🚗 Local Link Section #9002",
+      "label": "Local Link Section #9002",
       "type": "street",
       "x": 337,
       "y": 136,
@@ -12667,7 +12667,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5722008984",
-      "label": "🚗 Local Link Section #8984",
+      "label": "Local Link Section #8984",
       "type": "street",
       "x": 321,
       "y": 130,
@@ -12675,7 +12675,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5042499982",
-      "label": "🚗 Local Link Section #9982",
+      "label": "Local Link Section #9982",
       "type": "street",
       "x": 269,
       "y": 73,
@@ -12683,7 +12683,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5042499978",
-      "label": "🚗 Local Link Section #9978",
+      "label": "Local Link Section #9978",
       "type": "street",
       "x": 280,
       "y": 80,
@@ -12691,7 +12691,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5042530505",
-      "label": "🚗 Local Link Section #0505",
+      "label": "Local Link Section #0505",
       "type": "street",
       "x": 697,
       "y": 772,
@@ -12699,7 +12699,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5055207742",
-      "label": "🛑 Jct: Road 11 & Road 7",
+      "label": "Jct: Road 11 & Road 7",
       "type": "intersection",
       "x": 647,
       "y": 574,
@@ -12707,7 +12707,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5059355524",
-      "label": "🚗 Local Link Section #5524",
+      "label": "Local Link Section #5524",
       "type": "street",
       "x": 222,
       "y": 158,
@@ -12715,7 +12715,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5059355543",
-      "label": "🚗 Local Link Section #5543",
+      "label": "Local Link Section #5543",
       "type": "street",
       "x": 212,
       "y": 166,
@@ -12723,7 +12723,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5070505469",
-      "label": "🚗 Local Link Section #5469",
+      "label": "Local Link Section #5469",
       "type": "street",
       "x": 1071,
       "y": 704,
@@ -12731,7 +12731,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5070505438",
-      "label": "🚗 Local Link Section #5438",
+      "label": "Local Link Section #5438",
       "type": "street",
       "x": 1041,
       "y": 705,
@@ -12739,7 +12739,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6448161050",
-      "label": "🚗 Local Link Section #1050",
+      "label": "Local Link Section #1050",
       "type": "street",
       "x": 42,
       "y": 858,
@@ -12747,7 +12747,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5149184196",
-      "label": "🚗 Local Link Section #4196",
+      "label": "Local Link Section #4196",
       "type": "street",
       "x": 1053,
       "y": 817,
@@ -12755,7 +12755,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5149184209",
-      "label": "🚗 Local Link Section #4209",
+      "label": "Local Link Section #4209",
       "type": "street",
       "x": 1046,
       "y": 825,
@@ -12763,7 +12763,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5150839163",
-      "label": "🚗 Local Link Section #9163",
+      "label": "Local Link Section #9163",
       "type": "street",
       "x": 238,
       "y": 671,
@@ -12771,7 +12771,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5150839173",
-      "label": "🚗 Local Link Section #9173",
+      "label": "Local Link Section #9173",
       "type": "street",
       "x": 297,
       "y": 664,
@@ -12779,7 +12779,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5150851751",
-      "label": "🚗 Local Link Section #1751",
+      "label": "Local Link Section #1751",
       "type": "street",
       "x": 564,
       "y": 698,
@@ -12787,7 +12787,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5150851813",
-      "label": "🚗 Local Link Section #1813",
+      "label": "Local Link Section #1813",
       "type": "street",
       "x": 578,
       "y": 703,
@@ -12795,7 +12795,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_360188408",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 425,
       "y": 607,
@@ -12803,7 +12803,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5150925409",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 435,
       "y": 617,
@@ -12811,7 +12811,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5162356041",
-      "label": "📍 Daffodil",
+      "label": "Daffodil",
       "type": "street",
       "x": 231,
       "y": 64,
@@ -12819,7 +12819,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5162356074",
-      "label": "🚗 Local Link Section #6074",
+      "label": "Local Link Section #6074",
       "type": "street",
       "x": 193,
       "y": 46,
@@ -12827,7 +12827,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5162356086",
-      "label": "📍 Daffodil",
+      "label": "Daffodil",
       "type": "street",
       "x": 185,
       "y": 61,
@@ -12835,7 +12835,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5175774864",
-      "label": "🚗 Local Link Section #4864",
+      "label": "Local Link Section #4864",
       "type": "street",
       "x": 199,
       "y": 264,
@@ -12843,7 +12843,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5175774873",
-      "label": "📍 Belle Street",
+      "label": "Belle Street",
       "type": "street",
       "x": 209,
       "y": 273,
@@ -12851,7 +12851,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5201553875",
-      "label": "🚗 Local Link Section #3875",
+      "label": "Local Link Section #3875",
       "type": "street",
       "x": 221,
       "y": 504,
@@ -12859,7 +12859,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5201553911",
-      "label": "🚗 Local Link Section #3911",
+      "label": "Local Link Section #3911",
       "type": "street",
       "x": 222,
       "y": 495,
@@ -12867,7 +12867,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5201553891",
-      "label": "🚗 Local Link Section #3891",
+      "label": "Local Link Section #3891",
       "type": "street",
       "x": 218,
       "y": 485,
@@ -12875,7 +12875,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5201553897",
-      "label": "🚗 Local Link Section #3897",
+      "label": "Local Link Section #3897",
       "type": "street",
       "x": 201,
       "y": 487,
@@ -12883,7 +12883,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6050993628",
-      "label": "🚗 Local Link Section #3628",
+      "label": "Local Link Section #3628",
       "type": "street",
       "x": 206,
       "y": 498,
@@ -12891,7 +12891,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5217972745",
-      "label": "🚗 Local Link Section #2745",
+      "label": "Local Link Section #2745",
       "type": "street",
       "x": 1004,
       "y": 631,
@@ -12899,7 +12899,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_13389988183",
-      "label": "🚗 Local Link Section #8183",
+      "label": "Local Link Section #8183",
       "type": "street",
       "x": 991,
       "y": 640,
@@ -12907,7 +12907,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8257521354",
-      "label": "📍 Yakal Street",
+      "label": "Yakal Street",
       "type": "street",
       "x": 1163,
       "y": 662,
@@ -12915,7 +12915,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8257521351",
-      "label": "📍 Yakal Street",
+      "label": "Yakal Street",
       "type": "street",
       "x": 1193,
       "y": 650,
@@ -12923,7 +12923,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8296017606",
-      "label": "🚗 Local Link Section #7606",
+      "label": "Local Link Section #7606",
       "type": "street",
       "x": 831,
       "y": 698,
@@ -12931,7 +12931,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5220879786",
-      "label": "🚗 Local Link Section #9786",
+      "label": "Local Link Section #9786",
       "type": "street",
       "x": 815,
       "y": 694,
@@ -12939,7 +12939,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5220879891",
-      "label": "🚗 Local Link Section #9891",
+      "label": "Local Link Section #9891",
       "type": "street",
       "x": 839,
       "y": 672,
@@ -12947,7 +12947,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5220879897",
-      "label": "🚗 Local Link Section #9897",
+      "label": "Local Link Section #9897",
       "type": "street",
       "x": 823,
       "y": 678,
@@ -12955,7 +12955,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5220880361",
-      "label": "🚗 Local Link Section #0361",
+      "label": "Local Link Section #0361",
       "type": "street",
       "x": 841,
       "y": 683,
@@ -12963,7 +12963,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5220939147",
-      "label": "📍 Matipid Street",
+      "label": "Matipid Street",
       "type": "street",
       "x": 1021,
       "y": 727,
@@ -12971,7 +12971,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8266726260",
-      "label": "🚗 Local Link Section #6260",
+      "label": "Local Link Section #6260",
       "type": "street",
       "x": 1028,
       "y": 736,
@@ -12979,7 +12979,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5220939169",
-      "label": "🛑 Jct: Mahinahon Street & Maayos Street",
+      "label": "Jct: Mahinahon Street & Maayos Street",
       "type": "intersection",
       "x": 1043,
       "y": 739,
@@ -12987,7 +12987,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6159191170",
-      "label": "🛑 Jct: Matapang Street & Masipag Street",
+      "label": "Jct: Matapang Street & Masipag Street",
       "type": "intersection",
       "x": 1060,
       "y": 737,
@@ -12995,7 +12995,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5220939173",
-      "label": "🚗 Local Link Section #9173",
+      "label": "Local Link Section #9173",
       "type": "street",
       "x": 1078,
       "y": 735,
@@ -13003,7 +13003,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5220939444",
-      "label": "📍 Matipid Street",
+      "label": "Matipid Street",
       "type": "street",
       "x": 1082,
       "y": 724,
@@ -13011,7 +13011,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5224185561",
-      "label": "🛑 Jct: Alexandrite Street & Emerald Street",
+      "label": "Jct: Alexandrite Street & Emerald Street",
       "type": "intersection",
       "x": 530,
       "y": 155,
@@ -13019,7 +13019,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5224185565",
-      "label": "🛑 Jct: Garnet Street & Ruby Street",
+      "label": "Jct: Garnet Street & Ruby Street",
       "type": "intersection",
       "x": 511,
       "y": 165,
@@ -13027,7 +13027,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5230019386",
-      "label": "🚗 Local Link Section #9386",
+      "label": "Local Link Section #9386",
       "type": "street",
       "x": 518,
       "y": 234,
@@ -13035,7 +13035,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5402686386",
-      "label": "🚗 Local Link Section #6386",
+      "label": "Local Link Section #6386",
       "type": "street",
       "x": 262,
       "y": 270,
@@ -13043,7 +13043,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5405206855",
-      "label": "🚗 Local Link Section #6855",
+      "label": "Local Link Section #6855",
       "type": "street",
       "x": 306,
       "y": 861,
@@ -13051,7 +13051,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5405206884",
-      "label": "🛑 Jct: Avila Boulevard & Tascan Street",
+      "label": "Jct: Avila Boulevard & Tascan Street",
       "type": "intersection",
       "x": 334,
       "y": 860,
@@ -13059,7 +13059,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5405220342",
-      "label": "🛑 Jct: Leonard Street & Swann Street",
+      "label": "Jct: Leonard Street & Swann Street",
       "type": "intersection",
       "x": 350,
       "y": 857,
@@ -13067,7 +13067,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5405220408",
-      "label": "📍 Pyramid Street",
+      "label": "Pyramid Street",
       "type": "street",
       "x": 351,
       "y": 867,
@@ -13075,7 +13075,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5405510612",
-      "label": "🚗 Local Link Section #0612",
+      "label": "Local Link Section #0612",
       "type": "street",
       "x": 528,
       "y": 145,
@@ -13083,7 +13083,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5405510571",
-      "label": "📍 Caingin Road",
+      "label": "Caingin Road",
       "type": "street",
       "x": 526,
       "y": 135,
@@ -13091,7 +13091,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5409351539",
-      "label": "🛑 Jct: 9th Street & 21st Street",
+      "label": "Jct: 9th Street & 21st Street",
       "type": "intersection",
       "x": 116,
       "y": 368,
@@ -13099,7 +13099,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5409351724",
-      "label": "🛑 Jct: 9th Street & 19th Street",
+      "label": "Jct: 9th Street & 19th Street",
       "type": "intersection",
       "x": 147,
       "y": 365,
@@ -13107,7 +13107,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5409351566",
-      "label": "🛑 Jct: 7th Street & Berkeley Heights",
+      "label": "Jct: 7th Street & Berkeley Heights",
       "type": "intersection",
       "x": 133,
       "y": 371,
@@ -13115,7 +13115,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5409351555",
-      "label": "🛑 Jct: 20th Street & 5th Street",
+      "label": "Jct: 20th Street & 5th Street",
       "type": "intersection",
       "x": 132,
       "y": 381,
@@ -13123,7 +13123,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5409351591",
-      "label": "🛑 Jct: 4th Street & 3rd Street",
+      "label": "Jct: 4th Street & 3rd Street",
       "type": "intersection",
       "x": 116,
       "y": 377,
@@ -13131,7 +13131,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5413444285",
-      "label": "🚗 Local Link Section #4285",
+      "label": "Local Link Section #4285",
       "type": "street",
       "x": 41,
       "y": 346,
@@ -13139,7 +13139,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5420524388",
-      "label": "🚗 Local Link Section #4388",
+      "label": "Local Link Section #4388",
       "type": "street",
       "x": 41,
       "y": 502,
@@ -13147,7 +13147,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5420787081",
-      "label": "📍 Banlic - Mamatid Road",
+      "label": "Banlic - Mamatid Road",
       "type": "street",
       "x": 758,
       "y": 656,
@@ -13155,7 +13155,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093743770",
-      "label": "🚗 Local Link Section #3770",
+      "label": "Local Link Section #3770",
       "type": "street",
       "x": 131,
       "y": 850,
@@ -13163,7 +13163,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5517840259",
-      "label": "🚗 Local Link Section #0259",
+      "label": "Local Link Section #0259",
       "type": "street",
       "x": 37,
       "y": 54,
@@ -13171,7 +13171,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5517840266",
-      "label": "📍 Milan Street",
+      "label": "Milan Street",
       "type": "street",
       "x": 48,
       "y": 46,
@@ -13179,7 +13179,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5245085857",
-      "label": "📍 National Highway 1",
+      "label": "National Highway 1",
       "type": "street",
       "x": 235,
       "y": 41,
@@ -13187,7 +13187,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5742966400",
-      "label": "📍 Caingin Road",
+      "label": "Caingin Road",
       "type": "street",
       "x": 554,
       "y": 166,
@@ -13195,7 +13195,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6335874882",
-      "label": "📍 Caingin Road",
+      "label": "Caingin Road",
       "type": "street",
       "x": 561,
       "y": 178,
@@ -13203,7 +13203,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_292206960",
-      "label": "📍 Aplaya Road",
+      "label": "Aplaya Road",
       "type": "street",
       "x": 452,
       "y": 12,
@@ -13211,7 +13211,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_9104380206",
-      "label": "📍 Aplaya Road",
+      "label": "Aplaya Road",
       "type": "street",
       "x": 495,
       "y": 52,
@@ -13219,7 +13219,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093627017",
-      "label": "🚗 Local Link Section #7017",
+      "label": "Local Link Section #7017",
       "type": "street",
       "x": 446,
       "y": 874,
@@ -13227,7 +13227,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5692973344",
-      "label": "🚗 Local Link Section #3344",
+      "label": "Local Link Section #3344",
       "type": "street",
       "x": 104,
       "y": 109,
@@ -13235,7 +13235,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5742966361",
-      "label": "🚗 Local Link Section #6361",
+      "label": "Local Link Section #6361",
       "type": "street",
       "x": 542,
       "y": 125,
@@ -13243,7 +13243,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5742966364",
-      "label": "🚗 Local Link Section #6364",
+      "label": "Local Link Section #6364",
       "type": "street",
       "x": 541,
       "y": 114,
@@ -13251,7 +13251,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5742966373",
-      "label": "📍 Caingin Road",
+      "label": "Caingin Road",
       "type": "street",
       "x": 545,
       "y": 149,
@@ -13259,7 +13259,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6050993680",
-      "label": "🚗 Local Link Section #3680",
+      "label": "Local Link Section #3680",
       "type": "street",
       "x": 161,
       "y": 442,
@@ -13267,7 +13267,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6050993704",
-      "label": "🚗 Local Link Section #3704",
+      "label": "Local Link Section #3704",
       "type": "street",
       "x": 81,
       "y": 449,
@@ -13275,7 +13275,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5151335236",
-      "label": "🚗 Local Link Section #5236",
+      "label": "Local Link Section #5236",
       "type": "street",
       "x": 54,
       "y": 462,
@@ -13283,7 +13283,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6050993732",
-      "label": "🚗 Local Link Section #3732",
+      "label": "Local Link Section #3732",
       "type": "street",
       "x": 70,
       "y": 459,
@@ -13291,7 +13291,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6097111882",
-      "label": "🚗 Local Link Section #1882",
+      "label": "Local Link Section #1882",
       "type": "street",
       "x": 852,
       "y": 456,
@@ -13299,7 +13299,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_13651282605",
-      "label": "📍 LIIP Avenue",
+      "label": "LIIP Avenue",
       "type": "street",
       "x": -3,
       "y": 168,
@@ -13307,7 +13307,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6159191164",
-      "label": "🛑 Jct: Matapang Street & Matipid Street",
+      "label": "Jct: Matapang Street & Matipid Street",
       "type": "intersection",
       "x": 1063,
       "y": 724,
@@ -13315,7 +13315,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_7514823236",
-      "label": "📍 Matipid Street",
+      "label": "Matipid Street",
       "type": "street",
       "x": 1048,
       "y": 719,
@@ -13323,7 +13323,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6159191178",
-      "label": "🛑 Jct: Mahinahon Street & Matipid Street",
+      "label": "Jct: Mahinahon Street & Matipid Street",
       "type": "intersection",
       "x": 1041,
       "y": 727,
@@ -13331,7 +13331,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6224954247",
-      "label": "🚗 Local Link Section #4247",
+      "label": "Local Link Section #4247",
       "type": "street",
       "x": 534,
       "y": 216,
@@ -13339,7 +13339,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6265265499",
-      "label": "🚗 Local Link Section #5499",
+      "label": "Local Link Section #5499",
       "type": "street",
       "x": 654,
       "y": 435,
@@ -13347,7 +13347,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344092954",
-      "label": "📍 Deacosta Street",
+      "label": "Deacosta Street",
       "type": "street",
       "x": 710,
       "y": 761,
@@ -13355,7 +13355,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1344091900",
-      "label": "📍 Doña Felisa",
+      "label": "Doña Felisa",
       "type": "street",
       "x": 655,
       "y": 749,
@@ -13363,7 +13363,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1968539218",
-      "label": "🚗 Local Link Section #9218",
+      "label": "Local Link Section #9218",
       "type": "street",
       "x": 809,
       "y": 750,
@@ -13371,7 +13371,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_11121020967",
-      "label": "🚗 Local Link Section #0967",
+      "label": "Local Link Section #0967",
       "type": "street",
       "x": 623,
       "y": 789,
@@ -13379,7 +13379,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5162407522",
-      "label": "🚗 Local Link Section #7522",
+      "label": "Local Link Section #7522",
       "type": "street",
       "x": 882,
       "y": 753,
@@ -13387,7 +13387,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6333623457",
-      "label": "🚗 Local Link Section #3457",
+      "label": "Local Link Section #3457",
       "type": "street",
       "x": 402,
       "y": 118,
@@ -13395,7 +13395,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6334304554",
-      "label": "🚗 Local Link Section #4554",
+      "label": "Local Link Section #4554",
       "type": "street",
       "x": 602,
       "y": 198,
@@ -13403,7 +13403,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6334974020",
-      "label": "🚗 Local Link Section #4020",
+      "label": "Local Link Section #4020",
       "type": "street",
       "x": 435,
       "y": 178,
@@ -13411,7 +13411,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090372070",
-      "label": "🛑 Jct: Iriga Street & Escoda Street",
+      "label": "Jct: Iriga Street & Escoda Street",
       "type": "intersection",
       "x": 913,
       "y": 545,
@@ -13419,7 +13419,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090372026",
-      "label": "🚗 Local Link Section #2026",
+      "label": "Local Link Section #2026",
       "type": "street",
       "x": 835,
       "y": 563,
@@ -13427,7 +13427,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6363454036",
-      "label": "🚗 Local Link Section #4036",
+      "label": "Local Link Section #4036",
       "type": "street",
       "x": 459,
       "y": 41,
@@ -13435,7 +13435,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1076882342",
-      "label": "🚗 Local Link Section #2342",
+      "label": "Local Link Section #2342",
       "type": "street",
       "x": 482,
       "y": 59,
@@ -13443,7 +13443,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6366728719",
-      "label": "🚗 Local Link Section #8719",
+      "label": "Local Link Section #8719",
       "type": "street",
       "x": 515,
       "y": 54,
@@ -13451,7 +13451,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6379046357",
-      "label": "🚗 Local Link Section #6357",
+      "label": "Local Link Section #6357",
       "type": "street",
       "x": 600,
       "y": 737,
@@ -13459,7 +13459,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6379046375",
-      "label": "🚗 Local Link Section #6375",
+      "label": "Local Link Section #6375",
       "type": "street",
       "x": 619,
       "y": 735,
@@ -13467,7 +13467,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6379050302",
-      "label": "🚗 Local Link Section #0302",
+      "label": "Local Link Section #0302",
       "type": "street",
       "x": 601,
       "y": 748,
@@ -13475,7 +13475,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8315315033",
-      "label": "🚗 Local Link Section #5033",
+      "label": "Local Link Section #5033",
       "type": "street",
       "x": 234,
       "y": 363,
@@ -13483,7 +13483,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6383876123",
-      "label": "🚗 Local Link Section #6123",
+      "label": "Local Link Section #6123",
       "type": "street",
       "x": 316,
       "y": 392,
@@ -13491,7 +13491,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1093625657",
-      "label": "🚗 Local Link Section #5657",
+      "label": "Local Link Section #5657",
       "type": "street",
       "x": 231,
       "y": 799,
@@ -13499,7 +13499,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6415330760",
-      "label": "🚗 Local Link Section #0760",
+      "label": "Local Link Section #0760",
       "type": "street",
       "x": 444,
       "y": 198,
@@ -13507,7 +13507,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6433347150",
-      "label": "🚗 Local Link Section #7150",
+      "label": "Local Link Section #7150",
       "type": "street",
       "x": 650,
       "y": 603,
@@ -13515,7 +13515,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6479976214",
-      "label": "🚗 Local Link Section #6214",
+      "label": "Local Link Section #6214",
       "type": "street",
       "x": 1000,
       "y": 620,
@@ -13523,7 +13523,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6907527594",
-      "label": "🚗 Local Link Section #7594",
+      "label": "Local Link Section #7594",
       "type": "street",
       "x": 332,
       "y": 145,
@@ -13531,7 +13531,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6907548965",
-      "label": "🚗 Local Link Section #8965",
+      "label": "Local Link Section #8965",
       "type": "street",
       "x": 614,
       "y": 345,
@@ -13539,7 +13539,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6907548971",
-      "label": "🚗 Local Link Section #8971",
+      "label": "Local Link Section #8971",
       "type": "street",
       "x": 631,
       "y": 346,
@@ -13547,7 +13547,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6907561494",
-      "label": "🚗 Local Link Section #1494",
+      "label": "Local Link Section #1494",
       "type": "street",
       "x": 596,
       "y": 345,
@@ -13555,7 +13555,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8272778304",
-      "label": "🚗 Local Link Section #8304",
+      "label": "Local Link Section #8304",
       "type": "street",
       "x": 675,
       "y": 339,
@@ -13563,7 +13563,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6907561530",
-      "label": "🚗 Local Link Section #1530",
+      "label": "Local Link Section #1530",
       "type": "street",
       "x": 669,
       "y": 350,
@@ -13571,7 +13571,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6907561541",
-      "label": "🚗 Local Link Section #1541",
+      "label": "Local Link Section #1541",
       "type": "street",
       "x": 658,
       "y": 357,
@@ -13579,7 +13579,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6907561562",
-      "label": "🚗 Local Link Section #1562",
+      "label": "Local Link Section #1562",
       "type": "street",
       "x": 636,
       "y": 363,
@@ -13587,7 +13587,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8311094965",
-      "label": "📍 Malitlit - Eton Access Road",
+      "label": "Malitlit - Eton Access Road",
       "type": "street",
       "x": 442,
       "y": 369,
@@ -13595,7 +13595,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6950721652",
-      "label": "🚗 Local Link Section #1652",
+      "label": "Local Link Section #1652",
       "type": "street",
       "x": 819,
       "y": 827,
@@ -13603,7 +13603,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_6950721653",
-      "label": "🚗 Local Link Section #1653",
+      "label": "Local Link Section #1653",
       "type": "street",
       "x": 826,
       "y": 841,
@@ -13611,7 +13611,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_13295967022",
-      "label": "🚗 Local Link Section #7022",
+      "label": "Local Link Section #7022",
       "type": "street",
       "x": 801,
       "y": 456,
@@ -13619,7 +13619,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_7441926735",
-      "label": "🚗 Local Link Section #6735",
+      "label": "Local Link Section #6735",
       "type": "street",
       "x": 796,
       "y": 441,
@@ -13627,7 +13627,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_7441926740",
-      "label": "🚗 Local Link Section #6740",
+      "label": "Local Link Section #6740",
       "type": "street",
       "x": 777,
       "y": 447,
@@ -13635,7 +13635,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8299146850",
-      "label": "🚗 Local Link Section #6850",
+      "label": "Local Link Section #6850",
       "type": "street",
       "x": 812,
       "y": 437,
@@ -13643,7 +13643,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_7441926774",
-      "label": "🚗 Local Link Section #6774",
+      "label": "Local Link Section #6774",
       "type": "street",
       "x": 828,
       "y": 435,
@@ -13651,7 +13651,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_7441953214",
-      "label": "🚗 Local Link Section #3214",
+      "label": "Local Link Section #3214",
       "type": "street",
       "x": 790,
       "y": 483,
@@ -13659,7 +13659,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_7455342903",
-      "label": "🚗 Local Link Section #2903",
+      "label": "Local Link Section #2903",
       "type": "street",
       "x": 802,
       "y": 682,
@@ -13667,7 +13667,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_7500973294",
-      "label": "🚗 Local Link Section #3294",
+      "label": "Local Link Section #3294",
       "type": "street",
       "x": 705,
       "y": 244,
@@ -13675,7 +13675,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_7514823153",
-      "label": "🚗 Local Link Section #3153",
+      "label": "Local Link Section #3153",
       "type": "street",
       "x": 1161,
       "y": 714,
@@ -13683,7 +13683,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_616957741",
-      "label": "📍 Jubilation Loop",
+      "label": "Jubilation Loop",
       "type": "street",
       "x": 111,
       "y": -7,
@@ -13691,7 +13691,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8272823642",
-      "label": "📍 N. Basaca Street Extension",
+      "label": "N. Basaca Street Extension",
       "type": "street",
       "x": 558,
       "y": 272,
@@ -13699,7 +13699,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_10764546360",
-      "label": "🚗 Local Link Section #6360",
+      "label": "Local Link Section #6360",
       "type": "street",
       "x": 238,
       "y": 513,
@@ -13707,7 +13707,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_10764546362",
-      "label": "🚗 Local Link Section #6362",
+      "label": "Local Link Section #6362",
       "type": "street",
       "x": 193,
       "y": 477,
@@ -13715,7 +13715,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1080528165",
-      "label": "📍 Greenfield Parkway",
+      "label": "Greenfield Parkway",
       "type": "street",
       "x": -35,
       "y": 476,
@@ -13723,7 +13723,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8204483533",
-      "label": "🚗 Local Link Section #3533",
+      "label": "Local Link Section #3533",
       "type": "street",
       "x": 723,
       "y": 335,
@@ -13731,7 +13731,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8247101990",
-      "label": "🚗 Local Link Section #1990",
+      "label": "Local Link Section #1990",
       "type": "street",
       "x": 951,
       "y": 424,
@@ -13739,7 +13739,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8679007363",
-      "label": "🚗 Local Link Section #7363",
+      "label": "Local Link Section #7363",
       "type": "street",
       "x": 710,
       "y": 255,
@@ -13747,7 +13747,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8247473769",
-      "label": "🚗 Local Link Section #3769",
+      "label": "Local Link Section #3769",
       "type": "street",
       "x": 606,
       "y": 226,
@@ -13755,7 +13755,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8247473772",
-      "label": "🚗 Local Link Section #3772",
+      "label": "Local Link Section #3772",
       "type": "street",
       "x": 629,
       "y": 229,
@@ -13763,7 +13763,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094104772",
-      "label": "📍 Saint Catherine Street",
+      "label": "Saint Catherine Street",
       "type": "street",
       "x": 1132,
       "y": 734,
@@ -13771,7 +13771,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8266773281",
-      "label": "📍 Mahogany Street",
+      "label": "Mahogany Street",
       "type": "street",
       "x": 1112,
       "y": 666,
@@ -13779,7 +13779,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8266800322",
-      "label": "🚗 Local Link Section #0322",
+      "label": "Local Link Section #0322",
       "type": "street",
       "x": 1066,
       "y": 635,
@@ -13787,7 +13787,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8266800330",
-      "label": "🚗 Local Link Section #0330",
+      "label": "Local Link Section #0330",
       "type": "street",
       "x": 1054,
       "y": 642,
@@ -13795,7 +13795,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_10020311700",
-      "label": "🚗 Local Link Section #1700",
+      "label": "Local Link Section #1700",
       "type": "street",
       "x": 1083,
       "y": 637,
@@ -13803,7 +13803,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8266800348",
-      "label": "🚗 Local Link Section #0348",
+      "label": "Local Link Section #0348",
       "type": "street",
       "x": 1035,
       "y": 615,
@@ -13811,7 +13811,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_10020384011",
-      "label": "🚗 Local Link Section #4011",
+      "label": "Local Link Section #4011",
       "type": "street",
       "x": 1041,
       "y": 624,
@@ -13819,7 +13819,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_10020311715",
-      "label": "🚗 Local Link Section #1715",
+      "label": "Local Link Section #1715",
       "type": "street",
       "x": 1045,
       "y": 633,
@@ -13827,7 +13827,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8266827186",
-      "label": "🚗 Local Link Section #7186",
+      "label": "Local Link Section #7186",
       "type": "street",
       "x": 988,
       "y": 698,
@@ -13835,7 +13835,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1094119869",
-      "label": "🚗 Local Link Section #9869",
+      "label": "Local Link Section #9869",
       "type": "street",
       "x": 964,
       "y": 632,
@@ -13843,7 +13843,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8272778298",
-      "label": "🚗 Local Link Section #8298",
+      "label": "Local Link Section #8298",
       "type": "street",
       "x": 701,
       "y": 336,
@@ -13851,7 +13851,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8292407375",
-      "label": "🚗 Local Link Section #7375",
+      "label": "Local Link Section #7375",
       "type": "street",
       "x": 400,
       "y": 831,
@@ -13859,7 +13859,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8292407394",
-      "label": "🚗 Local Link Section #7394",
+      "label": "Local Link Section #7394",
       "type": "street",
       "x": 378,
       "y": 841,
@@ -13867,7 +13867,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8292407384",
-      "label": "🚗 Local Link Section #7384",
+      "label": "Local Link Section #7384",
       "type": "street",
       "x": 390,
       "y": 848,
@@ -13875,7 +13875,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8292810719",
-      "label": "🚗 Local Link Section #0719",
+      "label": "Local Link Section #0719",
       "type": "street",
       "x": 448,
       "y": 820,
@@ -13883,7 +13883,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8292810721",
-      "label": "🚗 Local Link Section #0721",
+      "label": "Local Link Section #0721",
       "type": "street",
       "x": 430,
       "y": 830,
@@ -13891,7 +13891,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090115539",
-      "label": "🚗 Local Link Section #5539",
+      "label": "Local Link Section #5539",
       "type": "street",
       "x": 741,
       "y": 389,
@@ -13899,7 +13899,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8299146849",
-      "label": "🚗 Local Link Section #6849",
+      "label": "Local Link Section #6849",
       "type": "street",
       "x": 820,
       "y": 447,
@@ -13907,7 +13907,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8299146853",
-      "label": "🚗 Local Link Section #6853",
+      "label": "Local Link Section #6853",
       "type": "street",
       "x": 785,
       "y": 433,
@@ -13915,7 +13915,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8299949459",
-      "label": "🚗 Local Link Section #9459",
+      "label": "Local Link Section #9459",
       "type": "street",
       "x": 880,
       "y": 722,
@@ -13923,7 +13923,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8302382793",
-      "label": "🚗 Local Link Section #2793",
+      "label": "Local Link Section #2793",
       "type": "street",
       "x": 657,
       "y": 646,
@@ -13931,7 +13931,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8302382805",
-      "label": "🚗 Local Link Section #2805",
+      "label": "Local Link Section #2805",
       "type": "street",
       "x": 552,
       "y": 643,
@@ -13939,7 +13939,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8302611984",
-      "label": "🚗 Local Link Section #1984",
+      "label": "Local Link Section #1984",
       "type": "street",
       "x": 347,
       "y": 150,
@@ -13947,7 +13947,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8310250762",
-      "label": "🚗 Local Link Section #0762",
+      "label": "Local Link Section #0762",
       "type": "street",
       "x": 401,
       "y": 716,
@@ -13955,7 +13955,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_2106608929",
-      "label": "📍 Enterprise Drive",
+      "label": "Enterprise Drive",
       "type": "street",
       "x": 159,
       "y": 789,
@@ -13963,7 +13963,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8314848489",
-      "label": "🚗 Local Link Section #8489",
+      "label": "Local Link Section #8489",
       "type": "street",
       "x": 824,
       "y": 817,
@@ -13971,7 +13971,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8317627405",
-      "label": "🚗 Local Link Section #7405",
+      "label": "Local Link Section #7405",
       "type": "street",
       "x": 598,
       "y": 211,
@@ -13979,7 +13979,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8317787408",
-      "label": "🚗 Local Link Section #7408",
+      "label": "Local Link Section #7408",
       "type": "street",
       "x": 45,
       "y": 62,
@@ -13987,7 +13987,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8317805268",
-      "label": "🚗 Local Link Section #5268",
+      "label": "Local Link Section #5268",
       "type": "street",
       "x": 357,
       "y": 195,
@@ -13995,7 +13995,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_3869109545",
-      "label": "📍 Carmelray Boulevard",
+      "label": "Carmelray Boulevard",
       "type": "street",
       "x": 37,
       "y": 795,
@@ -14003,7 +14003,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8324499423",
-      "label": "🚗 Local Link Section #9423",
+      "label": "Local Link Section #9423",
       "type": "street",
       "x": 399,
       "y": 375,
@@ -14011,7 +14011,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8322917509",
-      "label": "📍 Aplaya Road",
+      "label": "Aplaya Road",
       "type": "street",
       "x": 502,
       "y": 63,
@@ -14019,7 +14019,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_253499814",
-      "label": "📍 San Isidro Road",
+      "label": "San Isidro Road",
       "type": "street",
       "x": 770,
       "y": 553,
@@ -14027,7 +14027,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8382888124",
-      "label": "🚗 Local Link Section #8124",
+      "label": "Local Link Section #8124",
       "type": "street",
       "x": 496,
       "y": 443,
@@ -14035,7 +14035,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8382888143",
-      "label": "🚗 Local Link Section #8143",
+      "label": "Local Link Section #8143",
       "type": "street",
       "x": 521,
       "y": 490,
@@ -14043,7 +14043,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8384453702",
-      "label": "🚗 Local Link Section #3702",
+      "label": "Local Link Section #3702",
       "type": "street",
       "x": 646,
       "y": 387,
@@ -14051,7 +14051,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8384682553",
-      "label": "🚗 Local Link Section #2553",
+      "label": "Local Link Section #2553",
       "type": "street",
       "x": 414,
       "y": 740,
@@ -14059,7 +14059,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8385908935",
-      "label": "🚗 Local Link Section #8935",
+      "label": "Local Link Section #8935",
       "type": "street",
       "x": 415,
       "y": 626,
@@ -14067,7 +14067,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8385934807",
-      "label": "🚗 Local Link Section #4807",
+      "label": "Local Link Section #4807",
       "type": "street",
       "x": 484,
       "y": 364,
@@ -14075,7 +14075,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8385949061",
-      "label": "🚗 Local Link Section #9061",
+      "label": "Local Link Section #9061",
       "type": "street",
       "x": 479,
       "y": 545,
@@ -14083,7 +14083,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8385956433",
-      "label": "🚗 Local Link Section #6433",
+      "label": "Local Link Section #6433",
       "type": "street",
       "x": 268,
       "y": 730,
@@ -14091,7 +14091,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8386072004",
-      "label": "🚗 Local Link Section #2004",
+      "label": "Local Link Section #2004",
       "type": "street",
       "x": 752,
       "y": 832,
@@ -14099,7 +14099,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8386307218",
-      "label": "🚗 Local Link Section #7218",
+      "label": "Local Link Section #7218",
       "type": "street",
       "x": 762,
       "y": 288,
@@ -14107,7 +14107,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8386340813",
-      "label": "🚗 Local Link Section #0813",
+      "label": "Local Link Section #0813",
       "type": "street",
       "x": 710,
       "y": 658,
@@ -14115,7 +14115,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8386382676",
-      "label": "🚗 Local Link Section #2676",
+      "label": "Local Link Section #2676",
       "type": "street",
       "x": 884,
       "y": 654,
@@ -14123,7 +14123,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8386691464",
-      "label": "🚗 Local Link Section #1464",
+      "label": "Local Link Section #1464",
       "type": "street",
       "x": 689,
       "y": 462,
@@ -14131,7 +14131,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8386790213",
-      "label": "🚗 Local Link Section #0213",
+      "label": "Local Link Section #0213",
       "type": "street",
       "x": 956,
       "y": 712,
@@ -14139,7 +14139,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8387323578",
-      "label": "🚗 Local Link Section #3578",
+      "label": "Local Link Section #3578",
       "type": "street",
       "x": 197,
       "y": 673,
@@ -14147,7 +14147,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8383860206",
-      "label": "🚗 Local Link Section #0206",
+      "label": "Local Link Section #0206",
       "type": "street",
       "x": 778,
       "y": 708,
@@ -14155,7 +14155,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1090201121",
-      "label": "🛑 Jct: Escoda Street & NIA Road",
+      "label": "Jct: Escoda Street & NIA Road",
       "type": "intersection",
       "x": 763,
       "y": 616,
@@ -14163,7 +14163,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8682010427",
-      "label": "🚗 Local Link Section #0427",
+      "label": "Local Link Section #0427",
       "type": "street",
       "x": 108,
       "y": 640,
@@ -14171,7 +14171,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_10919543309",
-      "label": "🚗 Local Link Section #3309",
+      "label": "Local Link Section #3309",
       "type": "street",
       "x": 923,
       "y": 523,
@@ -14179,7 +14179,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_10919543326",
-      "label": "🚗 Local Link Section #3326",
+      "label": "Local Link Section #3326",
       "type": "street",
       "x": 918,
       "y": 513,
@@ -14187,7 +14187,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8758972462",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 359,
       "y": 544,
@@ -14195,7 +14195,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8759121394",
-      "label": "📍 South Luzon Expressway",
+      "label": "South Luzon Expressway",
       "type": "street",
       "x": 510,
       "y": 694,
@@ -14203,7 +14203,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_10019878362",
-      "label": "🚗 Local Link Section #8362",
+      "label": "Local Link Section #8362",
       "type": "street",
       "x": 306,
       "y": 317,
@@ -14211,7 +14211,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_10019878355",
-      "label": "🚗 Local Link Section #8355",
+      "label": "Local Link Section #8355",
       "type": "street",
       "x": 321,
       "y": 321,
@@ -14219,7 +14219,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_13390027850",
-      "label": "🚗 Local Link Section #7850",
+      "label": "Local Link Section #7850",
       "type": "street",
       "x": 1028,
       "y": 636,
@@ -14227,7 +14227,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_13390027883",
-      "label": "🚗 Local Link Section #7883",
+      "label": "Local Link Section #7883",
       "type": "street",
       "x": 1012,
       "y": 640,
@@ -14235,7 +14235,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_10020384026",
-      "label": "🚗 Local Link Section #4026",
+      "label": "Local Link Section #4026",
       "type": "street",
       "x": 1053,
       "y": 616,
@@ -14243,7 +14243,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_1014149851",
-      "label": "📍 Barretto Street",
+      "label": "Barretto Street",
       "type": "street",
       "x": 1036,
       "y": 792,
@@ -14251,7 +14251,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_10764546374",
-      "label": "🚗 Local Link Section #6374",
+      "label": "Local Link Section #6374",
       "type": "street",
       "x": 182,
       "y": 464,
@@ -14259,7 +14259,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_11033839106",
-      "label": "🚗 Local Link Section #9106",
+      "label": "Local Link Section #9106",
       "type": "street",
       "x": 705,
       "y": 850,
@@ -14267,7 +14267,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_5420524407",
-      "label": "🚗 Local Link Section #4407",
+      "label": "Local Link Section #4407",
       "type": "street",
       "x": 42,
       "y": 516,
@@ -14275,7 +14275,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_12096018519",
-      "label": "🚗 Local Link Section #8519",
+      "label": "Local Link Section #8519",
       "type": "street",
       "x": 759,
       "y": 451,
@@ -14283,7 +14283,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_12361964283",
-      "label": "🚗 Local Link Section #4283",
+      "label": "Local Link Section #4283",
       "type": "street",
       "x": 754,
       "y": 822,
@@ -14291,7 +14291,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_12375008764",
-      "label": "🛑 Jct: Mulberry Street & Cypress Street",
+      "label": "Jct: Mulberry Street & Cypress Street",
       "type": "intersection",
       "x": 354,
       "y": 78,
@@ -14299,7 +14299,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_12450729943",
-      "label": "🚗 Local Link Section #9943",
+      "label": "Local Link Section #9943",
       "type": "street",
       "x": 804,
       "y": 508,
@@ -14307,7 +14307,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_12819066088",
-      "label": "🚗 Local Link Section #6088",
+      "label": "Local Link Section #6088",
       "type": "street",
       "x": 704,
       "y": 347,
@@ -14315,7 +14315,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8042537212",
-      "label": "🚗 Local Link Section #7212",
+      "label": "Local Link Section #7212",
       "type": "street",
       "x": 185,
       "y": 502,
@@ -14323,7 +14323,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_12839890756",
-      "label": "🚗 Local Link Section #0756",
+      "label": "Local Link Section #0756",
       "type": "street",
       "x": 109,
       "y": 146,
@@ -14331,7 +14331,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_12839890757",
-      "label": "🚗 Local Link Section #0757",
+      "label": "Local Link Section #0757",
       "type": "street",
       "x": 126,
       "y": 146,
@@ -14339,7 +14339,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_12854418398",
-      "label": "🚗 Local Link Section #8398",
+      "label": "Local Link Section #8398",
       "type": "street",
       "x": 534,
       "y": 227,
@@ -14347,7 +14347,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_13522762880",
-      "label": "🚗 Local Link Section #2880",
+      "label": "Local Link Section #2880",
       "type": "street",
       "x": 533,
       "y": 242,
@@ -14355,7 +14355,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_13042862738",
-      "label": "🚗 Local Link Section #2738",
+      "label": "Local Link Section #2738",
       "type": "street",
       "x": 605,
       "y": 258,
@@ -14363,7 +14363,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_13372441424",
-      "label": "🚗 Local Link Section #1424",
+      "label": "Local Link Section #1424",
       "type": "street",
       "x": 553,
       "y": 770,
@@ -14371,7 +14371,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_13390027807",
-      "label": "🚗 Local Link Section #7807",
+      "label": "Local Link Section #7807",
       "type": "street",
       "x": 1022,
       "y": 620,
@@ -14379,7 +14379,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_13691868911",
-      "label": "📍 Milan Street",
+      "label": "Milan Street",
       "type": "street",
       "x": 44,
       "y": 32,
@@ -14387,7 +14387,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_13723709797",
-      "label": "🚗 Local Link Section #9797",
+      "label": "Local Link Section #9797",
       "type": "street",
       "x": 142,
       "y": 162,
@@ -14395,7 +14395,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_13987481913",
-      "label": "🚗 Local Link Section #1913",
+      "label": "Local Link Section #1913",
       "type": "street",
       "x": 673,
       "y": 824,
@@ -14403,7 +14403,7 @@ export const cabuyaoTrafficGraph: ScenarioGraph = {
     },
     {
       "id": "osm_n_8302841369",
-      "label": "🚗 Local Link Section #1369",
+      "label": "Local Link Section #1369",
       "type": "street",
       "x": 549,
       "y": 752,

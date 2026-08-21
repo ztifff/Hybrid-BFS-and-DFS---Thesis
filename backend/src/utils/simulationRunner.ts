@@ -386,6 +386,17 @@ export async function runSimulation(
     applyCampusACLs(graph, customSourceId);
   }
 
+  if (scenario === 'traffic') {
+    const { applyCustomTrafficEndpoints } = require('./trafficGraph');
+    applyCustomTrafficEndpoints(graph, customSourceId, customDestinationIds);
+  }
+
+  if (scenario === 'gameai') {
+    const { applyCustomGameAIEndpoints } = require('./gameAIGraph');
+    applyCustomGameAIEndpoints(graph, customSourceId);
+    graph.sourceId = 'spawn';
+  }
+
 
   let result: {
     steps: AlgorithmStep[];

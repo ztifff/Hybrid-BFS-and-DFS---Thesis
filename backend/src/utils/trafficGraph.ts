@@ -157,7 +157,6 @@ export function buildTrafficGraph(
   const sourceNode = nodes.find(n => n.id === sourceId);
   if (sourceNode) {
     sourceNode.type = 'origin';
-    sourceNode.label = 'City Center';
   }
 
   const lastIndex = targetNodes - 1;
@@ -174,11 +173,12 @@ export function buildTrafficGraph(
     rightColumnNodes[Math.floor(rightColumnNodes.length / 2)] ?? nodeId(lastRow, lastCol),
   ]));
 
-  destinationIds.forEach(id => {
-    const n = nodes.find(n => n.id === id);
-    if (n) { 
+  nodes.forEach(n => {
+    if (n.id === sourceId) {
+      n.type = 'origin'; 
+    }
+    if (destinationIds.includes(n.id)) {
       n.type = 'highway'; 
-      n.label = 'City Exit'; 
     }
   });
 
@@ -193,3 +193,33 @@ export function buildTrafficGraph(
 export function getTrafficClosureCandidates(graph: ScenarioGraph): string[] {
   return graph.nodes.filter(n => n.type === 'intersection' || n.type === 'street').map(n => n.id);
 }
+
+export function applyCustomTrafficEndpoints(graph: ScenarioGraph, customSourceId?: string, customDestinationIds?: string[]) {
+  // First reset previous source and destination nodes that aren't the new ones
+  graph.nodes.forEach(n => {
+    if (n.type === 'origin' || n.type === 'highway') {
+      n.type = n.label?.includes('St') ? 'street' : 'intersection';
+    }
+  });
+
+  if (customSourceId) {
+    graph.sourceId = customSourceId;
+    const node = graph.nodes.find(n => n.id === customSourceId);
+    if (node) {
+      node.type = 'origin';
+      // Label preserved
+    }
+  }
+
+  if (customDestinationIds && customDestinationIds.length > 0) {
+    graph.destinationIds = customDestinationIds;
+    customDestinationIds.forEach(id => {
+      const node = graph.nodes.find(n => n.id === id);
+      if (node) {
+        node.type = 'highway';
+        // Label preserved
+      }
+    });
+  }
+}
+

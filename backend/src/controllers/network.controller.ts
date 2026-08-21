@@ -43,6 +43,17 @@ export const getGraphData = (req: Request, res: Response) => {
       graph.destinationIds = customDestinationIds;
     }
 
+    if (scenario === 'traffic') {
+      const { applyCustomTrafficEndpoints } = require('../utils/trafficGraph');
+      applyCustomTrafficEndpoints(graph, customSourceId, customDestinationIds);
+    }
+
+    if (scenario === 'gameai') {
+      const { applyCustomGameAIEndpoints } = require('../utils/gameAIGraph');
+      applyCustomGameAIEndpoints(graph, customSourceId);
+      graph.sourceId = 'spawn';
+    }
+
     // Note: We deliberately DO NOT apply Campus ACLs here.
     // We want the frontend to always render the full physical topology (all edges intact).
     // The ACLs are enforced purely in the backend simulation algorithm runner (`simulationRunner.ts`),

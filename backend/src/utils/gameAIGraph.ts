@@ -302,3 +302,32 @@ function buildCheckersBoard(
 export function getGameAIEnemyCandidates(graph: ScenarioGraph): string[] {
   return graph.nodes.filter(n => n.type === 'board_tile').map(n => n.id);
 }
+
+export function applyCustomGameAIEndpoints(graph: ScenarioGraph, customSourceId?: string) {
+  if (!customSourceId) return;
+
+  const targetNode = graph.nodes.find(n => n.id === customSourceId);
+  if (!targetNode) return;
+
+  const spawnNode = graph.nodes.find(n => n.id === 'spawn');
+  if (spawnNode) {
+    spawnNode.x = targetNode.x;
+    spawnNode.y = targetNode.y;
+  }
+
+  // Redirect the wireless spawn edge to the new start point
+  const wirelessEdge = graph.edges.find(e => e.from === 'spawn' && e.type === 'wireless');
+  if (wirelessEdge) {
+    wirelessEdge.to = customSourceId;
+    wirelessEdge.id = `spawn-${customSourceId}`;
+  } else {
+    graph.edges.push({
+      id: `spawn-${customSourceId}`,
+      from: 'spawn',
+      to: customSourceId,
+      latency: 1,
+      label: '1 move',
+      type: 'wireless'
+    });
+  }
+}

@@ -33,8 +33,8 @@ const SCENARIO_NODE_ITEMS: Record<ScenarioType, LegendItem[]> = {
     { color: '#450a0a', label: 'Blocked Aisle', icon: '🚧' },
   ],
   traffic: [
-    { color: '#065f46', label: 'City Center (Source)', icon: '🏙️' },
-    { color: '#047857', label: 'Highway Exit (Target)', icon: '🛣️' },
+    { color: '#065f46', label: 'Starting Point', icon: '🏙️' },
+    { color: '#047857', label: 'Destination', icon: '🛣️' },
     { color: '#059669', label: 'Intersection', icon: '🚦' },
     { color: '#10b981', label: 'Street', icon: '🚗' },
     { color: '#450a0a', label: 'Road Closure', icon: '🚫' },

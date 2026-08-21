@@ -180,6 +180,13 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
             } : {}),
             ...(scenario === 'evacuation' && model.evacuationSourceId ? {
               customSourceId: model.evacuationSourceId
+            } : {}),
+            ...(scenario === 'traffic' ? {
+              ...(model.trafficSourceId ? { customSourceId: model.trafficSourceId } : {}),
+              ...(model.trafficDestinationIds.length > 0 ? { customDestinationIds: model.trafficDestinationIds } : {})
+            } : {}),
+            ...(scenario === 'gameai' && model.gameAISourceId ? {
+              customSourceId: model.gameAISourceId
             } : {})
           };
 
@@ -243,7 +250,7 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
       isMounted = false;
       controller.stopAnimation();
     };
-  }, [scenario, model.mapId, model.seed, model.gameBoard, model.graphSize, model.syntheticSizing, model.networkRoutingMode, model.sourceDevice, model.destinationDevices, model.deliveryMode, model.evacuationSourceId, JSON.stringify(model.robotAssignments), controller.stopAnimation]);
+  }, [scenario, model.mapId, model.seed, model.gameBoard, model.graphSize, model.syntheticSizing, model.networkRoutingMode, model.sourceDevice, model.destinationDevices, model.deliveryMode, model.evacuationSourceId, model.trafficSourceId, JSON.stringify(model.trafficDestinationIds), model.gameAISourceId, JSON.stringify(model.robotAssignments), controller.stopAnimation]);
 
   // ── Block page refresh/close when unsaved ─────────────────────────────────
   useEffect(() => {
@@ -253,7 +260,7 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
         e.returnValue = ''; // Standard way to trigger the browser's confirmation dialog
       }
     };
-    
+
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [controller.status, model.isCurrentSaved]);
@@ -335,6 +342,16 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
     // Evacuation: user-selectable start point (city + building maps)
     evacuationSourceId: model.evacuationSourceId,
     setEvacuationSourceId: model.setEvacuationSourceId,
+
+    // Traffic: user-selectable endpoints
+    trafficSourceId: model.trafficSourceId,
+    setTrafficSourceId: model.setTrafficSourceId,
+    trafficDestinationIds: model.trafficDestinationIds,
+    setTrafficDestinationIds: model.setTrafficDestinationIds,
+
+    // Game AI: user-selectable starting point (first row nodes)
+    gameAISourceId: model.gameAISourceId,
+    setGameAISourceId: model.setGameAISourceId,
 
     // ── Extracted from SimulationView ──────────────────────────────────────────
     isEvacuationRealWorld: model.isEvacuationRealWorld,
