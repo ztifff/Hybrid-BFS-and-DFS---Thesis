@@ -1,0 +1,209 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: etc.spec.ts >> Edge Test Cases (ETC-01 to ETC-15) >> ETC-13: History Import (Scenario Mismatch)
+- Location: tests\etc.spec.ts:192:3
+
+# Error details
+
+```
+Test timeout of 120000ms exceeded.
+```
+
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - button "← Back" [ref=e6]:
+        - generic [ref=e7]: ←
+        - generic [ref=e8]: Back
+      - heading "Network Routing" [level=1] [ref=e17]
+    - generic [ref=e18]:
+      - button "BFS" [ref=e19] [cursor=pointer]
+      - generic [ref=e22]: "|"
+      - button "DFS" [ref=e23] [cursor=pointer]
+      - generic [ref=e26]: "|"
+      - button "Hybrid" [ref=e27] [cursor=pointer]
+    - button "Result History 0" [ref=e31] [cursor=pointer]:
+      - generic [ref=e32]: Result History
+      - generic [ref=e33]: "0"
+    - button "Help & Guide" [ref=e35] [cursor=pointer]
+  - generic [ref=e37]:
+    - complementary [ref=e38]:
+      - button "❮" [ref=e40] [cursor=pointer]
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - generic [ref=e43]:
+            - generic [ref=e44]: Network Routing
+            - generic [ref=e45]: Step 0 / 20
+          - generic [ref=e48]:
+            - generic [ref=e49]:
+              - generic [ref=e50]: BFS
+              - generic [ref=e51]:
+                - generic [ref=e52]: Visited Nodes
+                - generic [ref=e53]: "0"
+              - generic [ref=e54]:
+                - generic [ref=e55]: Completion
+                - generic [ref=e56]: 0.0%
+              - generic [ref=e57]:
+                - generic [ref=e58]: Total Latency
+                - generic [ref=e59]: 0.0 ms
+              - generic [ref=e60]:
+                - generic [ref=e61]: Optimal %
+                - generic [ref=e62]: N/A
+              - generic [ref=e63]:
+                - generic [ref=e64]: Memory
+                - generic [ref=e65]: 0.000 MB
+              - generic [ref=e66]:
+                - generic [ref=e67]: Adaptability
+                - generic [ref=e68]: "0"
+            - generic [ref=e69]:
+              - generic [ref=e70]: DFS
+              - generic [ref=e71]:
+                - generic [ref=e72]: Visited Nodes
+                - generic [ref=e73]: "0"
+              - generic [ref=e74]:
+                - generic [ref=e75]: Completion
+                - generic [ref=e76]: 0.0%
+              - generic [ref=e77]:
+                - generic [ref=e78]: Total Latency
+                - generic [ref=e79]: 0.0 ms
+              - generic [ref=e80]:
+                - generic [ref=e81]: Optimal %
+                - generic [ref=e82]: N/A
+              - generic [ref=e83]:
+                - generic [ref=e84]: Memory
+                - generic [ref=e85]: 0.000 MB
+              - generic [ref=e86]:
+                - generic [ref=e87]: Adaptability
+                - generic [ref=e88]: "0"
+            - generic [ref=e89]:
+              - generic [ref=e90]: HYBRID
+              - generic [ref=e91]:
+                - generic [ref=e92]: Visited Nodes
+                - generic [ref=e93]: "0"
+              - generic [ref=e94]:
+                - generic [ref=e95]: Completion
+                - generic [ref=e96]: 0.0%
+              - generic [ref=e97]:
+                - generic [ref=e98]: Total Latency
+                - generic [ref=e99]: 0.0 ms
+              - generic [ref=e100]:
+                - generic [ref=e101]: Optimal %
+                - generic [ref=e102]: N/A
+              - generic [ref=e103]:
+                - generic [ref=e104]: Memory
+                - generic [ref=e105]: 0.000 MB
+              - generic [ref=e106]:
+                - generic [ref=e107]: Adaptability
+                - generic [ref=e108]: "0"
+        - generic [ref=e109]:
+          - heading "Legend" [level=3] [ref=e110]
+          - generic [ref=e111]:
+            - paragraph [ref=e112]: Environment Nodes
+            - generic [ref=e113]:
+              - generic [ref=e114]:
+                - generic [ref=e115]: 🌐
+                - generic [ref=e116]: Core Router / ISP
+              - generic [ref=e117]:
+                - generic [ref=e118]: 🎛️
+                - generic [ref=e119]: Multilayer Switch
+              - generic [ref=e120]:
+                - generic [ref=e121]: 🔌
+                - generic [ref=e122]: Access / Floor Switch
+              - generic [ref=e123]:
+                - generic [ref=e124]: 📡
+                - generic [ref=e125]: Wireless Access Point
+              - generic [ref=e126]:
+                - generic [ref=e127]: 💻
+                - generic [ref=e128]: End Device (PC/Laptop)
+              - generic [ref=e129]:
+                - generic [ref=e130]: 🗄️
+                - generic [ref=e131]: Server
+              - generic [ref=e132]:
+                - generic [ref=e133]: 💥
+                - generic [ref=e134]: Failed Component
+              - generic [ref=e135]: Explored Nodes (Stacked by Alg.)
+          - generic [ref=e141]:
+            - paragraph [ref=e142]: Environment Edges
+            - generic [ref=e143]:
+              - generic [ref=e144]: Fiber Optic
+              - generic [ref=e147]: Copper Straight-Through
+              - generic [ref=e150]: Copper Cross-Over
+              - generic [ref=e153]: Serial / WAN
+              - generic [ref=e157]: Wireless
+          - generic [ref=e160]:
+            - paragraph [ref=e161]: Algorithms
+            - generic [ref=e162]:
+              - generic [ref=e163]: BFS Path (Outer Layer)
+              - generic [ref=e166]: DFS Path (Middle Layer)
+              - generic [ref=e169]: Hybrid Path (Inner Layer)
+              - generic [ref=e172]: Active Search Heads
+    - main [ref=e180]:
+      - generic [ref=e181]:
+        - generic [ref=e182]:
+          - generic [ref=e183]: Simultaneous Multi-Algorithm Evaluation
+          - generic [ref=e184]: "Dynamic: VLAN isolation and core router failover events mid-routing"
+        - generic [ref=e186]:
+          - button "Synthetic" [ref=e187] [cursor=pointer]
+          - button "Company Business Network" [ref=e188] [cursor=pointer]
+          - button "Campus Network" [ref=e189] [cursor=pointer]
+        - generic [ref=e191]:
+          - generic [ref=e192]: "Mode:"
+          - combobox [ref=e193] [cursor=pointer]:
+            - option "Default (ISP Broadcast)" [selected]
+            - option "Device to Device"
+      - generic [ref=e195]:
+        - button "Show ▼" [ref=e197] [cursor=pointer]:
+          - generic [ref=e198]: Show
+          - generic [ref=e199]: ▼
+        - button "Follow ▼" [ref=e201] [cursor=pointer]:
+          - generic [ref=e202]: Follow
+          - generic [ref=e203]: ▼
+        - generic [ref=e204]:
+          - generic [ref=e205]: "Zoom: 1.0x"
+          - button "+" [ref=e206] [cursor=pointer]
+          - button "-" [ref=e207] [cursor=pointer]
+          - button "Reset" [ref=e208] [cursor=pointer]
+      - generic [ref=e210]:
+        - button "Reroll Events" [ref=e211] [cursor=pointer]
+        - button "Reset" [ref=e212] [cursor=pointer]
+        - button "Back" [disabled]
+        - button "Run Simulations" [ref=e213] [cursor=pointer]
+        - button "Fwd" [ref=e214] [cursor=pointer]
+        - button "Skip" [ref=e215] [cursor=pointer]
+    - complementary [ref=e216]:
+      - button "❯" [ref=e218] [cursor=pointer]
+      - generic [ref=e219]:
+        - generic [ref=e221]:
+          - heading "Dynamic Map Events" [level=3] [ref=e223]
+          - generic "Click to locate on map" [ref=e225] [cursor=pointer]:
+            - generic [ref=e226]:
+              - generic [ref=e227]: "[0]"
+              - generic [ref=e228]: 💥 🔌 Cable Unplugged at Aggr-SW2
+        - generic [ref=e229]:
+          - generic [ref=e230]: Dynamic Size Adjuster
+          - generic [ref=e231]:
+            - generic [ref=e232]:
+              - generic [ref=e233]: Nodes
+              - generic [ref=e234]:
+                - spinbutton "Nodes" [ref=e235]: "28"
+                - generic [ref=e236]:
+                  - button [ref=e237] [cursor=pointer]
+                  - button [ref=e240] [cursor=pointer]
+            - generic [ref=e243]:
+              - generic [ref=e244]: Links
+              - generic [ref=e245]:
+                - spinbutton "Links" [ref=e246]: "27"
+                - generic [ref=e247]:
+                  - button [ref=e248] [cursor=pointer]
+                  - button [ref=e251] [cursor=pointer]
+          - generic [ref=e254]: "Generated: 28 nodes / 27 links"
+```

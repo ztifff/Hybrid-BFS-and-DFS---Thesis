@@ -547,7 +547,7 @@ export class HybridPathfinder implements PathfinderObserver {
       done: true,
       foundDestination: allFoundDests[0] ?? null,
       foundDestinations: allFoundDests,
-      phaseLabel: allFoundDests.length > 0 ? '🏁 HYBRID - All Active Robot Destinations Reached' : '❌ HYBRID - Search Exhausted',
+      phaseLabel: allFoundDests.length > 0 ? '🏁 HYBRID - All Active Destinations Reached' : '❌ HYBRID - Search Exhausted',
       deliveredBoxCounts: getAllDeliveredBoxCounts(),
       pickedUpBoxCounts: getAllPickedUpBoxCounts(),
       robotPositions: getRobotPositions()

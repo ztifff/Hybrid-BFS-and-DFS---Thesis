@@ -548,7 +548,7 @@ export class DFSPathfinder implements PathfinderObserver {
       done: true,
       foundDestination: allFoundDests[0] ?? null,
       foundDestinations: allFoundDests,
-      phaseLabel: allFoundDests.length > 0 ? '🏁 DFS - All Active Robot Destinations Reached' : '❌ DFS - Search Exhausted',
+      phaseLabel: allFoundDests.length > 0 ? '🏁 DFS - All Active Destinations Reached' : '❌ DFS - Search Exhausted',
       deliveredBoxCounts: getAllDeliveredBoxCounts(),
       pickedUpBoxCounts: getAllPickedUpBoxCounts(),
       robotPositions: getRobotPositions()

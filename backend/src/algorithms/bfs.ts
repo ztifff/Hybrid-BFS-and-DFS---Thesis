@@ -533,7 +533,7 @@ export class BFSPathfinder implements PathfinderObserver {
       done: true,
       foundDestination: allFoundDests[0] ?? null,
       foundDestinations: allFoundDests,
-      phaseLabel: allFoundDests.length > 0 ? '🏁 BFS - All Active Robot Destinations Reached' : '❌ BFS - Search Exhausted',
+      phaseLabel: allFoundDests.length > 0 ? '🏁 BFS - All Active Destinations Reached' : '❌ BFS - Search Exhausted',
       deliveredBoxCounts: getAllDeliveredBoxCounts(),
       pickedUpBoxCounts: getAllPickedUpBoxCounts(),
       robotPositions: getRobotPositions()
