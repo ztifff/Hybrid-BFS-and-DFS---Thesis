@@ -78,12 +78,15 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
       {/* ── Unsaved-result navigation guard modal ─────────────────────────────── */}
       {sim.pendingNavigation && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn p-4">
-          <div className="bg-gray-900 border border-amber-500/30 rounded-xl p-6 max-w-sm w-full shadow-2xl scale-in">
-            <h3 className="text-amber-400 font-bold text-lg mb-2 flex items-center gap-2">
-              <span className="text-xl">⚠️</span> Unsaved Results
+          <div className={`bg-gray-900 border rounded-xl p-6 max-w-sm w-full shadow-2xl scale-in ${sim.pendingNavigation.reason === 'inprogress' ? 'border-blue-500/30' : 'border-amber-500/30'}`}>
+            <h3 className={`font-bold text-lg mb-2 flex items-center gap-2 ${sim.pendingNavigation.reason === 'inprogress' ? 'text-blue-400' : 'text-amber-400'}`}>
+              <span className="text-xl">{sim.pendingNavigation.reason === 'inprogress' ? '❗' : '⚠️'}</span>
+              {sim.pendingNavigation.reason === 'inprogress' ? 'Simulation in Progress' : 'Unsaved Results'}
             </h3>
             <p className="text-gray-300 text-sm mb-6 leading-relaxed">
-              You have an unsaved simulation result. Are you sure you want to discard it and leave?
+              {sim.pendingNavigation.reason === 'inprogress'
+                ? 'Simulation is currently running. Are you sure you want to stop it and reset?'
+                : 'You have an unsaved simulation result. Are you sure you want to discard it and leave?'}
             </p>
             <div className="flex justify-end gap-3">
               <button
@@ -94,9 +97,9 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               </button>
               <button
                 onClick={sim.confirmPendingNavigation}
-                className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-bold transition-colors shadow-lg shadow-amber-900/20"
+                className={`px-4 py-2 text-white rounded-lg text-sm font-bold transition-colors shadow-lg ${sim.pendingNavigation.reason === 'inprogress' ? 'bg-blue-600 hover:bg-blue-500 shadow-blue-900/20' : 'bg-amber-600 hover:bg-amber-500 shadow-amber-900/20'}`}
               >
-                Discard &amp; Leave
+                {sim.pendingNavigation.reason === 'inprogress' ? 'Stop & Reset' : 'Discard & Leave'}
               </button>
             </div>
           </div>
@@ -137,7 +140,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
         {/* ── Header ───────────────────────────────────────────────────────────── */}
         <header className="glass-panel border-b-0 border-white/5 px-2 sm:px-3 md:px-6 py-2.5 md:py-3 flex flex-wrap lg:flex-nowrap items-center justify-between shrink-0 relative z-10 gap-y-2 gap-x-1.5 w-full max-w-full">
-          
+
           {/* Left: Back & Title */}
           <div className="flex items-center gap-1.5 sm:gap-4 relative z-10 min-w-0 flex-1 lg:flex-none">
             <button
@@ -220,7 +223,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               title="Expert Mode (Raw Telemetry)"
               className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-mono font-bold transition-all cursor-pointer hover:-translate-y-0.5 active:scale-[0.98] ${isExpertMode ? 'bg-green-900/40 border-green-500 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.3)]' : 'bg-gray-800/50 border-gray-600 text-gray-400 hover:text-gray-200 hover:bg-gray-800'}`}
             >
-              <span className={isExpertMode ? "animate-pulse" : ""}>{'>_'}</span> 
+              <span className={isExpertMode ? "animate-pulse" : ""}>{'>_'}</span>
               <span>Expert</span>
             </button>
             <button
@@ -491,13 +494,13 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         onClick={() => { if (!sim.isComputing && sim.status !== 'running') setTrafSrcDropdownOpen(o => !o); }}
                       >
                         <span className="truncate">
-                          {sim.trafficSourceId 
+                          {sim.trafficSourceId
                             ? (sim.currentGraph?.nodes.find(n => n.id === sim.trafficSourceId)?.label?.replace('\n', ' - ') || sim.trafficSourceId)
                             : (sim.currentGraph?.sourceId ? (sim.currentGraph?.nodes.find(n => n.id === sim.currentGraph?.sourceId)?.label?.replace('\n', ' - ') || sim.currentGraph?.sourceId) : 'Select Src...')}
                         </span>
                         <span className="text-[10px] ml-2">▼</span>
                       </div>
-                      
+
                       {trafSrcDropdownOpen && (
                         <>
                           <div className="fixed inset-0 z-40" onClick={() => setTrafSrcDropdownOpen(false)}></div>
@@ -569,27 +572,27 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                                 .filter(n => n.type === 'intersection' || n.type === 'street' || n.type === 'origin' || n.type === 'highway')
                                 .filter(n => n.id !== sim.trafficSourceId)
                                 .filter(n => (n.label || n.id).toLowerCase().includes(trafDstSearch.toLowerCase()))
-                              .sort((a, b) => (a.label || a.id).localeCompare(b.label || b.id))
-                              .map(n => {
-                                const isChecked = sim.trafficDestinationIds.includes(n.id);
-                                return (
-                                  <label key={`traf-dst-${n.id}`} className="flex items-center gap-2 px-3 py-2 hover:bg-gray-700 cursor-pointer select-none">
-                                    <input
-                                      type="checkbox"
-                                      className="accent-red-500"
-                                      checked={isChecked}
-                                      onChange={() => {}}
-                                      onClick={() => {
-                                        if (isChecked) {
-                                          sim.setTrafficDestinationIds(sim.trafficDestinationIds.filter(id => id !== n.id));
-                                        } else {
-                                          sim.setTrafficDestinationIds([...sim.trafficDestinationIds, n.id]);
-                                        }
-                                      }}
-                                    />
-                                    <span className="text-xs text-gray-200 whitespace-nowrap">{n.label ? n.label.replace('\n', ' - ') : n.id}</span>
-                                  </label>
-                                );
+                                .sort((a, b) => (a.label || a.id).localeCompare(b.label || b.id))
+                                .map(n => {
+                                  const isChecked = sim.trafficDestinationIds.includes(n.id);
+                                  return (
+                                    <label key={`traf-dst-${n.id}`} className="flex items-center gap-2 px-3 py-2 hover:bg-gray-700 cursor-pointer select-none">
+                                      <input
+                                        type="checkbox"
+                                        className="accent-red-500"
+                                        checked={isChecked}
+                                        onChange={() => { }}
+                                        onClick={() => {
+                                          if (isChecked) {
+                                            sim.setTrafficDestinationIds(sim.trafficDestinationIds.filter(id => id !== n.id));
+                                          } else {
+                                            sim.setTrafficDestinationIds([...sim.trafficDestinationIds, n.id]);
+                                          }
+                                        }}
+                                      />
+                                      <span className="text-xs text-gray-200 whitespace-nowrap">{n.label ? n.label.replace('\n', ' - ') : n.id}</span>
+                                    </label>
+                                  );
                                 })}
                             </div>
                           </div>
@@ -744,7 +747,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   {sim.isComputing ? 'Computing...' : <><span className="sm:hidden">▶️ </span>Run Simulations</>}
                 </button>
               )}
-              
+
               <button disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex >= sim.totalSteps} onClick={sim.handleStepForward} className={scenarioBtnClass}>Fwd<span className="sm:hidden"> ⏭️</span></button>
               <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleSkipEnd} className={scenarioBtnClass}><span className="sm:hidden">⏭️ </span>Skip</button>
             </div>

@@ -91,12 +91,14 @@ export function getNextRoboticsNodes(currentNodes: number, direction: 'up' | 'do
 }
 
 // ── Pending navigation type ────────────────────────────────────────────────────
+export type PendingNavigationReason = 'unsaved' | 'inprogress';
+
 export type PendingNavigation =
-  | { type: 'back' }
-  | { type: 'map'; mapId: string }
-  | { type: 'gameboard'; boardId: GameAIBoard }
-  | { type: 'sizing'; field: keyof GraphSizing; value: number }
-  | { type: 'sizing_step'; action: 'nodesUp' | 'nodesDown' | 'edgesUp' | 'edgesDown' };
+  | { type: 'back'; reason?: PendingNavigationReason }
+  | { type: 'map'; mapId: string; reason?: PendingNavigationReason }
+  | { type: 'gameboard'; boardId: GameAIBoard; reason?: PendingNavigationReason }
+  | { type: 'sizing'; field: keyof GraphSizing; value: number; reason?: PendingNavigationReason }
+  | { type: 'sizing_step'; action: 'nodesUp' | 'nodesDown' | 'edgesUp' | 'edgesDown'; reason?: PendingNavigationReason };
 
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -301,8 +303,10 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
   // So they are returned as factory functions that the view/controller can call with
   // those values. The actual guard wiring happens in `useSimulation`.
   const requestBack = useCallback((status: string, saved: boolean) => {
-    if (status === 'done' && !saved) {
-      setPendingNavigation({ type: 'back' });
+    if (status === 'running' || status === 'paused') {
+      setPendingNavigation({ type: 'back', reason: 'inprogress' });
+    } else if (status === 'done' && !saved) {
+      setPendingNavigation({ type: 'back', reason: 'unsaved' });
     } else {
       onBack?.();
     }
@@ -310,8 +314,10 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
 
   const requestMapChange = useCallback((newMapId: string, status: string, saved: boolean) => {
     if (mapId === newMapId) return;
-    if (status === 'done' && !saved) {
-      setPendingNavigation({ type: 'map', mapId: newMapId });
+    if (status === 'running' || status === 'paused') {
+      setPendingNavigation({ type: 'map', mapId: newMapId, reason: 'inprogress' });
+    } else if (status === 'done' && !saved) {
+      setPendingNavigation({ type: 'map', mapId: newMapId, reason: 'unsaved' });
     } else {
       setMapId(newMapId);
       setTrafficSourceId(null);
@@ -327,8 +333,10 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
 
   const requestBoardChange = useCallback((boardId: GameAIBoard, status: string, saved: boolean) => {
     if (gameBoard === boardId) return;
-    if (status === 'done' && !saved) {
-      setPendingNavigation({ type: 'gameboard', boardId });
+    if (status === 'running' || status === 'paused') {
+      setPendingNavigation({ type: 'gameboard', boardId, reason: 'inprogress' });
+    } else if (status === 'done' && !saved) {
+      setPendingNavigation({ type: 'gameboard', boardId, reason: 'unsaved' });
     } else {
       setGameBoard(boardId);
       setMapId('synthetic');
@@ -336,8 +344,10 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
   }, [gameBoard]);
 
   const requestSizingChange = useCallback((field: keyof GraphSizing, value: number, status: string, saved: boolean) => {
-    if (status === 'done' && !saved) {
-      setPendingNavigation({ type: 'sizing', field, value });
+    if (status === 'running' || status === 'paused') {
+      setPendingNavigation({ type: 'sizing', field, value, reason: 'inprogress' });
+    } else if (status === 'done' && !saved) {
+      setPendingNavigation({ type: 'sizing', field, value, reason: 'unsaved' });
     } else {
       updateSyntheticSizing(field, value);
     }

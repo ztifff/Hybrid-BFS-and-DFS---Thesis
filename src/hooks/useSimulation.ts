@@ -252,10 +252,12 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
     };
   }, [scenario, model.mapId, model.seed, model.gameBoard, model.graphSize, model.syntheticSizing, model.networkRoutingMode, model.sourceDevice, model.destinationDevices, model.deliveryMode, model.evacuationSourceId, model.trafficSourceId, JSON.stringify(model.trafficDestinationIds), model.gameAISourceId, JSON.stringify(model.robotAssignments), controller.stopAnimation]);
 
-  // ── Block page refresh/close when unsaved ─────────────────────────────────
+  // ── Block page refresh/close when unsaved or running ──────────────────────
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (controller.status === 'done' && !model.isCurrentSaved) {
+      if ((controller.status === 'done' && !model.isCurrentSaved) ||
+        controller.status === 'running' ||
+        controller.status === 'paused') {
         e.preventDefault();
         e.returnValue = ''; // Standard way to trigger the browser's confirmation dialog
       }
@@ -376,8 +378,10 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
     confirmPendingNavigation: model.confirmPendingNavigation,
     requestSizingChange: model.requestSizingChange,
     requestSizingStep: (action: 'nodesUp' | 'nodesDown' | 'edgesUp' | 'edgesDown', status: string, saved: boolean) => {
-      if (status === 'done' && !saved) {
-        model.setPendingNavigation({ type: 'sizing_step', action });
+      if (status === 'running' || status === 'paused') {
+        model.setPendingNavigation({ type: 'sizing_step', action, reason: 'inprogress' });
+      } else if (status === 'done' && !saved) {
+        model.setPendingNavigation({ type: 'sizing_step', action, reason: 'unsaved' });
       } else {
         if (action === 'nodesUp') model.stepNodesUp();
         else if (action === 'nodesDown') model.stepNodesDown();
