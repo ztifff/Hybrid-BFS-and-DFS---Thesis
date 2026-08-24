@@ -195,7 +195,6 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestBody)
           });
-          console.log("[DEBUG] Fetch response status:", response.status);
 
           if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
           const json = await response.json();
@@ -323,6 +322,8 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
     handleResume: controller.handleResume,
     handleReset: controller.handleReset,
     handleSkipEnd: controller.handleSkipEnd,
+    playbackSpeed: controller.playbackSpeed,
+    handleSpeedChange: controller.handleSpeedChange,
     handleRerollEvents: model.handleRerollEvents,
     handleImportHistory: model.handleImportHistory,
 

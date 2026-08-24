@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { ScenarioType } from '../../types';
 import { useSimulation } from '../../hooks/useSimulation';
@@ -24,6 +24,81 @@ import { ExpertModePanel } from './ExpertModePanel';
 interface Props {
   scenario: ScenarioType;
   onBack: () => void;
+}
+
+function SpeedController({ 
+  playbackSpeed, 
+  handleSpeedChange, 
+  scenario 
+}: { 
+  playbackSpeed: number; 
+  handleSpeedChange: (speed: number) => void;
+  scenario: string;
+}) {
+  const [inputValue, setInputValue] = useState(playbackSpeed.toFixed(1));
+
+  useEffect(() => {
+    setInputValue(playbackSpeed.toFixed(1));
+  }, [playbackSpeed]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+    const val = parseFloat(e.target.value);
+    if (!isNaN(val)) {
+      handleSpeedChange(val);
+    }
+  };
+
+  const handleBlur = () => {
+    let val = parseFloat(inputValue);
+    if (isNaN(val)) val = 1;
+    val = Math.max(0.1, Math.min(4, val));
+    handleSpeedChange(val);
+    setInputValue(val.toFixed(1));
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleBlur();
+    }
+  };
+
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseFloat(e.target.value);
+    handleSpeedChange(val);
+    setInputValue(val.toFixed(1));
+  };
+
+  return (
+    <div className="flex items-center gap-3 text-xs text-gray-400 bg-[#0a0f1e]/80 border border-white/10 px-4 py-1.5 rounded-full shadow-inner backdrop-blur-sm">
+      <span className="uppercase tracking-wider font-semibold">Speed</span>
+      <input 
+        type="range" 
+        min="0.1" max="4" step="0.1" 
+        value={playbackSpeed}
+        onChange={handleSliderChange}
+        className={`w-32 cursor-pointer transition-all ${
+          scenario === 'network' ? 'accent-blue-500' :
+          scenario === 'robotics' ? 'accent-amber-500' :
+          scenario === 'traffic' ? 'accent-emerald-500' :
+          scenario === 'evacuation' ? 'accent-red-500' :
+          scenario === 'gameai' ? 'accent-purple-500' : 'accent-blue-500'
+        }`}
+      />
+      <div className="flex items-center w-14 justify-end text-white font-bold font-mono">
+        <input
+          type="number"
+          min="0.1" max="4" step="0.1"
+          value={inputValue}
+          onChange={handleInputChange}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          className="w-10 bg-transparent text-right outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        />
+        <span>x</span>
+      </div>
+    </div>
+  );
 }
 
 export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
@@ -731,25 +806,34 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             </div>
 
             {/* Playback Controls */}
-            <div className="mt-2 flex items-center gap-2 flex-wrap justify-center w-full shrink-0">
-              <button onClick={sim.handleRerollEvents} disabled={sim.status === 'running'} className={scenarioBtnClass}><span className="sm:hidden">🎲 </span>Reroll Events</button>
-              <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleReset} className={scenarioBtnClass}><span className="sm:hidden">🔄 </span>Reset</button>
-              <button disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex === 0} onClick={sim.handleStepBackward} className={scenarioBtnClass}><span className="sm:hidden">⏪ </span>Back</button>
+            <div className="mt-2 flex flex-col items-center gap-3 w-full shrink-0">
+              <div className="flex items-center gap-2 flex-wrap justify-center w-full">
+                <button onClick={sim.handleRerollEvents} disabled={sim.status === 'running'} className={scenarioBtnClass}><span className="sm:hidden">🎲 </span>Reroll Events</button>
+                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleReset} className={scenarioBtnClass}><span className="sm:hidden">🔄 </span>Reset</button>
+                <button disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex === 0} onClick={sim.handleStepBackward} className={scenarioBtnClass}><span className="sm:hidden">⏪ </span>Back</button>
 
-              {sim.status === 'running' ? (
-                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handlePause} className={`${primaryBtnClass} hover:bg-red-500 bg-red-600 text-white shadow-red-900/40`}><span className="sm:hidden">⏸️ </span>Pause</button>
-              ) : sim.status === 'paused' ? (
-                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleResume} className={`${primaryBtnClass} hover:bg-green-500 bg-green-600 text-white shadow-green-900/40`}><span className="sm:hidden">▶️ </span>Resume</button>
-              ) : sim.status === 'done' ? (
-                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleRun} className={`${primaryBtnClass} hover:bg-blue-500 bg-blue-600 text-white shadow-blue-900/40`}><span className="sm:hidden">🔄 </span>Replay</button>
-              ) : (
-                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleRun} className={`${primaryBtnClass} w-full sm:w-auto hover:bg-green-500 bg-green-600 text-white shadow-green-900/40`}>
-                  {sim.isComputing ? 'Computing...' : <><span className="sm:hidden">▶️ </span>Run Simulations</>}
-                </button>
-              )}
+                {sim.status === 'running' ? (
+                  <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handlePause} className={`${primaryBtnClass} hover:bg-red-500 bg-red-600 text-white shadow-red-900/40`}><span className="sm:hidden">⏸️ </span>Pause</button>
+                ) : sim.status === 'paused' ? (
+                  <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleResume} className={`${primaryBtnClass} hover:bg-green-500 bg-green-600 text-white shadow-green-900/40`}><span className="sm:hidden">▶️ </span>Resume</button>
+                ) : sim.status === 'done' ? (
+                  <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleRun} className={`${primaryBtnClass} hover:bg-blue-500 bg-blue-600 text-white shadow-blue-900/40`}><span className="sm:hidden">🔄 </span>Replay</button>
+                ) : (
+                  <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleRun} className={`${primaryBtnClass} w-full sm:w-auto hover:bg-green-500 bg-green-600 text-white shadow-green-900/40`}>
+                    {sim.isComputing ? 'Computing...' : <><span className="sm:hidden">▶️ </span>Run Simulations</>}
+                  </button>
+                )}
 
-              <button disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex >= sim.totalSteps} onClick={sim.handleStepForward} className={scenarioBtnClass}>Fwd<span className="sm:hidden"> ⏭️</span></button>
-              <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleSkipEnd} className={scenarioBtnClass}><span className="sm:hidden">⏭️ </span>Skip</button>
+                <button disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex >= sim.totalSteps} onClick={sim.handleStepForward} className={scenarioBtnClass}>Fwd<span className="sm:hidden"> ⏭️</span></button>
+                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleSkipEnd} className={scenarioBtnClass}><span className="sm:hidden">⏭️ </span>Skip</button>
+              </div>
+
+              {/* Speed Controller */}
+              <SpeedController 
+                playbackSpeed={sim.playbackSpeed} 
+                handleSpeedChange={sim.handleSpeedChange} 
+                scenario={scenario} 
+              />
             </div>
           </main>
 

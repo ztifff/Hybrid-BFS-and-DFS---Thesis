@@ -18,6 +18,7 @@ export function useSimulationController(model: {
   const [status, setStatus] = useState<Status>('idle');
   const animRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [saveNameInput, setSaveNameInput] = useState('');
@@ -46,7 +47,7 @@ export function useSimulationController(model: {
     }
   }, []);
 
-  const startAnimation = useCallback(() => {
+  const startAnimation = useCallback((speed = playbackSpeed) => {
     if (!simResults || totalSteps === 0) return;
 
     stopAnimation();
@@ -61,8 +62,8 @@ export function useSimulationController(model: {
         }
         return prev + 1;
       });
-    }, STEP_INTERVAL_MS);
-  }, [simResults, totalSteps, stopAnimation]);
+    }, STEP_INTERVAL_MS / speed);
+  }, [simResults, totalSteps, stopAnimation, playbackSpeed]);
 
   useEffect(() => {
     return () => stopAnimation();
@@ -155,6 +156,13 @@ export function useSimulationController(model: {
     setStatus('done');
   };
 
+  const handleSpeedChange = useCallback((newSpeed: number) => {
+    setPlaybackSpeed(newSpeed);
+    if (status === 'running') {
+      startAnimation(newSpeed);
+    }
+  }, [status, startAnimation]);
+
   const openSaveModal = useCallback(() => {
     if (!simResults || isCurrentSaved) return;
     const maxRun = history
@@ -181,6 +189,8 @@ export function useSimulationController(model: {
     handleResume,
     handleReset,
     handleSkipEnd,
+    playbackSpeed,
+    handleSpeedChange,
     openSaveModal,
     
     isHistoryModalOpen, setIsHistoryModalOpen,

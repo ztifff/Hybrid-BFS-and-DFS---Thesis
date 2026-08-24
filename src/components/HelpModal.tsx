@@ -159,9 +159,9 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose }) => {
                 : [`${base}/CanvasControl.png`];
             }
             if (tab === 'buttons') {
-              if (scenario === 'network') images = [`${base}/SimulationControl.png`, `/help-images/ActiveAlgo.png`, `${base}/Mode1.png`, `${base}/Mode2.png`, `${base}/Mode3.png`];
-              else if (scenario === 'robotics') images = [`${base}/SimulationControl.png`, `/help-images/ActiveAlgo.png`, `${base}/RobotAssign.png`, `${base}/RobotAssign1.png`, `${base}/RobotFleetStatus.png`];
-              else images = [`${base}/SimulationControl.png`, `/help-images/ActiveAlgo.png`];
+              if (scenario === 'network') images = [`${base}/SimulationControl.png`, `${base}/Speed.png`, `/help-images/ActiveAlgo.png`, `${base}/Mode1.png`, `${base}/Mode2.png`, `${base}/Mode3.png`];
+              else if (scenario === 'robotics') images = [`${base}/SimulationControl.png`, `${base}/Speed.png`, `/help-images/ActiveAlgo.png`, `${base}/RobotAssign.png`, `${base}/RobotAssign1.png`, `${base}/RobotFleetStatus.png`];
+              else images = [`${base}/SimulationControl.png`, `${base}/Speed.png`, `/help-images/ActiveAlgo.png`];
             }
             if (tab === 'maps') {
               images = scenario === 'network'
@@ -301,6 +301,7 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose }) => {
                 <Item label="🔄 Replay" icon="🔵">Appears after the simulation finishes. Re-runs the full simulation from the beginning using the same graph and event data.</Item>
                 <Item label="Fwd ⏭️" icon="">Steps the simulation forward by one step. Useful for slow manual inspection of each algorithm decision.</Item>
                 <Item label="⏭️ Skip" icon="">Jumps directly to the final step (end of simulation), skipping all animation frames.</Item>
+                <Item label="Speed Controller" icon="⏱️">Adjusts the playback speed of the simulation. Drag the slider or type a specific multiplier (0.1x to 4.0x) to speed up or slow down the traversal animation.</Item>
               </Section>
             </>
           )}

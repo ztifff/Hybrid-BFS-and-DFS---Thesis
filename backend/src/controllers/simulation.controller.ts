@@ -33,7 +33,6 @@ export class SimulationController {
 
       const useRealWorld = scenario !== 'gameai' && mapId !== 'synthetic';
       const activeSizing = useRealWorld ? undefined : sizing;
-      console.log("[DEBUG] Controller received - scenario:", scenario, "mapId:", mapId, "sizing:", sizing, "activeSizing:", activeSizing);
 
       const record = await orchestrateSimulation(
         scenario,

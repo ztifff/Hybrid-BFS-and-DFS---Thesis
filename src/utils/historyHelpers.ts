@@ -9,7 +9,6 @@ class HistoryDatabaseManager {
 
   private constructor() {
     // Private constructor prevents instantiation from outside
-    console.log("HistoryDatabaseManager Singleton Initialized");
   }
 
   public static getInstance(): HistoryDatabaseManager {
