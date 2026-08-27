@@ -45,10 +45,10 @@ export const HistoryDetailView: React.FC<Props> = ({
   };
 
   return (
-    <div className="flex flex-col gap-5 p-2 h-full overflow-y-auto max-h-[75vh] pr-1">
+    <div className="flex flex-col gap-5 p-2 h-full pr-1 pb-48">
       {/* Top row: benchmark table + canvas */}
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-5">
-        <div className="xl:col-span-2 flex flex-col">
+        <div data-tutorial="history-benchmarks" className="xl:col-span-2 flex flex-col">
           <BenchmarkTable
             bfs={bfs}
             dfs={dfs}
@@ -57,23 +57,24 @@ export const HistoryDetailView: React.FC<Props> = ({
             runNumber={entry.runNumber}
           />
         </div>
-
-        <CanvasReplay
-          baseGraph={baseGraph}
-          results={results}
-          entryActiveAlgorithms={entryActiveAlgorithms}
-          currentStep={currentStep}
-          ultimateMax={ultimateMax}
-          allEvents={allEvents}
-          blockedNodeIds={blockedNodeIds}
-          highlightedNodeId={highlightedNodeId}
-          shelfBoxCounts={shelfBoxCounts}
-          resolvedMapId={resolvedMapId}
-          scenario={entry.scenario}
-          robotAssignments={entry.metadata?.robotAssignments}
-          onDeselect={() => onHighlight(null)}
-          onSeek={onSeek}
-        />
+        <div data-tutorial="history-canvas-replay" className="xl:col-span-3 flex flex-col min-h-0">
+          <CanvasReplay
+            baseGraph={baseGraph}
+            results={results}
+            entryActiveAlgorithms={entryActiveAlgorithms}
+            currentStep={currentStep}
+            ultimateMax={ultimateMax}
+            allEvents={allEvents}
+            blockedNodeIds={blockedNodeIds}
+            highlightedNodeId={highlightedNodeId}
+            shelfBoxCounts={shelfBoxCounts}
+            resolvedMapId={resolvedMapId}
+            scenario={entry.scenario}
+            robotAssignments={entry.metadata?.robotAssignments}
+            onDeselect={() => onHighlight(null)}
+            onSeek={onSeek}
+          />
+        </div>
 
         {/* Campus topology note */}
         {entry.scenario === 'network' && baseGraph?.nodes.some((n: any) => n.id.includes('boys') || n.label?.includes('PC-PT')) && (
@@ -101,44 +102,54 @@ export const HistoryDetailView: React.FC<Props> = ({
         )}
       </div>
 
-      <WinnerCard winner={winner} runnerUp={runnerUp} bfs={bfs} dfs={dfs} hyb={hyb} />
+      <div data-tutorial="history-winner-card">
+        <WinnerCard winner={winner} runnerUp={runnerUp} bfs={bfs} dfs={dfs} hyb={hyb} />
+      </div>
 
-      <AlgorithmMovements
-        bfs={bfs}
-        dfs={dfs}
-        hyb={hyb}
-        entryActiveAlgorithms={entryActiveAlgorithms}
-        winner={winner}
-      />
+      <div data-tutorial="history-movements">
+        <AlgorithmMovements
+          bfs={bfs}
+          dfs={dfs}
+          hyb={hyb}
+          entryActiveAlgorithms={entryActiveAlgorithms}
+          winner={winner}
+        />
+      </div>
 
-      <PerformanceBarChart
-        bfs={bfs}
-        dfs={dfs}
-        hyb={hyb}
-        entryActiveAlgorithms={entryActiveAlgorithms}
-      />
+      <div data-tutorial="history-barchart">
+        <PerformanceBarChart
+          bfs={bfs}
+          dfs={dfs}
+          hyb={hyb}
+          entryActiveAlgorithms={entryActiveAlgorithms}
+        />
+      </div>
 
-      <SimulationConfig
-        entry={entry}
-        baseGraph={baseGraph}
-        resolvedMapId={resolvedMapId}
-        robotAlgo={robotAlgo}
-        setRobotAlgo={setRobotAlgo}
-      />
+      <div data-tutorial="history-sim-config">
+        <SimulationConfig
+          entry={entry}
+          baseGraph={baseGraph}
+          resolvedMapId={resolvedMapId}
+          robotAlgo={robotAlgo}
+          setRobotAlgo={setRobotAlgo}
+        />
+      </div>
 
-      <EventLog
-        entry={entry}
-        results={results}
-        allEvents={allEvents}
-        currentStep={currentStep}
-        maxEventStep={maxEventStep}
-        maxSteps={maxSteps}
-        highlightedNodeId={highlightedNodeId}
-        blockIcon={blockIcon}
-        clearIcon={clearIcon}
-        onEventClick={handleEventClick}
-        onSeek={onSeek}
-      />
+      <div data-tutorial="history-event-log">
+        <EventLog
+          entry={entry}
+          results={results}
+          allEvents={allEvents}
+          currentStep={currentStep}
+          maxEventStep={maxEventStep}
+          maxSteps={maxSteps}
+          highlightedNodeId={highlightedNodeId}
+          blockIcon={blockIcon}
+          clearIcon={clearIcon}
+          onEventClick={handleEventClick}
+          onSeek={onSeek}
+        />
+      </div>
     </div>
   );
 };

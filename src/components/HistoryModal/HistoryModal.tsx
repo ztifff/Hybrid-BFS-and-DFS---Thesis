@@ -5,6 +5,52 @@ import { HistoryDetailView } from './HistoryDetailView';
 import { PurgeModal } from './components/PurgeModal';
 import { ImportErrorModal } from './components/ImportErrorModal';
 import { ImportSuccessModal } from './components/ImportSuccessModal';
+import { useTutorial, TutorialOverlay, TutorialStep } from '../TutorialOverlay';
+
+const HISTORY_TUTORIAL_STEPS: TutorialStep[] = [
+  {
+    target: 'history-benchmarks',
+    title: 'Execution Benchmarks',
+    body: 'Displays the final performance metrics for each algorithm in this run, including total execution time, memory usage, and adaptability.',
+    placement: 'auto',
+  },
+  {
+    target: 'history-canvas-replay',
+    title: 'Canvas Replay',
+    body: 'Watch the entire simulation unfold again. You can scrub through the timeline at the bottom to see exact movements at any specific step.',
+    placement: 'left',
+  },
+  {
+    target: 'history-winner-card',
+    title: 'Winner Card',
+    body: 'Highlights the best performing algorithm based on a weighted score of distance, speed, and adaptability.',
+    placement: 'auto',
+  },
+  {
+    target: 'history-movements',
+    title: 'Algorithm Movements',
+    body: 'A breakdown of each algorithm\'s path length vs. total nodes visited. Helps visualize how efficient their search was.',
+    placement: 'auto',
+  },
+  {
+    target: 'history-barchart',
+    title: 'Performance Chart',
+    body: 'A visual comparison of key metrics like memory and execution time across all active algorithms.',
+    placement: 'top',
+  },
+  {
+    target: 'history-sim-config',
+    title: 'Simulation Configuration',
+    body: 'Shows the original parameters used for this run, such as the map, algorithm selection, and scenario-specific settings.',
+    placement: 'top',
+  },
+  {
+    target: 'history-event-log',
+    title: 'Event Log',
+    body: 'A timeline of all dynamic map events (like blockages or restorations) that occurred during this run, and which step they happened on.',
+    placement: 'top',
+  }
+];
 
 export const HistoryModal: React.FC<HistoryModalProps> = ({
   isOpen, onClose, history, scenario, onDeleteHistory, onImportHistory,
@@ -18,6 +64,8 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
   const [importError, setImportError]       = useState<{ expected: string; found: string } | null>(null);
   const [importSuccess, setImportSuccess]   = useState<{ count: number; scenario: string } | null>(null);
   const importInputRef = React.useRef<HTMLInputElement>(null);
+  
+  const tutorial = useTutorial('hybrid_sim_history_tutorial_v1', HISTORY_TUTORIAL_STEPS);
 
   // Reset all local state on close
   useEffect(() => {
@@ -246,12 +294,20 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
           </div>
           <div className="flex gap-2">
             {view === 'detail' && (
-              <button
-                onClick={() => setView('list')}
-                className="px-4 py-2 bg-gray-900 border border-gray-800 hover:border-gray-700 rounded-xl text-xs font-bold text-white transition-all cursor-pointer"
-              >
-                ← Return to Index
-              </button>
+              <>
+                <button
+                  onClick={() => tutorial.start()}
+                  className="px-4 py-2 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 hover:border-blue-500 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-[0_0_15px_rgba(37,99,235,0.2)]"
+                >
+                  Explain the Results
+                </button>
+                <button
+                  onClick={() => setView('list')}
+                  className="px-4 py-2 bg-gray-900 border border-gray-800 hover:border-gray-700 rounded-xl text-xs font-bold text-white transition-all cursor-pointer"
+                >
+                  ← Return to Index
+                </button>
+              </>
             )}
           </div>
         </footer>
@@ -277,6 +333,19 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
           count={importSuccess.count}
           scenario={importSuccess.scenario}
           onClose={() => setImportSuccess(null)}
+        />
+      )}
+
+      {view === 'detail' && (
+        <TutorialOverlay
+          isOpen={tutorial.isOpen}
+          stepIndex={tutorial.stepIndex}
+          scenario={scenario || 'network'}
+          steps={HISTORY_TUTORIAL_STEPS}
+          onNext={tutorial.next}
+          onPrev={tutorial.prev}
+          onClose={tutorial.close}
+          onGoTo={tutorial.goTo}
         />
       )}
     </div>

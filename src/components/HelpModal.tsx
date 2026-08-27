@@ -5,6 +5,7 @@ import { ScenarioType } from '../types';
 interface Props {
   scenario: ScenarioType;
   onClose: () => void;
+  onStartTutorial?: () => void;
 }
 
 // ── Scenario-specific content ─────────────────────────────────────────────────
@@ -95,18 +96,50 @@ const Item: React.FC<{ label: string; icon?: string; children: React.ReactNode }
 );
 
 // ── Main Component ─────────────────────────────────────────────────────────────
-export const HelpModal: React.FC<Props> = ({ scenario, onClose }) => {
+export const HelpModal: React.FC<Props> = ({ scenario, onClose, onStartTutorial }) => {
   const [tab, setTab] = useState<TabId>('metrics');
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const maps = SCENARIO_MAPS[scenario];
   const events = SCENARIO_DYNAMIC_EVENTS[scenario];
+
+  const getThemeClasses = () => {
+    switch (scenario) {
+      case 'robotics': return {
+        activeTab: 'bg-amber-600 text-white border-amber-500 shadow-[0_0_12px_rgba(217,119,6,0.4)]',
+        button: 'bg-amber-600 hover:bg-amber-500',
+        modalShadow: 'shadow-[0_0_40px_rgba(245,158,11,0.15)]',
+      };
+      case 'traffic': return {
+        activeTab: 'bg-emerald-600 text-white border-emerald-500 shadow-[0_0_12px_rgba(5,150,105,0.4)]',
+        button: 'bg-emerald-600 hover:bg-emerald-500',
+        modalShadow: 'shadow-[0_0_40px_rgba(16,185,129,0.15)]',
+      };
+      case 'evacuation': return {
+        activeTab: 'bg-red-600 text-white border-red-500 shadow-[0_0_12px_rgba(220,38,38,0.4)]',
+        button: 'bg-red-600 hover:bg-red-500',
+        modalShadow: 'shadow-[0_0_40px_rgba(239,68,68,0.15)]',
+      };
+      case 'gameai': return {
+        activeTab: 'bg-purple-600 text-white border-purple-500 shadow-[0_0_12px_rgba(147,51,234,0.4)]',
+        button: 'bg-purple-600 hover:bg-purple-500',
+        modalShadow: 'shadow-[0_0_40px_rgba(168,85,247,0.15)]',
+      };
+      case 'network':
+      default: return {
+        activeTab: 'bg-blue-600 text-white border-blue-500 shadow-[0_0_12px_rgba(37,99,235,0.4)]',
+        button: 'bg-blue-600 hover:bg-blue-500',
+        modalShadow: 'shadow-glow-blue',
+      };
+    }
+  };
+  const theme = getThemeClasses();
 
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="glass-panel rounded-2xl shadow-glow-blue w-full max-w-2xl flex flex-col max-h-[90vh] fade-in">
+      <div className={`glass-panel rounded-2xl ${theme.modalShadow} w-full max-w-2xl flex flex-col max-h-[90vh] fade-in`}>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700 shrink-0">
           <div>
@@ -127,7 +160,7 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose }) => {
               onClick={() => setTab(t.id)}
               className={`px-3 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer border flex items-center gap-1.5 ${
                 tab === t.id
-                  ? 'bg-blue-600 text-white border-blue-500 shadow-[0_0_12px_rgba(37,99,235,0.4)]'
+                  ? theme.activeTab
                   : 'text-gray-400 border-transparent hover:text-white hover:bg-gray-800'
               }`}
             >
@@ -402,14 +435,24 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose }) => {
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-gray-700 shrink-0 flex justify-between items-center">
+        <div className="px-5 py-3 border-t border-gray-700 shrink-0 flex justify-between items-center gap-3">
           <span className="text-xs text-gray-600">Click outside or press ✕ to close</span>
-          <button
-            onClick={onClose}
-            className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
-          >
-            Got it!
-          </button>
+          <div className="flex items-center gap-2">
+            {onStartTutorial && (
+              <button
+                onClick={() => { onClose(); setTimeout(onStartTutorial!, 100); }}
+                className="px-4 py-1.5 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-lg transition-all cursor-pointer shadow-[0_0_15px_rgba(34,197,94,0.4)] border border-green-500/50 hover:shadow-[0_0_20px_rgba(34,197,94,0.6)] hover:-translate-y-0.5"
+              >
+                New here?
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className={`px-4 py-1.5 text-white text-xs font-bold rounded-lg transition-colors cursor-pointer ${theme.button}`}
+            >
+              Got it!
+            </button>
+          </div>
         </div>
       </div>
       

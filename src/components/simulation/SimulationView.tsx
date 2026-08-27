@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { TutorialOverlay, useTutorial, TUTORIAL_STEPS } from '../TutorialOverlay';
 
 import { ScenarioType } from '../../types';
 import { useSimulation } from '../../hooks/useSimulation';
@@ -116,6 +117,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const [trafSrcDropdownOpen, setTrafSrcDropdownOpen] = useState(false);
   const [trafSrcSearch, setTrafSrcSearch] = useState('');
   const [trafDstSearch, setTrafDstSearch] = useState('');
+  const tutorial = useTutorial();
 
   const handleEventClick = (nodeId: string) => {
     setHighlightedNodeId(prev => prev === nodeId ? null : nodeId);
@@ -146,11 +148,48 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     return map[scenario] ?? 'bg-purple-900/40 text-purple-300 border border-purple-500/60 shadow-[0_0_10px_rgba(139,92,246,0.25)]';
   })();
 
+  // ── Auto-trigger specific tutorial steps on map change ──────────
+  useEffect(() => {
+    if (tutorial.isOpen) return;
+
+    let panelId: string | null = null;
+    if (scenario === 'robotics') panelId = 'robotics';
+    else if (scenario === 'network' && sim.mapId === 'campus') panelId = 'network_campus';
+    else if (scenario === 'gameai') panelId = 'gameai';
+
+    if (panelId) {
+      const seenRaw = localStorage.getItem('hybrid_sim_tutorial_seen_panels');
+      const seen: string[] = seenRaw ? JSON.parse(seenRaw) : [];
+      if (!seen.includes(panelId)) {
+        const stepIdx = TUTORIAL_STEPS.findIndex(s => s.target === 'tutorial-scenario-panels');
+        if (stepIdx !== -1) {
+          const t = setTimeout(() => {
+            tutorial.startAt(stepIdx);
+            seen.push(panelId!);
+            localStorage.setItem('hybrid_sim_tutorial_seen_panels', JSON.stringify(seen));
+          }, 800);
+          return () => clearTimeout(t);
+        }
+      }
+    }
+  }, [scenario, sim.mapId, tutorial.isOpen, tutorial.startAt]);
+
   const primaryBtnClass = "px-4 xl:px-6 py-1.5 xl:py-2 rounded-lg font-bold text-xs xl:text-sm transition-all duration-300 ease-out transform active:scale-[0.97] cursor-pointer disabled:opacity-30 disabled:pointer-events-none disabled:transform-none flex items-center justify-center gap-1.5 xl:gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex-1 sm:flex-none whitespace-nowrap";
 
   return (
     <>
-      {/* ── Unsaved-result navigation guard modal ─────────────────────────────── */}
+      {/* Tutorial overlay */}
+      <TutorialOverlay
+        isOpen={tutorial.isOpen}
+        stepIndex={tutorial.stepIndex}
+        scenario={scenario}
+        onNext={tutorial.next}
+        onPrev={tutorial.prev}
+        onClose={tutorial.close}
+        onGoTo={tutorial.goTo}
+      />
+
+      {/* ── Unsaved-result / in-progress action guard modal ───────────────────── */}
       {sim.pendingNavigation && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn p-4">
           <div className={`bg-gray-900 border rounded-xl p-6 max-w-sm w-full shadow-2xl scale-in ${sim.pendingNavigation.reason === 'inprogress' ? 'border-blue-500/30' : 'border-amber-500/30'}`}>
@@ -159,9 +198,11 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               {sim.pendingNavigation.reason === 'inprogress' ? 'Simulation in Progress' : 'Unsaved Results'}
             </h3>
             <p className="text-gray-300 text-sm mb-6 leading-relaxed">
-              {sim.pendingNavigation.reason === 'inprogress'
-                ? 'Simulation is currently running. Are you sure you want to stop it and reset?'
-                : 'You have an unsaved simulation result. Are you sure you want to discard it and leave?'}
+              {sim.pendingNavigation.type === 'skip'
+                ? 'Simulation is currently running. Are you sure you want to skip to the end?'
+                : sim.pendingNavigation.reason === 'inprogress'
+                  ? 'Simulation is currently running. Are you sure you want to stop it and reset?'
+                  : 'You have an unsaved simulation result. Are you sure you want to discard it and leave?'}
             </p>
             <div className="flex justify-end gap-3">
               <button
@@ -174,7 +215,11 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 onClick={sim.confirmPendingNavigation}
                 className={`px-4 py-2 text-white rounded-lg text-sm font-bold transition-colors shadow-lg ${sim.pendingNavigation.reason === 'inprogress' ? 'bg-blue-600 hover:bg-blue-500 shadow-blue-900/20' : 'bg-amber-600 hover:bg-amber-500 shadow-amber-900/20'}`}
               >
-                {sim.pendingNavigation.reason === 'inprogress' ? 'Stop & Reset' : 'Discard & Leave'}
+                {sim.pendingNavigation.type === 'skip'
+                  ? 'Skip to End'
+                  : sim.pendingNavigation.reason === 'inprogress'
+                    ? 'Stop & Reset'
+                    : 'Discard & Leave'}
               </button>
             </div>
           </div>
@@ -183,7 +228,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
       <div className="min-h-screen lg:h-screen w-full max-w-[100vw] bg-transparent text-white flex flex-col relative z-0 lg:overflow-hidden fade-in">
         {/* Help Modal */}
-        {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} scenario={scenario} />}
+        {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} scenario={scenario} onStartTutorial={tutorial.start} />}
 
         {/* Expert Mode Warning */}
         {showExpertWarning && (
@@ -225,7 +270,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               <span className="opacity-70 text-lg">←</span> <span className="hidden sm:inline tracking-wider">Back</span>
             </button>
             <div className="h-6 w-px bg-white/10 hidden sm:block mx-0.5 shrink-0"></div>
-            <div className="flex items-center gap-1.5 sm:gap-3 bg-[#0a0f1e]/80 px-2.5 sm:px-5 py-2 sm:py-2.5 rounded-xl border border-white/10 shadow-inner min-w-0">
+            <div
+              data-tutorial="tutorial-header-title"
+              className="flex items-center gap-1.5 sm:gap-3 bg-[#0a0f1e]/80 px-2.5 sm:px-5 py-2 sm:py-2.5 rounded-xl border border-white/10 shadow-inner min-w-0"
+            >
               <span className="text-xl sm:text-2xl drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] shrink-0 flex items-center justify-center" style={{ color: sc?.color }}>
                 {(() => {
                   const className = "w-6 h-6 sm:w-8 sm:h-8";
@@ -244,7 +292,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
           </div>
 
           {/* Center: Algorithm toggle pills (Wraps to new line on mobile) */}
-          <div className="flex items-center justify-center gap-2 sm:gap-3 px-2 sm:px-4 py-1.5 bg-black/40 rounded-full border border-white/5 text-[9px] sm:text-[10px] font-bold tracking-widest uppercase order-3 lg:order-none w-full lg:w-auto shrink-0 relative lg:mx-4">
+          <div
+            data-tutorial="tutorial-algo-pills"
+            className="flex items-center justify-center gap-2 sm:gap-3 px-2 sm:px-4 py-1.5 bg-black/40 rounded-full border border-white/5 text-[9px] sm:text-[10px] font-bold tracking-widest uppercase order-3 lg:order-none w-full lg:w-auto shrink-0 relative lg:mx-4"
+          >
             {sim.minAlgoWarning && (
               <div className="fixed bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap z-[9999]
                 flex items-center gap-1.5 px-4 py-2.5 rounded-lg
@@ -281,6 +332,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
           {/* Right: Actions */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0 relative z-10 ml-auto order-2 lg:order-none">
             <button
+              data-tutorial="tutorial-result-history"
               onClick={() => sim.setIsHistoryModalOpen(true)}
               className="px-2.5 sm:px-4 py-1.5 rounded-lg glass-panel text-gray-200 hover:text-white text-sm font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer hover:-translate-y-0.5 active:scale-[0.98] shadow-md hover:shadow-glow-blue hover:border-blue-500/50"
             >
@@ -302,6 +354,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               <span>Expert</span>
             </button>
             <button
+              data-tutorial="tutorial-help-btn"
               onClick={() => setIsHelpOpen(true)}
               title="Help & Guide"
               className="w-8 h-8 md:w-auto md:h-auto md:px-4 md:py-1.5 rounded-full md:rounded-lg glass-panel text-gray-200 hover:text-white text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer hover:-translate-y-0.5 active:scale-[0.98]"
@@ -333,18 +386,20 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             innerClassName="p-4 flex flex-col gap-4"
           >
             {sim.simResults && !sim.isComputing && sim.currentGraph ? (
-              <MetricsPanel
-                multiResults={sim.simResults}
-                activeSteps={sim.activeSteps}
-                scenario={scenario}
-                status={sim.status}
-                stepIndex={sim.stepIndex}
-                totalSteps={sim.totalSteps}
-                totalNodes={sim.currentGraph.nodes.length}
-                optimalPathLength={sim.bfsResult?.pathLength ?? 0}
-                activeAlgorithms={sim.activeAlgorithms}
-                mapId={sim.mapId}
-              />
+              <div data-tutorial="tutorial-metrics-panel" className="w-full shrink-0">
+                <MetricsPanel
+                  multiResults={sim.simResults}
+                  activeSteps={sim.activeSteps}
+                  scenario={scenario}
+                  status={sim.status}
+                  stepIndex={sim.stepIndex}
+                  totalSteps={sim.totalSteps}
+                  totalNodes={sim.currentGraph.nodes.length}
+                  optimalPathLength={sim.bfsResult?.pathLength ?? 0}
+                  activeAlgorithms={sim.activeAlgorithms}
+                  mapId={sim.mapId}
+                />
+              </div>
             ) : (
               <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 flex flex-col items-center justify-center py-12 text-center text-gray-400 animate-pulse">
                 <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
@@ -352,7 +407,9 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               </div>
             )}
 
-            <Legend scenario={scenario} mapId={sim.mapId} />
+            <div data-tutorial="tutorial-legend" className="w-full shrink-0">
+              <Legend scenario={scenario} mapId={sim.mapId} />
+            </div>
           </ResizableSidebar>
 
           {/* ── Main Canvas Area ──────────────────────────────────────────────── */}
@@ -405,8 +462,9 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 </div>
               )}
 
-              {scenario === 'network' && (
-                <div className="flex flex-col md:flex-row flex-wrap items-center gap-2 justify-center w-full mt-1 bg-gray-900/60 p-2 rounded-xl border border-gray-700/50">
+              <div data-tutorial="tutorial-scenario-selectors" className="w-full flex flex-col items-center gap-1.5 shrink-0 empty:hidden">
+                {scenario === 'network' && (
+                  <div className="flex flex-col md:flex-row flex-wrap items-center gap-2 justify-center w-full mt-1 bg-gray-900/60 p-2 rounded-xl border border-gray-700/50">
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Mode:</span>
                     <select
@@ -713,10 +771,15 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   </div>
                 </div>
               )}
+              </div>
             </div>
 
             {/* Canvas */}
-            <div className="rounded-2xl overflow-hidden border border-gray-700 w-full relative h-[50vh] lg:flex-1 lg:min-h-0 shadow-[0_0_48px_rgba(37,99,235,0.1)] bg-[#0a0f1e]" style={{ maxWidth: 1200 }}>
+            <div
+              data-tutorial="tutorial-canvas"
+              className="rounded-2xl overflow-hidden border border-gray-700 w-full relative h-[50vh] lg:flex-1 lg:min-h-0 shadow-[0_0_48px_rgba(37,99,235,0.1)] bg-[#0a0f1e]"
+              style={{ maxWidth: 1200 }}
+            >
               {sim.currentGraph ? (
                 <>
                   <NetworkCanvas
@@ -806,10 +869,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             </div>
 
             {/* Playback Controls */}
-            <div className="mt-2 flex flex-col items-center gap-3 w-full shrink-0">
+            <div data-tutorial="tutorial-playback-controls" className="mt-2 flex flex-col items-center gap-3 w-full shrink-0">
               <div className="flex items-center gap-2 flex-wrap justify-center w-full">
                 <button onClick={sim.handleRerollEvents} disabled={sim.status === 'running'} className={scenarioBtnClass}><span className="sm:hidden">🎲 </span>Reroll Events</button>
-                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleReset} className={scenarioBtnClass}><span className="sm:hidden">🔄 </span>Reset</button>
+                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={() => sim.requestReset(sim.handleReset, sim.status)} className={scenarioBtnClass}><span className="sm:hidden">🔄 </span>Reset</button>
                 <button disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex === 0} onClick={sim.handleStepBackward} className={scenarioBtnClass}><span className="sm:hidden">⏪ </span>Back</button>
 
                 {sim.status === 'running' ? (
@@ -825,7 +888,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 )}
 
                 <button disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex >= sim.totalSteps} onClick={sim.handleStepForward} className={scenarioBtnClass}>Fwd<span className="sm:hidden"> ⏭️</span></button>
-                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleSkipEnd} className={scenarioBtnClass}><span className="sm:hidden">⏭️ </span>Skip</button>
+                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={() => sim.requestSkip(sim.handleSkipEnd, sim.status)} className={scenarioBtnClass}><span className="sm:hidden">⏭️ </span>Skip</button>
               </div>
 
               {/* Speed Controller */}
@@ -868,7 +931,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               </div>
             )}
 
-            <div className="shrink-0">
+            <div className="shrink-0" data-tutorial="tutorial-map-events">
               <DynamicMapEvents
                 dynamicEvents={sim.simResults?.hybrid.dynamicEvents || []}
                 stepIndex={sim.stepIndex}
@@ -881,7 +944,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             </div>
 
             {scenario === 'robotics' && sim.currentGraph && (
-              <>
+              <div data-tutorial="tutorial-scenario-panels" className="flex flex-col gap-4 shrink-0 w-full">
                 <RobotAssignmentPanel
                   assignments={sim.robotAssignments}
                   setAssignments={sim.setRobotAssignments}
@@ -897,11 +960,11 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   onRobotClick={(nodeId) => setHighlightedNodeId(nodeId)}
                   mapId={sim.mapId}
                 />
-              </>
+              </div>
             )}
 
             {sim.mapId === 'campus' && scenario === 'network' && (
-              <div className="shrink-0 bg-gray-900 border border-indigo-900/50 rounded-xl p-4 flex flex-col gap-2 max-h-[40vh] overflow-y-auto">
+              <div data-tutorial="tutorial-scenario-panels" className="shrink-0 bg-gray-900 border border-indigo-900/50 rounded-xl p-4 flex flex-col gap-2 max-h-[40vh] overflow-y-auto">
                 <div className="text-[10px] uppercase tracking-[0.2em] text-indigo-400 font-bold mb-1">Campus Topology Rules</div>
                 <div className="text-xs text-gray-300 space-y-3 leading-relaxed">
                   <div>
@@ -924,7 +987,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             )}
 
             {scenario === 'gameai' && (
-              <div className="shrink-0">
+              <div data-tutorial="tutorial-scenario-panels" className="shrink-0">
                 <StrategyMapEvents
                   dynamicEvents={sim.simResults?.hybrid.dynamicEvents || []}
                   stepIndex={sim.stepIndex}
@@ -935,7 +998,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
             {/* Synthetic Size Adjuster */}
             {sim.mapId === 'synthetic' && (
-              <div className="shrink-0 glass-panel rounded-xl p-4 flex flex-col gap-2 fade-in hover:shadow-glow-blue transition-shadow duration-500">
+              <div data-tutorial="tutorial-size-adjuster" className="shrink-0 glass-panel rounded-xl p-4 flex flex-col gap-2 fade-in hover:shadow-glow-blue transition-shadow duration-500">
                 <div className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold mb-1">Dynamic Size Adjuster</div>
 
                 <div className="flex items-center justify-between gap-2">

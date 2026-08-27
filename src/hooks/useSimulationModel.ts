@@ -95,6 +95,8 @@ export type PendingNavigationReason = 'unsaved' | 'inprogress';
 
 export type PendingNavigation =
   | { type: 'back'; reason?: PendingNavigationReason }
+  | { type: 'reset'; reason: 'inprogress' }
+  | { type: 'skip'; reason: 'inprogress' }
   | { type: 'map'; mapId: string; reason?: PendingNavigationReason }
   | { type: 'gameboard'; boardId: GameAIBoard; reason?: PendingNavigationReason }
   | { type: 'sizing'; field: keyof GraphSizing; value: number; reason?: PendingNavigationReason }
@@ -382,9 +384,15 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     updateSyntheticSizing('edges', generatedEdgeCount - 1);
   }, [generatedEdgeCount, updateSyntheticSizing]);
 
+  // Shared callback ref for reset/skip confirmation dialogs
+  const pendingActionCallbackRef = useRef<(() => void) | null>(null);
+
   const confirmPendingNavigation = useCallback(() => {
     if (!pendingNavigation) return;
-    if (pendingNavigation.type === 'back') {
+    if (pendingNavigation.type === 'reset' || pendingNavigation.type === 'skip') {
+      pendingActionCallbackRef.current?.();
+      pendingActionCallbackRef.current = null;
+    } else if (pendingNavigation.type === 'back') {
       onBack?.();
     } else if (pendingNavigation.type === 'map') {
       setMapId(pendingNavigation.mapId);
@@ -403,6 +411,24 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     }
     setPendingNavigation(null);
   }, [pendingNavigation, onBack, scenario, mapId, gameBoard, stepNodesUp, stepNodesDown, stepEdgesUp, stepEdgesDown, updateSyntheticSizing]);
+
+  const requestReset = useCallback((onReset: () => void, status: string) => {
+    if (status === 'running' || status === 'paused') {
+      pendingActionCallbackRef.current = onReset;
+      setPendingNavigation({ type: 'reset', reason: 'inprogress' });
+    } else {
+      onReset();
+    }
+  }, []);
+
+  const requestSkip = useCallback((onSkip: () => void, status: string) => {
+    if (status === 'running' || status === 'paused') {
+      pendingActionCallbackRef.current = onSkip;
+      setPendingNavigation({ type: 'skip', reason: 'inprogress' });
+    } else {
+      onSkip();
+    }
+  }, []);
 
 
 
@@ -752,6 +778,8 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     requestMapChange,
     requestBoardChange,
     requestSizingChange,
+    requestReset,
+    requestSkip,
     confirmPendingNavigation,
 
     // Synthetic size stepper actions

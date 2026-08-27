@@ -108,6 +108,8 @@ export interface SimulationState {
   requestBack: (status: string, saved: boolean) => void;
   requestMapChange: (newMapId: string, status: string, saved: boolean) => void;
   requestBoardChange: (boardId: GameAIBoard, status: string, saved: boolean) => void;
+  requestReset: (onReset: () => void, status: string) => void;
+  requestSkip: (onSkip: () => void, status: string) => void;
   confirmPendingNavigation: () => void;
 
   stepNodesUp: () => void;
@@ -376,6 +378,8 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
     requestBack: model.requestBack,
     requestMapChange: model.requestMapChange,
     requestBoardChange: model.requestBoardChange,
+    requestReset: model.requestReset,
+    requestSkip: model.requestSkip,
     confirmPendingNavigation: model.confirmPendingNavigation,
     requestSizingChange: model.requestSizingChange,
     requestSizingStep: (action: 'nodesUp' | 'nodesDown' | 'edgesUp' | 'edgesDown', status: string, saved: boolean) => {
