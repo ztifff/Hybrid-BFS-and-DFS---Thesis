@@ -10,26 +10,26 @@ export type { SimulationResult };
 
 function estimateMemory(nodesExplored: number, maxFrontierSize: number, algorithm: AlgorithmType): number {
   const nodeBytes = 80;
-  
+
   // In our iterative DFS implementation, all neighbors are pushed to the stack, which 
   // artificially bloats the maxFrontierSize beyond the theoretical O(depth) bounds.
   // We scale down the DFS frontier size to better reflect its true theoretical memory advantage.
-  const adjustedFrontierSize = algorithm === 'dfs' 
-    ? Math.max(1, Math.floor(maxFrontierSize * 0.2)) 
+  const adjustedFrontierSize = algorithm === 'dfs'
+    ? Math.max(1, Math.floor(maxFrontierSize * 0.2))
     : maxFrontierSize;
 
   const visitedMemory = nodesExplored * nodeBytes;
-  
+
   // In theoretical computer science, BFS's massive memory footprint is driven by its 
   // exponentially growing frontier queue. Since our simulation graphs are relatively small,
   // we heavily weight the frontier memory to correctly simulate this theoretical limit and 
   // demonstrate the memory-saving advantage of Hybrid (which restricts frontier growth).
-  const frontierWeight = algorithm === 'bfs' ? 4 : 1.5; 
+  const frontierWeight = algorithm === 'bfs' ? 4 : 1.5;
   const frontierMemory = adjustedFrontierSize * nodeBytes * frontierWeight;
-  
+
   // Hybrid uses slightly more memory for logic state overhead, but saves massively on the frontier.
   const multiplier = algorithm === 'hybrid' ? 1.1 : 1.0;
-  
+
   return ((visitedMemory + frontierMemory) * multiplier) / 1024;
 }
 
@@ -178,7 +178,7 @@ function generateDynamicEvents(
       stepIndex = Math.floor(rng() * 15) + 1;
     }
 
-    const hazardDuration = 5 + Math.floor(rng() * 6); // 5 to 10 steps
+    const hazardDuration = 10 + Math.floor(rng() * 21); // 10 to 30 steps
     let reopenStep = stepIndex + hazardDuration;
 
     const isAoE = isMassive && rng() > 0.55;
