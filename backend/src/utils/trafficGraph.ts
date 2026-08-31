@@ -27,7 +27,13 @@ export function buildTrafficGraph(
     const registry: Record<string, any> = {
       'cabuyao': cabuyaoTrafficGraph
     };
-    return (registry[mapId || 'cabuyao'] || cabuyaoTrafficGraph) as ScenarioGraph;
+    const baseGraph = registry[mapId || 'cabuyao'] || cabuyaoTrafficGraph;
+    return {
+      ...baseGraph,
+      nodes: baseGraph.nodes.map((n: any) => ({ ...n })),
+      destinationIds: [...baseGraph.destinationIds],
+      sourceIds: baseGraph.sourceIds ? [...baseGraph.sourceIds] : undefined
+    } as ScenarioGraph;
   }
 
   let currentSeed = seed;

@@ -84,7 +84,7 @@ export const MetricsPanel: React.FC<Props> = ({
     const NODE_BYTES = 128;
     const multiplier = algoId === 'dfs' ? 1.0 : 1.5;
     const liveExplored = stepData?.explored.length ?? 0;
-    const liveFrontier = stepData?.frontier.length ?? 0;
+    const liveFrontier = stepData?.frontierLength ?? stepData?.frontier.length ?? 0;
     const liveMemoryKB = ((liveExplored + liveFrontier) * NODE_BYTES * multiplier) / 1024;
 
     const displayMemory = isStart

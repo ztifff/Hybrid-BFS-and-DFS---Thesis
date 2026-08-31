@@ -32,7 +32,7 @@ export const ExpertModePanel: React.FC<ExpertModePanelProps> = ({ activeSteps, a
               <div><span className="text-gray-500">Evaluating:</span> <span className="text-white bg-gray-800 px-1 py-0.5 rounded">{activeSteps.bfs.current || 'null'}</span></div>
               
               <div className="flex flex-col gap-0.5">
-                <span className="text-gray-500">Queue (Frontier) [{activeSteps.bfs.frontier.length}]:</span>
+                <span className="text-gray-500">Queue (Frontier) [{activeSteps.bfs.frontierLength ?? activeSteps.bfs.frontier.length}]:</span>
                 <span className="text-cyan-400 font-mono text-[10px] break-all">
                   {activeSteps.bfs.frontier.length > 0 
                     ? `[${activeSteps.bfs.frontier.slice(0, 5).join(', ')}${activeSteps.bfs.frontier.length > 5 ? ', ...' : ''}]` 
@@ -60,7 +60,7 @@ export const ExpertModePanel: React.FC<ExpertModePanelProps> = ({ activeSteps, a
               <div><span className="text-gray-500">Evaluating:</span> <span className="text-white bg-gray-800 px-1 py-0.5 rounded">{activeSteps.dfs.current || 'null'}</span></div>
               
               <div className="flex flex-col gap-0.5">
-                <span className="text-gray-500">Stack (Frontier) [{activeSteps.dfs.frontier.length}]:</span>
+                <span className="text-gray-500">Stack (Frontier) [{activeSteps.dfs.frontierLength ?? activeSteps.dfs.frontier.length}]:</span>
                 <span className="text-cyan-400 font-mono text-[10px] break-all">
                   {activeSteps.dfs.frontier.length > 0 
                     ? `[${activeSteps.dfs.frontier.slice(-5).reverse().join(', ')}${activeSteps.dfs.frontier.length > 5 ? ', ...' : ''}]` 
@@ -88,7 +88,7 @@ export const ExpertModePanel: React.FC<ExpertModePanelProps> = ({ activeSteps, a
               <div><span className="text-gray-500">Evaluating:</span> <span className="text-white bg-gray-800 px-1 py-0.5 rounded">{activeSteps.hybrid.current || 'null'}</span></div>
               
               <div className="flex flex-col gap-0.5">
-                <span className="text-gray-500">Smart Queue [{activeSteps.hybrid.frontier.length}]:</span>
+                <span className="text-gray-500">Smart Queue [{activeSteps.hybrid.frontierLength ?? activeSteps.hybrid.frontier.length}]:</span>
                 <span className="text-cyan-400 font-mono text-[10px] break-all">
                   {activeSteps.hybrid.frontier.length > 0 
                     ? `[${activeSteps.hybrid.frontier.slice(0, 5).join(', ')}${activeSteps.hybrid.frontier.length > 5 ? ', ...' : ''}]` 

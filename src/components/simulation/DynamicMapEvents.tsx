@@ -85,8 +85,9 @@ export const DynamicMapEvents: React.FC<Props> = ({ dynamicEvents, stepIndex, si
     return visibleEvents.map((event) => {
       const affectedAlgorithms: string[] = [];
 
-      // Only cross-examine algorithm reroutes for blocking events
-      if (event.blocked && simResults) {
+      // Only cross-examine algorithm reroutes for blocking events in the Network scenario
+      // (This avoids an expensive O(N^2) array lookup freeze on massive maps like Cabuyao)
+      if (scenario === 'network' && event.blocked && simResults) {
         (['bfs', 'dfs', 'hybrid'] as const).forEach((algorithm) => {
           if ((!activeAlgorithms || activeAlgorithms[algorithm]) && didAlgorithmReroute(algorithm, event, simResults)) {
             affectedAlgorithms.push(ALGORITHM_LABELS[algorithm]);

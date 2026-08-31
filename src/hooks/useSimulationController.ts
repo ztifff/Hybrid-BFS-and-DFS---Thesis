@@ -27,16 +27,29 @@ export function useSimulationController(model: {
   const activeSteps = useMemo(() => {
     if (isComputing || !simResults) return { bfs: null, dfs: null, hybrid: null };
 
-    const bfsTotal = simResults.bfs.steps.length;
-    const dfsTotal = simResults.dfs.steps.length;
-    const hybridTotal = simResults.hybrid.steps.length;
-
-    const step = Math.max(0, stepIndex - 1);
+    const buildActiveStep = (algo: 'bfs' | 'dfs' | 'hybrid') => {
+      const steps = simResults[algo].steps;
+      if (!steps || steps.length === 0) return null;
+      
+      const targetStepIndex = Math.min(Math.max(0, stepIndex - 1), steps.length - 1);
+      const targetStep = steps[targetStepIndex];
+      
+      const aggregatedExplored: string[] = [];
+      for (let i = 0; i <= targetStepIndex; i++) {
+        if (steps[i].explored) {
+          for (const id of steps[i].explored) {
+            aggregatedExplored.push(id);
+          }
+        }
+      }
+      
+      return { ...targetStep, explored: aggregatedExplored };
+    };
 
     return {
-      bfs: simResults.bfs.steps[Math.min(step, Math.max(bfsTotal - 1, 0))] ?? null,
-      dfs: simResults.dfs.steps[Math.min(step, Math.max(dfsTotal - 1, 0))] ?? null,
-      hybrid: simResults.hybrid.steps[Math.min(step, Math.max(hybridTotal - 1, 0))] ?? null,
+      bfs: buildActiveStep('bfs'),
+      dfs: buildActiveStep('dfs'),
+      hybrid: buildActiveStep('hybrid'),
     };
   }, [isComputing, simResults, stepIndex]);
 

@@ -107,6 +107,7 @@ export interface AlgorithmStep {
   stepIndex: number;        // (for dynamic event synchronization)
   explored: string[];
   frontier: string[];
+  frontierLength?: number;
   path: string[];
   current: string | null;
   done: boolean;

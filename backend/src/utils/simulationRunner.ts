@@ -510,8 +510,39 @@ export async function runSimulation(
     hasMore = (numericOffset + numericLimit) < totalStepsLength;
   }
 
+  const compressedSteps = finalSteps.map(s => ({ ...s }));
+  if (compressedSteps.length > 0) {
+    const previousExploredSet = new Set<string>();
+    compressedSteps[0].explored.forEach(id => previousExploredSet.add(id));
+    
+    for (let i = 1; i < compressedSteps.length; i++) {
+      const currentExplored = compressedSteps[i].explored;
+      const deltaExplored: string[] = [];
+      
+      for (const id of currentExplored) {
+        if (!previousExploredSet.has(id)) {
+          deltaExplored.push(id);
+          previousExploredSet.add(id);
+        }
+      }
+      compressedSteps[i].explored = deltaExplored;
+      
+      const step = compressedSteps[i];
+      step.frontierLength = step.frontier.length;
+      if (step.frontier.length > 20) {
+        step.frontier = [...step.frontier.slice(0, 10), ...step.frontier.slice(-10)];
+      }
+    }
+    
+    // Ensure step 0 also has frontier truncated
+    compressedSteps[0].frontierLength = compressedSteps[0].frontier.length;
+    if (compressedSteps[0].frontier.length > 20) {
+      compressedSteps[0].frontier = [...compressedSteps[0].frontier.slice(0, 10), ...compressedSteps[0].frontier.slice(-10)];
+    }
+  }
+
   return {
-    steps: finalSteps,
+    steps: compressedSteps,
     metrics,
     dynamicEvents,
     graph: offset === 0 ? graph : { nodes: [], edges: [], sourceId: '', destinationIds: [] } as any,
