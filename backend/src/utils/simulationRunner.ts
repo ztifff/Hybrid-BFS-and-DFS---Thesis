@@ -178,7 +178,7 @@ function generateDynamicEvents(
       stepIndex = Math.floor(rng() * 15) + 1;
     }
 
-    const hazardDuration = 20 + Math.floor(rng() * 31); // 10 to 30 steps
+    const hazardDuration = 20 + Math.floor(rng() * 21); // 20 to 40 steps
     let reopenStep = stepIndex + hazardDuration;
 
     const isAoE = isMassive && rng() > 0.55;
@@ -232,7 +232,7 @@ function generateDynamicEvents(
     // Create a continuous shifting chain until the end of the simulation
     let shiftStep = reopenStep;
     while (shiftStep < totalSteps) {
-      const nextDuration = 5 + Math.floor(rng() * 6);
+      const nextDuration = 20 + Math.floor(rng() * 21);
       const oppCandidates = candidates.filter(c => !usedNodes.has(c) && !protectedNodes.has(c));
 
       if (oppCandidates.length > 0) {
