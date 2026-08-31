@@ -20,3 +20,13 @@ Thumbs.db
 
 # anova data
 anova/
+
+# backend (separate git repo)
+backend/
+
+# playwright test output
+playwright-report/
+test-results/
+
+# tests folder
+tests/
