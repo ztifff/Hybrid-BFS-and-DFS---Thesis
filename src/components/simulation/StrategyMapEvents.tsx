@@ -53,6 +53,13 @@ function getAlgorithmStrategy(
   // Helper: does a step have a node (or edge) on its path?
   const nodeOnPath = (step: AlgorithmStep | undefined, nodeId: string): boolean => {
     if (!step) return false;
+
+    // For Game AI, pathfinders only care about head-on collisions at the active search head (current).
+    // Blocks on previously visited nodes or distant frontiers are ignored.
+    if (event.label.includes('Opponent')) {
+      return step.current === nodeId;
+    }
+
     if (step.path.includes(nodeId) || step.current === nodeId || step.frontier.includes(nodeId)) return true;
     // edge id support (e.g. "a1-a2")
     const parts = nodeId.split(/[-_]/);
@@ -94,7 +101,28 @@ function getAlgorithmStrategy(
     return { action: 'Path Re-evaluated', detail: 'Detected restored node and updated traversal frontier', severity: 'reroute' };
   }
 
-  // Blocking event
+  // 1. Explicit Reaction Detection (Ultimate source of truth)
+  // If the algorithm explicitly logged a reaction to this specific node in its phaseLabel, trust it!
+  const explicitlyReacted = atEvent?.phaseLabel?.includes(`[${event.nodeId}]`);
+
+  if (explicitlyReacted) {
+    if (atEvent.phaseLabel?.includes('Severed')) {
+      return {
+        action: 'Path Blocked',
+        detail: 'Active path collided with opponent; backtracking initiated',
+        severity: 'blocked',
+      };
+    }
+    if (atEvent.phaseLabel?.includes('Obstacle') || atEvent.phaseLabel?.includes('Wait')) {
+      return {
+        action: 'Rerouted',
+        detail: 'Opponent detected in frontier; finding alternate path',
+        severity: 'reroute',
+      };
+    }
+  }
+
+  // 2. Fallback logic for general path evaluation
   if (!wasOnPath && !isOnPath) {
     return { action: 'Unaffected', detail: 'Blocked node was not part of active path or frontier', severity: 'unaffected' };
   }

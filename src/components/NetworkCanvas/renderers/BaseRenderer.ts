@@ -113,9 +113,18 @@ export abstract class BaseRenderer {
       const cfg = EDGE_CONFIG[edge.type] ?? EDGE_CONFIG.path;
       const baseWidth = isDatacenter ? 0.25 : (isMassive ? 0.3 : cfg.width);
 
+      const isBlocked = options.activeBlocked.has(edge.from) || options.activeBlocked.has(edge.to);
+
       this.drawPath(ctx, edge, x1, y1, x2, y2, options.scale);
-      ctx.strokeStyle = expAny ? this.getRgba('#64748b', 0.4) : this.getRgba(cfg.color, baseOpacity);
-      ctx.lineWidth = baseWidth;
+      
+      if (isBlocked) {
+        ctx.strokeStyle = this.getRgba('#ef4444', Math.max(baseOpacity * 2, 0.6));
+        ctx.lineWidth = baseWidth * 2.5;
+      } else {
+        ctx.strokeStyle = expAny ? this.getRgba('#64748b', 0.4) : this.getRgba(cfg.color, baseOpacity);
+        ctx.lineWidth = baseWidth;
+      }
+      
       ctx.setLineDash(cfg.dash.length > 0 ? cfg.dash : []);
       ctx.stroke();
     });
