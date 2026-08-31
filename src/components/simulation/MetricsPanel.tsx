@@ -2,7 +2,6 @@ import React from 'react';
 import { AlgorithmType, ScenarioType, SimulationResult, AlgorithmStep } from '../../types';
 import { getScenario, ALGORITHMS } from '../../config/scenarios';
 import { getAdaptabilityScore, getPathOptimality, getCompletionRate, getMemoryInMB } from '../../utils/metricsHelpers';
-import { Network, Bot, Car, Flame, Gamepad2 } from '../icons';
 
 interface Props {
   multiResults: { bfs: SimulationResult, dfs: SimulationResult, hybrid: SimulationResult } | null;
