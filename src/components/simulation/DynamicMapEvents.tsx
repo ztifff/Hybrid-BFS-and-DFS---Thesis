@@ -31,25 +31,25 @@ function didAlgorithmReroute(
 
   const wasOnPath = (step?: AlgorithmStep) => {
     if (!step) return false;
-    
+
     if (
-      step.path.includes(event.nodeId) || 
+      step.path.includes(event.nodeId) ||
       step.current === event.nodeId ||
       step.explored.includes(event.nodeId) ||
       step.frontier.includes(event.nodeId)
     ) return true;
-    
+
     const parts = event.nodeId.split(/[-_]/);
     if (parts.length === 2) {
       const [u, v] = parts;
       for (let i = 0; i < step.path.length - 1; i++) {
-        if ((step.path[i] === u && step.path[i+1] === v) || 
-            (step.path[i] === v && step.path[i+1] === u)) {
+        if ((step.path[i] === u && step.path[i + 1] === v) ||
+          (step.path[i] === v && step.path[i + 1] === u)) {
           return true;
         }
       }
     }
-    
+
     return false;
   };
 
@@ -63,18 +63,18 @@ function didAlgorithmReroute(
 export const DynamicMapEvents: React.FC<Props> = ({ dynamicEvents, stepIndex, simResults, scenario, onEventClick, highlightedNodeId, mapId, activeAlgorithms }) => {
   // Scenario-specific icons that match what's shown on the canvas
   const BLOCK_ICON: Record<string, string> = {
-    traffic:    '🚫', // 🚫 Road Closure
+    traffic: '🚫', // 🚫 Road Closure
     evacuation: '⛔', // ⛔ 
-    robotics:   '🚧', // 🚧 Blocked Aisle
-    network:    '💥', // 💥 Failed Component
-    gameai:     mapId === 'dama' ? '🔻' : '🔴', // 🔻 Dama / 🔴 Checkers
+    robotics: '🚧', // 🚧 Blocked Aisle
+    network: '💥', // 💥 Failed Component
+    gameai: mapId === 'dama' ? '🔻' : '🔴', // 🔻 Dama / 🔴 Checkers
   };
   const CLEAR_ICON: Record<string, string> = {
-    traffic:    '✅', // ✅ Reopened
+    traffic: '✅', // ✅ Reopened
     evacuation: '🟢', // 🟢 Extinguished
-    robotics:   '✅', // ✅ Cleared
-    network:    '⚡', // ⚡ Restored
-    gameai:     '✅', // ✅ Retreats
+    robotics: '✅', // ✅ Cleared
+    network: '⚡', // ⚡ Restored
+    gameai: '✅', // ✅ Retreats
   };
   const blockIcon = BLOCK_ICON[scenario ?? ''] ?? '⛔';
   const clearIcon = CLEAR_ICON[scenario ?? ''] ?? '✅';
@@ -122,13 +122,12 @@ export const DynamicMapEvents: React.FC<Props> = ({ dynamicEvents, stepIndex, si
                 key={`${event.stepIndex}-${index}`}
                 onClick={() => onEventClick?.(event.nodeId)}
                 title="Click to locate on map"
-                className={`text-[11px] p-2 rounded border transition-all flex flex-col gap-1 cursor-pointer select-none ${
-                  isHighlighted
-                    ? 'border-yellow-400 bg-yellow-900/30 shadow-[0_0_8px_rgba(234,179,8,0.4)] scale-[1.01]'
-                    : event.blocked
-                      ? 'border-orange-500/50 bg-orange-900/20 text-orange-300 hover:border-orange-400 hover:bg-orange-900/30'
-                      : 'border-green-500/50 bg-green-900/20 text-green-300 hover:border-green-400 hover:bg-green-900/30'
-                }`}
+                className={`text-[11px] p-2 rounded border transition-all flex flex-col gap-1 cursor-pointer select-none ${isHighlighted
+                  ? 'border-yellow-400 bg-yellow-900/30 shadow-[0_0_8px_rgba(234,179,8,0.4)] scale-[1.01]'
+                  : event.blocked
+                    ? 'border-orange-500/50 bg-orange-900/20 text-orange-300 hover:border-orange-400 hover:bg-orange-900/30'
+                    : 'border-green-500/50 bg-green-900/20 text-green-300 hover:border-green-400 hover:bg-green-900/30'
+                  }`}
               >
                 <div className="flex items-start gap-1">
                   <span className="font-mono opacity-60 shrink-0">[{event.stepIndex}]</span>
@@ -140,8 +139,8 @@ export const DynamicMapEvents: React.FC<Props> = ({ dynamicEvents, stepIndex, si
                   <div className="mt-1 pl-5 flex flex-wrap items-center gap-1.5 text-[10px]">
                     <span className="text-red-400 font-semibold">Path Severed:</span>
                     {event.affectedAlgorithms.map((algo) => (
-                      <span 
-                        key={algo} 
+                      <span
+                        key={algo}
                         className="px-1.5 py-0.5 rounded border border-red-500/30 bg-red-950/40 text-red-300 font-mono font-bold"
                       >
                         {algo}

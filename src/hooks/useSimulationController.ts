@@ -30,10 +30,10 @@ export function useSimulationController(model: {
     const buildActiveStep = (algo: 'bfs' | 'dfs' | 'hybrid') => {
       const steps = simResults[algo].steps;
       if (!steps || steps.length === 0) return null;
-      
+
       const targetStepIndex = Math.min(Math.max(0, stepIndex - 1), steps.length - 1);
       const targetStep = steps[targetStepIndex];
-      
+
       const aggregatedExplored: string[] = [];
       for (let i = 0; i <= targetStepIndex; i++) {
         if (steps[i].explored) {
@@ -42,7 +42,7 @@ export function useSimulationController(model: {
           }
         }
       }
-      
+
       return { ...targetStep, explored: aggregatedExplored };
     };
 
@@ -102,7 +102,7 @@ export function useSimulationController(model: {
       stopAnimation();
       setStatus('done');
     }
-    
+
     // Clear the 'done' state if the max timeline expanded past our playhead and we didn't auto-forward
     if (status === 'done' && stepIndex < totalSteps && !(stepIndex === prevTotalSteps && totalSteps > prevTotalSteps)) {
       setStatus('paused');
@@ -205,7 +205,7 @@ export function useSimulationController(model: {
     playbackSpeed,
     handleSpeedChange,
     openSaveModal,
-    
+
     isHistoryModalOpen, setIsHistoryModalOpen,
     isSaveModalOpen, setIsSaveModalOpen,
     saveNameInput, setSaveNameInput,
