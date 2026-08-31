@@ -30,3 +30,12 @@ test-results/
 
 # tests folder
 tests/
+
+# playwright config
+playwright.config.ts
+
+# stats script
+run_stats.cjs
+
+# statistical analysis folder
+statistical_analysis/
