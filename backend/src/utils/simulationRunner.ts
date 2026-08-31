@@ -178,7 +178,7 @@ function generateDynamicEvents(
       stepIndex = Math.floor(rng() * 15) + 1;
     }
 
-    const hazardDuration = 10 + Math.floor(rng() * 21); // 10 to 30 steps
+    const hazardDuration = 20 + Math.floor(rng() * 31); // 10 to 30 steps
     let reopenStep = stepIndex + hazardDuration;
 
     const isAoE = isMassive && rng() > 0.55;
