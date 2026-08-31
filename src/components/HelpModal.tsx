@@ -85,9 +85,8 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
   </div>
 );
 
-const Item: React.FC<{ label: string; icon?: string; children: React.ReactNode }> = ({ label, icon, children }) => (
+const Item: React.FC<{ label: string; icon?: string; children: React.ReactNode }> = ({ label, children }) => (
   <div className="flex gap-3 text-sm">
-    {icon && <span className="text-lg shrink-0 mt-0.5 sm:hidden">{icon}</span>}
     <div>
       <span className="font-semibold text-white">{label}: </span>
       <span className="text-gray-300">{children}</span>
@@ -164,7 +163,7 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose, onStartTutorial 
                   : 'text-gray-400 border-transparent hover:text-white hover:bg-gray-800'
               }`}
             >
-              <span className="sm:hidden">{t.icon}</span> <span>{t.label}</span>
+              <span>{t.label}</span>
             </button>
           ))}
         </div>

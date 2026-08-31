@@ -438,7 +438,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
                         }`}
                     >
-                      <span className="sm:hidden">{icon}</span>{label}
+                      {label}
                     </button>
                   ))}
                 </div>
@@ -456,7 +456,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
                         }`}
                     >
-                      <span className="sm:hidden">{mapDef.icon}</span>{mapDef.label}
+                      {mapDef.label}
                     </button>
                   ))}
                 </div>
@@ -846,7 +846,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                               : 'bg-gray-900 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200'
                               }`}
                           >
-                            <span className="text-[14px] sm:hidden">📟</span>
+
                             {n.label ? n.label.split('\n')[0] : n.id} Terminal
                           </button>
                         ))}
@@ -871,24 +871,24 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             {/* Playback Controls */}
             <div data-tutorial="tutorial-playback-controls" className="mt-2 flex flex-col items-center gap-3 w-full shrink-0">
               <div className="flex items-center gap-2 flex-wrap justify-center w-full">
-                <button onClick={sim.handleRerollEvents} disabled={sim.status === 'running'} className={scenarioBtnClass}><span className="sm:hidden">🎲 </span>Reroll Events</button>
-                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={() => sim.requestReset(sim.handleReset, sim.status)} className={scenarioBtnClass}><span className="sm:hidden">🔄 </span>Reset</button>
-                <button disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex === 0} onClick={sim.handleStepBackward} className={scenarioBtnClass}><span className="sm:hidden">⏪ </span>Back</button>
+                <button onClick={sim.handleRerollEvents} disabled={sim.status === 'running'} className={scenarioBtnClass}>Reroll Events</button>
+                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={() => sim.requestReset(sim.handleReset, sim.status)} className={scenarioBtnClass}>Reset</button>
+                <button disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex === 0} onClick={sim.handleStepBackward} className={scenarioBtnClass}>Back</button>
 
                 {sim.status === 'running' ? (
-                  <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handlePause} className={`${primaryBtnClass} hover:bg-red-500 bg-red-600 text-white shadow-red-900/40`}><span className="sm:hidden">⏸️ </span>Pause</button>
+                  <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handlePause} className={`${primaryBtnClass} hover:bg-red-500 bg-red-600 text-white shadow-red-900/40`}>Pause</button>
                 ) : sim.status === 'paused' ? (
-                  <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleResume} className={`${primaryBtnClass} hover:bg-green-500 bg-green-600 text-white shadow-green-900/40`}><span className="sm:hidden">▶️ </span>Resume</button>
+                  <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleResume} className={`${primaryBtnClass} hover:bg-green-500 bg-green-600 text-white shadow-green-900/40`}>Resume</button>
                 ) : sim.status === 'done' ? (
-                  <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleRun} className={`${primaryBtnClass} hover:bg-blue-500 bg-blue-600 text-white shadow-blue-900/40`}><span className="sm:hidden">🔄 </span>Replay</button>
+                  <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleRun} className={`${primaryBtnClass} hover:bg-blue-500 bg-blue-600 text-white shadow-blue-900/40`}>Replay</button>
                 ) : (
                   <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleRun} className={`${primaryBtnClass} w-full sm:w-auto hover:bg-green-500 bg-green-600 text-white shadow-green-900/40`}>
-                    {sim.isComputing ? 'Computing...' : <><span className="sm:hidden">▶️ </span>Run Simulations</>}
+                    {sim.isComputing ? 'Computing...' : 'Run Simulations'}
                   </button>
                 )}
 
-                <button disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex >= sim.totalSteps} onClick={sim.handleStepForward} className={scenarioBtnClass}>Fwd<span className="sm:hidden"> ⏭️</span></button>
-                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={() => sim.requestSkip(sim.handleSkipEnd, sim.status)} className={scenarioBtnClass}><span className="sm:hidden">⏭️ </span>Skip</button>
+                <button disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex >= sim.totalSteps} onClick={sim.handleStepForward} className={scenarioBtnClass}>Fwd</button>
+                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={() => sim.requestSkip(sim.handleSkipEnd, sim.status)} className={scenarioBtnClass}>Skip</button>
               </div>
 
               {/* Speed Controller */}

@@ -150,19 +150,7 @@ export const MetricsPanel: React.FC<Props> = ({
     <div className="glass-panel rounded-xl p-4 space-y-4 fade-in hover:shadow-glow-blue transition-shadow duration-500">
       <div className="flex items-center justify-between border-b border-gray-700/50 pb-2 mb-2">
         <span className="text-xs font-bold uppercase tracking-widest drop-shadow-md flex items-center gap-1.5" style={{ color: sc.color }}>
-          <span className="sm:hidden">
-            {(() => {
-              const className = "w-4 h-4";
-              switch (scenario) {
-                case 'network': return <Network className={className} />;
-                case 'robotics': return <Bot className={className} />;
-                case 'traffic': return <Car className={className} />;
-                case 'evacuation': return <Flame className={className} />;
-                case 'gameai': return <Gamepad2 className={className} />;
-                default: return <Network className={className} />;
-              }
-            })()}
-          </span> {sc.name}
+          {sc.name}
         </span>
         <span className="text-xs text-gray-400 font-mono">Step {stepIndex} / {totalSteps}</span>
       </div>
@@ -182,12 +170,12 @@ export const MetricsPanel: React.FC<Props> = ({
       {status === 'done' && multiResults && (
         multiResults.hybrid.metrics.failureReason ? (
           <div className="text-center text-xs text-red-400 bg-red-900/20 border border-red-500/30 p-2 rounded-lg shadow-glow-red leading-snug">
-            <div className="font-bold mb-1 uppercase tracking-wider text-[10px]"><span className="sm:hidden">❌ </span>Target Unreachable</div>
+            <div className="font-bold mb-1 uppercase tracking-wider text-[10px]">Target Unreachable</div>
             <div>{multiResults.hybrid.metrics.failureReason}</div>
           </div>
         ) : (
           <div className="text-center text-xs text-green-400 bg-green-900/20 border border-green-500/30 p-2 rounded-lg shadow-glow-green">
-            <span className="sm:hidden">✅ </span>Simulation Complete
+            Simulation Complete
           </div>
         )
       )}

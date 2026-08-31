@@ -15,7 +15,7 @@ export const HistoryListView: React.FC<Props> = ({
   if (filteredHistory.length === 0) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-center p-8">
-        <span className="text-4xl mb-2">📁</span>
+        <svg className="w-10 h-10 mb-2 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" /></svg>
         <h4 className="text-gray-300 font-bold text-sm">No History Indexes Logged</h4>
         <p className="text-gray-500 text-xs mt-1 max-w-xs">
           Run algorithmic simulation cycles from your network control matrix dashboard to save benchmark logs here.
@@ -79,7 +79,7 @@ export const HistoryListView: React.FC<Props> = ({
                 className="text-gray-500 hover:text-red-400 opacity-60 group-hover:opacity-100 p-1 text-xs rounded transition-all"
                 title="Delete this record"
               >
-                🗑️
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
               </button>
             </div>
           </div>

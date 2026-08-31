@@ -68,7 +68,7 @@ export const PerformanceBarChart: React.FC<Props> = ({ bfs, dfs, hyb, entryActiv
     <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4">
       <div className="px-4 py-3 border-b border-gray-800 bg-gray-900/40">
         <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
-          <span className="sm:hidden">📊 </span>Performance Breakdown — Visual Comparison
+          Performance Breakdown — Visual Comparison
         </h3>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">

@@ -26,7 +26,7 @@ export const AlgorithmMovements: React.FC<Props> = ({
   return (
     <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4">
       <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 pb-2 border-b border-gray-800">
-        <span className="sm:hidden">🧭 </span>How Each Algorithm Moves Node-to-Node
+        How Each Algorithm Moves Node-to-Node
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {algos.filter(a => entryActiveAlgorithms[a.key]).map(({ key, label, result }) => {
@@ -42,11 +42,10 @@ export const AlgorithmMovements: React.FC<Props> = ({
             >
               {isWinner && (
                 <span className="absolute top-2 right-2 text-[9px] font-bold text-yellow-400 bg-yellow-950/60 border border-yellow-700/40 px-1.5 py-0.5 rounded">
-                  BEST ★
+                  BEST
                 </span>
               )}
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-lg sm:hidden">{profile.icon}</span>
                 <span className="text-xs font-bold" style={{ color }}>{label}</span>
                 {result && !result.success && (
                   <span className="text-[9px] text-red-400 border border-red-800/40 px-1 rounded ml-auto">FAILED</span>

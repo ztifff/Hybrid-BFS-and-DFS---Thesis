@@ -11,7 +11,7 @@ export const ImportErrorModal: React.FC<Props> = ({ expected, found, onClose }) 
     <div className="bg-[#0d1117] border border-red-500/40 rounded-2xl w-full max-w-md shadow-2xl shadow-red-900/30 overflow-hidden scale-in">
       <div className="bg-gradient-to-r from-red-900/80 via-rose-800/60 to-red-900/80 px-6 py-4 border-b border-red-500/30 flex items-center gap-3">
         <div className="w-10 h-10 rounded-full bg-red-500/20 border border-red-500/50 flex items-center justify-center text-xl shrink-0">
-          🚫
+          <svg className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
         </div>
         <div>
           <h3 className="text-red-300 font-bold text-base tracking-wide">Invalid Scenario Results</h3>
@@ -42,7 +42,7 @@ export const ImportErrorModal: React.FC<Props> = ({ expected, found, onClose }) 
         </div>
 
         <p className="text-gray-500 text-xs leading-relaxed">
-          💡 To import these results, navigate to the{' '}
+          To import these results, navigate to the{' '}
           <strong className="text-gray-400">{found.charAt(0).toUpperCase() + found.slice(1)}</strong> scenario
           and try importing there.
         </p>

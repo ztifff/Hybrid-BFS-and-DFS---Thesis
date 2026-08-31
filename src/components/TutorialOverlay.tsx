@@ -73,7 +73,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   {
     target: 'tutorial-result-history',
     title: 'Result History',
-    body: 'Saves and lists all your previous simulation runs. You can view past metrics, compare performance, and replay animations of previous runs.',
+    body: 'Saves and lists all your previous simulation runs. You can view past metrics, compare performance, and view dynamic events of previous runs.',
     placement: 'bottom',
   },
   {
@@ -85,7 +85,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   {
     target: 'tutorial-playback-controls',
     title: 'Playback Controls',
-    body: 'Run, Pause, Resume, step forward/back, Reset, or Skip to end. Reroll Events generates a new hazard schedule without rerunning the algorithms.',
+    body: 'Run, Pause, Resume, step forward/back, Reset, or Skip to end. Reroll Events generates a new dynamic hazard without rerunning the algorithms.',
     placement: 'top',
   },
   {
@@ -191,9 +191,22 @@ function computeTooltipStyle(
   placement: TutorialStep['placement'],
   tooltipRef: React.RefObject<HTMLDivElement | null>,
 ): React.CSSProperties {
-  if (!rect) return { top: '50%', left: '50%', transform: 'translate(-50%,-50%)' };
   const vw = window.innerWidth;
   const vh = window.innerHeight;
+
+  // ── On mobile, always center at the bottom ───────────────────────────────
+  if (vw < 640) {
+    const mw = Math.min(vw - 24, 400);
+    return {
+      bottom: 80,
+      left: (vw - mw) / 2,
+      width: mw,
+      top: 'auto',
+    };
+  }
+
+  // ── Desktop: smart anchor placement ──────────────────────────────────────
+  if (!rect) return { top: '50%', left: '50%', transform: 'translate(-50%,-50%)' };
   const tw = Math.min(tooltipRef.current?.offsetWidth ?? 300, vw - 32);
   const th = tooltipRef.current?.offsetHeight ?? 180;
   const spaceBelow = vh - (rect.top + rect.height + PAD);
@@ -202,8 +215,8 @@ function computeTooltipStyle(
   let resolved = placement === 'auto'
     ? (spaceBelow >= th + 20 ? 'bottom'
       : spaceAbove >= th + 20 ? 'top'
-      : spaceRight >= tw + 20 ? 'right'
-      : 'left')
+        : spaceRight >= tw + 20 ? 'right'
+          : 'left')
     : placement ?? 'bottom';
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
@@ -227,6 +240,7 @@ function computeTooltipStyle(
   }
 }
 
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 interface TutorialOverlayProps {
@@ -249,17 +263,30 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({});
   const [visible, setVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
+
+  // Track mobile breakpoint
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   useEffect(() => {
     if (!isOpen || !step) { setVisible(false); return; }
     setVisible(false);
-    
+
     // Auto-scroll the target into view if it exists
     const el = document.querySelector(`[data-tutorial="${step.target}"]`);
+    // Scroll the target into view on all devices so the highlight is visible.
+    // On mobile we use block:'center' so the element sits in the upper half
+    // of the screen, leaving room for the bottom-pinned tooltip.
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      el.scrollIntoView({ behavior: 'smooth', block: isMobile ? 'center' : 'end' });
     }
 
+    // Give extra time on mobile — its scroll animation can be slower
+    const delay = isMobile ? 650 : 400;
     const t = setTimeout(() => {
       const r = getTargetRect(step.target);
       setRect(r);
@@ -267,7 +294,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         setTooltipStyle(computeTooltipStyle(r, step.placement, tooltipRef));
         setVisible(true);
       });
-    }, 400); // 400ms delay to let the smooth scroll finish
+    }, delay);
     return () => clearTimeout(t);
   }, [isOpen, stepIndex, step]);
 
@@ -298,16 +325,18 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     : null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9000]">
+    <div
+      className="fixed inset-0 z-[9000]"
+      style={{ touchAction: 'pan-x pan-y' }}
+    >
 
-      {/* Backdrop — click to skip */}
+      {/* Backdrop — absorbs all background clicks silently; only Skip Explanation closes the tutorial */}
       <div
         className="absolute inset-0 transition-opacity duration-300"
         style={{ background: 'rgba(0,0,0,0.75)', opacity: visible ? 1 : 0 }}
-        onClick={onClose}
       />
 
-      {/* Spotlight cutout using box-shadow trick */}
+      {/* Spotlight cutout — shown on all devices once element is in view */}
       {spotlight && (
         <div
           className="absolute rounded-xl pointer-events-none transition-all duration-300"
@@ -350,12 +379,15 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       {/* Tooltip */}
       <div
         ref={tooltipRef}
-        className="absolute z-[9010] max-w-[320px] min-w-[240px]"
+        className="absolute z-[9010]"
         style={{
           ...tooltipStyle,
           opacity: visible ? 1 : 0,
           transform: visible ? 'scale(1) translateY(0)' : 'scale(0.96) translateY(6px)',
           transition: 'opacity 0.25s ease, transform 0.25s ease',
+          ...(isMobile
+            ? { maxWidth: 'calc(100vw - 24px)' }
+            : { maxWidth: '320px', minWidth: '240px' }),
         }}
       >
         <div className="bg-[#0d1424] border border-blue-500/25 rounded-2xl shadow-[0_12px_48px_rgba(0,0,0,0.7),0_0_0_1px_rgba(96,165,250,0.07)] overflow-hidden">

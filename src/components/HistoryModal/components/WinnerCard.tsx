@@ -14,7 +14,7 @@ export const WinnerCard: React.FC<Props> = ({ winner, runnerUp, bfs, dfs, hyb })
   if (!winner) {
     return (
       <div className="rounded-xl border border-red-500/20 bg-red-950/10 p-4 text-xs text-red-400 text-center">
-        <span className="sm:hidden">⚠️ </span>No algorithm completed successfully on this run — all paths were exhausted or severed.
+      <>No algorithm completed successfully on this run — all paths were exhausted or severed.</>
       </div>
     );
   }
@@ -24,7 +24,6 @@ export const WinnerCard: React.FC<Props> = ({ winner, runnerUp, bfs, dfs, hyb })
   return (
     <div className="rounded-xl border border-yellow-500/30 bg-gradient-to-br from-yellow-950/30 via-amber-950/20 to-gray-900/40 p-4 shadow-lg shadow-yellow-900/10">
       <div className="flex items-start gap-4">
-        <div className="text-3xl shrink-0 mt-0.5 sm:hidden">🥇</div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
             <h3 className="text-sm font-bold text-yellow-300 uppercase tracking-widest">
@@ -46,25 +45,23 @@ export const WinnerCard: React.FC<Props> = ({ winner, runnerUp, bfs, dfs, hyb })
           </div>
 
           <p className="text-xs text-gray-300 leading-relaxed mb-2">
-            <span className="text-yellow-400 font-semibold mr-1">
-              <span className="sm:hidden">{profile.icon}</span> Movement:
-            </span>
+            <span className="font-semibold mr-1">Movement:</span>
             {profile.motion}
           </p>
           <p className="text-[11px] text-gray-400 leading-relaxed mb-2">{profile.strategy}</p>
 
           <div className="flex flex-wrap gap-2 mt-2">
             {winner.data.distance <= Math.min(bfs?.distance ?? Infinity, dfs?.distance ?? Infinity, hyb?.distance ?? Infinity) && (
-              <span className="text-[10px] px-2 py-0.5 rounded bg-blue-950/60 border border-blue-700/40 text-blue-300"><span className="sm:hidden">📏 </span>Shortest Path</span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-blue-950/60 border border-blue-700/40 text-blue-300">Shortest Path</span>
             )}
             {winner.data.time <= Math.min(bfs?.time ?? Infinity, dfs?.time ?? Infinity, hyb?.time ?? Infinity) && (
-              <span className="text-[10px] px-2 py-0.5 rounded bg-green-950/60 border border-green-700/40 text-green-300"><span className="sm:hidden">⚡ </span>Fastest Execution</span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-green-950/60 border border-green-700/40 text-green-300">Fastest Execution</span>
             )}
             {winner.data.nodes <= Math.min(bfs?.nodes ?? Infinity, dfs?.nodes ?? Infinity, hyb?.nodes ?? Infinity) && (
-              <span className="text-[10px] px-2 py-0.5 rounded bg-purple-950/60 border border-purple-700/40 text-purple-300"><span className="sm:hidden">🔍 </span>Least Nodes Swept</span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-purple-950/60 border border-purple-700/40 text-purple-300">Least Nodes Swept</span>
             )}
             {Number(winner.data.adaptability) >= Math.max(Number(bfs?.adaptability ?? 0), Number(dfs?.adaptability ?? 0), Number(hyb?.adaptability ?? 0)) && (
-              <span className="text-[10px] px-2 py-0.5 rounded bg-orange-950/60 border border-orange-700/40 text-orange-300"><span className="sm:hidden">🛡️ </span>Highest Adaptability</span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-orange-950/60 border border-orange-700/40 text-orange-300">Highest Adaptability</span>
             )}
           </div>
 

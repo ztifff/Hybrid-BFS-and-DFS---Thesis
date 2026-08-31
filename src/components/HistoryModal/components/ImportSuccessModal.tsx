@@ -11,7 +11,7 @@ export const ImportSuccessModal: React.FC<Props> = ({ count, scenario, onClose }
     <div className="bg-[#0d1117] border border-emerald-500/40 rounded-2xl w-full max-w-md shadow-2xl shadow-emerald-900/30 overflow-hidden scale-in">
       <div className="bg-gradient-to-r from-emerald-900/80 via-green-800/60 to-emerald-900/80 px-6 py-4 border-b border-emerald-500/30 flex items-center gap-3">
         <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center text-xl shrink-0">
-          ✅
+          <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
         </div>
         <div>
           <h3 className="text-emerald-300 font-bold text-base tracking-wide">Import Successful</h3>
@@ -43,7 +43,7 @@ export const ImportSuccessModal: React.FC<Props> = ({ count, scenario, onClose }
         </div>
 
         <p className="text-gray-500 text-xs leading-relaxed">
-          💡 Your imported records are now visible in the history list and are ready for review.
+          Your imported records are now visible in the history list and are ready for review.
         </p>
       </div>
 

@@ -25,7 +25,7 @@ export const EventLog: React.FC<Props> = ({
   return (
     <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 text-xs text-gray-400 space-y-2">
       <span className="font-bold text-gray-300 block uppercase text-[10px] tracking-wider text-orange-400">
-        📌 Structural Metadata
+        Structural Metadata
       </span>
       <p>
         Graph composed of{' '}
@@ -38,7 +38,7 @@ export const EventLog: React.FC<Props> = ({
       {allEvents.length > 0 && (
         <div className="mt-2 pt-2 border-t border-gray-800/50">
           <span className="font-bold text-orange-400 block text-[10px] uppercase tracking-wider mb-2">
-            ⚡ Dynamic Blockages ({visibleEvents.length})
+            Dynamic Blockages ({visibleEvents.length})
           </span>
           <div className="flex flex-col gap-1.5 max-h-[160px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
             {visibleEvents.map((event, idx) => {
