@@ -1,6 +1,5 @@
 import React from 'react';
 import { HistoryEntry, HistoryResults } from '../types';
-import { StrategyMapEvents } from '../../simulation/StrategyMapEvents';
 
 interface Props {
   entry: HistoryEntry;
@@ -71,19 +70,6 @@ export const EventLog: React.FC<Props> = ({
         </div>
       )}
 
-      {entry.scenario === 'gameai' && (
-        <div className="mt-2 pt-2 border-t border-gray-800/50">
-          <StrategyMapEvents
-            dynamicEvents={allEvents}
-            stepIndex={maxEventStep > 0 ? maxEventStep : maxSteps}
-            simResults={{
-              bfs:    results.bfs    as any,
-              dfs:    results.dfs    as any,
-              hybrid: results.hybrid as any,
-            }}
-          />
-        </div>
-      )}
     </div>
   );
 };

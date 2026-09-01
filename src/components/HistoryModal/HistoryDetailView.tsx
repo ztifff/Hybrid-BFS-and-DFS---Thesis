@@ -8,6 +8,7 @@ import { AlgorithmMovements } from './components/AlgorithmMovements';
 import { PerformanceBarChart } from './components/PerformanceBarChart';
 import { SimulationConfig } from './components/SimulationConfig';
 import { EventLog } from './components/EventLog';
+import { StrategyMapEvents } from '../simulation/StrategyMapEvents';
 import { isMultiAlgorithmResult } from './historyUtils';
 
 interface Props {
@@ -78,7 +79,7 @@ export const HistoryDetailView: React.FC<Props> = ({
 
         {/* Campus topology note */}
         {entry.scenario === 'network' && baseGraph?.nodes.some((n: any) => n.id.includes('boys') || n.label?.includes('PC-PT')) && (
-          <div className="xl:col-span-5 bg-gray-900/60 border border-indigo-900/50 rounded-xl p-4 flex flex-col gap-2 mt-[-10px]">
+          <div data-tutorial="history-scenario-panels" className="xl:col-span-5 bg-gray-900/60 border border-indigo-900/50 rounded-xl p-4 flex flex-col gap-2 mt-[-10px]">
             <div className="text-[10px] uppercase tracking-[0.2em] text-indigo-400 font-bold mb-1">
               Campus Topology Rules Context
             </div>
@@ -150,6 +151,20 @@ export const HistoryDetailView: React.FC<Props> = ({
           onSeek={onSeek}
         />
       </div>
+
+      {entry.scenario === 'gameai' && (
+        <div data-tutorial="history-scenario-panels" className="bg-gray-900/40 border border-gray-800 rounded-xl p-4">
+          <StrategyMapEvents
+            dynamicEvents={allEvents}
+            stepIndex={maxEventStep > 0 ? maxEventStep : maxSteps}
+            simResults={{
+              bfs:    results.bfs    as any,
+              dfs:    results.dfs    as any,
+              hybrid: results.hybrid as any,
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 };

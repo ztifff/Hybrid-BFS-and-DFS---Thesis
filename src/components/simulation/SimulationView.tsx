@@ -199,9 +199,11 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             <p className="text-gray-300 text-sm mb-6 leading-relaxed">
               {sim.pendingNavigation.type === 'skip'
                 ? 'Simulation is currently running. Are you sure you want to skip to the end?'
-                : sim.pendingNavigation.reason === 'inprogress'
-                  ? 'Simulation is currently running. Are you sure you want to stop it and reset?'
-                  : 'You have an unsaved simulation result. Are you sure you want to discard it and leave?'}
+                : sim.pendingNavigation.type === 'reroll'
+                  ? 'Simulation is currently running. Are you sure you want to stop it and reroll events?'
+                  : sim.pendingNavigation.reason === 'inprogress'
+                    ? 'Simulation is currently running. Are you sure you want to stop it and reset?'
+                    : 'You have an unsaved simulation result. Are you sure you want to discard it and leave?'}
             </p>
             <div className="flex justify-end gap-3">
               <button
@@ -216,9 +218,11 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               >
                 {sim.pendingNavigation.type === 'skip'
                   ? 'Skip to End'
-                  : sim.pendingNavigation.reason === 'inprogress'
-                    ? 'Stop & Reset'
-                    : 'Discard & Leave'}
+                  : sim.pendingNavigation.type === 'reroll'
+                    ? 'Stop & Reroll'
+                    : sim.pendingNavigation.reason === 'inprogress'
+                      ? 'Stop & Reset'
+                      : 'Discard & Leave'}
               </button>
             </div>
           </div>
@@ -870,7 +874,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             {/* Playback Controls */}
             <div data-tutorial="tutorial-playback-controls" className="mt-2 flex flex-col items-center gap-3 w-full shrink-0">
               <div className="flex items-center gap-2 flex-wrap justify-center w-full">
-                <button onClick={sim.handleRerollEvents} disabled={sim.status === 'running'} className={scenarioBtnClass}>Reroll Events</button>
+                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={() => sim.requestReroll(sim.handleRerollEvents, sim.status)} className={scenarioBtnClass}>Reroll Events</button>
                 <button disabled={sim.isComputing || sim.isGraphLoading} onClick={() => sim.requestReset(sim.handleReset, sim.status)} className={scenarioBtnClass}>Reset</button>
                 <button disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex === 0} onClick={sim.handleStepBackward} className={scenarioBtnClass}>Back</button>
 

@@ -97,6 +97,7 @@ export type PendingNavigation =
   | { type: 'back'; reason?: PendingNavigationReason }
   | { type: 'reset'; reason: 'inprogress' }
   | { type: 'skip'; reason: 'inprogress' }
+  | { type: 'reroll'; reason: 'inprogress' }
   | { type: 'map'; mapId: string; reason?: PendingNavigationReason }
   | { type: 'gameboard'; boardId: GameAIBoard; reason?: PendingNavigationReason }
   | { type: 'sizing'; field: keyof GraphSizing; value: number; reason?: PendingNavigationReason }
@@ -389,7 +390,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
 
   const confirmPendingNavigation = useCallback(() => {
     if (!pendingNavigation) return;
-    if (pendingNavigation.type === 'reset' || pendingNavigation.type === 'skip') {
+    if (pendingNavigation.type === 'reset' || pendingNavigation.type === 'skip' || pendingNavigation.type === 'reroll') {
       pendingActionCallbackRef.current?.();
       pendingActionCallbackRef.current = null;
     } else if (pendingNavigation.type === 'back') {
@@ -427,6 +428,15 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
       setPendingNavigation({ type: 'skip', reason: 'inprogress' });
     } else {
       onSkip();
+    }
+  }, []);
+
+  const requestReroll = useCallback((onReroll: () => void, status: string) => {
+    if (status === 'running' || status === 'paused') {
+      pendingActionCallbackRef.current = onReroll;
+      setPendingNavigation({ type: 'reroll', reason: 'inprogress' });
+    } else {
+      onReroll();
     }
   }, []);
 
@@ -780,6 +790,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     requestSizingChange,
     requestReset,
     requestSkip,
+    requestReroll,
     confirmPendingNavigation,
 
     // Synthetic size stepper actions

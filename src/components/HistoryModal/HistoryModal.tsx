@@ -45,6 +45,16 @@ const HISTORY_TUTORIAL_STEPS: TutorialStep[] = [
     placement: 'top',
   },
   {
+    target: 'history-scenario-panels',
+    title: 'Scenario Specific Data',
+    body: (scenario: string) => {
+      if (scenario === 'gameai') return 'Displays the Strategy Map Events recorded for this run. It shows AI moves, opponent formations, and how the algorithm reacted to them.';
+      if (scenario === 'network') return 'Displays the Campus Topology Rules. It explains the active VLAN isolation (ACLs) applied during this run.';
+      return 'Displays unique data and specialized controls for the recorded scenario.';
+    },
+    placement: 'auto',
+  },
+  {
     target: 'history-event-log',
     title: 'Event Log',
     body: 'A timeline of all dynamic map events (like blockages or restorations) that occurred during this run, and which step they happened on.',

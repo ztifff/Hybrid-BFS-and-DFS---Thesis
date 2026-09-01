@@ -110,6 +110,7 @@ export interface SimulationState {
   requestBoardChange: (boardId: GameAIBoard, status: string, saved: boolean) => void;
   requestReset: (onReset: () => void, status: string) => void;
   requestSkip: (onSkip: () => void, status: string) => void;
+  requestReroll: (onReroll: () => void, status: string) => void;
   confirmPendingNavigation: () => void;
 
   stepNodesUp: () => void;
@@ -380,6 +381,7 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
     requestBoardChange: model.requestBoardChange,
     requestReset: model.requestReset,
     requestSkip: model.requestSkip,
+    requestReroll: model.requestReroll,
     confirmPendingNavigation: model.confirmPendingNavigation,
     requestSizingChange: model.requestSizingChange,
     requestSizingStep: (action: 'nodesUp' | 'nodesDown' | 'edgesUp' | 'edgesDown', status: string, saved: boolean) => {

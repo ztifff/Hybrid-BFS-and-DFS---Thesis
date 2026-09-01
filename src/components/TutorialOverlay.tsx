@@ -222,7 +222,7 @@ function computeTooltipStyle(
   const cy = rect.top + rect.height / 2;
   switch (resolved) {
     case 'bottom': {
-      const l = Math.max(12, Math.min(cx - tw / 2, vw - tw - 12));
+    const l = Math.max(12, Math.min(cx - tw / 2, vw - tw - 12));
       return { top: rect.top + rect.height + PAD + 14, left: l, width: tw };
     }
     case 'top': {
@@ -239,6 +239,52 @@ function computeTooltipStyle(
     }
   }
 }
+
+const getTheme = (scenario: string) => {
+  switch (scenario) {
+    case 'robotics': return {
+      border: 'border-orange-500/25', shadowBorder: 'rgba(249,115,22,0.07)',
+      gradient: 'from-orange-500 via-amber-400 to-yellow-500',
+      iconBg: 'bg-orange-600/20', iconBorder: 'border-orange-500/30', iconText: 'text-orange-400',
+      progressActive: '#f97316', progressHoverBg: 'hover:bg-orange-400', progressPast: '#c2410c',
+      btnBg: 'bg-orange-600', btnHover: 'hover:bg-orange-500', btnShadow: 'shadow-orange-900/40',
+      spotlightBorder: 'rgba(249,115,22,0.5)',
+    };
+    case 'traffic': return {
+      border: 'border-emerald-500/25', shadowBorder: 'rgba(16,185,129,0.07)',
+      gradient: 'from-emerald-500 via-green-400 to-teal-500',
+      iconBg: 'bg-emerald-600/20', iconBorder: 'border-emerald-500/30', iconText: 'text-emerald-400',
+      progressActive: '#10b981', progressHoverBg: 'hover:bg-emerald-400', progressPast: '#047857',
+      btnBg: 'bg-emerald-600', btnHover: 'hover:bg-emerald-500', btnShadow: 'shadow-emerald-900/40',
+      spotlightBorder: 'rgba(16,185,129,0.5)',
+    };
+    case 'evacuation': return {
+      border: 'border-red-500/25', shadowBorder: 'rgba(239,68,68,0.07)',
+      gradient: 'from-red-500 via-rose-400 to-orange-500',
+      iconBg: 'bg-red-600/20', iconBorder: 'border-red-500/30', iconText: 'text-red-400',
+      progressActive: '#ef4444', progressHoverBg: 'hover:bg-red-400', progressPast: '#b91c1c',
+      btnBg: 'bg-red-600', btnHover: 'hover:bg-red-500', btnShadow: 'shadow-red-900/40',
+      spotlightBorder: 'rgba(239,68,68,0.5)',
+    };
+    case 'gameai': return {
+      border: 'border-purple-500/25', shadowBorder: 'rgba(168,85,247,0.07)',
+      gradient: 'from-purple-500 via-fuchsia-400 to-pink-500',
+      iconBg: 'bg-purple-600/20', iconBorder: 'border-purple-500/30', iconText: 'text-purple-400',
+      progressActive: '#a855f7', progressHoverBg: 'hover:bg-purple-400', progressPast: '#7e22ce',
+      btnBg: 'bg-purple-600', btnHover: 'hover:bg-purple-500', btnShadow: 'shadow-purple-900/40',
+      spotlightBorder: 'rgba(168,85,247,0.5)',
+    };
+    case 'network':
+    default: return {
+      border: 'border-blue-500/25', shadowBorder: 'rgba(59,130,246,0.07)',
+      gradient: 'from-blue-500 via-indigo-400 to-purple-500',
+      iconBg: 'bg-blue-600/20', iconBorder: 'border-blue-500/30', iconText: 'text-blue-400',
+      progressActive: '#3b82f6', progressHoverBg: 'hover:bg-blue-400', progressPast: '#1d4ed8',
+      btnBg: 'bg-blue-600', btnHover: 'hover:bg-blue-500', btnShadow: 'shadow-blue-900/40',
+      spotlightBorder: 'rgba(59,130,246,0.5)',
+    };
+  }
+};
 
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -264,6 +310,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({});
   const [visible, setVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
+  
+  const theme = getTheme(scenario);
 
   // Track mobile breakpoint
   useEffect(() => {
@@ -286,17 +334,16 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     }
 
     // Give extra time on mobile — its scroll animation can be slower
-    const delay = isMobile ? 650 : 400;
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       const r = getTargetRect(step.target);
       setRect(r);
       requestAnimationFrame(() => {
         setTooltipStyle(computeTooltipStyle(r, step.placement, tooltipRef));
         setVisible(true);
       });
-    }, delay);
-    return () => clearTimeout(t);
-  }, [isOpen, stepIndex, step]);
+    }, isMobile ? 650 : 400);
+    return () => clearTimeout(timer);
+  }, [isOpen, stepIndex, step, isMobile]);
 
   // We re-compute position whenever stepIndex changes or window resizes.
   useEffect(() => {
@@ -326,7 +373,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9000]"
+      className="fixed inset-0 z-[9000] overflow-hidden pointer-events-none"
       style={{ touchAction: 'pan-x pan-y' }}
     >
 
@@ -346,7 +393,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             width: spotlight.width,
             height: spotlight.height,
             boxShadow: '0 0 0 9999px rgba(0,0,0,0.75)',
-            border: '2px solid rgba(96,165,250,0.5)',
+            border: `2px solid ${theme.spotlightBorder}`,
             opacity: visible ? 1 : 0,
           }}
         />
@@ -354,7 +401,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
       {/* Skip pill */}
       <div
-        className="absolute top-5 left-1/2 -translate-x-1/2 z-[9010]"
+        className="absolute top-5 left-1/2 -translate-x-1/2 z-[9010] pointer-events-auto"
         style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.25s' }}
       >
         <button
@@ -368,7 +415,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
       {/* Step counter */}
       <div
-        className="absolute top-5 right-5 z-[9010] select-none"
+        className="absolute top-5 right-5 z-[9010] select-none pointer-events-auto"
         style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.25s' }}
       >
         <div className="px-3 py-1.5 rounded-full bg-[#111827]/90 border border-white/10 text-gray-400 text-[10px] font-mono tracking-wider">
@@ -379,7 +426,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       {/* Tooltip */}
       <div
         ref={tooltipRef}
-        className="absolute z-[9010]"
+        className="absolute z-[9010] pointer-events-auto"
         style={{
           ...tooltipStyle,
           opacity: visible ? 1 : 0,
@@ -390,12 +437,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             : { maxWidth: '320px', minWidth: '240px' }),
         }}
       >
-        <div className="bg-[#0d1424] border border-blue-500/25 rounded-2xl shadow-[0_12px_48px_rgba(0,0,0,0.7),0_0_0_1px_rgba(96,165,250,0.07)] overflow-hidden">
-          <div className="h-[2px] bg-gradient-to-r from-blue-500 via-indigo-400 to-purple-500" />
+        <div className={`bg-[#0d1424] border ${theme.border} rounded-2xl overflow-hidden`} style={{ boxShadow: `0 12px 48px rgba(0,0,0,0.7), 0 0 0 1px ${theme.shadowBorder}` }}>
+          <div className={`h-[2px] bg-gradient-to-r ${theme.gradient}`} />
           <div className="p-5 pb-2">
             <div className="flex items-start gap-3 mb-3">
-              <div className="w-7 h-7 rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg className="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className={`w-7 h-7 rounded-full ${theme.iconBg} ${theme.iconBorder} border flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                <svg className={`w-3.5 h-3.5 ${theme.iconText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -411,11 +458,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
               <div
                 key={i}
                 onClick={() => onGoTo(i)}
-                className="rounded-full transition-all duration-300 cursor-pointer hover:bg-blue-400"
+                className={`rounded-full transition-all duration-300 cursor-pointer ${theme.progressHoverBg}`}
                 style={{
                   width: i === stepIndex ? 18 : 6,
                   height: 6,
-                  background: i === stepIndex ? '#3b82f6' : i < stepIndex ? '#1d4ed8' : '#1f2937',
+                  background: i === stepIndex ? theme.progressActive : i < stepIndex ? theme.progressPast : '#1f2937',
                 }}
                 title={`Go to step ${i + 1}`}
               />
@@ -433,7 +480,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             </button>
             <button
               onClick={onNext}
-              className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 transition-all shadow-lg shadow-blue-900/40 active:scale-95 cursor-pointer"
+              className={`px-5 py-2 rounded-xl text-xs font-bold text-white ${theme.btnBg} ${theme.btnHover} transition-all shadow-lg ${theme.btnShadow} active:scale-95 cursor-pointer`}
             >
               {isLast ? '✓ Got it!' : 'Next →'}
             </button>

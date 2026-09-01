@@ -117,7 +117,7 @@ export abstract class BaseRenderer {
 
       this.drawPath(ctx, edge, x1, y1, x2, y2, options.scale);
       
-      if (isBlocked) {
+      if (isBlocked && options.scenario === 'gameai') {
         ctx.strokeStyle = this.getRgba('#ef4444', Math.max(baseOpacity * 2, 0.6));
         ctx.lineWidth = baseWidth * 2.5;
       } else {
