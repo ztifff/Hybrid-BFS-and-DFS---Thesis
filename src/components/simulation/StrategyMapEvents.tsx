@@ -78,29 +78,6 @@ function getAlgorithmStrategy(
   const isOnPath = nodeOnPath(atEvent, event.nodeId);
   const willOnPath = nodeOnPath(after, event.nodeId);
 
-  // Phase detection (hybrid-specific)
-  const phaseChanged =
-    algorithm === 'hybrid' &&
-    before?.phaseLabel &&
-    atEvent?.phaseLabel &&
-    before.phaseLabel !== atEvent.phaseLabel;
-
-  if (phaseChanged) {
-    return {
-      action: `Phase Switch → ${atEvent.phaseLabel}`,
-      detail: `Switched from ${before!.phaseLabel} to ${atEvent.phaseLabel} in response to the event`,
-      severity: 'phase',
-    };
-  }
-
-  if (!event.blocked) {
-    // Node/edge restored
-    if (!willOnPath && !isOnPath) {
-      return { action: 'Restoration Ignored', detail: 'Node restored but not on active path — no recalculation needed', severity: 'unaffected' };
-    }
-    return { action: 'Path Re-evaluated', detail: 'Detected restored node and updated traversal frontier', severity: 'reroute' };
-  }
-
   // 1. Explicit Reaction Detection (Ultimate source of truth)
   // If the algorithm explicitly logged a reaction to this specific node in its phaseLabel, trust it!
   const explicitlyReacted = atEvent?.phaseLabel?.includes(`[${event.nodeId}]`);
@@ -122,7 +99,31 @@ function getAlgorithmStrategy(
     }
   }
 
-  // 2. Fallback logic for general path evaluation
+  // 2. Phase detection (hybrid-specific)
+  // Only trigger a phase switch if we are genuinely transitioning between algorithmic modes (e.g., BFS -> DFS)
+  const isTruePhaseSwitch =
+    algorithm === 'hybrid' &&
+    before?.phaseLabel?.includes('Mode:') &&
+    atEvent?.phaseLabel?.includes('Mode:') &&
+    before.phaseLabel !== atEvent.phaseLabel;
+
+  if (isTruePhaseSwitch) {
+    return {
+      action: 'Phase Switch',
+      detail: `Switched from ${before!.phaseLabel} to ${atEvent.phaseLabel} in response to the event`,
+      severity: 'phase',
+    };
+  }
+
+  if (!event.blocked) {
+    // Node/edge restored
+    if (!willOnPath && !isOnPath) {
+      return { action: 'Restoration Ignored', detail: 'Node restored but not on active path — no recalculation needed', severity: 'unaffected' };
+    }
+    return { action: 'Path Re-evaluated', detail: 'Detected restored node and updated traversal frontier', severity: 'reroute' };
+  }
+
+  // 3. Fallback logic for general path evaluation
   if (!wasOnPath && !isOnPath) {
     return { action: 'Unaffected', detail: 'Blocked node was not part of active path or frontier', severity: 'unaffected' };
   }
