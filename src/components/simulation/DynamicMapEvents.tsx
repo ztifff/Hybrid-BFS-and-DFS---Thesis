@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { DynamicEvent, SimulationResult, AlgorithmStep } from '../../types';
+import { DynamicEvent, SimulationResult } from '../../types';
 
 interface Props {
   dynamicEvents: DynamicEvent[];
@@ -25,39 +25,46 @@ function didAlgorithmReroute(
   simResults: { bfs: SimulationResult; dfs: SimulationResult; hybrid: SimulationResult }
 ) {
   const steps = simResults[algorithm].steps;
-  const previous = steps.find((step) => step.stepIndex === event.stepIndex - 1);
-  const current = steps.find((step) => step.stepIndex === event.stepIndex);
-  const next = steps.find((step) => step.stepIndex === event.stepIndex + 1);
+  
+  // Find the closest steps near the event index
+  // We scan a small window around the event step to handle offset step indices
+  const windowStart = Math.max(0, event.stepIndex - 2);
+  const windowEnd = event.stepIndex + 3;
 
-  const wasOnPath = (step?: AlgorithmStep) => {
-    if (!step) return false;
+  const stepsInWindow = steps.filter(s => s.stepIndex >= windowStart && s.stepIndex <= windowEnd);
+  const stepsAfterWindow = steps.filter(s => s.stepIndex > event.stepIndex && s.stepIndex <= event.stepIndex + 5);
 
-    if (
-      step.path.includes(event.nodeId) ||
-      step.current === event.nodeId ||
-      step.explored.includes(event.nodeId) ||
-      step.frontier.includes(event.nodeId)
-    ) return true;
+  const nodeId = event.nodeId;
+  
+  // Check if the node was on an active path or explored BEFORE the event
+  const wasActiveBeforeEvent = stepsInWindow.some(step => {
+    if (step.stepIndex > event.stepIndex) return false;
+    return (
+      step.path.includes(nodeId) ||
+      step.current === nodeId ||
+      step.explored.includes(nodeId) ||
+      step.frontier.includes(nodeId)
+    );
+  });
 
-    const parts = event.nodeId.split(/[-_]/);
-    if (parts.length === 2) {
-      const [u, v] = parts;
-      for (let i = 0; i < step.path.length - 1; i++) {
-        if ((step.path[i] === u && step.path[i + 1] === v) ||
-          (step.path[i] === v && step.path[i + 1] === u)) {
-          return true;
-        }
-      }
-    }
+  if (!wasActiveBeforeEvent) return false;
 
+  // Check if a sever happened: node disappears from explored/path after the event,
+  // OR the path changes significantly, OR a sever phaseLabel is detected
+  const wasSevered = stepsAfterWindow.some(step => {
+    // Direct sever label detection
+    if (step.phaseLabel?.toLowerCase().includes('sever')) return true;
+    // Node was removed from explored (the most reliable signal of a true sever)
+    if (!step.explored.includes(nodeId) && !step.path.includes(nodeId)) return true;
     return false;
-  };
+  });
 
-  if (!current) return false;
-  if (wasOnPath(current)) return true;
-  if (previous && wasOnPath(previous) && !wasOnPath(current)) return true;
-  if (next && wasOnPath(current) && !wasOnPath(next)) return true;
-  return false;
+  // Also catch the case where the node was on the path before and the path changed
+  const pathBeforeEvent = stepsInWindow.filter(s => s.stepIndex <= event.stepIndex).pop()?.path ?? [];
+  const pathAfterEvent = stepsAfterWindow[0]?.path ?? [];
+  const pathChanged = pathBeforeEvent.includes(nodeId) && !pathAfterEvent.includes(nodeId);
+
+  return wasSevered || pathChanged;
 }
 
 export const DynamicMapEvents: React.FC<Props> = ({ dynamicEvents, stepIndex, simResults, scenario, onEventClick, highlightedNodeId, mapId, activeAlgorithms }) => {
