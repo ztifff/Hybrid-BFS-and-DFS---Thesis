@@ -3,7 +3,7 @@ import { HistoryEntry, HistoryModalProps } from './types';
 import { HistoryListView } from './HistoryListView';
 import { HistoryDetailView } from './HistoryDetailView';
 import { PurgeModal } from './components/PurgeModal';
-import { ImportErrorModal } from './components/ImportErrorModal';
+import { ImportErrorModal, ImportErrorType } from './components/ImportErrorModal';
 import { ImportSuccessModal } from './components/ImportSuccessModal';
 import { useTutorial, TutorialOverlay, TutorialStep } from '../TutorialOverlay';
 
@@ -71,7 +71,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
   const [isPurgeModalOpen, setIsPurgeModalOpen] = useState(false);
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
   const [historyTimelineStep, setHistoryTimelineStep] = useState<number>(-1);
-  const [importError, setImportError]       = useState<{ expected: string; found: string } | null>(null);
+  const [importError, setImportError]       = useState<ImportErrorType | null>(null);
   const [importSuccess, setImportSuccess]   = useState<{ count: number; scenario: string } | null>(null);
   const importInputRef = React.useRef<HTMLInputElement>(null);
   
@@ -144,6 +144,30 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
   };
 
   // ── Import ─────────────────────────────────────────────────────────────────
+  const VALID_SCENARIOS = ['network', 'robotics', 'traffic', 'evacuation', 'gameai'];
+
+  const isValidHistoryEntry = (e: unknown): e is HistoryEntry => {
+    if (!e || typeof e !== 'object') return false;
+    const entry = e as Record<string, unknown>;
+    // Must have a valid scenario
+    if (typeof entry.scenario !== 'string' || !VALID_SCENARIOS.includes(entry.scenario)) return false;
+    // Must have a name string
+    if (typeof entry.name !== 'string' || entry.name.trim() === '') return false;
+    // Must have a timestamp
+    if (!entry.timestamp) return false;
+    
+    // Check if it's a multi-algorithm or single-algorithm result
+    const hasSingleResult = entry.simResult && typeof entry.simResult === 'object' && Array.isArray((entry.simResult as any).steps);
+    const hasMultiResult = entry.multiResults && typeof entry.multiResults === 'object';
+    
+    if (!hasSingleResult && !hasMultiResult) return false;
+
+    // Must have numeric summary fields
+    if (typeof entry.optimalPathLength !== 'number') return false;
+    if (typeof entry.totalNodes !== 'number') return false;
+    return true;
+  };
+
   const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -151,18 +175,44 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
     reader.onload = (ev) => {
       try {
         const parsed = JSON.parse(ev.target?.result as string);
-        const rawEntries: HistoryEntry[] = Array.isArray(parsed) ? parsed : [parsed];
+        const rawEntries: unknown[] = Array.isArray(parsed) ? parsed : [parsed];
+
+        // Validate all entries are proper HistoryEntry records
+        const invalidEntries = rawEntries.filter(entry => !isValidHistoryEntry(entry));
+        if (invalidEntries.length > 0) {
+          setImportError({ type: 'invalid_format' });
+          if (importInputRef.current) importInputRef.current.value = '';
+          return;
+        }
+
+        const validEntries = rawEntries as HistoryEntry[];
 
         if (scenario) {
-          const mismatched = rawEntries.filter(entry => entry.scenario && entry.scenario !== scenario);
+          const mismatched = validEntries.filter(entry => entry.scenario && entry.scenario !== scenario);
           if (mismatched.length > 0) {
-            setImportError({ expected: scenario, found: mismatched[0].scenario ?? 'unknown' });
+            setImportError({ type: 'mismatch', expected: scenario, found: mismatched[0].scenario ?? 'unknown' });
             if (importInputRef.current) importInputRef.current.value = '';
             return;
           }
         }
 
-        const entries: HistoryEntry[] = rawEntries.map(entry => ({
+        const isDuplicate = validEntries.some(newEntry => {
+          return history.some(existingEntry => 
+            new Date(existingEntry.timestamp).getTime() === new Date(newEntry.timestamp).getTime() &&
+            existingEntry.name === newEntry.name &&
+            existingEntry.scenario === newEntry.scenario &&
+            existingEntry.optimalPathLength === newEntry.optimalPathLength &&
+            existingEntry.totalNodes === newEntry.totalNodes
+          );
+        });
+
+        if (isDuplicate) {
+          setImportError({ type: 'duplicate' });
+          if (importInputRef.current) importInputRef.current.value = '';
+          return;
+        }
+
+        const entries: HistoryEntry[] = validEntries.map(entry => ({
           ...entry,
           timestamp: entry.timestamp ? new Date(entry.timestamp) : new Date(),
           id: entry.id ?? Date.now().toString() + Math.random().toString(36).slice(2),
@@ -173,12 +223,13 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
           setImportSuccess({ count: entries.length, scenario: entries[0]?.scenario ?? scenario ?? 'simulation' });
         }
       } catch {
-        alert('❌ Invalid file format. Please select a valid history JSON file.');
+        setImportError({ type: 'invalid_json' });
       }
       if (importInputRef.current) importInputRef.current.value = '';
     };
     reader.readAsText(file);
   };
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
@@ -333,8 +384,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
       )}
       {importError && (
         <ImportErrorModal
-          expected={importError.expected}
-          found={importError.found}
+          error={importError}
           onClose={() => setImportError(null)}
         />
       )}

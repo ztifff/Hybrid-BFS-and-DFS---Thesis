@@ -8,6 +8,7 @@ interface Props {
   graphNodes: GraphNode[];
   onRobotClick?: (nodeId: string) => void;
   mapId?: string;
+  activeAlgorithms?: { bfs: boolean; dfs: boolean; hybrid: boolean };
 }
 
 const ALGO_CONFIG = {
@@ -23,12 +24,29 @@ export const RobotLiveStatusPanel: React.FC<Props> = ({
   graphNodes,
   onRobotClick,
   mapId,
+  activeAlgorithms,
 }) => {
   const [selectedAlgo, setSelectedAlgo] = useState<'bfs' | 'dfs' | 'hybrid'>(followAlgo || 'bfs');
+
+  // Determine which algos are visible (default all true)
+  const visible = {
+    bfs:    activeAlgorithms?.bfs    ?? true,
+    dfs:    activeAlgorithms?.dfs    ?? true,
+    hybrid: activeAlgorithms?.hybrid ?? true,
+  };
+
+  const visibleKeys = (Object.keys(ALGO_CONFIG) as Array<keyof typeof ALGO_CONFIG>).filter(k => visible[k]);
 
   useEffect(() => {
     if (followAlgo) setSelectedAlgo(followAlgo);
   }, [followAlgo]);
+
+  // If the selected algo is hidden, switch to the first visible one
+  useEffect(() => {
+    if (!visible[selectedAlgo] && visibleKeys.length > 0) {
+      setSelectedAlgo(visibleKeys[0]);
+    }
+  }, [visible.bfs, visible.dfs, visible.hybrid]);
 
   if (!assignments || assignments.length === 0) return null;
 
@@ -58,7 +76,7 @@ export const RobotLiveStatusPanel: React.FC<Props> = ({
 
         {/* Algorithm switcher */}
         <div className="flex items-center gap-0.5 bg-black/40 border border-white/10 shadow-inner rounded-md p-0.5">
-          {(Object.keys(ALGO_CONFIG) as Array<keyof typeof ALGO_CONFIG>).map(key => (
+          {visibleKeys.map(key => (
             <button
               key={key}
               onClick={() => setSelectedAlgo(key)}

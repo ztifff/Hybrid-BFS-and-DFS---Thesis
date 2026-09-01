@@ -520,14 +520,15 @@ export abstract class BaseRenderer {
         if (dNode) {
           const cx = this.sx(dNode.x, options), cy = this.sy(dNode.y, options);
           const cfg = NODE_CONFIG[dNode.type] || NODE_CONFIG['place'];
-          const r = (cfg.radius / scale) * zoom;
+          // Use same world-space radius as node drawing (no /scale, no *zoom)
+          const r = options.isMassive ? 4.5 : cfg.radius;
           ctx.save();
-          ctx.shadowBlur = 18;
+          ctx.shadowBlur = 6 / zoom;
           ctx.shadowColor = '#22c55e';
           ctx.strokeStyle = '#22c55e';
-          ctx.lineWidth = 3 / zoom;
+          ctx.lineWidth = 1.5 / zoom;
           ctx.beginPath();
-          ctx.arc(cx, cy, r + 6 / zoom, 0, Math.PI * 2);
+          ctx.arc(cx, cy, r + 3, 0, Math.PI * 2);
           ctx.stroke();
           ctx.restore();
         }

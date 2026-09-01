@@ -1,25 +1,26 @@
 import React from 'react';
 
+export type ImportErrorType = 
+  | { type: 'mismatch'; expected: string; found: string }
+  | { type: 'invalid_format' }
+  | { type: 'invalid_json' }
+  | { type: 'duplicate' };
+
 interface Props {
-  expected: string;
-  found: string;
+  error: ImportErrorType;
   onClose: () => void;
 }
 
-export const ImportErrorModal: React.FC<Props> = ({ expected, found, onClose }) => (
-  <div className="absolute inset-0 z-[70] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fadeIn p-4">
-    <div className="bg-[#0d1117] border border-red-500/40 rounded-2xl w-full max-w-md shadow-2xl shadow-red-900/30 overflow-hidden scale-in">
-      <div className="bg-gradient-to-r from-red-900/80 via-rose-800/60 to-red-900/80 px-6 py-4 border-b border-red-500/30 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-red-500/20 border border-red-500/50 flex items-center justify-center text-xl shrink-0">
-          <svg className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
-        </div>
-        <div>
-          <h3 className="text-red-300 font-bold text-base tracking-wide">Invalid Scenario Results</h3>
-          <p className="text-red-400/70 text-xs mt-0.5">Scenario mismatch detected in import file</p>
-        </div>
-      </div>
+export const ImportErrorModal: React.FC<Props> = ({ error, onClose }) => {
+  let title = '';
+  let subtitle = '';
+  let content = null;
 
-      <div className="px-6 py-5 space-y-4">
+  if (error.type === 'mismatch') {
+    title = 'Invalid Scenario Results';
+    subtitle = 'Scenario mismatch detected in import file';
+    content = (
+      <>
         <p className="text-gray-300 text-sm leading-relaxed">
           The file you selected contains results from a{' '}
           <strong className="text-red-400">different scenario</strong> and cannot be imported here.
@@ -29,33 +30,96 @@ export const ImportErrorModal: React.FC<Props> = ({ expected, found, onClose }) 
           <div className="flex-1 text-center">
             <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-1.5">Current Scenario</div>
             <span className="inline-block px-3 py-1.5 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-300 text-xs font-bold uppercase tracking-wider">
-              {expected}
+              {error.expected}
             </span>
           </div>
           <div className="text-gray-600 text-lg font-bold shrink-0">≠</div>
           <div className="flex-1 text-center">
             <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-1.5">File Contains</div>
             <span className="inline-block px-3 py-1.5 rounded-lg bg-red-500/20 border border-red-500/40 text-red-300 text-xs font-bold uppercase tracking-wider">
-              {found}
+              {error.found}
             </span>
           </div>
         </div>
 
         <p className="text-gray-500 text-xs leading-relaxed">
           To import these results, navigate to the{' '}
-          <strong className="text-gray-400">{found.charAt(0).toUpperCase() + found.slice(1)}</strong> scenario
+          <strong className="text-gray-400">{error.found.charAt(0).toUpperCase() + error.found.slice(1)}</strong> scenario
           and try importing there.
         </p>
-      </div>
+      </>
+    );
+  } else if (error.type === 'invalid_format') {
+    title = 'Invalid Results Data';
+    subtitle = 'File content is not a valid simulation result';
+    content = (
+      <>
+        <p className="text-gray-300 text-sm leading-relaxed">
+          The file you selected is valid JSON, but it does <strong className="text-red-400">not contain valid simulation history records</strong>.
+        </p>
+        <div className="bg-black/40 rounded-xl p-4 border border-white/5 mt-4">
+          <p className="text-gray-400 text-xs text-center">
+            Please make sure you are importing a file previously exported from the <strong>Core Simulation Storage History</strong>.
+          </p>
+        </div>
+      </>
+    );
+  } else if (error.type === 'invalid_json') {
+    title = 'Invalid File Format';
+    subtitle = 'File is not a valid JSON document';
+    content = (
+      <>
+        <p className="text-gray-300 text-sm leading-relaxed">
+          The file you selected <strong className="text-red-400">could not be parsed</strong> as JSON.
+        </p>
+        <div className="bg-black/40 rounded-xl p-4 border border-white/5 mt-4 flex items-center justify-center">
+          <p className="text-gray-400 text-xs text-center flex items-center gap-2">
+            <span className="text-xl">📄</span> Only <strong className="text-white font-mono">.json</strong> files are supported.
+          </p>
+        </div>
+      </>
+    );
+  } else if (error.type === 'duplicate') {
+    title = 'Duplicate Record';
+    subtitle = 'This simulation is already in your history';
+    content = (
+      <>
+        <p className="text-gray-300 text-sm leading-relaxed">
+          The file you selected contains a simulation record that has <strong className="text-red-400">already been imported</strong>.
+        </p>
+        <div className="bg-black/40 rounded-xl p-4 border border-white/5 mt-4 flex items-center justify-center">
+          <p className="text-gray-400 text-xs text-center flex items-center gap-2">
+            <span className="text-xl">🔄</span> Exact duplicates are not allowed in the storage history.
+          </p>
+        </div>
+      </>
+    );
+  }
 
-      <div className="px-6 pb-5 flex justify-end">
-        <button
-          onClick={onClose}
-          className="px-6 py-2.5 bg-red-600 hover:bg-red-500 active:scale-95 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-red-900/30 cursor-pointer"
-        >
-          Got it
-        </button>
+  return (
+    <div className="absolute inset-0 z-[70] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fadeIn p-4">
+      <div className="bg-[#0d1117] border border-red-500/40 rounded-2xl w-full max-w-md shadow-2xl shadow-red-900/30 overflow-hidden scale-in">
+        <div className="bg-gradient-to-r from-red-900/80 via-rose-800/60 to-red-900/80 px-6 py-4 border-b border-red-500/30 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-red-500/20 border border-red-500/50 flex items-center justify-center text-xl shrink-0">
+            <svg className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+          </div>
+          <div>
+            <h3 className="text-red-300 font-bold text-base tracking-wide">{title}</h3>
+            <p className="text-red-400/70 text-xs mt-0.5">{subtitle}</p>
+          </div>
+        </div>
+        <div className="px-6 py-5 space-y-4">
+          {content}
+        </div>
+        <div className="px-6 pb-5 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-6 py-2.5 bg-red-600 hover:bg-red-500 active:scale-95 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-red-900/30 cursor-pointer"
+          >
+            Got it
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};

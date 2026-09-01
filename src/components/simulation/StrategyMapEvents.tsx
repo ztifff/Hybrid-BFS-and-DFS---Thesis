@@ -5,6 +5,7 @@ interface Props {
   dynamicEvents: DynamicEvent[];
   stepIndex: number;
   simResults: { bfs: SimulationResult; dfs: SimulationResult; hybrid: SimulationResult } | null;
+  activeAlgorithms: { bfs: boolean; dfs: boolean; hybrid: boolean };
 }
 
 // ── Per-algorithm color tokens ───────────────────────────────────────────────
@@ -168,7 +169,7 @@ const SEVERITY_ICON: Record<string, string> = {
 };
 
 // ── Main Component ───────────────────────────────────────────────────────────
-export const StrategyMapEvents: React.FC<Props> = ({ dynamicEvents, stepIndex, simResults }) => {
+export const StrategyMapEvents: React.FC<Props> = ({ dynamicEvents, stepIndex, simResults, activeAlgorithms }) => {
   const activeStrategyEvents = useMemo(() => {
     if (!simResults) return [];
 
@@ -177,6 +178,7 @@ export const StrategyMapEvents: React.FC<Props> = ({ dynamicEvents, stepIndex, s
     return visible
       .map((event) => {
         const responses = (['bfs', 'dfs', 'hybrid'] as const)
+          .filter(algo => activeAlgorithms[algo])
           .map((algo) => {
             const strategy = getAlgorithmStrategy(algo, event, simResults);
             return strategy ? { algo, ...strategy } : null;
@@ -187,7 +189,7 @@ export const StrategyMapEvents: React.FC<Props> = ({ dynamicEvents, stepIndex, s
       })
       .filter((entry) => entry.responses.length > 0)
       .reverse(); // newest on top
-  }, [dynamicEvents, stepIndex, simResults]);
+  }, [dynamicEvents, stepIndex, simResults, activeAlgorithms.bfs, activeAlgorithms.dfs, activeAlgorithms.hybrid]);
 
   return (
     <div className="glass-panel rounded-xl p-3 flex flex-col shrink-0 fade-in hover:shadow-glow-purple transition-shadow duration-500">

@@ -79,7 +79,12 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   {
     target: 'tutorial-size-adjuster',
     title: 'Dynamic Size Adjuster',
-    body: 'Allows you to change the size and complexity of synthetic graphs to see how algorithms scale on larger maps.',
+    body: (scenario: string) => {
+      if (scenario === 'gameai') {
+        return 'Allows you to change the size of the synthetic board. The Links input is uneditable for Game AI, as game boards strictly adhere to fixed movement rules and calculate their own valid paths.';
+      }
+      return 'Allows you to change the size and complexity of synthetic graphs to see how algorithms scale on larger maps.';
+    },
     placement: 'left',
   },
   {
@@ -209,20 +214,38 @@ function computeTooltipStyle(
   if (!rect) return { top: '50%', left: '50%', transform: 'translate(-50%,-50%)' };
   const tw = Math.min(tooltipRef.current?.offsetWidth ?? 300, vw - 32);
   const th = tooltipRef.current?.offsetHeight ?? 180;
+  
   const spaceBelow = vh - (rect.top + rect.height + PAD);
   const spaceAbove = rect.top - PAD;
   const spaceRight = vw - (rect.left + rect.width + PAD);
-  let resolved = placement === 'auto'
-    ? (spaceBelow >= th + 20 ? 'bottom'
+  const spaceLeft = rect.left - PAD;
+
+  let resolved = placement ?? 'bottom';
+  
+  if (resolved === 'auto') {
+    resolved = spaceBelow >= th + 20 ? 'bottom'
       : spaceAbove >= th + 20 ? 'top'
         : spaceRight >= tw + 20 ? 'right'
-          : 'left')
-    : placement ?? 'bottom';
+          : 'left';
+  }
+
+  // Safe fallback if the requested placement pushes the tooltip off-screen
+  if (resolved === 'left' && spaceLeft < tw + 20) {
+    resolved = spaceRight >= tw + 20 ? 'right' : (spaceBelow >= th + 20 ? 'bottom' : 'top');
+  } else if (resolved === 'right' && spaceRight < tw + 20) {
+    resolved = spaceLeft >= tw + 20 ? 'left' : (spaceBelow >= th + 20 ? 'bottom' : 'top');
+  } else if (resolved === 'top' && spaceAbove < th + 20) {
+    resolved = spaceBelow >= th + 20 ? 'bottom' : (spaceRight >= tw + 20 ? 'right' : 'left');
+  } else if (resolved === 'bottom' && spaceBelow < th + 20) {
+    resolved = spaceAbove >= th + 20 ? 'top' : (spaceRight >= tw + 20 ? 'right' : 'left');
+  }
+
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
+
   switch (resolved) {
     case 'bottom': {
-    const l = Math.max(12, Math.min(cx - tw / 2, vw - tw - 12));
+      const l = Math.max(12, Math.min(cx - tw / 2, vw - tw - 12));
       return { top: rect.top + rect.height + PAD + 14, left: l, width: tw };
     }
     case 'top': {
@@ -233,9 +256,11 @@ function computeTooltipStyle(
       const t = Math.max(12, Math.min(cy - th / 2, vh - th - 12));
       return { top: t, left: rect.left + rect.width + PAD + 14, width: tw };
     }
+    case 'left':
     default: {
       const t = Math.max(12, Math.min(cy - th / 2, vh - th - 12));
-      return { top: t, left: rect.left - PAD - tw - 14, width: tw };
+      const l = Math.max(12, Math.min(rect.left - PAD - tw - 14, vw - tw - 12));
+      return { top: t, left: l, width: tw };
     }
   }
 }

@@ -162,6 +162,7 @@ export const HistoryDetailView: React.FC<Props> = ({
               dfs:    results.dfs    as any,
               hybrid: results.hybrid as any,
             }}
+            activeAlgorithms={entry.metadata?.activeAlgorithms || { bfs: true, dfs: true, hybrid: true }}
           />
         </div>
       )}

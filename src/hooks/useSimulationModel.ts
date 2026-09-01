@@ -95,9 +95,9 @@ export type PendingNavigationReason = 'unsaved' | 'inprogress';
 
 export type PendingNavigation =
   | { type: 'back'; reason?: PendingNavigationReason }
-  | { type: 'reset'; reason: 'inprogress' }
-  | { type: 'skip'; reason: 'inprogress' }
-  | { type: 'reroll'; reason: 'inprogress' }
+  | { type: 'reset'; reason: PendingNavigationReason }
+  | { type: 'skip'; reason: PendingNavigationReason }
+  | { type: 'reroll'; reason: PendingNavigationReason }
   | { type: 'map'; mapId: string; reason?: PendingNavigationReason }
   | { type: 'gameboard'; boardId: GameAIBoard; reason?: PendingNavigationReason }
   | { type: 'sizing'; field: keyof GraphSizing; value: number; reason?: PendingNavigationReason }
@@ -413,7 +413,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     setPendingNavigation(null);
   }, [pendingNavigation, onBack, scenario, mapId, gameBoard, stepNodesUp, stepNodesDown, stepEdgesUp, stepEdgesDown, updateSyntheticSizing]);
 
-  const requestReset = useCallback((onReset: () => void, status: string) => {
+  const requestReset = useCallback((onReset: () => void, status: string, _saved: boolean) => {
     if (status === 'running' || status === 'paused') {
       pendingActionCallbackRef.current = onReset;
       setPendingNavigation({ type: 'reset', reason: 'inprogress' });
@@ -422,19 +422,25 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     }
   }, []);
 
-  const requestSkip = useCallback((onSkip: () => void, status: string) => {
+  const requestSkip = useCallback((onSkip: () => void, status: string, saved: boolean) => {
     if (status === 'running' || status === 'paused') {
       pendingActionCallbackRef.current = onSkip;
       setPendingNavigation({ type: 'skip', reason: 'inprogress' });
+    } else if (status === 'done' && !saved) {
+      pendingActionCallbackRef.current = onSkip;
+      setPendingNavigation({ type: 'skip', reason: 'unsaved' });
     } else {
       onSkip();
     }
   }, []);
 
-  const requestReroll = useCallback((onReroll: () => void, status: string) => {
+  const requestReroll = useCallback((onReroll: () => void, status: string, saved: boolean) => {
     if (status === 'running' || status === 'paused') {
       pendingActionCallbackRef.current = onReroll;
       setPendingNavigation({ type: 'reroll', reason: 'inprogress' });
+    } else if (status === 'done' && !saved) {
+      pendingActionCallbackRef.current = onReroll;
+      setPendingNavigation({ type: 'reroll', reason: 'unsaved' });
     } else {
       onReroll();
     }

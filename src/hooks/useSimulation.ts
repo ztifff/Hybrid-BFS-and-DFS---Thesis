@@ -108,9 +108,9 @@ export interface SimulationState {
   requestBack: (status: string, saved: boolean) => void;
   requestMapChange: (newMapId: string, status: string, saved: boolean) => void;
   requestBoardChange: (boardId: GameAIBoard, status: string, saved: boolean) => void;
-  requestReset: (onReset: () => void, status: string) => void;
-  requestSkip: (onSkip: () => void, status: string) => void;
-  requestReroll: (onReroll: () => void, status: string) => void;
+  requestReset: (onReset: () => void, status: string, saved: boolean) => void;
+  requestSkip: (onSkip: () => void, status: string, saved: boolean) => void;
+  requestReroll: (onReroll: () => void, status: string, saved: boolean) => void;
   confirmPendingNavigation: () => void;
 
   stepNodesUp: () => void;
@@ -268,6 +268,13 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [controller.status, model.isCurrentSaved]);
+
+  // ── Auto-pause when navigation/reset warning is triggered ─────────────
+  useEffect(() => {
+    if (model.pendingNavigation && controller.status === 'running') {
+      controller.handlePause();
+    }
+  }, [model.pendingNavigation, controller.status, controller.handlePause]);
 
   // Wrapper for confirmSaveResult to inject controller state
   const confirmSaveResult = () => {

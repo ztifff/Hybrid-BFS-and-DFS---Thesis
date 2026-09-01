@@ -22,6 +22,14 @@ import { RobotLiveStatusPanel } from './RobotLiveStatusPanel';
 import { ResizableSidebar } from '../layout/ResizableSidebar';
 import { ExpertModePanel } from './ExpertModePanel';
 
+const SIZE_ADJUSTER_THEME: Record<string, { border: string; text: string }> = {
+  robotics: { border: 'focus-within:border-orange-500', text: 'text-orange-300' },
+  traffic: { border: 'focus-within:border-emerald-500', text: 'text-emerald-300' },
+  evacuation: { border: 'focus-within:border-red-500', text: 'text-red-300' },
+  gameai: { border: 'focus-within:border-purple-500', text: 'text-purple-300' },
+  network: { border: 'focus-within:border-blue-500', text: 'text-blue-300' },
+};
+
 interface Props {
   scenario: ScenarioType;
   onBack: () => void;
@@ -189,45 +197,90 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
       />
 
       {/* ── Unsaved-result / in-progress action guard modal ───────────────────── */}
-      {sim.pendingNavigation && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn p-4">
-          <div className={`bg-gray-900 border rounded-xl p-6 max-w-sm w-full shadow-2xl scale-in ${sim.pendingNavigation.reason === 'inprogress' ? 'border-blue-500/30' : 'border-amber-500/30'}`}>
-            <h3 className={`font-bold text-lg mb-2 flex items-center gap-2 ${sim.pendingNavigation.reason === 'inprogress' ? 'text-blue-400' : 'text-amber-400'}`}>
-              <span className="text-xl">{sim.pendingNavigation.reason === 'inprogress' ? '❗' : '⚠️'}</span>
-              {sim.pendingNavigation.reason === 'inprogress' ? 'Simulation in Progress' : 'Unsaved Results'}
-            </h3>
-            <p className="text-gray-300 text-sm mb-6 leading-relaxed">
-              {sim.pendingNavigation.type === 'skip'
-                ? 'Simulation is currently running. Are you sure you want to skip to the end?'
-                : sim.pendingNavigation.type === 'reroll'
-                  ? 'Simulation is currently running. Are you sure you want to stop it and reroll events?'
-                  : sim.pendingNavigation.reason === 'inprogress'
-                    ? 'Simulation is currently running. Are you sure you want to stop it and reset?'
-                    : 'You have an unsaved simulation result. Are you sure you want to discard it and leave?'}
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => sim.setPendingNavigation(null)}
-                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm font-medium transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={sim.confirmPendingNavigation}
-                className={`px-4 py-2 text-white rounded-lg text-sm font-bold transition-colors shadow-lg ${sim.pendingNavigation.reason === 'inprogress' ? 'bg-blue-600 hover:bg-blue-500 shadow-blue-900/20' : 'bg-amber-600 hover:bg-amber-500 shadow-amber-900/20'}`}
-              >
-                {sim.pendingNavigation.type === 'skip'
-                  ? 'Skip to End'
-                  : sim.pendingNavigation.type === 'reroll'
-                    ? 'Stop & Reroll'
-                    : sim.pendingNavigation.reason === 'inprogress'
-                      ? 'Stop & Reset'
-                      : 'Discard & Leave'}
-              </button>
+      {sim.pendingNavigation && (() => {
+        const nav = sim.pendingNavigation!;
+        const isInProgress = nav.reason === 'inprogress';
+        const type = nav.type;
+
+        const title = isInProgress ? 'Simulation in Progress' : 'Unsaved Results';
+        const icon  = isInProgress ? '❗' : '⚠️';
+        const borderColor = isInProgress ? 'border-blue-500/30' : 'border-amber-500/30';
+        const titleColor  = isInProgress ? 'text-blue-400'  : 'text-amber-400';
+        const btnColor    = isInProgress
+          ? 'bg-blue-600 hover:bg-blue-500 shadow-blue-900/20'
+          : 'bg-amber-600 hover:bg-amber-500 shadow-amber-900/20';
+
+        const body = (() => {
+          if (type === 'reset')
+            return isInProgress
+              ? 'The simulation is currently running. Are you sure you want to stop it and reset everything?'
+              : 'You have unsaved simulation results. Are you sure you want to discard them and reset?';
+          if (type === 'reroll')
+            return isInProgress
+              ? 'The simulation is currently running. Are you sure you want to stop it and reroll the map events?'
+              : 'You have unsaved simulation results. Are you sure you want to discard them and reroll the map events?';
+          if (type === 'skip')
+            return isInProgress
+              ? 'The simulation is currently running. Are you sure you want to skip straight to the end?'
+              : 'You have unsaved simulation results. Are you sure you want to discard them and skip to the end?';
+          if (type === 'sizing' || type === 'sizing_step')
+            return isInProgress
+              ? 'The simulation is currently running. Are you sure you want to stop it and change the graph size?'
+              : 'You have unsaved simulation results. Are you sure you want to discard them and change the graph size?';
+          if (type === 'back')
+            return isInProgress
+              ? 'The simulation is currently running. Are you sure you want to stop it and go back?'
+              : 'You have unsaved simulation results. Are you sure you want to discard them and leave?';
+          if (type === 'map')
+            return isInProgress
+              ? 'The simulation is currently running. Are you sure you want to stop it and switch maps?'
+              : 'You have unsaved simulation results. Are you sure you want to discard them and switch maps?';
+          if (type === 'gameboard')
+            return isInProgress
+              ? 'The simulation is currently running. Are you sure you want to stop it and switch game boards?'
+              : 'You have unsaved simulation results. Are you sure you want to discard them and switch game boards?';
+          return 'Are you sure you want to proceed?';
+        })();
+
+        const confirmLabel = (() => {
+          if (type === 'reset')   return isInProgress ? 'Stop & Reset'   : 'Discard & Reset';
+          if (type === 'reroll')  return isInProgress ? 'Stop & Reroll'  : 'Discard & Reroll';
+          if (type === 'skip')    return isInProgress ? 'Skip to End'    : 'Discard & Skip';
+          if (type === 'sizing' || type === 'sizing_step')
+                                  return isInProgress ? 'Stop & Resize'  : 'Discard & Resize';
+          if (type === 'back')    return isInProgress ? 'Stop & Leave'   : 'Discard & Leave';
+          if (type === 'map')     return isInProgress ? 'Stop & Switch'  : 'Discard & Switch';
+          if (type === 'gameboard') return isInProgress ? 'Stop & Switch' : 'Discard & Switch';
+          return 'Confirm';
+        })();
+
+        return (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn p-4">
+            <div className={`bg-gray-900 border rounded-xl p-6 max-w-sm w-full shadow-2xl scale-in ${borderColor}`}>
+              <h3 className={`font-bold text-lg mb-2 flex items-center gap-2 ${titleColor}`}>
+                <span className="text-xl">{icon}</span>
+                {title}
+              </h3>
+              <p className="text-gray-300 text-sm mb-6 leading-relaxed">{body}</p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => sim.setPendingNavigation(null)}
+                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={sim.confirmPendingNavigation}
+                  className={`px-4 py-2 text-white rounded-lg text-sm font-bold transition-colors shadow-lg ${btnColor}`}
+                >
+                  {confirmLabel}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
+
 
       <div className="min-h-screen lg:h-screen w-full max-w-[100vw] bg-transparent text-white flex flex-col relative z-0 lg:overflow-hidden fade-in">
         {/* Help Modal */}
@@ -874,8 +927,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             {/* Playback Controls */}
             <div data-tutorial="tutorial-playback-controls" className="mt-2 flex flex-col items-center gap-3 w-full shrink-0">
               <div className="flex items-center gap-2 flex-wrap justify-center w-full">
-                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={() => sim.requestReroll(sim.handleRerollEvents, sim.status)} className={scenarioBtnClass}>Reroll Events</button>
-                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={() => sim.requestReset(sim.handleReset, sim.status)} className={scenarioBtnClass}>Reset</button>
+                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={() => sim.requestReroll(sim.handleRerollEvents, sim.status, sim.isCurrentSaved)} className={scenarioBtnClass}>Reroll Events</button>
+                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={() => sim.requestReset(sim.handleReset, sim.status, sim.isCurrentSaved)} className={scenarioBtnClass}>Reset</button>
                 <button disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex === 0} onClick={sim.handleStepBackward} className={scenarioBtnClass}>Back</button>
 
                 {sim.status === 'running' ? (
@@ -891,7 +944,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 )}
 
                 <button disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex >= sim.totalSteps} onClick={sim.handleStepForward} className={scenarioBtnClass}>Fwd</button>
-                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={() => sim.requestSkip(sim.handleSkipEnd, sim.status)} className={scenarioBtnClass}>Skip</button>
+                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={() => sim.requestSkip(sim.handleSkipEnd, sim.status, sim.isCurrentSaved)} className={scenarioBtnClass}>Skip</button>
               </div>
 
               {/* Speed Controller */}
@@ -962,6 +1015,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   graphNodes={sim.currentGraph.nodes}
                   onRobotClick={(nodeId) => setHighlightedNodeId(nodeId)}
                   mapId={sim.mapId}
+                  activeAlgorithms={sim.activeAlgorithms}
                 />
               </div>
             )}
@@ -995,6 +1049,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   dynamicEvents={sim.simResults?.hybrid.dynamicEvents || []}
                   stepIndex={sim.stepIndex}
                   simResults={sim.simResults}
+                  activeAlgorithms={sim.activeAlgorithms}
                 />
               </div>
             )}
@@ -1006,7 +1061,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
                 <div className="flex items-center justify-between gap-2">
                   {/* Nodes */}
-                  <label className="flex items-center gap-1.5 flex-1 rounded-md border border-white/10 bg-black/40 shadow-inner pl-3 pr-0 py-1 overflow-hidden transition-colors focus-within:border-teal-500">
+                  <label className={`flex items-center gap-1.5 flex-1 rounded-md border border-white/10 bg-black/40 shadow-inner pl-3 pr-0 py-1 overflow-hidden transition-colors ${SIZE_ADJUSTER_THEME[scenario]?.border || 'focus-within:border-teal-500'}`}>
                     <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold flex-1">Nodes</span>
                     <div className="flex items-stretch bg-black/60 border-l border-white/10 h-full ml-1">
                       <input
@@ -1014,11 +1069,27 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         min={MIN_SYNTHETIC_NODES[sim.sizingKey as SizingKey]}
                         max={MAX_SYNTHETIC_NODES[sim.sizingKey as SizingKey]}
                         value={sim.localNodesInput}
-                        onChange={(e) => sim.setLocalNodesInput(e.target.value)}
-                        onBlur={() => { if (sim.localNodesInput !== '') sim.requestSizingChange('nodes', Number(sim.localNodesInput), sim.status, sim.isCurrentSaved); }}
-                        onKeyDown={(e) => { if (e.key === 'Enter' && sim.localNodesInput !== '') { sim.requestSizingChange('nodes', Number(sim.localNodesInput), sim.status, sim.isCurrentSaved); (e.target as HTMLInputElement).blur(); } }}
+                        onKeyDown={(e) => {
+                          if (['e', 'E', '-', '+', '.'].includes(e.key)) e.preventDefault();
+                          if (e.key === 'Enter' && sim.localNodesInput !== '') { sim.requestSizingChange('nodes', Number(sim.localNodesInput), sim.status, sim.isCurrentSaved); (e.target as HTMLInputElement).blur(); }
+                        }}
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(/[^0-9]/g, '');
+                          if (raw === '') { sim.setLocalNodesInput(''); return; }
+                          const max = MAX_SYNTHETIC_NODES[sim.sizingKey as SizingKey];
+                          const min = MIN_SYNTHETIC_NODES[sim.sizingKey as SizingKey];
+                          const clamped = Math.min(max, Math.max(min, Number(raw)));
+                          sim.setLocalNodesInput(String(clamped));
+                        }}
+                        onBlur={() => {
+                          if (sim.localNodesInput === '') {
+                            sim.setLocalNodesInput(String(sim.syntheticSizing.nodes));
+                          } else {
+                            sim.requestSizingChange('nodes', Number(sim.localNodesInput), sim.status, sim.isCurrentSaved);
+                          }
+                        }}
                         disabled={sim.isComputing || sim.isGraphLoading}
-                        className="w-10 bg-transparent py-1 text-center text-xs font-bold text-teal-300 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 m-0"
+                        className={`w-10 bg-transparent py-1 text-center text-xs font-bold ${SIZE_ADJUSTER_THEME[scenario]?.text || 'text-teal-300'} focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 m-0`}
                       />
                       <div className="flex flex-col border-l border-white/10 bg-black/40 w-5">
                         <button type="button" disabled={sim.isComputing || sim.isGraphLoading || sim.syntheticSizing.nodes >= MAX_SYNTHETIC_NODES[sim.sizingKey as SizingKey]} onClick={() => sim.requestSizingStep('nodesUp', sim.status, sim.isCurrentSaved)} className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center">
@@ -1032,7 +1103,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   </label>
 
                   {/* Links */}
-                  <label className="flex items-center gap-1.5 flex-1 rounded-md border border-white/10 bg-black/40 shadow-inner pl-3 pr-0 py-1 overflow-hidden transition-colors focus-within:border-teal-500">
+                  <label className={`flex items-center gap-1.5 flex-1 rounded-md border border-white/10 bg-black/40 shadow-inner pl-3 pr-0 py-1 overflow-hidden transition-colors ${SIZE_ADJUSTER_THEME[scenario]?.border || 'focus-within:border-teal-500'}`}>
                     <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold flex-1">Links</span>
                     <div className="flex items-stretch bg-black/60 border-l border-white/10 h-full ml-1">
                       <input
@@ -1040,17 +1111,33 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         min={MIN_SYNTHETIC_LINKS[scenario]}
                         max={1600}
                         value={sim.localEdgesInput}
-                        onChange={(e) => sim.setLocalEdgesInput(e.target.value)}
-                        onBlur={() => { if (sim.localEdgesInput !== '') sim.requestSizingChange('edges', Math.max(MIN_SYNTHETIC_LINKS[scenario], Number(sim.localEdgesInput)), sim.status, sim.isCurrentSaved); }}
-                        onKeyDown={(e) => { if (e.key === 'Enter' && sim.localEdgesInput !== '') { sim.requestSizingChange('edges', Math.max(MIN_SYNTHETIC_LINKS[scenario], Number(sim.localEdgesInput)), sim.status, sim.isCurrentSaved); (e.target as HTMLInputElement).blur(); } }}
-                        disabled={sim.isComputing || sim.isGraphLoading}
-                        className="w-10 bg-transparent py-1 text-center text-xs font-bold text-teal-300 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 m-0"
+                        onKeyDown={(e) => {
+                          if (['e', 'E', '-', '+', '.'].includes(e.key)) e.preventDefault();
+                          if (e.key === 'Enter' && sim.localEdgesInput !== '') { sim.requestSizingChange('edges', Number(sim.localEdgesInput), sim.status, sim.isCurrentSaved); (e.target as HTMLInputElement).blur(); }
+                        }}
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(/[^0-9]/g, '');
+                          if (raw === '') { sim.setLocalEdgesInput(''); return; }
+                          const max = 1600;
+                          const min = MIN_SYNTHETIC_LINKS[scenario];
+                          const clamped = Math.min(max, Math.max(min, Number(raw)));
+                          sim.setLocalEdgesInput(String(clamped));
+                        }}
+                        onBlur={() => {
+                          if (sim.localEdgesInput === '') {
+                            sim.setLocalEdgesInput(String(sim.syntheticSizing.edges));
+                          } else {
+                            sim.requestSizingChange('edges', Number(sim.localEdgesInput), sim.status, sim.isCurrentSaved);
+                          }
+                        }}
+                        disabled={scenario === 'gameai' || sim.isComputing || sim.isGraphLoading}
+                        className={`w-10 bg-transparent py-1 text-center text-xs font-bold ${SIZE_ADJUSTER_THEME[scenario]?.text || 'text-teal-300'} focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 m-0`}
                       />
                       <div className="flex flex-col border-l border-white/10 bg-black/40 w-5">
-                        <button type="button" disabled={sim.isComputing || sim.isGraphLoading || sim.generatedEdgeCount >= 1600} onClick={() => sim.requestSizingStep('edgesUp', sim.status, sim.isCurrentSaved)} className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center">
+                        <button type="button" disabled={scenario === 'gameai' || sim.isComputing || sim.isGraphLoading || sim.generatedEdgeCount >= 1600} onClick={() => sim.requestSizingStep('edgesUp', sim.status, sim.isCurrentSaved)} className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center">
                           <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
                         </button>
-                        <button type="button" disabled={sim.isComputing || sim.isGraphLoading || sim.generatedEdgeCount <= MIN_SYNTHETIC_LINKS[scenario]} onClick={() => sim.requestSizingStep('edgesDown', sim.status, sim.isCurrentSaved)} className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 border-t border-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center">
+                        <button type="button" disabled={scenario === 'gameai' || sim.isComputing || sim.isGraphLoading || sim.generatedEdgeCount <= MIN_SYNTHETIC_LINKS[scenario]} onClick={() => sim.requestSizingStep('edgesDown', sim.status, sim.isCurrentSaved)} className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 border-t border-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center">
                           <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
                         </button>
                       </div>
