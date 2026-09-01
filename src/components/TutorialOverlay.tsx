@@ -363,6 +363,35 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     };
   }, [isOpen, stepIndex, step]);
 
+  // Block clicks to the underlying app during tutorial, but allow scrolls
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const blockClicks = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('.tutorial-interactive')) {
+        return; // Allow clicks on tutorial elements
+      }
+      e.stopPropagation();
+      e.preventDefault();
+    };
+
+    // Use capture phase to intercept before React or anything else processes it
+    window.addEventListener('click', blockClicks, true);
+    window.addEventListener('mousedown', blockClicks, true);
+    window.addEventListener('mouseup', blockClicks, true);
+    window.addEventListener('touchstart', blockClicks, { capture: true, passive: false });
+    window.addEventListener('touchend', blockClicks, true);
+
+    return () => {
+      window.removeEventListener('click', blockClicks, true);
+      window.removeEventListener('mousedown', blockClicks, true);
+      window.removeEventListener('mouseup', blockClicks, true);
+      window.removeEventListener('touchstart', blockClicks, true);
+      window.removeEventListener('touchend', blockClicks, true);
+    };
+  }, [isOpen]);
+
   if (!isOpen || !step) return null;
 
   const isLast = stepIndex === steps.length - 1;
@@ -401,7 +430,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
       {/* Skip pill */}
       <div
-        className="absolute top-5 left-1/2 -translate-x-1/2 z-[9010] pointer-events-auto"
+        className="absolute top-5 left-1/2 -translate-x-1/2 z-[9010] pointer-events-auto tutorial-interactive"
         style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.25s' }}
       >
         <button
@@ -415,7 +444,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
       {/* Step counter */}
       <div
-        className="absolute top-5 right-5 z-[9010] select-none pointer-events-auto"
+        className="absolute top-5 right-5 z-[9010] select-none pointer-events-auto tutorial-interactive"
         style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.25s' }}
       >
         <div className="px-3 py-1.5 rounded-full bg-[#111827]/90 border border-white/10 text-gray-400 text-[10px] font-mono tracking-wider">
@@ -426,7 +455,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       {/* Tooltip */}
       <div
         ref={tooltipRef}
-        className="absolute z-[9010] pointer-events-auto"
+        className="absolute z-[9010] pointer-events-auto tutorial-interactive"
         style={{
           ...tooltipStyle,
           opacity: visible ? 1 : 0,
