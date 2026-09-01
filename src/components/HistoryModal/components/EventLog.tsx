@@ -16,7 +16,7 @@ interface Props {
 }
 
 export const EventLog: React.FC<Props> = ({
-  entry, results, allEvents, currentStep, maxEventStep, maxSteps,
+  entry, allEvents, currentStep,
   highlightedNodeId, blockIcon, clearIcon, onEventClick, onSeek,
 }) => {
   const visibleEvents = allEvents.filter(e => e.stepIndex <= currentStep).reverse();
@@ -50,13 +50,12 @@ export const EventLog: React.FC<Props> = ({
                     onSeek(event.stepIndex);
                   }}
                   title="Click to seek to this step and locate on map"
-                  className={`flex items-start gap-2 p-2 rounded border cursor-pointer select-none transition-all ${
-                    isHighlighted
+                  className={`flex items-start gap-2 p-2 rounded border cursor-pointer select-none transition-all ${isHighlighted
                       ? 'border-yellow-400 bg-yellow-900/20 shadow-[0_0_8px_rgba(234,179,8,0.35)] scale-[1.01]'
                       : event.blocked
                         ? 'border-orange-500/30 bg-orange-900/10 text-orange-300 hover:border-orange-400/60'
                         : 'border-green-500/30 bg-green-900/10 text-green-300 hover:border-green-400/60'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span className="text-[10px] font-mono opacity-60 shrink-0">[{event.stepIndex}]</span>
