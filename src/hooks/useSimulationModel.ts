@@ -26,6 +26,16 @@ export const MIN_SYNTHETIC_LINKS: Record<ScenarioType, number> = {
   gameai: 24,
 };
 
+export const MAX_SYNTHETIC_LINKS: Record<SizingKey, number> = {
+  network: 185,    // natural generated links at 220 nodes
+  robotics: 250,   // natural generated links at 217 nodes
+  traffic: 174,    // natural generated links at 220 nodes
+  evacuation: 147, // natural generated links at 144 nodes
+  gameai: 264,     // natural generated links at 145 nodes
+  'gameai-dama': 264,
+  'gameai-checkers': 121,
+};
+
 // ── Sizing tables ──────────────────────────────────────────────────────────────
 const DEFAULT_SYNTHETIC_SIZING: Record<SizingKey, GraphSizing> = {
   network: { nodes: 28, edges: 27 },
@@ -171,7 +181,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     // without the input instantly locking to the minimum (e.g. 7). The backend generators
     // will safely clamp the final value to the actual scenario minimums anyway.
     const min = 0;
-    const max = field === 'nodes' ? MAX_SYNTHETIC_NODES[sizingKey] : 1600;
+    const max = field === 'nodes' ? MAX_SYNTHETIC_NODES[sizingKey] : MAX_SYNTHETIC_LINKS[sizingKey];
 
     setSyntheticSizingByScenario((previous) => {
       const current = previous[sizingKey] ?? DEFAULT_SYNTHETIC_SIZING[sizingKey];

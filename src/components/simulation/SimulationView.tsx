@@ -3,7 +3,7 @@ import { TutorialOverlay, useTutorial, TUTORIAL_STEPS } from '../TutorialOverlay
 
 import { ScenarioType } from '../../types';
 import { useSimulation } from '../../hooks/useSimulation';
-import { MAX_SYNTHETIC_NODES, MIN_SYNTHETIC_NODES, MIN_SYNTHETIC_LINKS, GAME_AI_BOARDS, SizingKey } from '../../hooks/useSimulationModel';
+import { MAX_SYNTHETIC_NODES, MIN_SYNTHETIC_NODES, MIN_SYNTHETIC_LINKS, MAX_SYNTHETIC_LINKS, GAME_AI_BOARDS, SizingKey } from '../../hooks/useSimulationModel';
 import { getScenario } from '../../config/scenarios';
 import { CiscoTerminal } from '../NetworkCanvas/renderers/scenarios/network/CiscoTerminal';
 import { MAP_REGISTRY } from '../../config/mapRegistry';
@@ -115,6 +115,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
   // ── Purely local UI state (nothing to do with business logic) ───────────────
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
+  const [terminalNodeId, setTerminalNodeId] = useState<string | null>(null);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [dstDropdownOpen, setDstDropdownOpen] = useState(false);
   const [dstMinWarning, setDstMinWarning] = useState(false);
@@ -885,8 +886,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     activeAlgorithms={sim.activeAlgorithms}
                   />
 
-                  {scenario === 'network' && (sim.mapId === 'companybusiness' || sim.mapId === 'campus') && highlightedNodeId && (
-                    <CiscoTerminal nodeId={highlightedNodeId} onClose={() => setHighlightedNodeId(null)} />
+                  {scenario === 'network' && (sim.mapId === 'companybusiness' || sim.mapId === 'campus') && terminalNodeId && (
+                    <CiscoTerminal nodeId={terminalNodeId} onClose={() => setTerminalNodeId(null)} />
                   )}
 
                   {scenario === 'network' && (sim.mapId === 'companybusiness' || sim.mapId === 'campus') && (
@@ -896,8 +897,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         .map(n => (
                           <button
                             key={`terminal-btn-${n.id}`}
-                            onClick={(e) => { e.stopPropagation(); setHighlightedNodeId(prev => prev === n.id ? null : n.id); }}
-                            className={`px-3 py-1.5 rounded border font-mono text-xs shadow-md flex items-center gap-2 transition-colors cursor-pointer ${highlightedNodeId === n.id
+                            onClick={(e) => { e.stopPropagation(); setTerminalNodeId(prev => prev === n.id ? null : n.id); }}
+                            className={`px-3 py-1.5 rounded border font-mono text-xs shadow-md flex items-center gap-2 transition-colors cursor-pointer ${terminalNodeId === n.id
                               ? 'bg-gray-800 border-green-500 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.2)]'
                               : 'bg-gray-900 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200'
                               }`}
@@ -1109,7 +1110,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                       <input
                         type="number"
                         min={MIN_SYNTHETIC_LINKS[scenario]}
-                        max={1600}
+                        max={MAX_SYNTHETIC_LINKS[sim.sizingKey as SizingKey]}
                         value={sim.localEdgesInput}
                         onKeyDown={(e) => {
                           if (['e', 'E', '-', '+', '.'].includes(e.key)) e.preventDefault();
@@ -1118,7 +1119,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         onChange={(e) => {
                           const raw = e.target.value.replace(/[^0-9]/g, '');
                           if (raw === '') { sim.setLocalEdgesInput(''); return; }
-                          const max = 1600;
+                          const max = MAX_SYNTHETIC_LINKS[sim.sizingKey as SizingKey];
                           const min = MIN_SYNTHETIC_LINKS[scenario];
                           const clamped = Math.min(max, Math.max(min, Number(raw)));
                           sim.setLocalEdgesInput(String(clamped));
@@ -1134,7 +1135,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         className={`w-10 bg-transparent py-1 text-center text-xs font-bold ${SIZE_ADJUSTER_THEME[scenario]?.text || 'text-teal-300'} focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 m-0`}
                       />
                       <div className="flex flex-col border-l border-white/10 bg-black/40 w-5">
-                        <button type="button" disabled={scenario === 'gameai' || sim.isComputing || sim.isGraphLoading || sim.generatedEdgeCount >= 1600} onClick={() => sim.requestSizingStep('edgesUp', sim.status, sim.isCurrentSaved)} className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center">
+                        <button type="button" disabled={scenario === 'gameai' || sim.isComputing || sim.isGraphLoading || sim.generatedEdgeCount >= MAX_SYNTHETIC_LINKS[sim.sizingKey as SizingKey]} onClick={() => sim.requestSizingStep('edgesUp', sim.status, sim.isCurrentSaved)} className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center">
                           <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
                         </button>
                         <button type="button" disabled={scenario === 'gameai' || sim.isComputing || sim.isGraphLoading || sim.generatedEdgeCount <= MIN_SYNTHETIC_LINKS[scenario]} onClick={() => sim.requestSizingStep('edgesDown', sim.status, sim.isCurrentSaved)} className="flex-1 text-gray-400 hover:text-white hover:bg-gray-700 border-t border-gray-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center">
