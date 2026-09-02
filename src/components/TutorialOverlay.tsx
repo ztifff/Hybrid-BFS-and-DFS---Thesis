@@ -403,17 +403,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
     // Use capture phase to intercept before React or anything else processes it
     window.addEventListener('click', blockClicks, true);
-    window.addEventListener('mousedown', blockClicks, true);
-    window.addEventListener('mouseup', blockClicks, true);
-    window.addEventListener('touchstart', blockClicks, { capture: true, passive: false });
-    window.addEventListener('touchend', blockClicks, true);
 
     return () => {
       window.removeEventListener('click', blockClicks, true);
-      window.removeEventListener('mousedown', blockClicks, true);
-      window.removeEventListener('mouseup', blockClicks, true);
-      window.removeEventListener('touchstart', blockClicks, true);
-      window.removeEventListener('touchend', blockClicks, true);
     };
   }, [isOpen]);
 

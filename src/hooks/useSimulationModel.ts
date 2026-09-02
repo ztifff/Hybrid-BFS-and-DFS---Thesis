@@ -29,7 +29,7 @@ export const MIN_SYNTHETIC_LINKS: Record<ScenarioType, number> = {
 // ── Sizing tables ──────────────────────────────────────────────────────────────
 const DEFAULT_SYNTHETIC_SIZING: Record<SizingKey, GraphSizing> = {
   network: { nodes: 28, edges: 27 },
-  robotics: { nodes: 56, edges: 63 },
+  robotics: { nodes: 28, edges: 32 },
   traffic: { nodes: 36, edges: 29 },
   evacuation: { nodes: 60, edges: 49 },
   gameai: { nodes: 65, edges: 120 }, // fallback (unused when board is known)
@@ -203,6 +203,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
   // Data State
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [currentGraph, setCurrentGraph] = useState<ScenarioGraph | null>(null);
+  const [currentGraphMapId, setCurrentGraphMapId] = useState<string | null>(null);
   const [isGraphLoading, setIsGraphLoading] = useState(true);
   const [simResults, setSimResults] = useState<MultiResultsLocal | null>(null);
   const [bfsResult, setBfsResult] = useState<{ pathLength: number } | null>(null);
@@ -422,13 +423,10 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     }
   }, []);
 
-  const requestSkip = useCallback((onSkip: () => void, status: string, saved: boolean) => {
+  const requestSkip = useCallback((onSkip: () => void, status: string, _saved: boolean) => {
     if (status === 'running' || status === 'paused') {
       pendingActionCallbackRef.current = onSkip;
       setPendingNavigation({ type: 'skip', reason: 'inprogress' });
-    } else if (status === 'done' && !saved) {
-      pendingActionCallbackRef.current = onSkip;
-      setPendingNavigation({ type: 'skip', reason: 'unsaved' });
     } else {
       onSkip();
     }
@@ -609,7 +607,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
           graphParams.set('customDestinationIds', JSON.stringify(destinationDevices));
         }
 
-        if (scenario === 'robotics') {
+        if (scenario === 'robotics' && roboticsInitializedMap.current === mapId) {
           graphParams.set('customSourceIds', JSON.stringify(sourceDevices));
           graphParams.set('customDestinationIds', JSON.stringify(destinationDevices_robotics));
         }
@@ -636,6 +634,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
 
         if (isMounted) {
           setCurrentGraph(json.data);
+          setCurrentGraphMapId(mapId);
           setIsGraphLoading(false);
         }
       } catch (err) {
@@ -649,18 +648,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
 
   // Synchronize custom endpoints if the map changes or if they are invalid
   useEffect(() => {
-    if (scenario === 'robotics' && currentGraph && robotAssignments.length === 0) {
-      // Pick a default robot (source) and at least 2 default destinations from the graph
-      const defaultRobot = currentGraph.sourceIds?.[0] || currentGraph.sourceId || currentGraph.nodes.find(n => n.type === 'depot' || n.id.includes('Robot'))?.id;
 
-      const defaultDests = currentGraph.destinationIds && currentGraph.destinationIds.length >= 2
-        ? currentGraph.destinationIds.slice(0, 2)
-        : currentGraph.nodes.filter(n => n.type === 'shelf' || n.type === 'delivery_bay' || n.id.includes('nurse') || n.id.includes('air_pressure')).slice(0, 2).map(n => n.id);
-
-      if (defaultRobot && defaultDests.length > 0) {
-        setRobotAssignments([{ robotId: defaultRobot, destinations: defaultDests }]);
-      }
-    }
 
     if (networkRoutingMode === 'device-to-device' && currentGraph) {
       let currentSource = sourceDevice;
@@ -692,15 +680,19 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
   const roboticsInitializedMap = useRef<string | null>(null);
 
   useEffect(() => {
-    if (scenario === 'robotics' && currentGraph) {
-      const depots = currentGraph.nodes.filter(n => n.type === 'depot').map(n => n.id);
-      const destNodes = currentGraph.nodes.filter(n => n.type === 'shelf' || n.id.startsWith('dest_')).map(n => n.id);
+    if (scenario === 'robotics' && currentGraph && currentGraphMapId === mapId) {
+      const depots = (currentGraph.sourceIds && currentGraph.sourceIds.length > 0)
+        ? currentGraph.sourceIds
+        : (currentGraph.sourceId
+          ? [currentGraph.sourceId]
+          : currentGraph.nodes.filter(n => n.type === 'depot' || n.id.includes('Robot') || n.label.includes('Start')).map(n => n.id));
+      const destNodes = (currentGraph.destinationIds && currentGraph.destinationIds.length >= 2)
+        ? currentGraph.destinationIds
+        : currentGraph.nodes.filter(n => n.type === 'shelf' || n.id.startsWith('dest_') || n.type === 'delivery_bay' || n.id.includes('nurse') || n.id.includes('air_pressure')).map(n => n.id);
 
       if (roboticsInitializedMap.current !== mapId) {
         // Initial setup for this map (Synthetic, AWS, or Clinic)
-        const defaultDests = mapId === 'synthetic'
-          ? currentGraph.nodes.filter(n => n.id.startsWith('dest_')).map(n => n.id)
-          : destNodes.slice(0, 2);
+        const defaultDests = destNodes.slice(0, 2);
         const boxCounts: Record<string, number> = {};
         defaultDests.forEach(d => boxCounts[d] = 6);
 

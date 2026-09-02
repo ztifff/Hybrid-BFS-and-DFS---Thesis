@@ -138,9 +138,10 @@ export abstract class BaseRenderer {
       const toNode = visibleNodeMap.get(edge.to);
       if (!fromNode || !toNode) return;
 
-      const pBFS = sets.bfs.path.has(edge.from) && sets.bfs.path.has(edge.to);
-      const pDFS = sets.dfs.path.has(edge.from) && sets.dfs.path.has(edge.to);
-      const pHYB = sets.hyb.path.has(edge.from) && sets.hyb.path.has(edge.to);
+      const edgeTouchesBlocked = options.activeBlocked.has(edge.from) || options.activeBlocked.has(edge.to);
+      const pBFS = !edgeTouchesBlocked && sets.bfs.path.has(edge.from) && sets.bfs.path.has(edge.to);
+      const pDFS = !edgeTouchesBlocked && sets.dfs.path.has(edge.from) && sets.dfs.path.has(edge.to);
+      const pHYB = !edgeTouchesBlocked && sets.hyb.path.has(edge.from) && sets.hyb.path.has(edge.to);
 
       if (pBFS || pDFS || pHYB) {
         const x1 = this.sx(fromNode.x, options), y1 = this.sy(fromNode.y, options);
@@ -167,9 +168,10 @@ export abstract class BaseRenderer {
       const cfg = EDGE_CONFIG[edge.type] ?? EDGE_CONFIG.path;
       const baseWidth = isDatacenter ? 0.25 : (isMassive ? 0.3 : cfg.width);
 
-      const vBFS = (sets.bfs.explored.has(edge.from) || sets.bfs.explored.has(edge.to)) && !(sets.bfs.path.has(edge.from) && sets.bfs.path.has(edge.to));
-      const vDFS = (sets.dfs.explored.has(edge.from) || sets.dfs.explored.has(edge.to)) && !(sets.dfs.path.has(edge.from) && sets.dfs.path.has(edge.to));
-      const vHYB = (sets.hyb.explored.has(edge.from) || sets.hyb.explored.has(edge.to)) && !(sets.hyb.path.has(edge.from) && sets.hyb.path.has(edge.to));
+      const isBlocked = (id: string) => options.activeBlocked.has(id);
+      const vBFS = (sets.bfs.explored.has(edge.from) && sets.bfs.explored.has(edge.to)) && !isBlocked(edge.from) && !isBlocked(edge.to) && !(sets.bfs.path.has(edge.from) && sets.bfs.path.has(edge.to));
+      const vDFS = (sets.dfs.explored.has(edge.from) && sets.dfs.explored.has(edge.to)) && !isBlocked(edge.from) && !isBlocked(edge.to) && !(sets.dfs.path.has(edge.from) && sets.dfs.path.has(edge.to));
+      const vHYB = (sets.hyb.explored.has(edge.from) && sets.hyb.explored.has(edge.to)) && !isBlocked(edge.from) && !isBlocked(edge.to) && !(sets.hyb.path.has(edge.from) && sets.hyb.path.has(edge.to));
 
       if (vBFS || vDFS || vHYB) {
         if (isMassive || isDatacenter) {
@@ -318,6 +320,12 @@ export abstract class BaseRenderer {
       ctx.textBaseline = 'middle';
 
       let displayLabel = node.label ? node.label.replace('\n', ' - ').trim() : '';
+      if (displayLabel.includes('_')) {
+        displayLabel = displayLabel
+          .split('_')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+      }
       if (zoom < 0.5) {
         if (displayLabel.startsWith('Finish Line ')) displayLabel = displayLabel.replace('Finish Line ', 'FL-');
         if (displayLabel.startsWith('Rack-')) displayLabel = displayLabel.replace('Rack-', 'R-');

@@ -27,10 +27,19 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
   const isBoxDeliveryMap = mapId === 'aws' || mapId === 'awsWarehouse' || mapId === 'synthetic';
 
   const formatLabel = (label: string) => {
-    return label
+    let formatted = label
       .replace(/\n/g, " ")
       .replace(/Finish Line /g, "FL-")
       .replace(/Packing Desk /g, "PD-");
+      
+    if (formatted.includes('_')) {
+      formatted = formatted
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    }
+    
+    return formatted;
   };
 
   const getRobotLabel = (robotId: string) => {
