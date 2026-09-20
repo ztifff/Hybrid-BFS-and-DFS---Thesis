@@ -111,7 +111,8 @@ export type PendingNavigation =
   | { type: 'map'; mapId: string; reason?: PendingNavigationReason }
   | { type: 'gameboard'; boardId: GameAIBoard; reason?: PendingNavigationReason }
   | { type: 'sizing'; field: keyof GraphSizing; value: number; reason?: PendingNavigationReason }
-  | { type: 'sizing_step'; action: 'nodesUp' | 'nodesDown' | 'edgesUp' | 'edgesDown'; reason?: PendingNavigationReason };
+  | { type: 'sizing_step'; action: 'nodesUp' | 'nodesDown' | 'edgesUp' | 'edgesDown'; reason?: PendingNavigationReason }
+  | { type: 'robot_assignment'; reason: 'inprogress' };
 
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -401,7 +402,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
 
   const confirmPendingNavigation = useCallback(() => {
     if (!pendingNavigation) return;
-    if (pendingNavigation.type === 'reset' || pendingNavigation.type === 'skip' || pendingNavigation.type === 'reroll') {
+    if (pendingNavigation.type === 'reset' || pendingNavigation.type === 'skip' || pendingNavigation.type === 'reroll' || pendingNavigation.type === 'robot_assignment') {
       pendingActionCallbackRef.current?.();
       pendingActionCallbackRef.current = null;
     } else if (pendingNavigation.type === 'back') {
@@ -452,6 +453,11 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     } else {
       onReroll();
     }
+  }, []);
+
+  const requestRobotAssignmentOpen = useCallback((onOpen: () => void) => {
+    pendingActionCallbackRef.current = onOpen;
+    setPendingNavigation({ type: 'robot_assignment', reason: 'inprogress' });
   }, []);
 
 
@@ -799,6 +805,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     requestReset,
     requestSkip,
     requestReroll,
+    requestRobotAssignmentOpen,
     confirmPendingNavigation,
 
     // Synthetic size stepper actions

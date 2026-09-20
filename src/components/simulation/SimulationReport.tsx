@@ -1,5 +1,5 @@
 import React from 'react';
-import { SimulationResult, DynamicEvent } from '../../types';
+import { SimulationResult, DynamicEvent, ScenarioType } from '../../types';
 import { getPathOptimality, getMemoryInMB, getAdaptabilityScore } from '../../utils/metricsHelpers';
 import { ALGORITHMS } from '../../config/scenarios';
 
@@ -13,6 +13,7 @@ interface Props {
   isSaved: boolean;
   scenarioColor?: string;
   activeAlgorithms?: { bfs: boolean; dfs: boolean; hybrid: boolean };
+  scenario?: ScenarioType;
 }
 
 export const SimulationReport: React.FC<Props> = ({
@@ -23,12 +24,26 @@ export const SimulationReport: React.FC<Props> = ({
   isSaved,
   scenarioColor,
   activeAlgorithms = { bfs: true, dfs: true, hybrid: true },
+  scenario,
 }) => {
   const optimalDistance = bfsResult?.pathLength || 1;
 
+  const distanceLabel = scenario === 'network' ? 'Total Latency'
+    : scenario === 'traffic' ? 'Travel Time'
+    : scenario === 'evacuation' ? 'Evac Time'
+    : scenario === 'gameai' ? 'Moves'
+    : 'Distance';
+
+  const distanceUnit = scenario === 'network' ? ' ms'
+    : scenario === 'robotics' ? ' m'
+    : scenario === 'traffic' ? ' min'
+    : scenario === 'evacuation' ? ' s'
+    : '';
+
   const getData = (algo: 'bfs' | 'dfs' | 'hybrid') => {
     const res = multiResults[algo];
-    const actualDistance = Math.max(res.metrics.pathLength, 1);
+    // Use totalLatency (weighted distance) to match live MetricsPanel display
+    const actualDistance = Math.max(res.metrics.totalLatency ?? res.metrics.pathLength ?? 0, 1);
     const cRate = res.metrics.completionRate ? res.metrics.completionRate.toFixed(1) + '%' : '0%';
 
     return {
@@ -106,6 +121,11 @@ export const SimulationReport: React.FC<Props> = ({
             <tr>
               <td className="py-2 text-xs text-gray-400">Nodes Visited</td>
               {activeAlgos.map(a => renderCell(a, data[a].nodes, data[a].nodes === minNodes, !data[a].success))}
+            </tr>
+            <tr>
+              <td className="py-2 text-xs text-gray-400">{distanceLabel}</td>
+              {activeAlgos.map(a => renderCell(a, `${data[a].distance.toFixed(scenario === 'gameai' ? 0 : 1)}${distanceUnit}`, false, !data[a].success))}
+
             </tr>
             <tr>
               <td className="py-2 text-xs text-gray-400">Completion Rate</td>

@@ -111,6 +111,7 @@ export interface SimulationState {
   requestReset: (onReset: () => void, status: string, saved: boolean) => void;
   requestSkip: (onSkip: () => void, status: string, saved: boolean) => void;
   requestReroll: (onReroll: () => void, status: string, saved: boolean) => void;
+  requestRobotAssignmentOpen: (onOpen: () => void) => void;
   confirmPendingNavigation: () => void;
 
   stepNodesUp: () => void;
@@ -389,6 +390,7 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
     requestReset: model.requestReset,
     requestSkip: model.requestSkip,
     requestReroll: model.requestReroll,
+    requestRobotAssignmentOpen: model.requestRobotAssignmentOpen,
     confirmPendingNavigation: model.confirmPendingNavigation,
     requestSizingChange: model.requestSizingChange,
     requestSizingStep: (action: 'nodesUp' | 'nodesDown' | 'edgesUp' | 'edgesDown', status: string, saved: boolean) => {

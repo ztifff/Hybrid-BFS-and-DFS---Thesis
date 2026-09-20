@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlgorithmKey } from '../types';
 import { AlgoData } from '../hooks/useHistoryDetail';
+import { ScenarioType } from '../../../types';
 
 interface Props {
   bfs: AlgoData | null;
@@ -8,6 +9,7 @@ interface Props {
   hyb: AlgoData | null;
   entryActiveAlgorithms: { bfs: boolean; dfs: boolean; hybrid: boolean };
   runNumber?: number;
+  scenario?: ScenarioType;
 }
 
 const renderCell = (value: string | number, color: string, isFailure = false) => (
@@ -26,9 +28,22 @@ export const BenchmarkTable: React.FC<Props> = ({
   hyb,
   entryActiveAlgorithms,
   runNumber,
+  scenario,
 }) => {
   const allAlgos = ['bfs', 'dfs', 'hybrid'] as const;
   const activeAlgos = allAlgos.filter(a => entryActiveAlgorithms[a]);
+
+  const distanceLabel = scenario === 'network' ? 'Total Latency'
+    : scenario === 'traffic' ? 'Travel Time'
+    : scenario === 'evacuation' ? 'Evac Time'
+    : scenario === 'gameai' ? 'Moves'
+    : 'Distance';
+
+  const distanceUnit = scenario === 'network' ? ' ms'
+    : scenario === 'robotics' ? ' m'
+    : scenario === 'traffic' ? ' min'
+    : scenario === 'evacuation' ? ' s'
+    : '';
 
   const algoColors: Record<AlgorithmKey, { text: string; bg: string; hex: string }> = {
     bfs: { text: 'text-green-400', bg: 'bg-green-500/5', hex: '#4ade80' },
@@ -67,7 +82,8 @@ export const BenchmarkTable: React.FC<Props> = ({
         <tbody className="divide-y divide-gray-800/40">
           {[
             { label: 'Execution Time', val: (d: AlgoData) => `${d.time.toFixed(2)} ms`, color: (a: AlgorithmKey) => algoColors[a].hex },
-            { label: 'Distance', val: (d: AlgoData) => d.distance.toFixed(1), color: () => '#cbd5e1' },
+            { label: distanceLabel, val: (d: AlgoData) => `${d.distance.toFixed(scenario === 'gameai' ? 0 : 1)}${distanceUnit}`, color: () => '#cbd5e1' },
+
             { label: 'Nodes Visited', val: (d: AlgoData) => String(d.nodes), color: () => '#94a3b8' },
             { label: 'Memory', val: (d: AlgoData) => String(d.memory), color: () => '#cbd5e1' },
             { label: 'Path Optimality', val: (d: AlgoData) => String(d.optimality), color: (a: AlgorithmKey) => algoColors[a].hex },

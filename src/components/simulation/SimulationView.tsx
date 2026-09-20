@@ -240,6 +240,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             return isInProgress
               ? 'The simulation is currently running. Are you sure you want to stop it and switch game boards?'
               : 'You have unsaved simulation results. Are you sure you want to discard them and switch game boards?';
+          if (type === 'robot_assignment')
+            return 'The simulation is currently paused. Changing robot assignments requires a full reset. Do you want to stop the simulation and open the assignment panel?';
           return 'Are you sure you want to proceed?';
         })();
 
@@ -252,6 +254,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
           if (type === 'back')    return isInProgress ? 'Stop & Leave'   : 'Discard & Leave';
           if (type === 'map')     return isInProgress ? 'Stop & Switch'  : 'Discard & Switch';
           if (type === 'gameboard') return isInProgress ? 'Stop & Switch' : 'Discard & Switch';
+          if (type === 'robot_assignment') return 'Stop & Open';
           return 'Confirm';
         })();
 
@@ -984,7 +987,9 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   isSaved={sim.isCurrentSaved}
                   scenarioColor={sc?.color}
                   activeAlgorithms={sim.activeAlgorithms}
+                  scenario={scenario}
                 />
+
               </div>
             )}
 
@@ -1009,6 +1014,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   shelfNodes={sim.currentGraph.nodes.filter(n => n.type === 'shelf' || n.id.startsWith('dest_'))}
                   disabled={sim.isComputing || sim.status === 'running'}
                   mapId={sim.mapId}
+                  simStatus={sim.status}
+                  onRequestOpenWhileActive={(openPanel) => {
+                    sim.requestRobotAssignmentOpen(openPanel);
+                  }}
                 />
                 <RobotLiveStatusPanel
                   assignments={sim.robotAssignments}

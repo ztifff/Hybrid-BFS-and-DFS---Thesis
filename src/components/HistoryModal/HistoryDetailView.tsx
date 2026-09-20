@@ -56,6 +56,7 @@ export const HistoryDetailView: React.FC<Props> = ({
             hyb={hyb}
             entryActiveAlgorithms={entryActiveAlgorithms}
             runNumber={entry.runNumber}
+            scenario={entry.scenario}
           />
         </div>
         <div data-tutorial="history-canvas-replay" className="xl:col-span-3 flex flex-col min-h-0">
