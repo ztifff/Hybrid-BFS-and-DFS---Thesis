@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AlgorithmStep, GameAIBoard, GraphSize, GraphSizing, RobotAssignment, ScenarioGraph, ScenarioType, SimulationResult } from '../types';
 import { HistoryEntry } from '../components/HistoryModal';
 import { useSimulationModel, PendingNavigation } from './useSimulationModel';
@@ -21,6 +21,7 @@ export interface SimulationState {
   // Loading / computing state
   isGraphLoading: boolean;
   isComputing: boolean;
+  computeProgress: number; // 0–100, tracks backend chunked fetch completion
 
   // Animation state
   stepIndex: number;
@@ -137,6 +138,38 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
   // Initialize the Controller
   const controller = useSimulationController(model);
 
+  // Track backend computation progress (0–100)
+  const [computeProgress, setComputeProgress] = useState(0);
+  // Ref to hold the simulated-progress interval so we can clear it from anywhere
+  const tickerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const tickerElapsedRef = useRef(0); // seconds elapsed since ticker started
+
+  // ── Simulated progress ticker ──────────────────────────────────────────────
+  // Runs while isComputing=true. Uses an asymptotic curve that looks alive
+  // but never reaches 90%, giving the real data a chance to "take over".
+  // Formula: progress = 90 * (1 - e^(-elapsed/τ))  where τ≈18s
+  const startTicker = () => {
+    if (tickerRef.current) clearInterval(tickerRef.current);
+    tickerElapsedRef.current = 0;
+    setComputeProgress(0);
+    tickerRef.current = setInterval(() => {
+      tickerElapsedRef.current += 0.25; // tick every 250 ms → +0.25 s
+      const simulated = Math.round(90 * (1 - Math.exp(-tickerElapsedRef.current / 18)));
+      setComputeProgress(prev => {
+        // Only advance the ticker if no real progress has taken over yet
+        // (real progress is always ≥ simulated once chunks start arriving)
+        return prev < simulated ? simulated : prev;
+      });
+    }, 250);
+  };
+
+  const stopTicker = () => {
+    if (tickerRef.current) {
+      clearInterval(tickerRef.current);
+      tickerRef.current = null;
+    }
+  };
+
   // Glue logic: Fetch run metrics and evaluated paths from the computing engine (Chunked)
   // This lives in the composer because it manipulates both Model (saving data) and Controller (stopping animations)
   useEffect(() => {
@@ -149,6 +182,9 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
         model.setCurrentSavedId(null);
         model.setBfsResult(null);
         controller.setStatus('idle');
+        // Start the simulated ticker immediately so progress looks alive during the
+        // cold-start period while the backend is still computing its first response.
+        startTicker();
 
         controller.setStepIndex(0);
         controller.stopAnimation();
@@ -231,18 +267,39 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
 
           const isDone = !results.bfs.meta?.hasMore && !results.dfs.meta?.hasMore && !results.hybrid.meta?.hasMore;
 
+          // Real progress from backend meta: stop ticker and use actual value
+          const totalSteps = Math.max(
+            results.bfs.meta?.totalSteps ?? 0,
+            results.dfs.meta?.totalSteps ?? 0,
+            results.hybrid.meta?.totalSteps ?? 0
+          );
+          if (totalSteps > 0 && !isDone) {
+            // Multi-chunk: show real intermediate progress while more is coming
+            stopTicker();
+            const fetchedUpTo = currentOffset + limit;
+            setComputeProgress(Math.min(99, Math.round((fetchedUpTo / totalSteps) * 100)));
+          }
+          // isDone → 100% + delay handled in the block below
+
           if (isDone || maxStepsInChunk === 0) {
             keepFetching = false;
-            model.setIsComputing(false);
+            // Always land on 100% first so the bar visibly completes,
+            // then wait ~550 ms before collapsing the loading UI.
+            stopTicker();
+            setComputeProgress(100);
+            await new Promise(resolve => setTimeout(resolve, 550));
+            if (isMounted) model.setIsComputing(false);
           } else {
             currentOffset += limit;
           }
         }
       } catch (err) {
         console.error('Simulation fetch failed:', err);
+        stopTicker();
         if (isMounted) {
           model.setIsComputing(false);
           controller.setStatus('idle');
+          setComputeProgress(0);
         }
       }
     };
@@ -251,6 +308,7 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
 
     return () => {
       isMounted = false;
+      stopTicker();
       controller.stopAnimation();
     };
   }, [scenario, model.mapId, model.seed, model.gameBoard, model.graphSize, model.syntheticSizing, model.networkRoutingMode, model.sourceDevice, model.destinationDevices, model.deliveryMode, model.evacuationSourceId, model.trafficSourceId, JSON.stringify(model.trafficDestinationIds), model.gameAISourceId, JSON.stringify(model.robotAssignments), controller.stopAnimation]);
@@ -292,6 +350,7 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
     // Loading / Computing
     isGraphLoading: model.isGraphLoading,
     isComputing: model.isComputing,
+    computeProgress,
 
     // Animation state
     stepIndex: controller.stepIndex,

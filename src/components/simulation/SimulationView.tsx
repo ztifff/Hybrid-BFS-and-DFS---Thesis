@@ -461,9 +461,66 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 />
               </div>
             ) : (
-              <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 flex flex-col items-center justify-center py-12 text-center text-gray-400 animate-pulse">
-                <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
-                <div>Fetching evaluation matrices from backend...</div>
+              <div className="bg-gray-900 border border-gray-700 rounded-xl p-5 flex flex-col items-center justify-center py-10 text-center gap-3">
+                {/* Spinner with glow ring */}
+                <div className="relative w-10 h-10">
+                  <div className="w-10 h-10 border-4 border-gray-800 rounded-full" />
+                  <div className="absolute inset-0 w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  {sim.computeProgress >= 30 && (
+                    <div className="absolute inset-0 w-10 h-10 rounded-full shadow-[0_0_12px_2px_rgba(59,130,246,0.4)]" />
+                  )}
+                </div>
+
+                {/* Dynamic phase label */}
+                <div className="text-gray-200 text-xs font-semibold">
+                  {sim.computeProgress < 5
+                    ? 'Contacting backend server\u2026'
+                    : sim.computeProgress < 20
+                    ? 'Building graph topology\u2026'
+                    : sim.computeProgress < 45
+                    ? 'Running BFS \u00b7 DFS \u00b7 Hybrid\u2026'
+                    : sim.computeProgress < 70
+                    ? 'Evaluating algorithm steps\u2026'
+                    : sim.computeProgress < 90
+                    ? 'Collecting performance metrics\u2026'
+                    : sim.computeProgress < 100
+                    ? 'Almost there\u2026'
+                    : 'Finalizing results\u2026'}
+                </div>
+
+                {/* Progress bar */}
+                <div className="w-full">
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className="text-[10px] text-gray-500 font-mono">
+                      {sim.computeProgress < 5 ? 'Connecting\u2026' : 'Computing\u2026'}
+                    </span>
+                    <span className={`text-[10px] font-bold font-mono transition-colors ${
+                      sim.computeProgress >= 90 ? 'text-green-400' :
+                      sim.computeProgress >= 50 ? 'text-cyan-400' : 'text-blue-400'
+                    }`}>
+                      {sim.computeProgress > 0 ? `${sim.computeProgress}%` : '\u2014\u2014'}
+                    </span>
+                  </div>
+                  <div className="h-2 w-full bg-gray-800 rounded-full overflow-hidden">
+                    {sim.computeProgress > 0 ? (
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ease-out ${
+                          sim.computeProgress >= 90
+                            ? 'bg-gradient-to-r from-cyan-500 to-green-400'
+                            : 'bg-gradient-to-r from-blue-600 via-blue-400 to-cyan-400'
+                        }`}
+                        style={{ width: `${sim.computeProgress}%` }}
+                      />
+                    ) : (
+                      /* Shimmer stripe while connecting */
+                      <div className="h-full w-full bg-gradient-to-r from-transparent via-blue-700/60 to-transparent animate-[shimmer_1.5s_ease-in-out_infinite] bg-[length:200%_100%]" />
+                    )}
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-gray-600">
+                  Simultaneous BFS · DFS · Hybrid evaluation
+                </p>
               </div>
             )}
 
@@ -943,7 +1000,14 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleRun} className={`${primaryBtnClass} hover:bg-blue-500 bg-blue-600 text-white shadow-blue-900/40`}>Replay</button>
                 ) : (
                   <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleRun} className={`${primaryBtnClass} w-full sm:w-auto hover:bg-green-500 bg-green-600 text-white shadow-green-900/40`}>
-                    {sim.isComputing ? 'Computing...' : 'Run Simulations'}
+                    {sim.isComputing ? (
+                      <>
+                        Computing…
+                        {sim.computeProgress > 0 && (
+                          <span className="ml-1.5 font-mono text-[11px] opacity-90">{sim.computeProgress}%</span>
+                        )}
+                      </>
+                    ) : 'Run Simulations'}
                   </button>
                 )}
 
