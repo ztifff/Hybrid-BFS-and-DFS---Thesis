@@ -44,6 +44,8 @@ export const SimulationReport: React.FC<Props> = ({
     const res = multiResults[algo];
     // Use totalLatency (weighted distance) to match live MetricsPanel display
     const actualDistance = Math.max(res.metrics.totalLatency ?? res.metrics.pathLength ?? 0, 1);
+    // Optimality must compare like units: hop count vs optimal hop count (matches live MetricsPanel)
+    const actualHops = res.metrics.pathLength ?? 0;
     const cRate = res.metrics.completionRate ? res.metrics.completionRate.toFixed(1) + '%' : '0%';
 
     return {
@@ -52,7 +54,7 @@ export const SimulationReport: React.FC<Props> = ({
       distance: actualDistance,
       memory: res.metrics.memoryUsed,
       memoryLabel: getMemoryInMB(res.metrics.memoryUsed),
-      optimality: getPathOptimality(actualDistance, optimalDistance),
+      optimality: getPathOptimality(actualHops, optimalDistance),
       completion: cRate,
       adaptability: getAdaptabilityScore('done', res.metrics, algo, dynamicEvents),
       success: res.metrics.exitFound,

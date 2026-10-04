@@ -83,7 +83,8 @@ export function useHistoryDetail(
         distance: actualDistance,
         memory: getMemoryInMB(metrics.memoryUsed || 0),
         optimality: extractPrimitive(
-          getPathOptimality(actualDistance, entry.optimalPathLength || 0)
+          // Compare hop count vs optimal hop count (same units as live MetricsPanel)
+          getPathOptimality(metrics.pathLength ?? actualDistance, entry.optimalPathLength || 0)
         ),
         completion: cRate,
         adaptability: extractPrimitive(
