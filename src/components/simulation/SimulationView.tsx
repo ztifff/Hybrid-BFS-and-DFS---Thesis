@@ -817,18 +817,48 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                                 const isHost = (t: string) => ['end_device', 'server'].includes(t);
                                 const isWireless = (t: string) => ['wireless_ap', 'access_point'].includes(t);
 
+                                const isMDI = (t: string) => isRouter(t) || isHost(t) || isWireless(t);
+                                const isMDIX = (t: string) => isSwitch(t);
+
                                 if ((isWireless(t1) && isHost(t2)) || (isWireless(t2) && isHost(t1))) {
                                   finalEdgeType = 'wireless';
                                 } else if (isRouter(t1) && isRouter(t2)) {
                                   finalEdgeType = 'serial';
                                 } else {
-                                  const isMDI = (t: string) => isRouter(t) || isHost(t) || isWireless(t);
-                                  const isMDIX = (t: string) => isSwitch(t);
-                                  
                                   if (isMDI(t1) && isMDI(t2)) finalEdgeType = 'copper_crossover';
                                   else if (isMDIX(t1) && isMDIX(t2)) finalEdgeType = 'copper_crossover';
                                   else if ((isMDI(t1) && isMDIX(t2)) || (isMDIX(t1) && isMDI(t2))) finalEdgeType = 'copper_straight';
                                   else finalEdgeType = 'copper_straight';
+                                }
+                              } else {
+                                const t1 = prev.nodes.find(n => n.id === src)?.type || '';
+                                const t2 = prev.nodes.find(n => n.id === nodeId)?.type || '';
+                                
+                                const isSwitch = (t: string) => ['switch', 'multilayer_switch', 'access_switch', 'floor_router'].includes(t);
+                                const isRouter = (t: string) => ['router', 'datacenter', 'building_router'].includes(t);
+                                const isHost = (t: string) => ['end_device', 'server'].includes(t);
+                                const isWireless = (t: string) => ['wireless_ap', 'access_point'].includes(t);
+
+                                const isMDI = (t: string) => isRouter(t) || isHost(t) || isWireless(t);
+                                const isMDIX = (t: string) => isSwitch(t);
+
+                                let isValid = true;
+                                if (finalEdgeType === 'copper_straight') {
+                                  isValid = (isMDI(t1) && isMDIX(t2)) || (isMDIX(t1) && isMDI(t2));
+                                } else if (finalEdgeType === 'copper_crossover') {
+                                  isValid = (isMDI(t1) && isMDI(t2)) || (isMDIX(t1) && isMDIX(t2));
+                                } else if (finalEdgeType === 'serial') {
+                                  isValid = isRouter(t1) && isRouter(t2);
+                                } else if (finalEdgeType === 'fiber') {
+                                  const hasFiber = (t: string) => isSwitch(t) || isRouter(t) || t === 'server';
+                                  isValid = hasFiber(t1) && hasFiber(t2);
+                                } else if (finalEdgeType === 'wireless') {
+                                  isValid = (isWireless(t1) && isHost(t2)) || (isHost(t1) && isWireless(t2)) || (isWireless(t1) && isWireless(t2));
+                                }
+
+                                if (!isValid) {
+                                  window.alert(`Incompatible connection: Cannot use a ${finalEdgeType.replace(/_/g, ' ')} cable between a ${t1.replace(/_/g, ' ')} and a ${t2.replace(/_/g, ' ')}.`);
+                                  return prev;
                                 }
                               }
 
