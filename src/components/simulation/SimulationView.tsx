@@ -178,6 +178,12 @@ function SpeedController({
 
 export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const sc = getScenario(scenario);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+
+  const showConnectionError = (msg: string) => {
+    setConnectionError(msg);
+    setTimeout(() => setConnectionError(null), 3000);
+  };
   const sim = useSimulation({ scenario, onBack });
 
   // All local UI state + endpoint picking + blockage brush + button styles live in the hook.
@@ -289,6 +295,13 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         onClose={tutorial.close}
         onGoTo={tutorial.goTo}
       />
+
+      {connectionError && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] bg-[#450a0a]/90 border border-red-500/50 text-red-200 px-6 py-3 rounded-lg shadow-2xl flex items-center gap-3 backdrop-blur-sm animate-in fade-in slide-in-from-top-8">
+          <span className="text-xl leading-none">⚠️</span>
+          <span className="font-medium text-sm">{connectionError}</span>
+        </div>
+      )}
 
       {/* ── Unsaved-result / in-progress action guard modal ───────────────────── */}
       {sim.pendingNavigation && (() => {
@@ -803,65 +816,54 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                         } else {
                           const src = placementMode.sourceNodeId;
                           if (src !== nodeId) {
-                            sim.setCurrentGraph?.(prev => {
-                              if (!prev) return prev;
-                              
-                              let finalEdgeType = placementMode.edgeType;
-                              
-                              if (finalEdgeType === 'auto_connect') {
-                                const t1 = prev.nodes.find(n => n.id === src)?.type || '';
-                                const t2 = prev.nodes.find(n => n.id === nodeId)?.type || '';
-                                
-                                const isSwitch = (t: string) => ['switch', 'multilayer_switch', 'access_switch', 'floor_router'].includes(t);
-                                const isRouter = (t: string) => ['router', 'datacenter', 'building_router'].includes(t);
-                                const isHost = (t: string) => ['end_device', 'server'].includes(t);
-                                const isWireless = (t: string) => ['wireless_ap', 'access_point'].includes(t);
+                            let finalEdgeType = placementMode.edgeType;
+                            
+                            const t1 = patchedGraph.nodes.find(n => n.id === src)?.type || '';
+                            const t2 = patchedGraph.nodes.find(n => n.id === nodeId)?.type || '';
+                            
+                            const isSwitch = (t: string) => ['switch', 'multilayer_switch', 'access_switch', 'floor_router'].includes(t);
+                            const isRouter = (t: string) => ['router', 'datacenter', 'building_router'].includes(t);
+                            const isHost = (t: string) => ['end_device', 'server'].includes(t);
+                            const isWireless = (t: string) => ['wireless_ap', 'access_point'].includes(t);
 
-                                const isMDI = (t: string) => isRouter(t) || isHost(t) || isWireless(t);
-                                const isMDIX = (t: string) => isSwitch(t);
+                            const isMDI = (t: string) => isRouter(t) || isHost(t) || isWireless(t);
+                            const isMDIX = (t: string) => isSwitch(t);
 
-                                if ((isWireless(t1) && isHost(t2)) || (isWireless(t2) && isHost(t1))) {
-                                  finalEdgeType = 'wireless';
-                                } else if (isRouter(t1) && isRouter(t2)) {
-                                  finalEdgeType = 'serial';
-                                } else {
-                                  if (isMDI(t1) && isMDI(t2)) finalEdgeType = 'copper_crossover';
-                                  else if (isMDIX(t1) && isMDIX(t2)) finalEdgeType = 'copper_crossover';
-                                  else if ((isMDI(t1) && isMDIX(t2)) || (isMDIX(t1) && isMDI(t2))) finalEdgeType = 'copper_straight';
-                                  else finalEdgeType = 'copper_straight';
-                                }
+                            if (finalEdgeType === 'auto_connect') {
+                              if ((isWireless(t1) && isHost(t2)) || (isWireless(t2) && isHost(t1))) {
+                                finalEdgeType = 'wireless';
+                              } else if (isRouter(t1) && isRouter(t2)) {
+                                finalEdgeType = 'serial';
                               } else {
-                                const t1 = prev.nodes.find(n => n.id === src)?.type || '';
-                                const t2 = prev.nodes.find(n => n.id === nodeId)?.type || '';
-                                
-                                const isSwitch = (t: string) => ['switch', 'multilayer_switch', 'access_switch', 'floor_router'].includes(t);
-                                const isRouter = (t: string) => ['router', 'datacenter', 'building_router'].includes(t);
-                                const isHost = (t: string) => ['end_device', 'server'].includes(t);
-                                const isWireless = (t: string) => ['wireless_ap', 'access_point'].includes(t);
-
-                                const isMDI = (t: string) => isRouter(t) || isHost(t) || isWireless(t);
-                                const isMDIX = (t: string) => isSwitch(t);
-
-                                let isValid = true;
-                                if (finalEdgeType === 'copper_straight') {
-                                  isValid = (isMDI(t1) && isMDIX(t2)) || (isMDIX(t1) && isMDI(t2));
-                                } else if (finalEdgeType === 'copper_crossover') {
-                                  isValid = (isMDI(t1) && isMDI(t2)) || (isMDIX(t1) && isMDIX(t2));
-                                } else if (finalEdgeType === 'serial') {
-                                  isValid = isRouter(t1) && isRouter(t2);
-                                } else if (finalEdgeType === 'fiber') {
-                                  const hasFiber = (t: string) => isSwitch(t) || isRouter(t) || t === 'server';
-                                  isValid = hasFiber(t1) && hasFiber(t2);
-                                } else if (finalEdgeType === 'wireless') {
-                                  isValid = (isWireless(t1) && isHost(t2)) || (isHost(t1) && isWireless(t2)) || (isWireless(t1) && isWireless(t2));
-                                }
-
-                                if (!isValid) {
-                                  window.alert(`Incompatible connection: Cannot use a ${finalEdgeType.replace(/_/g, ' ')} cable between a ${t1.replace(/_/g, ' ')} and a ${t2.replace(/_/g, ' ')}.`);
-                                  return prev;
-                                }
+                                if (isMDI(t1) && isMDI(t2)) finalEdgeType = 'copper_crossover';
+                                else if (isMDIX(t1) && isMDIX(t2)) finalEdgeType = 'copper_crossover';
+                                else if ((isMDI(t1) && isMDIX(t2)) || (isMDIX(t1) && isMDI(t2))) finalEdgeType = 'copper_straight';
+                                else finalEdgeType = 'copper_straight';
+                              }
+                            } else {
+                              let isValid = true;
+                              if (finalEdgeType === 'copper_straight') {
+                                isValid = (isMDI(t1) && isMDIX(t2)) || (isMDIX(t1) && isMDI(t2));
+                              } else if (finalEdgeType === 'copper_crossover') {
+                                isValid = (isMDI(t1) && isMDI(t2)) || (isMDIX(t1) && isMDIX(t2));
+                              } else if (finalEdgeType === 'serial') {
+                                isValid = isRouter(t1) && isRouter(t2);
+                              } else if (finalEdgeType === 'fiber') {
+                                const hasFiber = (t: string) => isSwitch(t) || isRouter(t) || t === 'server';
+                                isValid = hasFiber(t1) && hasFiber(t2);
+                              } else if (finalEdgeType === 'wireless') {
+                                isValid = (isWireless(t1) && isHost(t2)) || (isHost(t1) && isWireless(t2)) || (isWireless(t1) && isWireless(t2));
                               }
 
+                              if (!isValid) {
+                                showConnectionError(`Incompatible connection: Cannot use a ${finalEdgeType.replace(/_/g, ' ')} cable between a ${t1.replace(/_/g, ' ')} and a ${t2.replace(/_/g, ' ')}.`);
+                                setPlacementModeSafe({ ...placementMode, sourceNodeId: undefined });
+                                return;
+                              }
+                            }
+
+                            sim.setCurrentGraph?.(prev => {
+                              if (!prev) return prev;
                               const newEdge = {
                                 id: `edge_${Date.now()}`,
                                 from: src,
