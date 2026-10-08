@@ -818,8 +818,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                           if (src !== nodeId) {
                             let finalEdgeType = placementMode.edgeType;
                             
-                            const t1 = patchedGraph.nodes.find(n => n.id === src)?.type || '';
-                            const t2 = patchedGraph.nodes.find(n => n.id === nodeId)?.type || '';
+                            const t1 = patchedGraph.nodes.find((n: any) => n.id === src)?.type || '';
+                            const t2 = patchedGraph.nodes.find((n: any) => n.id === nodeId)?.type || '';
                             
                             const isSwitch = (t: string) => ['switch', 'multilayer_switch', 'access_switch', 'floor_router'].includes(t);
                             const isRouter = (t: string) => ['router', 'datacenter', 'building_router'].includes(t);
