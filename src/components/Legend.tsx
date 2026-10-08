@@ -28,8 +28,8 @@ const SCENARIO_NODE_ITEMS: Record<ScenarioType, LegendItem[]> = {
   robotics: [
     { color: '#92400e', label: 'Central Depot (Source)', icon: '🏭' },
     { color: '#b45309', label: 'Warehouse Zone', icon: '📦' },
-    { color: '#d97706', label: 'Aisle', icon: '🔧' },
-    { color: '#f59e0b', label: 'Delivery Bay (Target)', icon: '📫' },
+    { color: '#d97706', label: 'Shelf', icon: '🔧' },
+    { color: '#f59e0b', label: 'Delivery Bay (Target)', icon: '🚚' },
     { color: '#450a0a', label: 'Blocked Aisle', icon: '🚧' },
   ],
   traffic: [
@@ -98,7 +98,7 @@ export const Legend: React.FC<Props> = ({ scenario, mapId }) => {
   const cHYB = ALGORITHMS.find(a => a.id === 'hybrid')?.color || '#fb923c';
 
   return (
-    <div className="glass-panel rounded-xl p-4 space-y-4 shrink-0 fade-in hover:shadow-glow-blue transition-shadow duration-500">
+    <div className="bg-gray-900 border border-gray-700 rounded p-4 space-y-4 shrink-0 fade-in hover:border-blue-500 transition-colors duration-500">
       <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider text-center">
         Legend
       </h3>

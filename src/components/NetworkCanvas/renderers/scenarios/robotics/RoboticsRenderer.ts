@@ -30,13 +30,12 @@ export class RoboticsRenderer extends BaseRenderer {
       const AWS_SHELF_NODES = new Set([
         'shelf_a1','shelf_a2','shelf_b1','shelf_b2','shelf_d1','shelf_d2','shelf_e1','shelf_e2','shelf_e3','shelf_e4','shelf_f1','shelf_f2'
       ]);
-      const PACKING_DESK_NODES = new Set(['dest_desk_a', 'dest_desk_b', 'clutter_a', 'clutter_b', 'pallet_jack', 'trash_cans']);
 
       const cellW_world = 2500;
       const cellH_world = 1666.67;
 
       visibleNodes.forEach(node => {
-        const isStorageShelf = AWS_SHELF_NODES.has(node.id) || (node.id.startsWith('shelf_') && !node.id.startsWith('dest_'));
+        const isStorageShelf = mapId !== 'clinic' && (AWS_SHELF_NODES.has(node.id) || (node.id.startsWith('shelf_') && !node.id.startsWith('dest_')) || node.type === 'shelf' || node.type === 'aisle');
         if (isStorageShelf) {
           const bfsPicked = activeSteps.bfs?.pickedUpBoxCounts?.[node.id] ?? 0;
           const dfsPicked = activeSteps.dfs?.pickedUpBoxCounts?.[node.id] ?? 0;
@@ -103,9 +102,9 @@ export class RoboticsRenderer extends BaseRenderer {
           }
         }
 
-        const isDestinationNode = PACKING_DESK_NODES.has(node.id) || node.id.startsWith('dest_');
+        const isDestinationNode = node.type === 'delivery_bay' && mapId !== 'clinic';
         if (isDestinationNode) {
-          const requiredCount = options.shelfBoxCounts!.get(node.id);
+          const requiredCount = options.shelfBoxCounts?.get(node.id);
           if (!requiredCount) return; // Skip if this destination is not selected
 
           const algos = [

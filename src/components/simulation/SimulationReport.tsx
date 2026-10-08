@@ -98,7 +98,7 @@ export const SimulationReport: React.FC<Props> = ({
   const anyFailure = activeAlgos.some(a => !data[a].success);
 
   return (
-    <div className="glass-panel rounded-xl p-4 shadow-[0_0_20px_rgba(30,58,138,0.15)] shrink-0 relative overflow-hidden flex flex-col fade-in hover:shadow-glow-blue transition-shadow duration-500">
+    <div className="bg-gray-900 border border-gray-700 rounded p-4 shrink-0 relative overflow-hidden flex flex-col fade-in hover:border-blue-500 transition-colors duration-500">
       <h3 className="font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wide text-sm">
         Comparative Benchmark
       </h3>

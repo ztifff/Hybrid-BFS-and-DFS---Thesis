@@ -143,11 +143,16 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
   // Game AI: user-selectable starting point (first row nodes)
   const [gameAISourceId, setGameAISourceId] = useState<string | null>(null);
 
+  // Manual Blockages
+  const [customBlockedNodes, setCustomBlockedNodes] = useState<{ nodeId: string; label: string }[]>([]);
+  const [forceGraphRefetch, setForceGraphRefetch] = useState(0);
+
   useEffect(() => {
     setEvacuationSourceId(null);
     setTrafficSourceId(null);
     setTrafficDestinationIds([]);
     setGameAISourceId(null);
+    setCustomBlockedNodes([]);
   }, [mapId, scenario, gameBoard]);
 
   // ✅ Multi-Agent Robotics: Per-robot destination assignments
@@ -618,7 +623,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
         }
 
         if (scenario === 'gameai') graphParams.set('gameBoard', gameBoard);
-        if (networkRoutingMode === 'device-to-device') {
+        if (scenario === 'network') {
           graphParams.set('customSourceId', sourceDevice);
           graphParams.set('customDestinationIds', JSON.stringify(destinationDevices));
         }
@@ -644,12 +649,24 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
           graphParams.set('customSourceId', gameAISourceId);
         }
 
-        const response = await fetch(`https://backend-1e4y.onrender.com/api/network/graph?${graphParams}`);
+        const response = await fetch(`http://localhost:3200/api/network/graph?${graphParams}`);
         if (!response.ok) throw new Error(`Graph API Error: ${response.statusText}`);
         const json = await response.json();
 
         if (isMounted) {
-          setCurrentGraph(json.data);
+          let newGraph = json.data;
+          
+          // Preserve manually added custom nodes and edges ONLY if the map is the same
+          if (currentGraph && currentGraphMapId === mapId) {
+            const customNodes = currentGraph.nodes.filter(n => /_\d{13}$/.test(n.id));
+            const customEdges = currentGraph.edges.filter(e => /_\d{13}$/.test(e.id));
+            if (customNodes.length > 0 || customEdges.length > 0) {
+              newGraph.nodes = [...newGraph.nodes, ...customNodes];
+              newGraph.edges = [...newGraph.edges, ...customEdges];
+            }
+          }
+          
+          setCurrentGraph(newGraph);
           setCurrentGraphMapId(mapId);
           setIsGraphLoading(false);
         }
@@ -660,31 +677,79 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     };
     fetchGraphStructure();
     return () => { isMounted = false; };
-  }, [scenario, mapId, gameBoard, graphSize, seed, syntheticSizing.nodes, syntheticSizing.edges, networkRoutingMode, sourceDevice, sourceDevices, destinationDevices, destinationDevices_robotics, evacuationSourceId, trafficSourceId, trafficDestinationIds, gameAISourceId]);
+  }, [scenario, mapId, gameBoard, graphSize, syntheticSizing.nodes, syntheticSizing.edges, forceGraphRefetch]);
 
   // Synchronize custom endpoints if the map changes or if they are invalid
   useEffect(() => {
 
 
-    if (networkRoutingMode === 'device-to-device' && currentGraph) {
+    if (scenario === 'network' && currentGraph) {
+      const allNodes = currentGraph.nodes;
+      const possibleDests = allNodes.filter(n => {
+        if (networkRoutingMode === 'device-to-device') {
+          return n.label.toLowerCase().includes('rack') || n.type === 'access_point' || n.type === 'end_device';
+        }
+        return n.label.toLowerCase().includes('rack') || n.type === 'server' || n.type === 'access_point' || n.type === 'end_device';
+      });
+
       let currentSource = sourceDevice;
-      const validSource = currentGraph.nodes.some(n => n.id === currentSource);
-      const endpoints = currentGraph.nodes.filter(n => mapId === 'campus' ? n.type === 'access_point' : (n.type === 'access_point' || n.type === 'server'));
-
-
-      if (!validSource && endpoints.length > 0) {
-        currentSource = endpoints[0].id;
-        setSourceDevice(currentSource);
+      
+      if (networkRoutingMode === 'default' && allNodes.length > 0) {
+        // Default mode: source must be a router-class node (ISP / core / building router).
+        const ROUTER_TYPES = ['datacenter', 'router', 'building_router'];
+        const isRouterSource = allNodes.some(n => n.id === currentSource && ROUTER_TYPES.includes(n.type as string));
+        if (!isRouterSource) {
+          currentSource = allNodes[0].id; // Fallback to Global Ingress / Root
+          setSourceDevice(currentSource);
+        }
+      } else if (networkRoutingMode === 'device-to-device') {
+        const validSource = allNodes.some(n => n.id === currentSource && possibleDests.some(pd => pd.id === n.id));
+        if (!validSource && possibleDests.length > 0) {
+          let fallbackId = possibleDests[0].id;
+          if (mapId === 'campus') {
+            const boysPC = possibleDests.find(n => n.id.includes('boys'));
+            if (boysPC) fallbackId = boysPC.id;
+          }
+          currentSource = fallbackId;
+          setSourceDevice(currentSource);
+        }
+      } else {
+        const validSource = allNodes.some(n => n.id === currentSource);
+        if (!validSource && allNodes.length > 0) {
+          currentSource = allNodes[0].id;
+          setSourceDevice(currentSource);
+        }
       }
 
-      const validDestinations = destinationDevices.filter(d => currentGraph.nodes.some(n => n.id === d));
+      const validDestinations = destinationDevices.filter(d => d !== currentSource && possibleDests.some(n => n.id === d));
 
       // Ensure at least 2 destinations are selected (if available) so it doesn't default to empty
-      const availableDests = endpoints.filter(e => e.id !== currentSource && !validDestinations.includes(e.id));
+      const availableDests = possibleDests.filter(e => e.id !== currentSource && !validDestinations.includes(e.id));
       const needed = 2 - validDestinations.length;
 
       if (needed > 0 && availableDests.length > 0) {
-        const newDests = [...validDestinations, ...availableDests.slice(0, needed).map(e => e.id)];
+        const srcNode = allNodes.find(n => n.id === currentSource);
+        let sortedDests = [...availableDests];
+        
+        if (mapId === 'campus') {
+          sortedDests.sort((a, b) => {
+            const aIsAB1 = a.id.includes('ab1') || a.id.includes('AB1');
+            const bIsAB1 = b.id.includes('ab1') || b.id.includes('AB1');
+            if (aIsAB1 && !bIsAB1) return -1;
+            if (!aIsAB1 && bIsAB1) return 1;
+            return 0;
+          });
+        } else if (srcNode) {
+          // Sort by physical distance (furthest first) for realistic long-distance defaults
+          sortedDests.sort((a, b) => {
+            const distA = Math.hypot(a.x - srcNode.x, a.y - srcNode.y);
+            const distB = Math.hypot(b.x - srcNode.x, b.y - srcNode.y);
+            return distB - distA; 
+          });
+        }
+
+        const farDests = sortedDests.slice(0, needed);
+        const newDests = [...validDestinations, ...farDests.map(e => e.id)];
         setDestinationDevices(newDests);
       } else if (validDestinations.length !== destinationDevices.length) {
         setDestinationDevices(validDestinations);
@@ -697,14 +762,11 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
 
   useEffect(() => {
     if (scenario === 'robotics' && currentGraph && currentGraphMapId === mapId) {
-      const depots = (currentGraph.sourceIds && currentGraph.sourceIds.length > 0)
-        ? currentGraph.sourceIds
-        : (currentGraph.sourceId
-          ? [currentGraph.sourceId]
-          : currentGraph.nodes.filter(n => n.type === 'depot' || n.id.includes('Robot') || n.label.includes('Start')).map(n => n.id));
-      const destNodes = (currentGraph.destinationIds && currentGraph.destinationIds.length >= 2)
-        ? currentGraph.destinationIds
-        : currentGraph.nodes.filter(n => n.type === 'shelf' || n.id.startsWith('dest_') || n.type === 'delivery_bay' || n.id.includes('nurse') || n.id.includes('air_pressure')).map(n => n.id);
+      const allDepots = currentGraph.nodes.filter(n => n.type === 'depot' || n.type === 'place' || n.id.includes('Robot') || n.label.includes('Start')).map(n => n.id);
+      
+      const destNodes = currentGraph.nodes
+        .filter(n => n.type === 'delivery_bay')
+        .map(n => n.id);
 
       if (roboticsInitializedMap.current !== mapId) {
         // Initial setup for this map (Synthetic, AWS, or Clinic)
@@ -712,23 +774,46 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
         const boxCounts: Record<string, number> = {};
         defaultDests.forEach(d => boxCounts[d] = 6);
 
-        const initialAssignments: RobotAssignment[] = depots.map((depotId, idx) => ({
-          robotId: depotId,
-          destinations: idx === 0 ? defaultDests : [],
-          boxCounts: idx === 0 ? boxCounts : {}
-        }));
+        const initialAssignments: RobotAssignment[] = allDepots.length > 0 ? [{
+          robotId: allDepots[0],
+          destinations: defaultDests,
+          boxCounts,
+          priorityDest: undefined
+        }] : [];
         setRobotAssignments(initialAssignments);
         roboticsInitializedMap.current = mapId;
       } else {
         // Cleanup: remove depots that no longer exist, remove destinations that no longer exist
         setRobotAssignments(prev => {
-          const cleaned = prev
-            .filter(a => depots.includes(a.robotId))
+          let cleaned = prev
+            .filter(a => allDepots.includes(a.robotId))
             .map(a => ({
               ...a,
               destinations: a.destinations.filter(d => destNodes.includes(d)),
               priorityDest: a.priorityDest && destNodes.includes(a.priorityDest) ? a.priorityDest : undefined,
             }));
+
+          // Ensure at least the first robot has a valid destination if available
+          if (cleaned.length > 0 && cleaned[0].destinations.length === 0 && destNodes.length > 0) {
+            const fallbackDests = destNodes.slice(0, 2);
+            cleaned[0].destinations = fallbackDests;
+            if (!cleaned[0].boxCounts) cleaned[0].boxCounts = {};
+            fallbackDests.forEach(d => cleaned[0].boxCounts![d] = 6);
+          }
+
+          // If no robots left but depots exist, assign the first depot
+          if (cleaned.length === 0 && allDepots.length > 0) {
+            const fallbackDests = destNodes.slice(0, 2);
+            const boxCounts: Record<string, number> = {};
+            fallbackDests.forEach(d => boxCounts[d] = 6);
+            cleaned = [{
+              robotId: allDepots[0],
+              destinations: fallbackDests,
+              boxCounts: boxCounts,
+              priorityDest: undefined
+            }];
+          }
+
           return JSON.stringify(cleaned) !== JSON.stringify(prev) ? cleaned : prev;
         });
       }
@@ -769,7 +854,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     sizingKey,
     activeAlgorithms, setActiveAlgorithms,
 
-    currentGraph, isGraphLoading,
+    currentGraph, setCurrentGraph, isGraphLoading,
     simResults, setSimResults,
     bfsResult, setBfsResult,
     isComputing, setIsComputing,
@@ -778,6 +863,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     trafficSourceId, setTrafficSourceId,
     trafficDestinationIds, setTrafficDestinationIds,
     gameAISourceId, setGameAISourceId,
+    customBlockedNodes, setCustomBlockedNodes,
 
     // ── Extracted from SimulationView ──────────────────────────────────────────
     // Derived view values
@@ -813,5 +899,6 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     stepNodesDown,
     stepEdgesUp,
     stepEdgesDown,
+    forceRefetchGraph: () => setForceGraphRefetch(p => p + 1)
   };
 }

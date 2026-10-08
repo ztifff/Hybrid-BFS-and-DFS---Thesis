@@ -97,28 +97,28 @@ export const MetricsPanel: React.FC<Props> = ({
     if (!isActive) return null;
 
     return (
-      <div className="flex flex-col gap-2 text-center border-r border-gray-700/50 last:border-0 px-1">
-        <div className="font-bold text-sm truncate pb-1 border-b border-gray-700/50" style={{ color }}>{name}</div>
+      <div className="flex flex-col gap-2.5 text-center border-r border-slate-700/40 last:border-0 px-1.5">
+        <div className="font-bold text-sm truncate pb-1.5 border-b border-slate-700/40 drop-shadow-sm" style={{ color }}>{name}</div>
 
-        <div className="flex flex-col pt-1">
-          <div className="text-[9px] text-gray-500 uppercase tracking-wider">Visited Nodes</div>
-          <div className="text-sm font-bold text-gray-200">
+        <div className="flex flex-col bg-gradient-to-br from-slate-800/50 to-slate-900/80 border border-slate-700/30 rounded-lg p-2">
+          <div className="text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-0.5">Visited Nodes</div>
+          <div className="text-sm font-bold text-slate-200 drop-shadow-[0_0_8px_rgba(255,255,255,0.1)]">
             {exploredCount}
           </div>
         </div>
 
-        <div className="flex flex-col">
-          <div className="text-[9px] text-gray-500 uppercase tracking-wider">Completion</div>
-          <div className="text-sm font-bold text-blue-300">
+        <div className="flex flex-col bg-gradient-to-br from-slate-800/50 to-slate-900/80 border border-slate-700/30 rounded-lg p-2">
+          <div className="text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-0.5">Completion</div>
+          <div className="text-sm font-bold text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.3)]">
             {completion.label}
           </div>
         </div>
 
-        <div className="flex flex-col">
-          <div className="text-[9px] text-gray-500 uppercase tracking-wider">
+        <div className="flex flex-col bg-gradient-to-br from-slate-800/50 to-slate-900/80 border border-slate-700/30 rounded-lg p-2">
+          <div className="text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-0.5">
             {scenario === 'network' ? 'Total Latency' : scenario === 'traffic' ? 'Travel Time' : scenario === 'evacuation' ? 'Evac Time' : scenario === 'gameai' ? 'Moves' : 'Distance'}
           </div>
-          <div className="text-sm font-bold text-gray-200">
+          <div className="text-sm font-bold text-slate-200 drop-shadow-[0_0_8px_rgba(255,255,255,0.1)]">
             {status === 'done' && resultData
               ? `${resultData.metrics.totalLatency.toFixed(scenario === 'gameai' ? 0 : 1)}${scenario === 'network' ? ' ms' : scenario === 'robotics' ? ' m' : scenario === 'traffic' ? ' min' : scenario === 'evacuation' ? ' s' : ''}`
               : stepData?.currentLatency !== undefined
@@ -127,26 +127,26 @@ export const MetricsPanel: React.FC<Props> = ({
           </div>
         </div>
 
-        <div className="flex flex-col">
-          <div className="text-[9px] text-gray-500 uppercase tracking-wider">Optimal %</div>
-          <div className="text-sm font-bold" style={{ color: optimality.color }}>{optimality.label}</div>
+        <div className="flex flex-col bg-gradient-to-br from-slate-800/50 to-slate-900/80 border border-slate-700/30 rounded-lg p-2">
+          <div className="text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-0.5">Optimal %</div>
+          <div className="text-sm font-bold drop-shadow-sm" style={{ color: optimality.color }}>{optimality.label}</div>
         </div>
 
-        <div className="flex flex-col">
-          <div className="text-[9px] text-gray-500 uppercase tracking-wider">Memory</div>
-          <div className="text-sm font-bold text-gray-200">{displayMemory}</div>
+        <div className="flex flex-col bg-gradient-to-br from-slate-800/50 to-slate-900/80 border border-slate-700/30 rounded-lg p-2">
+          <div className="text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-0.5">Memory</div>
+          <div className="text-sm font-bold text-slate-300 drop-shadow-sm">{displayMemory}</div>
         </div>
 
-        <div className="flex flex-col">
-          <div className="text-[9px] text-gray-500 uppercase tracking-wider">Adaptability</div>
-          <div className="text-sm font-bold" style={{ color: adaptability.color }}>{adaptability.score}</div>
+        <div className="flex flex-col bg-gradient-to-br from-slate-800/50 to-slate-900/80 border border-slate-700/30 rounded-lg p-2">
+          <div className="text-[9px] text-slate-500 uppercase tracking-wider font-bold mb-0.5">Adaptability</div>
+          <div className="text-sm font-bold drop-shadow-sm" style={{ color: adaptability.color }}>{adaptability.score}</div>
         </div>
       </div>
     );
   };
 
   return (
-    <div className="glass-panel rounded-xl p-4 space-y-4 fade-in hover:shadow-glow-blue transition-shadow duration-500">
+    <div className="bg-slate-900/60 backdrop-blur-lg border border-slate-800/80 rounded-xl p-4 shadow-xl hover:border-slate-700/60 transition-colors duration-500 space-y-4 fade-in">
       <div className="flex items-center justify-between border-b border-gray-700/50 pb-2 mb-2">
         <span className="text-xs font-bold uppercase tracking-widest drop-shadow-md flex items-center gap-1.5" style={{ color: sc.color }}>
           {sc.name}
@@ -155,8 +155,8 @@ export const MetricsPanel: React.FC<Props> = ({
       </div>
 
       <div>
-        <div className="w-full bg-black/40 rounded-full h-2 shadow-inner border border-white/5">
-          <div className="h-2 rounded-full bg-blue-500 transition-all duration-200 shadow-glow-blue" style={{ width: `${progress}%` }} />
+        <div className="w-full bg-gray-800 rounded-full h-2 border border-gray-700">
+          <div className="h-2 rounded-full bg-blue-500 transition-all duration-200" style={{ width: `${progress}%` }} />
         </div>
       </div>
 
@@ -168,12 +168,12 @@ export const MetricsPanel: React.FC<Props> = ({
 
       {status === 'done' && multiResults && (
         multiResults.hybrid.metrics.failureReason ? (
-          <div className="text-center text-xs text-red-400 bg-red-900/20 border border-red-500/30 p-2 rounded-lg shadow-glow-red leading-snug">
+          <div className="text-center text-xs text-red-400 bg-red-900/20 border border-red-500/30 p-2 rounded leading-snug">
             <div className="font-bold mb-1 uppercase tracking-wider text-[10px]">Target Unreachable</div>
             <div>{multiResults.hybrid.metrics.failureReason}</div>
           </div>
         ) : (
-          <div className="text-center text-xs text-green-400 bg-green-900/20 border border-green-500/30 p-2 rounded-lg shadow-glow-green">
+          <div className="text-center text-xs text-green-400 bg-green-900/20 border border-green-500/30 p-2 rounded">
             Simulation Complete
           </div>
         )

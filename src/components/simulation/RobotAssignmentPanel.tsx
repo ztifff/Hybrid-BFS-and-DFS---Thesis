@@ -171,7 +171,7 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
           />
 
           {/* Modal */}
-          <div className="relative z-10 glass-panel rounded-2xl shadow-[0_0_40px_rgba(34,197,94,0.15)] w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden fade-in">
+          <div className="relative z-10 bg-gray-900 border border-gray-700 rounded-lg w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden fade-in">
             
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 bg-green-900/10 shrink-0">

@@ -16,6 +16,8 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
   highlightedNodeId,
   onDeselect,
   onNodeClick,
+  onEdgeClick,
+  onCanvasClick,
   mapId,
   autoFit,
   shelfBoxCounts,
@@ -245,24 +247,14 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    const cw = rect.width;
-    const ch = rect.height;
-
-    // Reverse transform to find canvas coordinates
-    const x = (mouseX - cw / 2) / zoom + cw / 2 - pan.x;
-    const y = (mouseY - ch / 2) / zoom + ch / 2 - pan.y;
-
-    const clickableNetworkNodes = ['mlt_sw1', 'main_router', 'college_router', 'hostel_router'];
+    // Reverse transform to find canvas coordinates (matches BaseRenderer.ts: translate(pan), then scale(zoom))
+    const x = (mouseX - pan.x) / zoom;
+    const y = (mouseY - pan.y) / zoom;
 
     let clickedNodeId: string | null = null;
     let minDist = Infinity;
 
     for (const node of visibleNodes) {
-      // If we're in network scenario, only allow clicking specific terminal nodes
-      if (scenario === 'network' && !clickableNetworkNodes.includes(node.id)) {
-        continue;
-      }
-
       const cx = (node.x * scale) + offsetX;
       const cy = (node.y * scale) + offsetY;
       
@@ -279,7 +271,41 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
     if (clickedNodeId) {
       onNodeClick(clickedNodeId);
     } else {
-      onDeselect?.();
+      let clickedEdgeId: string | null = null;
+      let minEdgeDistSq = 100; // within 10 virtual pixels distance squared
+      
+      for (const edge of visibleEdges) {
+        const fromNode = visibleNodeMap.get(edge.from);
+        const toNode = visibleNodeMap.get(edge.to);
+        if (!fromNode || !toNode) continue;
+        
+        const cx1 = (fromNode.x * scale) + offsetX;
+        const cy1 = (fromNode.y * scale) + offsetY;
+        const cx2 = (toNode.x * scale) + offsetX;
+        const cy2 = (toNode.y * scale) + offsetY;
+        
+        const l2 = (cx2 - cx1)**2 + (cy2 - cy1)**2;
+        if (l2 === 0) continue;
+        let t = ((x - cx1) * (cx2 - cx1) + (y - cy1) * (cy2 - cy1)) / l2;
+        t = Math.max(0, Math.min(1, t));
+        const projX = cx1 + t * (cx2 - cx1);
+        const projY = cy1 + t * (cy2 - cy1);
+        const distSq = (x - projX)**2 + (y - projY)**2;
+        
+        if (distSq < minEdgeDistSq) {
+          minEdgeDistSq = distSq;
+          clickedEdgeId = edge.id;
+        }
+      }
+
+      if (clickedEdgeId && onEdgeClick) {
+        onEdgeClick(clickedEdgeId);
+      } else {
+        onDeselect?.();
+        const nodeX = (x - offsetX) / scale;
+        const nodeY = (y - offsetY) / scale;
+        onCanvasClick?.(nodeX, nodeY);
+      }
     }
   };
 

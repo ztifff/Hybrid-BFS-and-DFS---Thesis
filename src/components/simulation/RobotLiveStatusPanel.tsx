@@ -63,7 +63,7 @@ export const RobotLiveStatusPanel: React.FC<Props> = ({
   const theme = ALGO_CONFIG[selectedAlgo];
 
   return (
-    <div className="shrink-0 glass-panel rounded-xl overflow-hidden fade-in hover:shadow-glow-blue transition-shadow duration-500">
+    <div className="shrink-0 bg-gray-900 border border-gray-700 rounded overflow-hidden fade-in hover:border-blue-500 transition-colors duration-500">
 
       {/* ── Header ───────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/5 bg-black/40">

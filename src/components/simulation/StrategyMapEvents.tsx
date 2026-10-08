@@ -192,7 +192,7 @@ export const StrategyMapEvents: React.FC<Props> = ({ dynamicEvents, stepIndex, s
   }, [dynamicEvents, stepIndex, simResults, activeAlgorithms.bfs, activeAlgorithms.dfs, activeAlgorithms.hybrid]);
 
   return (
-    <div className="glass-panel rounded-xl p-3 flex flex-col shrink-0 fade-in hover:shadow-glow-purple transition-shadow duration-500">
+    <div className="bg-gray-900 border border-gray-700 rounded p-3 flex flex-col shrink-0 fade-in hover:border-purple-500 transition-colors duration-500">
       {/* ── Header ── */}
       <div className="flex items-center mb-2 shrink-0 border-b border-gray-800 pb-2">
         <h3 className="text-xs text-gray-400 font-bold uppercase tracking-wider flex items-center gap-1.5">

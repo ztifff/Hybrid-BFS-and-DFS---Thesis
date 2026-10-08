@@ -138,7 +138,7 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose, onStartTutorial 
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className={`glass-panel rounded-2xl ${theme.modalShadow} w-full max-w-2xl flex flex-col max-h-[90vh] fade-in`}>
+      <div className={`bg-gray-900 border border-gray-700 rounded-lg shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] fade-in`}>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700 shrink-0">
           <div>

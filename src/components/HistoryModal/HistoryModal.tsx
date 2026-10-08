@@ -233,7 +233,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-      <div className="glass-panel rounded-2xl w-full max-w-[1300px] h-[90vh] flex flex-col overflow-hidden shadow-glow-blue fade-in">
+      <div className="bg-gray-900 border border-gray-700 rounded-lg w-full max-w-[1300px] h-[90vh] flex flex-col overflow-hidden shadow-2xl fade-in">
 
         {/* ── Header ──────────────────────────────────────────────────────── */}
         <header className="p-4 md:p-5 border-b border-gray-800 bg-[#0a0f1e]/60 flex flex-col md:flex-row md:justify-between md:items-center gap-4 relative">

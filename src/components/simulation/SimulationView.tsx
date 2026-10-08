@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { TutorialOverlay, useTutorial, TUTORIAL_STEPS } from '../TutorialOverlay';
+import { TutorialOverlay } from '../TutorialOverlay';
 
 import { ScenarioType } from '../../types';
 import { useSimulation } from '../../hooks/useSimulation';
+import { useSimulationViewLogic } from '../../hooks/useSimulationViewLogic';
 import { MAX_SYNTHETIC_NODES, MIN_SYNTHETIC_NODES, MIN_SYNTHETIC_LINKS, MAX_SYNTHETIC_LINKS, GAME_AI_BOARDS, SizingKey } from '../../hooks/useSimulationModel';
 import { getScenario } from '../../config/scenarios';
 import { CiscoTerminal } from '../NetworkCanvas/renderers/scenarios/network/CiscoTerminal';
@@ -21,6 +22,7 @@ import { RobotAssignmentPanel } from './RobotAssignmentPanel';
 import { RobotLiveStatusPanel } from './RobotLiveStatusPanel';
 import { ResizableSidebar } from '../layout/ResizableSidebar';
 import { ExpertModePanel } from './ExpertModePanel';
+import { TopologyEditor } from './TopologyEditor';
 
 const SIZE_ADJUSTER_THEME: Record<string, { border: string; text: string }> = {
   robotics: { border: 'focus-within:border-orange-500', text: 'text-orange-300' },
@@ -33,6 +35,71 @@ const SIZE_ADJUSTER_THEME: Record<string, { border: string; text: string }> = {
 interface Props {
   scenario: ScenarioType;
   onBack: () => void;
+}
+
+// ── Small inline icon helper (no extra dependency) ───────────────────────────
+const ICON_PATHS: Record<string, string> = {
+  block: 'M12 9v4m0 4h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z',
+  reroll: 'M12 2l9 5v10l-9 5-9-5V7l9-5zM12 12l9-5M12 12v10M12 12L3 7',
+  reset: 'M4 4v6h6M20 20v-6h-6M20 9A8 8 0 006 6.3M4 15a8 8 0 0014 2.7',
+  back: 'M19 5L9 12l10 7V5zM5 5v14',
+  fwd: 'M5 5l10 7-10 7V5zM19 5v14',
+  skip: 'M5 5l10 7-10 7V5zM19 5v14',
+  play: 'M6 4l14 8-14 8V4z',
+  pause: 'M6 4h4v16H6zM14 4h4v16h-4z',
+};
+
+function Ico({ name, className = 'w-4 h-4' }: { name: string; className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d={ICON_PATHS[name]} />
+    </svg>
+  );
+}
+
+function CrosshairIcon({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+      <circle cx="12" cy="12" r="6" />
+      <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+    </svg>
+  );
+}
+
+// ── Endpoint chip: the whole chip is the button ──────────────────────────────
+function EndpointChip({
+  label, labelClass, dotClass, borderClass, value, active, disabled, onPick,
+}: {
+  label: string;
+  labelClass: string;
+  dotClass: string;
+  borderClass: string;
+  value: string;
+  active: boolean;
+  disabled: boolean;
+  onPick: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className={`text-[10px] uppercase tracking-widest font-bold flex items-center gap-1.5 ${labelClass}`}>
+        <span className={`w-1.5 h-1.5 rounded-full ${dotClass} opacity-0 sm:opacity-100`} />
+        {label}:
+      </span>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={onPick}
+        title={active ? 'Click to cancel picking' : 'Click to pick on map'}
+        className={`flex items-center gap-2 bg-gray-800/80 border rounded-lg px-3 py-1.5 text-left transition-all cursor-pointer
+          hover:bg-gray-700/80 hover:-translate-y-0.5 active:scale-[0.98]
+          disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:bg-gray-800/80
+          ${borderClass} ${active ? 'ring-2 ring-cyan-400/60 bg-cyan-950/40' : ''}`}
+      >
+        <span className={`w-2 h-2 rounded-full shrink-0 ${dotClass} ${active ? 'animate-pulse' : ''}`} />
+        <span className="text-xs font-bold text-white truncate max-w-[180px]">{value}</span>
+      </button>
+    </div>
+  );
 }
 
 function SpeedController({
@@ -87,10 +154,10 @@ function SpeedController({
         value={playbackSpeed}
         onChange={handleSliderChange}
         className={`w-32 cursor-pointer transition-all ${scenario === 'network' ? 'accent-blue-500' :
-            scenario === 'robotics' ? 'accent-amber-500' :
-              scenario === 'traffic' ? 'accent-emerald-500' :
-                scenario === 'evacuation' ? 'accent-red-500' :
-                  scenario === 'gameai' ? 'accent-purple-500' : 'accent-blue-500'
+          scenario === 'robotics' ? 'accent-amber-500' :
+            scenario === 'traffic' ? 'accent-emerald-500' :
+              scenario === 'evacuation' ? 'accent-red-500' :
+                scenario === 'gameai' ? 'accent-purple-500' : 'accent-blue-500'
           }`}
       />
       <div className="flex items-center w-14 justify-end text-white font-bold font-mono">
@@ -113,76 +180,102 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const sc = getScenario(scenario);
   const sim = useSimulation({ scenario, onBack });
 
-  // ── Purely local UI state (nothing to do with business logic) ───────────────
-  const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
-  const [terminalNodeId, setTerminalNodeId] = useState<string | null>(null);
-  const [isHelpOpen, setIsHelpOpen] = useState(false);
-  const [dstDropdownOpen, setDstDropdownOpen] = useState(false);
-  const [dstMinWarning, setDstMinWarning] = useState(false);
-  const [isExpertMode, setIsExpertMode] = useState(false);
-  const [showExpertWarning, setShowExpertWarning] = useState(false);
-  const [trafDstDropdownOpen, setTrafDstDropdownOpen] = useState(false);
-  const [trafSrcDropdownOpen, setTrafSrcDropdownOpen] = useState(false);
-  const [trafSrcSearch, setTrafSrcSearch] = useState('');
-  const [trafDstSearch, setTrafDstSearch] = useState('');
-  const tutorial = useTutorial();
+  // All local UI state + endpoint picking + blockage brush + button styles live in the hook.
+  const {
+    highlightedNodeId, setHighlightedNodeId,
+    terminalNodeId, setTerminalNodeId,
+    isHelpOpen, setIsHelpOpen,
+    isBlockageMode, setIsBlockageMode,
+    blockageBrush, setBlockageBrush,
+    placementMode, setPlacementMode,
+    pickMode, pickDraft, pickToast,
+    tutorial,
+    handleEventClick,
+    nodeLabel,
+    supportsDestPick,
+    minDestinations,
+    currentSourceId,
+    currentDestIds,
+    pickRuleText,
+    startPicking,
+    cancelPicking,
+    finishPicking,
+    handlePickClick,
+    patchedGraph,
+    BLOCKAGE_LABELS,
+    previewDynamicEvents,
+    scenarioBtnClass,
+    activeTabClass,
+    primaryBtnClass,
+    pickDisabled,
+  } = useSimulationViewLogic(scenario, sim);
 
-  const handleEventClick = (nodeId: string) => {
-    setHighlightedNodeId(prev => prev === nodeId ? null : nodeId);
+  // Entering a topology tool cancels endpoint picking and blockage painting,
+  // so only one canvas interaction mode is active at a time.
+  const setPlacementModeSafe: typeof setPlacementMode = (value) => {
+    cancelPicking();
+    setIsBlockageMode(false);
+    setPlacementMode(value);
   };
 
-  // ── Button style helpers ────────────────────────────────────────────────────
-  const baseBtnClass = "px-2.5 xl:px-4 py-1.5 xl:py-2 rounded-lg text-xs xl:text-sm font-semibold transition-all duration-300 ease-out transform active:scale-[0.97] cursor-pointer disabled:opacity-30 disabled:pointer-events-none disabled:transform-none flex items-center gap-1.5 xl:gap-2 shadow-md hover:shadow-lg hover:-translate-y-0.5 flex-1 sm:flex-none justify-center whitespace-nowrap";
+  const editorDisabled = sim.isComputing || sim.isGraphLoading || sim.status === 'running';
 
-  const scenarioBtnClass = (() => {
-    const map: Record<ScenarioType, string> = {
-      network: `${baseBtnClass} bg-blue-900/40 text-blue-300 hover:bg-blue-600 hover:text-white border border-blue-800 hover:border-blue-500 hover:shadow-blue-900/50`,
-      robotics: `${baseBtnClass} bg-orange-900/40 text-orange-300 hover:bg-orange-600 hover:text-white border border-orange-800 hover:border-orange-500 hover:shadow-orange-900/50`,
-      traffic: `${baseBtnClass} bg-emerald-900/40 text-emerald-300 hover:bg-emerald-600 hover:text-white border border-emerald-800 hover:border-emerald-500 hover:shadow-emerald-900/50`,
-      evacuation: `${baseBtnClass} bg-red-900/40 text-red-300 hover:bg-red-600 hover:text-white border border-red-800 hover:border-red-500 hover:shadow-red-900/50`,
-      gameai: `${baseBtnClass} bg-purple-900/40 text-purple-300 hover:bg-purple-600 hover:text-white border border-purple-800 hover:border-purple-500 hover:shadow-purple-900/50`,
-    };
-    return map[scenario] ?? `${baseBtnClass} bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600`;
-  })();
+  // ── Custom blockage helpers ─────────────────────────────────────────────────
+  // NOTE: adjust `setCustomBlockedNodes` if your useSimulation exposes a different setter name.
+  const setCustomBlocked = (sim as any).setCustomBlockedNodes as
+    | ((updater: (prev: { nodeId: string; label: string }[]) => { nodeId: string; label: string }[]) => void)
+    | undefined;
 
-  const activeTabClass = (() => {
-    const map: Record<ScenarioType, string> = {
-      network: 'bg-blue-900/40 text-blue-300 border border-blue-500/60 shadow-[0_0_10px_rgba(59,130,246,0.25)]',
-      robotics: 'bg-orange-900/40 text-orange-300 border border-orange-500/60 shadow-[0_0_10px_rgba(249,115,22,0.25)]',
-      traffic: 'bg-emerald-900/40 text-emerald-300 border border-emerald-500/60 shadow-[0_0_10px_rgba(16,185,129,0.25)]',
-      evacuation: 'bg-red-900/40 text-red-300 border border-red-500/60 shadow-[0_0_10px_rgba(239,68,68,0.25)]',
-      gameai: 'bg-purple-900/40 text-purple-300 border border-purple-500/60 shadow-[0_0_10px_rgba(139,92,246,0.25)]',
-    };
-    return map[scenario] ?? 'bg-purple-900/40 text-purple-300 border border-purple-500/60 shadow-[0_0_10px_rgba(139,92,246,0.25)]';
-  })();
+  const blockedList: { nodeId: string; label: string }[] = (sim as any).customBlockedNodes ?? [];
+  const blockageDisabled = sim.isComputing || sim.isGraphLoading || sim.status !== 'idle';
 
-  // ── Auto-trigger specific tutorial steps on map change ──────────
+  const toggleBlockNode = (nodeId: string) => {
+    if (!setCustomBlocked) return;
+    const node = sim.currentGraph?.nodes.find(n => n.id === nodeId);
+    if (!node) return;
+    // Don't allow blocking the start / exits
+    if (nodeId === currentSourceId || currentDestIds.includes(nodeId)) return;
+    setCustomBlocked(prev =>
+      prev.some(b => b.nodeId === nodeId)
+        ? prev.filter(b => b.nodeId !== nodeId)
+        : [...prev, { nodeId, label: blockageBrush }]
+    );
+  };
+
+  const toggleBlockageMode = () => {
+    if (blockageDisabled) return;
+    if (!isBlockageMode) cancelPicking();
+    setIsBlockageMode(!isBlockageMode);
+  };
+
+  // Leave blockage mode whenever a run starts
   useEffect(() => {
-    if (tutorial.isOpen) return;
+    if (sim.status !== 'idle' || sim.isComputing) setIsBlockageMode(false);
+  }, [sim.status, sim.isComputing]);
 
-    let panelId: string | null = null;
-    if (scenario === 'robotics') panelId = 'robotics';
-    else if (scenario === 'network' && sim.mapId === 'campus') panelId = 'network_campus';
-    else if (scenario === 'gameai') panelId = 'gameai';
+  // ── Endpoint bar labels ─────────────────────────────────────────────────────
+  const srcLabel =
+    scenario === 'network'
+      ? (sim.networkRoutingMode === 'device-to-device' ? 'SRC DEVICE' : 'SRC ROUTER')
+      : scenario === 'robotics' ? 'ROBOT START'
+        : scenario === 'gameai' ? 'STRATEGY START'
+          : scenario === 'evacuation' ? 'STARTING ROOM'
+            : 'STARTING POINT';
 
-    if (panelId) {
-      const seenRaw = localStorage.getItem('hybrid_sim_tutorial_seen_panels');
-      const seen: string[] = seenRaw ? JSON.parse(seenRaw) : [];
-      if (!seen.includes(panelId)) {
-        const stepIdx = TUTORIAL_STEPS.findIndex(s => s.target === 'tutorial-scenario-panels');
-        if (stepIdx !== -1) {
-          const t = setTimeout(() => {
-            tutorial.startAt(stepIdx);
-            seen.push(panelId!);
-            localStorage.setItem('hybrid_sim_tutorial_seen_panels', JSON.stringify(seen));
-          }, 800);
-          return () => clearTimeout(t);
-        }
-      }
-    }
-  }, [scenario, sim.mapId, tutorial.isOpen, tutorial.startAt]);
+  const dstValue = currentDestIds.length > 0
+    ? `${currentDestIds.length} exit${currentDestIds.length > 1 ? 's' : ''} selected`
+    : 'Select exits';
 
-  const primaryBtnClass = "px-4 xl:px-6 py-1.5 xl:py-2 rounded-lg font-bold text-xs xl:text-sm transition-all duration-300 ease-out transform active:scale-[0.97] cursor-pointer disabled:opacity-30 disabled:pointer-events-none disabled:transform-none flex items-center justify-center gap-1.5 xl:gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex-1 sm:flex-none whitespace-nowrap";
+  const showResetDefault =
+    (scenario === 'traffic' && (sim.trafficSourceId || sim.trafficDestinationIds.length > 0)) ||
+    (scenario === 'evacuation' && sim.evacuationSourceId) ||
+    (scenario === 'gameai' && sim.gameAISourceId);
+
+  const handleResetDefault = () => {
+    if (scenario === 'traffic') { sim.setTrafficSourceId(null); sim.setTrafficDestinationIds([]); }
+    if (scenario === 'evacuation') sim.setEvacuationSourceId(null);
+    if (scenario === 'gameai') sim.setGameAISourceId(null);
+  };
 
   return (
     <>
@@ -204,10 +297,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         const type = nav.type;
 
         const title = isInProgress ? 'Simulation in Progress' : 'Unsaved Results';
-        const icon  = isInProgress ? '❗' : '⚠️';
+        const icon = isInProgress ? '❗' : '⚠️';
         const borderColor = isInProgress ? 'border-blue-500/30' : 'border-amber-500/30';
-        const titleColor  = isInProgress ? 'text-blue-400'  : 'text-amber-400';
-        const btnColor    = isInProgress
+        const titleColor = isInProgress ? 'text-blue-400' : 'text-amber-400';
+        const btnColor = isInProgress
           ? 'bg-blue-600 hover:bg-blue-500 shadow-blue-900/20'
           : 'bg-amber-600 hover:bg-amber-500 shadow-amber-900/20';
 
@@ -246,13 +339,13 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         })();
 
         const confirmLabel = (() => {
-          if (type === 'reset')   return isInProgress ? 'Stop & Reset'   : 'Discard & Reset';
-          if (type === 'reroll')  return isInProgress ? 'Stop & Reroll'  : 'Discard & Reroll';
-          if (type === 'skip')    return isInProgress ? 'Skip to End'    : 'Discard & Skip';
+          if (type === 'reset') return isInProgress ? 'Stop & Reset' : 'Discard & Reset';
+          if (type === 'reroll') return isInProgress ? 'Stop & Reroll' : 'Discard & Reroll';
+          if (type === 'skip') return isInProgress ? 'Skip to End' : 'Discard & Skip';
           if (type === 'sizing' || type === 'sizing_step')
-                                  return isInProgress ? 'Stop & Resize'  : 'Discard & Resize';
-          if (type === 'back')    return isInProgress ? 'Stop & Leave'   : 'Discard & Leave';
-          if (type === 'map')     return isInProgress ? 'Stop & Switch'  : 'Discard & Switch';
+            return isInProgress ? 'Stop & Resize' : 'Discard & Resize';
+          if (type === 'back') return isInProgress ? 'Stop & Leave' : 'Discard & Leave';
+          if (type === 'map') return isInProgress ? 'Stop & Switch' : 'Discard & Switch';
           if (type === 'gameboard') return isInProgress ? 'Stop & Switch' : 'Discard & Switch';
           if (type === 'robot_assignment') return 'Stop & Open';
           return 'Confirm';
@@ -290,33 +383,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         {/* Help Modal */}
         {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} scenario={scenario} onStartTutorial={tutorial.start} />}
 
-        {/* Expert Mode Warning */}
-        {showExpertWarning && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn p-4">
-            <div className="bg-gray-900 border border-green-500/50 rounded-xl p-6 max-w-sm w-full shadow-2xl scale-in font-mono">
-              <h3 className="text-green-400 font-bold text-lg mb-2 flex items-center gap-2">
-                <span className="animate-pulse">{'>_'}</span> Enable Expert Mode?
-              </h3>
-              <p className="text-gray-300 text-xs mb-6 leading-relaxed">
-                Expert mode displays raw algorithmic telemetry (Queue/Stack memory, phase states, and real-time node evaluations). This requires additional rendering and may impact performance on large maps.
-              </p>
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setShowExpertWarning(false)}
-                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-medium transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => { setShowExpertWarning(false); setIsExpertMode(true); }}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-xs font-bold transition-colors shadow-lg shadow-green-900/20 cursor-pointer"
-                >
-                  Enable Telemetry
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+
 
         {/* ── Header ───────────────────────────────────────────────────────────── */}
         <header className="glass-panel border-b-0 border-white/5 px-2 sm:px-3 md:px-6 py-2.5 md:py-3 flex flex-wrap lg:flex-nowrap items-center justify-between shrink-0 relative z-10 gap-y-2 gap-x-1.5 w-full max-w-full">
@@ -405,14 +472,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
           </div>
 
           <div className="z-20 shrink-0 ml-2 sm:ml-4 flex items-center gap-2 sm:gap-3">
-            <button
-              onClick={() => isExpertMode ? setIsExpertMode(false) : setShowExpertWarning(true)}
-              title="Expert Mode (Raw Telemetry)"
-              className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-mono font-bold transition-all cursor-pointer hover:-translate-y-0.5 active:scale-[0.98] ${isExpertMode ? 'bg-green-900/40 border-green-500 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.3)]' : 'bg-gray-800/50 border-gray-600 text-gray-400 hover:text-gray-200 hover:bg-gray-800'}`}
-            >
-              <span className={isExpertMode ? "animate-pulse" : ""}>{'>_'}</span>
-              <span>Expert</span>
-            </button>
+
             <button
               data-tutorial="tutorial-help-btn"
               onClick={() => setIsHelpOpen(true)}
@@ -476,16 +536,16 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   {sim.computeProgress < 5
                     ? 'Contacting backend server\u2026'
                     : sim.computeProgress < 20
-                    ? 'Building graph topology\u2026'
-                    : sim.computeProgress < 45
-                    ? 'Running BFS \u00b7 DFS \u00b7 Hybrid\u2026'
-                    : sim.computeProgress < 70
-                    ? 'Evaluating algorithm steps\u2026'
-                    : sim.computeProgress < 90
-                    ? 'Collecting performance metrics\u2026'
-                    : sim.computeProgress < 100
-                    ? 'Almost there\u2026'
-                    : 'Finalizing results\u2026'}
+                      ? 'Building graph topology\u2026'
+                      : sim.computeProgress < 45
+                        ? 'Running BFS \u00b7 DFS \u00b7 Hybrid\u2026'
+                        : sim.computeProgress < 70
+                          ? 'Evaluating algorithm steps\u2026'
+                          : sim.computeProgress < 90
+                            ? 'Collecting performance metrics\u2026'
+                            : sim.computeProgress < 100
+                              ? 'Almost there\u2026'
+                              : 'Finalizing results\u2026'}
                 </div>
 
                 {/* Progress bar */}
@@ -494,21 +554,19 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     <span className="text-[10px] text-gray-500 font-mono">
                       {sim.computeProgress < 5 ? 'Connecting\u2026' : 'Computing\u2026'}
                     </span>
-                    <span className={`text-[10px] font-bold font-mono transition-colors ${
-                      sim.computeProgress >= 90 ? 'text-green-400' :
+                    <span className={`text-[10px] font-bold font-mono transition-colors ${sim.computeProgress >= 90 ? 'text-green-400' :
                       sim.computeProgress >= 50 ? 'text-cyan-400' : 'text-blue-400'
-                    }`}>
+                      }`}>
                       {sim.computeProgress > 0 ? `${sim.computeProgress}%` : '\u2014\u2014'}
                     </span>
                   </div>
                   <div className="h-2 w-full bg-gray-800 rounded-full overflow-hidden">
                     {sim.computeProgress > 0 ? (
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ease-out ${
-                          sim.computeProgress >= 90
-                            ? 'bg-gradient-to-r from-cyan-500 to-green-400'
-                            : 'bg-gradient-to-r from-blue-600 via-blue-400 to-cyan-400'
-                        }`}
+                        className={`h-full rounded-full transition-all duration-500 ease-out ${sim.computeProgress >= 90
+                          ? 'bg-gradient-to-r from-cyan-500 to-green-400'
+                          : 'bg-gradient-to-r from-blue-600 via-blue-400 to-cyan-400'
+                          }`}
                         style={{ width: `${sim.computeProgress}%` }}
                       />
                     ) : (
@@ -579,282 +637,70 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 </div>
               )}
 
+              {/* ── Endpoint bar (on-map picking) ─────────────────────────────── */}
               <div data-tutorial="tutorial-scenario-selectors" className="w-full flex flex-col items-center gap-1.5 shrink-0 empty:hidden">
-                {scenario === 'network' && (
-                  <div className="flex flex-col md:flex-row flex-wrap items-center gap-2 justify-center w-full mt-1 bg-gray-900/60 p-2 rounded-xl border border-gray-700/50">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Mode:</span>
-                      <select
-                        value={sim.networkRoutingMode}
-                        onChange={(e) => sim.setNetworkRoutingMode(e.target.value as 'default' | 'device-to-device')}
-                        disabled={sim.isComputing || sim.status === 'running'}
-                        className="bg-gray-800 border border-gray-600 rounded text-xs font-bold text-white px-2 py-1 outline-none focus:border-blue-500 cursor-pointer disabled:opacity-50"
-                      >
-                        <option value="default">Default (ISP Broadcast)</option>
-                        <option value="device-to-device">Device to Device</option>
-                      </select>
-                    </div>
+                {sim.currentGraph && (
+                  <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 w-full mt-1 bg-gray-900/60 px-3 py-2 rounded-xl border border-gray-700/50">
 
-                    {sim.networkRoutingMode === 'device-to-device' && sim.currentGraph && (
+                    {scenario === 'network' && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Mode:</span>
+                        <select
+                          value={sim.networkRoutingMode}
+                          onChange={(e) => sim.setNetworkRoutingMode(e.target.value as 'default' | 'device-to-device')}
+                          disabled={sim.isComputing || sim.status === 'running'}
+                          className="bg-gray-800 border border-gray-600 rounded text-xs font-bold text-white px-2 py-1 outline-none focus:border-blue-500 cursor-pointer disabled:opacity-50"
+                        >
+                          <option value="default">Default (ISP Broadcast)</option>
+                          <option value="device-to-device">Device to Device</option>
+                        </select>
+                      </div>
+                    )}
+
+                    <EndpointChip
+                      label={srcLabel}
+                      labelClass="text-green-400"
+                      dotClass="bg-green-500"
+                      borderClass="border-green-900"
+                      value={nodeLabel(currentSourceId)}
+                      active={pickMode === 'source'}
+                      disabled={pickDisabled}
+                      onPick={() => (pickMode === 'source' ? cancelPicking() : startPicking('source'))}
+                    />
+
+                    {supportsDestPick && (
                       <>
-                        <div className="h-4 w-px bg-gray-700 hidden md:block mx-1"></div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] uppercase tracking-widest text-green-400 font-bold">Src:</span>
-                          <select
-                            value={sim.sourceDevice}
-                            onChange={(e) => sim.setSourceDevice(e.target.value)}
-                            disabled={sim.isComputing || sim.status === 'running'}
-                            className="bg-gray-800 border border-green-900 rounded text-xs font-bold text-white px-2 py-1 outline-none focus:border-green-500 cursor-pointer disabled:opacity-50 max-w-[150px] truncate"
-                          >
-                            {sim.currentGraph.nodes
-                              .filter(n => sim.mapId === 'campus' ? n.type === 'access_point' : (n.type === 'access_point' || n.type === 'server'))
-                              .filter(n => !sim.destinationDevices.includes(n.id))
-                              .sort((a, b) => a.label.localeCompare(b.label))
-                              .map(n => <option key={`src-${n.id}`} value={n.id}>{n.label.replace('\n', ' - ')}</option>)}
-                          </select>
-                        </div>
-
-                        <div className="text-gray-500 hidden md:block">→</div>
-
-                        <div className="flex items-center gap-2 relative">
-                          <span className="text-[10px] uppercase tracking-widest text-red-400 font-bold">Dst:</span>
-                          <div
-                            className={`bg-gray-800 border ${sim.destinationDevices.length > 0 ? 'border-red-900' : 'border-red-500'} rounded text-xs font-bold text-white px-2 py-1 flex items-center justify-between min-w-[120px] max-w-[150px] ${(sim.isComputing || sim.status === 'running') ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-red-500'}`}
-                            onClick={() => { if (!sim.isComputing && sim.status !== 'running') setDstDropdownOpen(o => !o); }}
-                          >
-                            <span className="truncate">{sim.destinationDevices.length > 0 ? `${sim.destinationDevices.length} Selected` : 'Select Dst...'}</span>
-                            <span className="text-[10px] ml-2">▼</span>
-                          </div>
-
-                          {dstDropdownOpen && (
-                            <>
-                              <div className="fixed inset-0 z-40" onClick={() => { setDstDropdownOpen(false); setDstMinWarning(false); }}></div>
-                              <div className="absolute top-full right-0 mt-1 bg-gray-800 border border-gray-600 rounded shadow-xl z-50 min-w-[200px] max-h-[300px] overflow-y-auto">
-                                {dstMinWarning && (
-                                  <div className="sticky top-0 z-10 mx-0 px-3 py-2.5 bg-amber-950 border-b border-amber-500/60 flex items-start gap-2">
-                                    <span className="text-amber-400 text-sm shrink-0 mt-0.5">⚠️</span>
-                                    <div>
-                                      <p className="text-amber-300 text-[11px] font-bold leading-tight">Minimum 2 Destinations Required</p>
-                                      <p className="text-amber-400/70 text-[10px] mt-0.5 leading-tight">Device-to-Device mode needs at least 2 destinations.</p>
-                                    </div>
-                                  </div>
-                                )}
-                                {sim.currentGraph.nodes
-                                  .filter(n => sim.mapId === 'campus' ? n.type === 'access_point' : (n.type === 'access_point' || n.type === 'server'))
-                                  .filter(n => n.id !== sim.sourceDevice)
-                                  .sort((a, b) => a.label.localeCompare(b.label))
-                                  .map(n => {
-                                    const isChecked = sim.destinationDevices.includes(n.id);
-                                    const atMin = sim.destinationDevices.length <= 2;
-                                    return (
-                                      <label key={`dst-${n.id}`} className="flex items-center gap-2 px-3 py-2 hover:bg-gray-700 cursor-pointer select-none">
-                                        <input
-                                          type="checkbox"
-                                          className="accent-red-500"
-                                          checked={isChecked}
-                                          onChange={() => { }}
-                                          onClick={(e) => {
-                                            if (isChecked && atMin) {
-                                              e.preventDefault();
-                                              setDstMinWarning(true);
-                                              setTimeout(() => setDstMinWarning(false), 3000);
-                                              return;
-                                            }
-                                            setDstMinWarning(false);
-                                            if (isChecked) {
-                                              sim.setDestinationDevices(sim.destinationDevices.filter(id => id !== n.id));
-                                            } else {
-                                              sim.setDestinationDevices([...sim.destinationDevices, n.id]);
-                                            }
-                                          }}
-                                        />
-                                        <span className="text-xs text-gray-200 whitespace-nowrap">{n.label.replace('\n', ' - ')}</span>
-                                      </label>
-                                    );
-                                  })}
-                              </div>
-                            </>
-                          )}
-                        </div>
-
-                        <div className="h-4 w-px bg-gray-700 hidden md:block mx-1"></div>
-                        <div className="flex items-center gap-2">
-                          <select
-                            value={sim.deliveryMode}
-                            onChange={(e) => sim.setDeliveryMode(e.target.value as 'anycast' | 'multicast')}
-                            disabled={sim.isComputing || sim.status === 'running'}
-                            className="bg-gray-800 border border-purple-900/50 rounded text-[10px] uppercase font-bold text-gray-300 px-2 py-1.5 outline-none focus:border-purple-500 cursor-pointer disabled:opacity-50"
-                          >
-                            <option value="anycast">Anycast (Race to first)</option>
-                            <option value="multicast">Multicast (Find all)</option>
-                          </select>
-                        </div>
+                        <span className="text-gray-500 hidden md:block">→</span>
+                        <EndpointChip
+                          label="DST"
+                          labelClass="text-red-400"
+                          dotClass="bg-red-500"
+                          borderClass={currentDestIds.length > 0 ? 'border-red-900' : 'border-red-500'}
+                          value={dstValue}
+                          active={pickMode === 'dest'}
+                          disabled={pickDisabled}
+                          onPick={() => (pickMode === 'dest' ? cancelPicking() : startPicking('dest'))}
+                        />
                       </>
                     )}
-                  </div>
-                )}
 
-                {scenario === 'evacuation' && sim.currentGraph && (
-                  <div className="flex flex-col md:flex-row items-center gap-2 justify-center w-full mt-1 bg-gray-900/60 p-2 rounded-xl border border-gray-700/50">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] uppercase tracking-widest text-emerald-400 font-bold flex items-center gap-1">
-                        <span className="sm:hidden">🔥</span> STARTING POINT (SRC):
-                      </span>
+                    {scenario === 'network' && (
                       <select
-                        value={sim.evacuationSourceId || sim.currentGraph.sourceId || ''}
-                        onChange={(e) => sim.setEvacuationSourceId(e.target.value)}
+                        value={sim.deliveryMode}
+                        onChange={(e) => sim.setDeliveryMode(e.target.value as 'anycast' | 'multicast')}
                         disabled={sim.isComputing || sim.status === 'running'}
-                        className="bg-gray-800 border border-emerald-800 rounded text-xs font-bold text-white px-3 py-1 outline-none focus:border-emerald-500 cursor-pointer disabled:opacity-50 max-w-[260px] md:max-w-[320px] truncate"
+                        className="bg-gray-800 border border-gray-600 rounded text-[10px] uppercase font-bold text-gray-300 px-2 py-1.5 outline-none focus:border-purple-500 cursor-pointer disabled:opacity-50"
                       >
-                        {sim.currentGraph.nodes
-                          .filter(n => n.type === 'place' || n.type === 'origin' || n.type === 'room')
-                          .sort((a, b) => {
-                            if (a.buildingId !== b.buildingId) return (a.buildingId || '').localeCompare(b.buildingId || '');
-                            return (a.label || a.id).localeCompare(b.label || b.id);
-                          })
-                          .map(n => (
-                            <option key={`evac-src-${n.id}`} value={n.id}>
-                              {n.buildingId ? `[${n.buildingId}] ` : ''}{n.label ? n.label.replace('\n', ' - ') : n.id}
-                            </option>
-                          ))}
+                        <option value="anycast">Anycast (Race to first)</option>
+                        <option value="multicast">Multicast (Find all)</option>
                       </select>
-                      {sim.evacuationSourceId && (
-                        <button
-                          onClick={() => sim.setEvacuationSourceId(null)}
-                          disabled={sim.isComputing || sim.status === 'running'}
-                          className="text-[11px] text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 border border-gray-600 px-2 py-1 rounded cursor-pointer transition-colors"
-                          title="Reset to default starting room"
-                        >
-                          Reset Default
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )}
+                    )}
 
-                {scenario === 'traffic' && sim.currentGraph && (
-                  <div className="flex flex-col md:flex-row items-center gap-4 justify-center w-full mt-1 bg-gray-900/60 p-2 rounded-xl border border-gray-700/50">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] uppercase tracking-widest text-emerald-400 font-bold flex items-center gap-1">
-                        <span className="sm:hidden">📍</span> STARTING POINT:
-                      </span>
-                      <div className="flex items-center gap-2 relative">
-                        <div
-                          className="bg-gray-800 border border-emerald-800 rounded text-xs font-bold text-white px-3 py-1 flex items-center justify-between min-w-[200px] max-w-[250px] cursor-pointer hover:border-emerald-500 disabled:opacity-50"
-                          onClick={() => { if (!sim.isComputing && sim.status !== 'running') setTrafSrcDropdownOpen(o => !o); }}
-                        >
-                          <span className="truncate">
-                            {sim.trafficSourceId
-                              ? (sim.currentGraph?.nodes.find(n => n.id === sim.trafficSourceId)?.label?.replace('\n', ' - ') || sim.trafficSourceId)
-                              : (sim.currentGraph?.sourceId ? (sim.currentGraph?.nodes.find(n => n.id === sim.currentGraph?.sourceId)?.label?.replace('\n', ' - ') || sim.currentGraph?.sourceId) : 'Select Src...')}
-                          </span>
-                          <span className="text-[10px] ml-2">▼</span>
-                        </div>
-
-                        {trafSrcDropdownOpen && (
-                          <>
-                            <div className="fixed inset-0 z-40" onClick={() => setTrafSrcDropdownOpen(false)}></div>
-                            <div className="absolute top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded shadow-xl z-50 min-w-[250px] max-w-[300px] max-h-[300px] overflow-y-auto flex flex-col">
-                              <div className="sticky top-0 z-10 bg-gray-800 p-2 border-b border-gray-600">
-                                <input
-                                  type="text"
-                                  placeholder="Search starting point..."
-                                  value={trafSrcSearch}
-                                  onChange={(e) => setTrafSrcSearch(e.target.value)}
-                                  className="w-full bg-gray-900 border border-gray-600 rounded text-xs text-white px-2 py-1 outline-none focus:border-emerald-500"
-                                  autoFocus
-                                />
-                              </div>
-                              <div className="overflow-y-auto flex-1">
-                                {sim.currentGraph.nodes
-                                  .filter(n => n.type === 'intersection' || n.type === 'street' || n.type === 'origin' || n.type === 'highway')
-                                  .filter(n => !sim.trafficDestinationIds.includes(n.id))
-                                  .filter(n => (n.label || n.id).toLowerCase().includes(trafSrcSearch.toLowerCase()))
-                                  .sort((a, b) => (a.label || a.id).localeCompare(b.label || b.id))
-                                  .map(n => (
-                                    <div
-                                      key={`traffic-src-${n.id}`}
-                                      className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-xs text-gray-200 select-none whitespace-nowrap"
-                                      onClick={() => {
-                                        sim.setTrafficSourceId(n.id);
-                                        setTrafSrcDropdownOpen(false);
-                                        setTrafSrcSearch('');
-                                      }}
-                                    >
-                                      {n.label ? n.label.replace('\n', ' - ') : n.id}
-                                    </div>
-                                  ))}
-                              </div>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] uppercase tracking-widest text-red-400 font-bold flex items-center gap-1">
-                        <span className="sm:hidden">🏁</span> DESTINATION:
-                      </span>
-                      <div className="flex items-center gap-2 relative">
-                        <div
-                          className={`bg-gray-800 border ${sim.trafficDestinationIds.length > 0 ? 'border-red-900' : 'border-red-500'} rounded text-xs font-bold text-white px-2 py-1 flex items-center justify-between min-w-[120px] max-w-[150px] ${(sim.isComputing || sim.status === 'running') ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-red-500'}`}
-                          onClick={() => { if (!sim.isComputing && sim.status !== 'running') setTrafDstDropdownOpen(o => !o); }}
-                        >
-                          <span className="truncate">{sim.trafficDestinationIds.length > 0 ? `${sim.trafficDestinationIds.length} Selected` : 'Select Dst...'}</span>
-                          <span className="text-[10px] ml-2">▼</span>
-                        </div>
-
-                        {trafDstDropdownOpen && (
-                          <>
-                            <div className="fixed inset-0 z-40" onClick={() => setTrafDstDropdownOpen(false)}></div>
-                            <div className="absolute top-full right-0 mt-1 bg-gray-800 border border-gray-600 rounded shadow-xl z-50 min-w-[250px] max-w-[300px] max-h-[300px] overflow-y-auto flex flex-col">
-                              <div className="sticky top-0 z-10 bg-gray-800 p-2 border-b border-gray-600">
-                                <input
-                                  type="text"
-                                  placeholder="Search destinations..."
-                                  value={trafDstSearch}
-                                  onChange={(e) => setTrafDstSearch(e.target.value)}
-                                  className="w-full bg-gray-900 border border-gray-600 rounded text-xs text-white px-2 py-1 outline-none focus:border-red-500"
-                                  autoFocus
-                                />
-                              </div>
-                              <div className="overflow-y-auto flex-1">
-                                {sim.currentGraph.nodes
-                                  .filter(n => n.type === 'intersection' || n.type === 'street' || n.type === 'origin' || n.type === 'highway')
-                                  .filter(n => n.id !== sim.trafficSourceId)
-                                  .filter(n => (n.label || n.id).toLowerCase().includes(trafDstSearch.toLowerCase()))
-                                  .sort((a, b) => (a.label || a.id).localeCompare(b.label || b.id))
-                                  .map(n => {
-                                    const isChecked = sim.trafficDestinationIds.includes(n.id);
-                                    return (
-                                      <label key={`traf-dst-${n.id}`} className="flex items-center gap-2 px-3 py-2 hover:bg-gray-700 cursor-pointer select-none">
-                                        <input
-                                          type="checkbox"
-                                          className="accent-red-500"
-                                          checked={isChecked}
-                                          onChange={() => { }}
-                                          onClick={() => {
-                                            if (isChecked) {
-                                              sim.setTrafficDestinationIds(sim.trafficDestinationIds.filter(id => id !== n.id));
-                                            } else {
-                                              sim.setTrafficDestinationIds([...sim.trafficDestinationIds, n.id]);
-                                            }
-                                          }}
-                                        />
-                                        <span className="text-xs text-gray-200 whitespace-nowrap">{n.label ? n.label.replace('\n', ' - ') : n.id}</span>
-                                      </label>
-                                    );
-                                  })}
-                              </div>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    {(sim.trafficSourceId || sim.trafficDestinationIds.length > 0) && (
+                    {showResetDefault && (
                       <button
-                        onClick={() => { sim.setTrafficSourceId(null); sim.setTrafficDestinationIds([]); }}
+                        onClick={handleResetDefault}
                         disabled={sim.isComputing || sim.status === 'running'}
-                        className="text-[11px] text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 border border-gray-600 px-2 py-1 rounded cursor-pointer transition-colors"
+                        className="text-[11px] text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 border border-gray-600 px-2 py-1 rounded cursor-pointer transition-colors disabled:opacity-40"
                         title="Reset to default endpoints"
                       >
                         Reset Default
@@ -863,29 +709,53 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   </div>
                 )}
 
-                {scenario === 'gameai' && sim.currentGraph && (
-                  <div className="flex flex-col md:flex-row items-center gap-2 justify-center w-full mt-1 bg-gray-900/60 p-2 rounded-xl border border-gray-700/50">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] uppercase tracking-widest text-purple-400 font-bold flex items-center gap-1">
-                        <span className="sm:hidden">📍</span> STRATEGY START:
-                      </span>
-                      <select
-                        value={sim.gameAISourceId || ''}
-                        onChange={(e) => sim.setGameAISourceId(e.target.value || null)}
-                        disabled={sim.isComputing || sim.status === 'running'}
-                        className="bg-gray-800 border border-purple-800 rounded text-xs font-bold text-white px-3 py-1 outline-none focus:border-purple-500 cursor-pointer disabled:opacity-50 max-w-[200px] truncate"
-                      >
-                        <option value="">Default (Random)</option>
-                        {sim.currentGraph.nodes
-                          .filter(n => n.type === 'board_tile' && (n.id.endsWith('1') || n.id.match(/^[a-z]+1$/)))
-                          .sort((a, b) => (a.label || a.id).localeCompare(b.label || b.id))
-                          .map(n => (
-                            <option key={`gameai-src-${n.id}`} value={n.id}>
-                              {n.label ? n.label.replace('\n', ' - ') : n.id}
-                            </option>
-                          ))}
-                      </select>
+                {/* Picking banner */}
+                {pickMode && (
+                  <div className="flex flex-wrap items-center justify-center gap-3 w-full px-3 py-2 rounded-xl border border-cyan-500/40 bg-cyan-950/40 text-xs text-cyan-200">
+                    <CrosshairIcon className="w-4 h-4 text-cyan-300 animate-pulse" />
+                    <span className="font-bold">
+                      {pickMode === 'source'
+                        ? 'Click a node on the map to set the starting point'
+                        : `Click nodes on the map to toggle exits (${pickDraft.length} selected, min ${minDestinations})`}
+                    </span>
+                    <span className="text-cyan-400/70 hidden md:inline">· {pickRuleText(pickMode)}</span>
+                    <div className="flex items-center gap-2 ml-auto">
+                      {pickMode === 'dest' && (
+                        <button onClick={finishPicking} className="px-3 py-1 rounded-md bg-cyan-600 hover:bg-cyan-500 text-white font-bold cursor-pointer transition-colors">
+                          Done
+                        </button>
+                      )}
+                      <button onClick={cancelPicking} className="px-3 py-1 rounded-md bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold cursor-pointer transition-colors">
+                        Cancel
+                      </button>
                     </div>
+                  </div>
+                )}
+
+                {/* Blockage brush bar */}
+                {isBlockageMode && (
+                  <div className="flex flex-wrap items-center justify-center gap-2 w-full px-3 py-2 rounded-xl border border-amber-500/40 bg-amber-950/30 text-xs text-amber-200">
+                    <span className="font-bold uppercase tracking-widest text-[10px]">Blockage brush:</span>
+                    {BLOCKAGE_LABELS[scenario].map(label => (
+                      <button
+                        key={label}
+                        onClick={() => setBlockageBrush(label)}
+                        className={`px-2.5 py-1 rounded-md border font-bold cursor-pointer transition-colors ${blockageBrush === label
+                          ? 'bg-amber-600/30 border-amber-400 text-amber-100'
+                          : 'bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700'}`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                    <span className="text-amber-300/70 ml-1">Click nodes to block / unblock ({blockedList.length} blocked)</span>
+                    {blockedList.length > 0 && setCustomBlocked && (
+                      <button
+                        onClick={() => setCustomBlocked(() => [])}
+                        className="ml-auto px-2.5 py-1 rounded-md bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-300 font-bold cursor-pointer"
+                      >
+                        Clear
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -894,50 +764,102 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             {/* Canvas */}
             <div
               data-tutorial="tutorial-canvas"
-              className="rounded-2xl overflow-hidden border border-gray-700 w-full relative h-[50vh] lg:flex-1 lg:min-h-0 shadow-[0_0_48px_rgba(37,99,235,0.1)] bg-[#0a0f1e]"
+              className={`rounded-2xl overflow-hidden border w-full relative h-[50vh] lg:flex-1 lg:min-h-0 shadow-[0_0_48px_rgba(37,99,235,0.1)] bg-[#0a0f1e] transition-colors ${pickMode ? 'border-cyan-500/70 cursor-crosshair' : isBlockageMode ? 'border-amber-500/70 cursor-crosshair' : 'border-gray-700'}`}
               style={{ maxWidth: 1200 }}
             >
-              {sim.currentGraph ? (
+              {patchedGraph ? (
                 <>
                   <NetworkCanvas
-                    graph={sim.currentGraph}
+                    graph={patchedGraph}
                     activeSteps={sim.activeSteps}
                     scenario={scenario}
                     stepIndex={sim.stepIndex}
-                    dynamicEvents={sim.simResults?.hybrid.dynamicEvents || []}
+                    dynamicEvents={previewDynamicEvents}
                     highlightedNodeId={highlightedNodeId}
                     onDeselect={() => setHighlightedNodeId(null)}
                     onNodeClick={(nodeId) => {
+                      // 1. Endpoint picking has priority
+                      if (pickMode) { handlePickClick(nodeId); return; }
+                      // 2. Custom blockage painting
+                      if (isBlockageMode) { toggleBlockNode(nodeId); return; }
+                      
+                      // Topology Editor: Delete Node
+                      if (placementMode?.type === 'delete') {
+                        sim.setCurrentGraph?.(prev => {
+                          if (!prev) return prev;
+                          return {
+                            ...prev,
+                            nodes: prev.nodes.filter(n => n.id !== nodeId),
+                            edges: prev.edges.filter(e => e.from !== nodeId && e.to !== nodeId)
+                          };
+                        });
+                        return;
+                      }
+
+                      // Topology Editor: Connect Edge
+                      if (placementMode?.type === 'edge') {
+                        if (!placementMode.sourceNodeId) {
+                          setPlacementModeSafe({ ...placementMode, sourceNodeId: nodeId });
+                        } else {
+                          const src = placementMode.sourceNodeId;
+                          if (src !== nodeId) {
+                            sim.setCurrentGraph?.(prev => {
+                              if (!prev) return prev;
+                              const newEdge = {
+                                id: `edge_${Date.now()}`,
+                                from: src,
+                                to: nodeId,
+                                type: placementMode.edgeType as any,
+                                bandwidth: 1000,
+                                latency: 1,
+                                status: 'active'
+                              };
+                              return {
+                                ...prev,
+                                edges: [...prev.edges, newEdge]
+                              };
+                            });
+                          }
+                          setPlacementModeSafe({ ...placementMode, sourceNodeId: undefined });
+                        }
+                        return;
+                      }
+
+                      // 3. Default: highlight (robotics)
                       if (scenario === 'robotics') {
                         setHighlightedNodeId(prev => prev === nodeId ? null : nodeId);
                       }
-                      if (sim.isEvacuationRealWorld && !sim.isComputing) {
-                        const node = sim.currentGraph?.nodes.find(n => n.id === nodeId);
-                        if (node && (node.type === 'place' || node.type === 'origin' || node.type === 'room')) {
-                          sim.setEvacuationSourceId(prev => prev === nodeId ? null : nodeId);
-                        }
+                    }}
+                    onEdgeClick={(edgeId) => {
+                      if (placementMode?.type === 'delete') {
+                        sim.setCurrentGraph?.(prev => {
+                          if (!prev) return prev;
+                          return {
+                            ...prev,
+                            edges: prev.edges.filter(e => e.id !== edgeId)
+                          };
+                        });
                       }
-                      if (scenario === 'traffic' && !sim.isComputing && sim.status !== 'running') {
-                        const node = sim.currentGraph?.nodes.find(n => n.id === nodeId);
-                        if (node && (node.type === 'intersection' || node.type === 'street' || node.type === 'origin' || node.type === 'highway')) {
-                          if (sim.trafficSourceId === nodeId) {
-                            sim.setTrafficSourceId(null);
-                          } else if (sim.trafficDestinationIds.includes(nodeId)) {
-                            sim.setTrafficDestinationIds(sim.trafficDestinationIds.filter(id => id !== nodeId));
-                          } else {
-                            if (!sim.trafficSourceId) {
-                              sim.setTrafficSourceId(nodeId);
-                            } else {
-                              sim.setTrafficDestinationIds([...sim.trafficDestinationIds, nodeId]);
-                            }
-                          }
-                        }
-                      }
-                      if (scenario === 'gameai' && !sim.isComputing && sim.status !== 'running') {
-                        const node = sim.currentGraph?.nodes.find(n => n.id === nodeId);
-                        if (node && node.type === 'board_tile' && (nodeId.endsWith('1') || nodeId.match(/^[a-z]+1$/))) {
-                          sim.setGameAISourceId(prev => prev === nodeId ? null : nodeId);
-                        }
+                    }}
+                    onCanvasClick={(x, y) => {
+                      if (placementMode?.type === 'node') {
+                        sim.setCurrentGraph?.(prev => {
+                          if (!prev) return prev;
+                          const newNodeId = `${placementMode.nodeType}_${Date.now()}`;
+                          const newNode = {
+                            id: newNodeId,
+                            type: placementMode.nodeType,
+                            label: placementMode.nodeType.replace(/_/g, ' '),
+                            x,
+                            y,
+                            level: 0,
+                            status: 'active'
+                          };
+                          return {
+                            ...prev,
+                            nodes: [...prev.nodes, newNode]
+                          };
+                        });
                       }
                     }}
                     mapId={sim.mapId}
@@ -946,15 +868,24 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     activeAlgorithms={sim.activeAlgorithms}
                   />
 
+                  {/* Pick toast */}
+                  {pickToast && (
+                    <div className={`absolute top-3 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-lg border text-xs font-bold shadow-lg animate-fadeIn pointer-events-none ${pickToast.ok
+                      ? 'bg-emerald-950/95 border-emerald-500/60 text-emerald-300'
+                      : 'bg-red-950/95 border-red-500/60 text-red-300'}`}>
+                      {pickToast.msg}
+                    </div>
+                  )}
+
                   {scenario === 'network' && (sim.mapId === 'companybusiness' || sim.mapId === 'campus') && terminalNodeId && (
                     <CiscoTerminal nodeId={terminalNodeId} onClose={() => setTerminalNodeId(null)} />
                   )}
 
                   {scenario === 'network' && (sim.mapId === 'companybusiness' || sim.mapId === 'campus') && (
                     <div className="absolute bottom-4 left-4 z-10 flex flex-col gap-2">
-                      {sim.currentGraph.nodes
-                        .filter(n => ['mlt_sw1', 'main_router', 'college_router', 'hostel_router'].includes(n.id))
-                        .map(n => (
+                      {patchedGraph.nodes
+                        .filter((n: any) => ['mlt_sw1', 'main_router', 'college_router', 'hostel_router'].includes(n.id))
+                        .map((n: any) => (
                           <button
                             key={`terminal-btn-${n.id}`}
                             onClick={(e) => { e.stopPropagation(); setTerminalNodeId(prev => prev === n.id ? null : n.id); }}
@@ -963,7 +894,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                               : 'bg-gray-900 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200'
                               }`}
                           >
-
                             {n.label ? n.label.split('\n')[0] : n.id} Terminal
                           </button>
                         ))}
@@ -988,18 +918,38 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             {/* Playback Controls */}
             <div data-tutorial="tutorial-playback-controls" className="mt-2 flex flex-col items-center gap-3 w-full shrink-0">
               <div className="flex items-center gap-2 flex-wrap justify-center w-full">
-                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={() => sim.requestReroll(sim.handleRerollEvents, sim.status, sim.isCurrentSaved)} className={scenarioBtnClass}>Reroll Events</button>
-                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={() => sim.requestReset(sim.handleReset, sim.status, sim.isCurrentSaved)} className={scenarioBtnClass}>Reset</button>
-                <button disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex === 0} onClick={sim.handleStepBackward} className={scenarioBtnClass}>Back</button>
+                <button
+                  disabled={blockageDisabled}
+                  onClick={toggleBlockageMode}
+                  title={blockageDisabled ? 'Reset the simulation to edit blocked nodes' : 'Paint blocked nodes on the map'}
+                  className={`${scenarioBtnClass} ${isBlockageMode ? activeTabClass : ''}`}
+                >
+                  <Ico name="block" /> Block Nodes
+                </button>
+                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={() => sim.requestReroll(sim.handleRerollEvents, sim.status, sim.isCurrentSaved)} className={scenarioBtnClass}>
+                  <Ico name="reroll" /> Reroll Events
+                </button>
+                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={() => sim.requestReset(sim.handleReset, sim.status, sim.isCurrentSaved)} className={scenarioBtnClass}>
+                  <Ico name="reset" /> Reset
+                </button>
+                <button disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex === 0} onClick={sim.handleStepBackward} className={scenarioBtnClass}>
+                  <Ico name="back" /> Back
+                </button>
 
                 {sim.status === 'running' ? (
-                  <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handlePause} className={`${primaryBtnClass} hover:bg-red-500 bg-red-600 text-white shadow-red-900/40`}>Pause</button>
+                  <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handlePause} className={`${primaryBtnClass} bg-red-600/20 border border-red-500/60 text-red-300 hover:bg-red-600/40 hover:shadow-red-900/40`}>
+                    <Ico name="pause" /> Pause
+                  </button>
                 ) : sim.status === 'paused' ? (
-                  <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleResume} className={`${primaryBtnClass} hover:bg-green-500 bg-green-600 text-white shadow-green-900/40`}>Resume</button>
+                  <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleResume} className={`${primaryBtnClass} bg-green-600/20 border border-green-500/60 text-green-300 hover:bg-green-600/40 hover:shadow-green-900/40`}>
+                    <Ico name="play" /> Resume
+                  </button>
                 ) : sim.status === 'done' ? (
-                  <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleRun} className={`${primaryBtnClass} hover:bg-blue-500 bg-blue-600 text-white shadow-blue-900/40`}>Replay</button>
+                  <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleRun} className={`${primaryBtnClass} bg-blue-600/20 border border-blue-500/60 text-blue-300 hover:bg-blue-600/40 hover:shadow-blue-900/40`}>
+                    <Ico name="play" /> Replay
+                  </button>
                 ) : (
-                  <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleRun} className={`${primaryBtnClass} w-full sm:w-auto hover:bg-green-500 bg-green-600 text-white shadow-green-900/40`}>
+                  <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleRun} className={`${primaryBtnClass} bg-green-600/10 border border-green-500/60 text-green-400 hover:bg-green-600/30 hover:shadow-green-900/40`}>
                     {sim.isComputing ? (
                       <>
                         Computing…
@@ -1007,12 +957,16 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                           <span className="ml-1.5 font-mono text-[11px] opacity-90">{sim.computeProgress}%</span>
                         )}
                       </>
-                    ) : 'Run Simulations'}
+                    ) : (<><Ico name="play" /> Run Simulations</>)}
                   </button>
                 )}
 
-                <button disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex >= sim.totalSteps} onClick={sim.handleStepForward} className={scenarioBtnClass}>Fwd</button>
-                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={() => sim.requestSkip(sim.handleSkipEnd, sim.status, sim.isCurrentSaved)} className={scenarioBtnClass}>Skip</button>
+                <button disabled={sim.isComputing || sim.isGraphLoading || sim.stepIndex >= sim.totalSteps} onClick={sim.handleStepForward} className={scenarioBtnClass}>
+                  <Ico name="fwd" /> Fwd
+                </button>
+                <button disabled={sim.isComputing || sim.isGraphLoading} onClick={() => sim.requestSkip(sim.handleSkipEnd, sim.status, sim.isCurrentSaved)} className={scenarioBtnClass}>
+                  <Ico name="skip" /> Skip
+                </button>
               </div>
 
               {/* Speed Controller */}
@@ -1034,11 +988,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             className="border-t lg:border-t-0 lg:border-l border-white/5 lg:max-h-[calc(100vh-theme(spacing.20))] bg-[#0a0f1e]/50 backdrop-blur-sm"
             innerClassName="p-4 flex flex-col gap-4"
           >
-            {isExpertMode && (
-              <div className="shrink-0">
-                <ExpertModePanel activeSteps={sim.activeSteps} activeAlgorithms={sim.activeAlgorithms} />
-              </div>
-            )}
+
 
             {sim.simResults && !sim.isComputing && sim.status === 'done' && sim.currentGraph && (
               <div className="shrink-0">
@@ -1053,7 +1003,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   activeAlgorithms={sim.activeAlgorithms}
                   scenario={scenario}
                 />
-
               </div>
             )}
 
@@ -1067,6 +1016,11 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 highlightedNodeId={highlightedNodeId}
                 activeAlgorithms={sim.activeAlgorithms}
               />
+            </div>
+
+            {/* Algorithm path trace logs (always visible, tabbed BFS / DFS / Hybrid) */}
+            <div className="shrink-0">
+              <ExpertModePanel activeSteps={sim.activeSteps} activeAlgorithms={sim.activeAlgorithms} />
             </div>
 
             {scenario === 'robotics' && sim.currentGraph && (
@@ -1223,6 +1177,17 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   Generated: {sim.generatedNodeCount} nodes / {sim.generatedEdgeCount} links
                 </div>
               </div>
+            )}
+
+            {/* Topology Editor (synthetic maps only) */}
+            {sim.mapId === 'synthetic' && (
+              <TopologyEditor
+                scenario={scenario}
+                placementMode={placementMode}
+                setPlacementMode={setPlacementModeSafe}
+                onClearGraph={() => sim.setCurrentGraph?.(prev => prev ? { ...prev, nodes: [], edges: [] } : prev)}
+                disabled={editorDisabled}
+              />
             )}
           </ResizableSidebar>
         </div>

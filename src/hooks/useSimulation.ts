@@ -207,7 +207,7 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
               }
             } : {}),
             ...(model.scenario === 'gameai' && model.gameBoard ? { gameBoard: model.gameBoard } : {}),
-            ...(model.networkRoutingMode === 'device-to-device' ? {
+            ...(model.scenario === 'network' ? {
               customSourceId: model.sourceDevice,
               customDestinationIds: model.destinationDevices,
               deliveryMode: model.deliveryMode
@@ -227,10 +227,16 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
             } : {}),
             ...(scenario === 'gameai' && model.gameAISourceId ? {
               customSourceId: model.gameAISourceId
+            } : {}),
+            ...(model.customBlockedNodes?.length > 0 ? {
+              customBlockedNodes: model.customBlockedNodes
+            } : {}),
+            ...(model.currentGraph ? {
+              customGraph: model.currentGraph
             } : {})
           };
 
-          const response = await fetch(`https://backend-1e4y.onrender.com/api/simulation/run?offset=${currentOffset}&limit=${limit}`, {
+          const response = await fetch(`http://localhost:3200/api/simulation/run?offset=${currentOffset}&limit=${limit}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestBody)
@@ -311,7 +317,7 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
       stopTicker();
       controller.stopAnimation();
     };
-  }, [scenario, model.mapId, model.seed, model.gameBoard, model.graphSize, model.syntheticSizing, model.networkRoutingMode, model.sourceDevice, model.destinationDevices, model.deliveryMode, model.evacuationSourceId, model.trafficSourceId, JSON.stringify(model.trafficDestinationIds), model.gameAISourceId, JSON.stringify(model.robotAssignments), controller.stopAnimation]);
+  }, [scenario, model.mapId, model.seed, model.gameBoard, model.graphSize, model.syntheticSizing, model.networkRoutingMode, model.sourceDevice, model.destinationDevices, model.deliveryMode, model.evacuationSourceId, model.trafficSourceId, JSON.stringify(model.trafficDestinationIds), model.gameAISourceId, JSON.stringify(model.robotAssignments), JSON.stringify(model.customBlockedNodes), model.currentGraph, controller.stopAnimation]);
 
   // ── Block page refresh/close when unsaved or running ──────────────────────
   useEffect(() => {
@@ -343,6 +349,7 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
   return {
     // Data
     currentGraph: model.currentGraph,
+    setCurrentGraph: model.setCurrentGraph,
     simResults: model.simResults,
     bfsResult: model.bfsResult,
     history: model.history,
@@ -469,5 +476,7 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
     stepNodesDown: model.stepNodesDown,
     stepEdgesUp: model.stepEdgesUp,
     stepEdgesDown: model.stepEdgesDown,
+    customBlockedNodes: model.customBlockedNodes,
+    setCustomBlockedNodes: model.setCustomBlockedNodes,
   };
 }
