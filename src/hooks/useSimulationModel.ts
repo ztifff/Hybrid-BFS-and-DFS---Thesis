@@ -899,6 +899,9 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     stepNodesDown,
     stepEdgesUp,
     stepEdgesDown,
-    forceRefetchGraph: () => setForceGraphRefetch(p => p + 1)
+    forceRefetchGraph: (clearCustom?: boolean) => {
+      if (clearCustom) setCurrentGraph(null);
+      setForceGraphRefetch(p => p + 1);
+    }
   };
 }

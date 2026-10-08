@@ -1163,7 +1163,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   <div className="absolute inset-0 bg-black/70 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-4 text-center animate-in fade-in">
                     <span className="text-xs text-gray-300 font-medium mb-2">Map has been manually edited.</span>
                     <button 
-                      onClick={sim.forceRefetchGraph}
+                      onClick={() => sim.forceRefetchGraph(true)}
                       className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] uppercase tracking-wider font-bold px-4 py-2 rounded-lg transition-colors shadow-[0_0_15px_rgba(37,99,235,0.3)]"
                     >
                       Reset to Default Map

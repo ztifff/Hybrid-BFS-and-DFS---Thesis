@@ -119,7 +119,7 @@ export interface SimulationState {
   stepNodesDown: () => void;
   stepEdgesUp: () => void;
   stepEdgesDown: () => void;
-  forceRefetchGraph: () => void;
+  forceRefetchGraph: (clearCustom?: boolean) => void;
 
   requestSizingChange: (field: keyof GraphSizing, value: number, status: string, saved: boolean) => void;
   requestSizingStep: (action: 'nodesUp' | 'nodesDown' | 'edgesUp' | 'edgesDown', status: string, saved: boolean) => void;
