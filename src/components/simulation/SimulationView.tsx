@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { TutorialOverlay } from '../TutorialOverlay';
 
 import { ScenarioType } from '../../types';
@@ -234,6 +234,12 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
   const blockedList: { nodeId: string; label: string }[] = (sim as any).customBlockedNodes ?? [];
   const blockageDisabled = sim.isComputing || sim.isGraphLoading || sim.status !== 'idle';
+
+  const isManuallyEdited = useMemo(() => {
+    if (!sim.currentGraph) return false;
+    if (sim.currentGraph.nodes.length !== sim.generatedNodeCount || sim.currentGraph.edges.length !== sim.generatedEdgeCount) return true;
+    return sim.currentGraph.nodes.some(n => /_\d{13}$/.test(n.id)) || sim.currentGraph.edges.some(e => /_\d{13}$/.test(e.id));
+  }, [sim.currentGraph, sim.generatedNodeCount, sim.generatedEdgeCount]);
 
   const toggleBlockNode = (nodeId: string) => {
     if (!setCustomBlocked) return;
@@ -761,14 +767,23 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                       </button>
                     ))}
                     <span className="text-amber-300/70 ml-1">Click nodes to block / unblock ({blockedList.length} blocked)</span>
-                    {blockedList.length > 0 && setCustomBlocked && (
+                    
+                    <div className="ml-auto flex items-center gap-2">
+                      {blockedList.length > 0 && setCustomBlocked && (
+                        <button
+                          onClick={() => setCustomBlocked(() => [])}
+                          className="px-2.5 py-1 rounded-md bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-300 font-bold cursor-pointer transition-colors"
+                        >
+                          Clear
+                        </button>
+                      )}
                       <button
-                        onClick={() => setCustomBlocked(() => [])}
-                        className="ml-auto px-2.5 py-1 rounded-md bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-300 font-bold cursor-pointer"
+                        onClick={toggleBlockageMode}
+                        className="px-4 py-1 rounded-md bg-amber-600 hover:bg-amber-500 text-white font-bold cursor-pointer transition-colors shadow-lg shadow-amber-500/20"
                       >
-                        Clear
+                        Done
                       </button>
-                    )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1143,10 +1158,22 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
             {/* Synthetic Size Adjuster */}
             {sim.mapId === 'synthetic' && (
-              <div data-tutorial="tutorial-size-adjuster" className="shrink-0 glass-panel rounded-xl p-4 flex flex-col gap-2 fade-in hover:shadow-glow-blue transition-shadow duration-500">
-                <div className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold mb-1">Dynamic Size Adjuster</div>
+              <div data-tutorial="tutorial-size-adjuster" className="shrink-0 glass-panel rounded-xl p-4 flex flex-col gap-2 fade-in hover:shadow-glow-blue transition-shadow duration-500 relative overflow-hidden">
+                {isManuallyEdited && (
+                  <div className="absolute inset-0 bg-black/70 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-4 text-center animate-in fade-in">
+                    <span className="text-xs text-gray-300 font-medium mb-2">Map has been manually edited.</span>
+                    <button 
+                      onClick={sim.forceRefetchGraph}
+                      className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] uppercase tracking-wider font-bold px-4 py-2 rounded-lg transition-colors shadow-[0_0_15px_rgba(37,99,235,0.3)]"
+                    >
+                      Reset to Default Map
+                    </button>
+                  </div>
+                )}
+                
+                <div className={`text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold mb-1 ${isManuallyEdited ? 'opacity-30' : ''}`}>Dynamic Size Adjuster</div>
 
-                <div className="flex items-center justify-between gap-2">
+                <div className={`flex items-center justify-between gap-2 ${isManuallyEdited ? 'opacity-30' : ''}`}>
                   {/* Nodes */}
                   <label className={`flex items-center gap-1.5 flex-1 rounded-md border border-white/10 bg-black/40 shadow-inner pl-3 pr-0 py-1 overflow-hidden transition-colors ${SIZE_ADJUSTER_THEME[scenario]?.border || 'focus-within:border-teal-500'}`}>
                     <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold flex-1">Nodes</span>

@@ -119,6 +119,7 @@ export interface SimulationState {
   stepNodesDown: () => void;
   stepEdgesUp: () => void;
   stepEdgesDown: () => void;
+  forceRefetchGraph: () => void;
 
   requestSizingChange: (field: keyof GraphSizing, value: number, status: string, saved: boolean) => void;
   requestSizingStep: (action: 'nodesUp' | 'nodesDown' | 'edgesUp' | 'edgesDown', status: string, saved: boolean) => void;
@@ -476,6 +477,7 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
     stepNodesDown: model.stepNodesDown,
     stepEdgesUp: model.stepEdgesUp,
     stepEdgesDown: model.stepEdgesDown,
+    forceRefetchGraph: model.forceRefetchGraph,
     customBlockedNodes: model.customBlockedNodes,
     setCustomBlockedNodes: model.setCustomBlockedNodes,
   };
