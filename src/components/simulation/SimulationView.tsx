@@ -237,9 +237,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
   const isManuallyEdited = useMemo(() => {
     if (!sim.currentGraph) return false;
-    if (sim.currentGraph.nodes.length !== sim.generatedNodeCount || sim.currentGraph.edges.length !== sim.generatedEdgeCount) return true;
     return sim.currentGraph.nodes.some(n => /_\d{13}$/.test(n.id)) || sim.currentGraph.edges.some(e => /_\d{13}$/.test(e.id));
-  }, [sim.currentGraph, sim.generatedNodeCount, sim.generatedEdgeCount]);
+  }, [sim.currentGraph]);
 
   const toggleBlockNode = (nodeId: string) => {
     if (!setCustomBlocked) return;
