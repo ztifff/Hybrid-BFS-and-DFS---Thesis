@@ -23,33 +23,28 @@ export function getAdaptabilityScore(
   const currentCompletion = (status === 'done' || completionRate === undefined) ? (hasExit ? 100 : 0) : completionRate;
   const completionRatio = currentCompletion / 100;
 
-  // Base score scales from 0 to 50 based on completion percentage
-  let score = hasExit ? (50 * completionRatio) : 0;
+  // 1. Mission Completion Base (Max 40 points)
+  let score = hasExit ? (40 * completionRatio) : 0;
 
+  // 2. Dynamic Disruption Resilience (Max 35 points)
   if (eventCount > 0) {
-    // Scale bonus based on number of events handled (Max 40 points)
-    const eventBonus = Math.min(40, eventCount * 10);
-    // If it ultimately finds the exit, reward the event handling.
-    // If it's still running, it gets partial event credit immediately to show real-time adaptation
+    const eventBonus = Math.min(30, eventCount * 6);
     score += hasExit ? eventBonus : Math.floor(eventBonus / 3);
-
-    // Algorithm-specific bonuses for handling dynamic events
-    if (algorithm === 'hybrid' && hasExit) score += 2;
-    else if (algorithm === 'bfs' && hasExit) score += 1;
+    if (algorithm === 'hybrid' && hasExit) score += 5;
+    else if (algorithm === 'bfs' && hasExit) score += 2;
   } else {
-    // No events: award based on successful completion
-    score += hasExit ? (35 * completionRatio) : 0;
+    score += hasExit ? (25 * completionRatio) : 0;
+    if (algorithm === 'hybrid' && hasExit) score += 5;
+    else if (algorithm === 'bfs' && hasExit) score += 2;
   }
 
-  // Path efficiency bonus (only if path was found and is reasonable)
+  // 3. Detour / Path Optimality Under Stress (Max 25 points)
   if (hasExit && metrics.pathLength > 0 && status === 'done') {
-    // Bonus based on path efficiency: shorter paths get higher bonus (max 10 points)
-    // Only applied at the end when the path is fully realized
-    const pathBonus = Math.max(0, Math.ceil((50 - metrics.pathLength) / 5));
-    score += Math.min(10, pathBonus);
+    const pathRatio = Math.max(0, (60 - metrics.pathLength) / 60);
+    score += Math.min(25, Math.max(0, pathRatio * 25));
   }
 
-  score = Math.min(100, Math.max(0, Math.floor(score)));
+  score = Math.min(100, Math.max(0, Math.round(score)));
 
   if (score >= 80) return { score, label: 'Great', color: '#22c55e' };
   if (score >= 60) return { score, label: 'Good', color: '#84cc16' };

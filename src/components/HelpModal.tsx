@@ -324,6 +324,7 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose, onStartTutorial 
                 )}
               </Section>
               <Section title="Simulation Control Buttons (Below Canvas)">
+                <Item label="🚧 Block Nodes" icon="">Toggles a brush mode that lets you manually click nodes on the canvas to place or remove hazards before running.</Item>
                 <Item label="🎲 Reroll Events" icon="">Randomly regenerates the dynamic event schedule (blockages) for the current map. Use this to test a different event pattern without re-running the simulation from scratch.</Item>
                 <Item label="🔄 Reset" icon="">Clears all simulation progress and returns to Step 0. Keeps the current map and event schedule loaded.</Item>
                 <Item label="⏪ Back" icon="">Steps the simulation backward by one step. Useful for reviewing exactly when a path was rerouted.</Item>
@@ -341,6 +342,11 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose, onStartTutorial 
           {/* ── MAP EVENTS ── */}
           {tab === 'events' && (
             <>
+              <Section title="Algorithm Path Trace (Right Sidebar)">
+                <p className="text-sm text-gray-400 mb-3">A real-time live feed showing exactly which node each algorithm is evaluating at the current step.</p>
+                <Item label="Algorithm Toggle" icon="🔘">Switch the panel view to see the specific trace logs for BFS, DFS, or Hybrid.</Item>
+                <Item label="Path Trace Log" icon="📋">Displays the historical trail of nodes the algorithm has added to its path.</Item>
+              </Section>
               <Section title="Dynamic Map Events Panel (Right Sidebar)">
                 <p className="text-sm text-gray-400 mb-3">Shows a real-time log of all dynamic events that have occurred during the simulation. Each entry includes the step number, the affected node, and which algorithms had their paths severed.</p>
                 <Item label="[Step #]" icon="🕐">The simulation step number at which the event was triggered.</Item>
@@ -382,13 +388,20 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose, onStartTutorial 
               </Section>
                 {scenario === 'robotics' && (
                   <Section title="Multi-Robot Fleet & Delivery Assignments (Robotics Scenario)">
-                    <Item label="🤖 Robot Delivery Assignments" icon="⚙️">Assign specific finish line exits (Finish Line 1..18), packing desks, or clutter zones to active robots. Supports setting priority destinations (visited first ⭐) and configuring cargo box counts (1 to 6 boxes per destination).</Item>
+                    <Item label="🤖 Robot Delivery Assignments" icon="⚙️">Assign specific delivery bays (DB-1..DB-4 / Finish Line exits) to active robots. Supports setting priority destinations (visited first ⭐) and configuring cargo box counts (1 to 6 boxes per destination).</Item>
                     <Item label="📊 Robot Fleet Status (Sidebar)" icon="🤖">Real-time status tracking showing total cargo box delivery progress (e.g. 48/48 boxes, 100%), progress bars color-coded by algorithm, active robot location, live task badge (Loading 📦, Unloading 🚚, Blocked ⏳, In Transit 🚚), and per-destination box progress.</Item>
                   </Section>
                 )}
                 {scenario !== 'gameai' ? (
-                  <Section title="Dynamic Size Adjuster (Synthetic Maps only)">
-                    <Item label="Nodes" icon="🔢">
+                  <>
+                    <Section title="Topology Editor (Right Sidebar)">
+                      <p className="text-sm text-gray-400 mb-3">Allows you to manually customize the graph by adding or removing nodes and edges before the simulation starts.</p>
+                      <Item label="Select / Pan" icon="🖱️">Default mode. Click to select elements or drag to pan the canvas.</Item>
+                      <Item label="Add Nodes / Edges" icon="➕">Select a node type to drop new nodes onto the canvas, or select cable types to connect existing nodes together.</Item>
+                      <Item label="Delete Tool" icon="🗑️">Click on any node or edge to remove it from the graph.</Item>
+                    </Section>
+                    <Section title="Dynamic Size Adjuster (Synthetic Maps only)">
+                      <Item label="Nodes" icon="🔢">
                       Controls how many nodes are generated in the synthetic graph. The strict mathematical bounds for this scenario to ensure valid layouts are:
                       <ul className="list-disc list-inside mt-2 mb-2 ml-4 text-gray-400">
                         {scenario === 'network' && <li><strong>Network Routing:</strong> 7 to 220 nodes</li>}
@@ -401,6 +414,7 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose, onStartTutorial 
                     <Item label="Links" icon="🔗">Controls edge connectivity. Link counts automatically scale with node density to ensure dense graphs remain 100% pathable and connected.</Item>
                     <Item label="Generated X nodes / Y links" icon="📋">Displays actual generated node and edge counts after structure generation.</Item>
                   </Section>
+                  </>
                 ) : (
                   <Section title="Dynamic Board Scaling (Game AI)">
                     <Item label="Auto-Snapping Grids" icon="📐">Because a game board must remain a perfect grid (e.g. 8x8 = 64 squares, or 9x9 = 81 squares), clicking the up or down arrows on the Nodes adjuster will automatically snap to the next mathematically valid board size. The Game AI graph has a strict bound of <strong>17 to 145 nodes</strong>. The total nodes will equal the playable squares on the board plus 1 or 2 extra nodes for the spawning Strategy AI and portals.</Item>

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { useTheme } from '../context/ThemeContext';
 
 // ── Step definitions ──────────────────────────────────────────────────────────
 
@@ -88,9 +89,21 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     placement: 'left',
   },
   {
+    target: 'tutorial-topology-editor',
+    title: 'Topology Editor',
+    body: 'Allows you to manually customize the graph by adding or removing nodes and edges before the simulation starts.',
+    placement: 'left',
+  },
+  {
+    target: 'tutorial-expert-panel',
+    title: 'Algorithm Path Trace',
+    body: 'A real-time live feed showing exactly which node each algorithm is evaluating at the current step.',
+    placement: 'left',
+  },
+  {
     target: 'tutorial-playback-controls',
-    title: 'Playback Controls',
-    body: 'Run, Pause, Resume, step forward/back, Reset, or Skip to end. Reroll Events generates a new dynamic hazard without rerunning the algorithms.',
+    title: 'Simulation Controls',
+    body: 'Use Block Nodes to manually place hazards. Run, Pause, Resume, step forward/back, Reset, or Skip to end. Reroll Events generates a new dynamic hazard.',
     placement: 'top',
   },
   {
@@ -265,7 +278,53 @@ function computeTooltipStyle(
   }
 }
 
-const getTheme = (scenario: string) => {
+const getTheme = (scenario: string, isLight: boolean) => {
+  if (isLight) {
+    switch (scenario) {
+      case 'robotics': return {
+        border: 'border-orange-200/90', shadowBorder: 'rgba(249,115,22,0.12)',
+        gradient: 'from-orange-500 via-amber-500 to-yellow-500',
+        iconBg: 'bg-orange-50', iconBorder: 'border-orange-200', iconText: 'text-orange-600',
+        progressActive: '#ea580c', progressHoverBg: 'hover:bg-orange-400', progressPast: '#f97316',
+        btnBg: 'bg-orange-600', btnHover: 'hover:bg-orange-700', btnShadow: 'shadow-orange-500/25',
+        spotlightBorder: 'rgba(234,88,12,0.85)',
+      };
+      case 'traffic': return {
+        border: 'border-emerald-200/90', shadowBorder: 'rgba(16,185,129,0.12)',
+        gradient: 'from-emerald-500 via-green-500 to-teal-500',
+        iconBg: 'bg-emerald-50', iconBorder: 'border-emerald-200', iconText: 'text-emerald-600',
+        progressActive: '#059669', progressHoverBg: 'hover:bg-emerald-400', progressPast: '#10b981',
+        btnBg: 'bg-emerald-600', btnHover: 'hover:bg-emerald-700', btnShadow: 'shadow-emerald-500/25',
+        spotlightBorder: 'rgba(5,150,105,0.85)',
+      };
+      case 'evacuation': return {
+        border: 'border-rose-200/90', shadowBorder: 'rgba(239,68,68,0.12)',
+        gradient: 'from-red-500 via-rose-500 to-orange-500',
+        iconBg: 'bg-rose-50', iconBorder: 'border-rose-200', iconText: 'text-rose-600',
+        progressActive: '#e11d48', progressHoverBg: 'hover:bg-rose-400', progressPast: '#f43f5e',
+        btnBg: 'bg-rose-600', btnHover: 'hover:bg-rose-700', btnShadow: 'shadow-rose-500/25',
+        spotlightBorder: 'rgba(225,29,72,0.85)',
+      };
+      case 'gameai': return {
+        border: 'border-purple-200/90', shadowBorder: 'rgba(168,85,247,0.12)',
+        gradient: 'from-purple-600 via-fuchsia-500 to-pink-500',
+        iconBg: 'bg-purple-50', iconBorder: 'border-purple-200', iconText: 'text-purple-600',
+        progressActive: '#7c3aed', progressHoverBg: 'hover:bg-purple-400', progressPast: '#a855f7',
+        btnBg: 'bg-purple-600', btnHover: 'hover:bg-purple-700', btnShadow: 'shadow-purple-500/25',
+        spotlightBorder: 'rgba(124,58,237,0.85)',
+      };
+      case 'network':
+      default: return {
+        border: 'border-blue-200/90', shadowBorder: 'rgba(59,130,246,0.12)',
+        gradient: 'from-blue-600 via-indigo-500 to-purple-600',
+        iconBg: 'bg-blue-50', iconBorder: 'border-blue-200', iconText: 'text-blue-600',
+        progressActive: '#2563eb', progressHoverBg: 'hover:bg-blue-400', progressPast: '#3b82f6',
+        btnBg: 'bg-blue-600', btnHover: 'hover:bg-blue-700', btnShadow: 'shadow-blue-500/25',
+        spotlightBorder: 'rgba(37,99,235,0.85)',
+      };
+    }
+  }
+
   switch (scenario) {
     case 'robotics': return {
       border: 'border-orange-500/25', shadowBorder: 'rgba(249,115,22,0.07)',
@@ -276,7 +335,7 @@ const getTheme = (scenario: string) => {
       spotlightBorder: 'rgba(249,115,22,0.5)',
     };
     case 'traffic': return {
-      border: 'border-emerald-500/25', shadowBorder: 'rgba(16,185,129,0.07)',
+      border: 'border-emerald-500/25', shadowBorder: 'rgba(168,85,247,0.07)',
       gradient: 'from-emerald-500 via-green-400 to-teal-500',
       iconBg: 'bg-emerald-600/20', iconBorder: 'border-emerald-500/30', iconText: 'text-emerald-400',
       progressActive: '#10b981', progressHoverBg: 'hover:bg-emerald-400', progressPast: '#047857',
@@ -328,6 +387,9 @@ interface TutorialOverlayProps {
 export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   isOpen, stepIndex, onClose, onNext, onPrev, onGoTo, scenario, steps = TUTORIAL_STEPS
 }) => {
+  const { theme: appTheme } = useTheme();
+  const isLight = appTheme === 'light';
+
   const step = steps[stepIndex];
   const stepBody = typeof step.body === 'function' ? step.body(scenario || '') : step.body;
   const [rect, setRect] = useState<Rect | null>(null);
@@ -336,7 +398,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   const [visible, setVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
   
-  const theme = getTheme(scenario);
+  const theme = getTheme(scenario, isLight);
 
   // Track mobile breakpoint
   useEffect(() => {
@@ -417,6 +479,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     ? { top: rect.top - PAD, left: rect.left - PAD, width: rect.width + PAD * 2, height: rect.height + PAD * 2 }
     : null;
 
+  const overlayBg = isLight ? 'rgba(15, 23, 42, 0.45)' : 'rgba(0, 0, 0, 0.75)';
+
   return createPortal(
     <div
       className="fixed inset-0 z-[9000] overflow-hidden pointer-events-none"
@@ -426,7 +490,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       {/* Backdrop — absorbs all background clicks silently; only Skip Explanation closes the tutorial */}
       <div
         className="absolute inset-0 transition-opacity duration-300"
-        style={{ background: 'rgba(0,0,0,0.75)', opacity: visible ? 1 : 0 }}
+        style={{ background: overlayBg, opacity: visible ? 1 : 0 }}
       />
 
       {/* Spotlight cutout — shown on all devices once element is in view */}
@@ -438,7 +502,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             left: spotlight.left,
             width: spotlight.width,
             height: spotlight.height,
-            boxShadow: '0 0 0 9999px rgba(0,0,0,0.75)',
+            boxShadow: `0 0 0 9999px ${overlayBg}`,
             border: `2px solid ${theme.spotlightBorder}`,
             opacity: visible ? 1 : 0,
           }}
@@ -452,9 +516,13 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       >
         <button
           onClick={onClose}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#111827]/95 border border-white/10 text-gray-300 text-xs font-bold uppercase tracking-widest hover:bg-gray-800 hover:text-white transition-all shadow-2xl backdrop-blur-sm cursor-pointer"
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all cursor-pointer ${
+            isLight
+              ? 'bg-white/95 border border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900 shadow-xl shadow-slate-900/10'
+              : 'bg-[#111827]/95 border border-white/10 text-gray-300 hover:bg-gray-800 hover:text-white shadow-2xl backdrop-blur-sm'
+          }`}
         >
-          <span className="text-gray-500 text-base leading-none">×</span>
+          <span className={`${isLight ? 'text-slate-400' : 'text-gray-500'} text-base leading-none`}>×</span>
           Skip Explanation
         </button>
       </div>
@@ -464,7 +532,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         className="absolute top-5 right-5 z-[9010] select-none pointer-events-auto tutorial-interactive"
         style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.25s' }}
       >
-        <div className="px-3 py-1.5 rounded-full bg-[#111827]/90 border border-white/10 text-gray-400 text-[10px] font-mono tracking-wider">
+        <div className={`px-3.5 py-1.5 rounded-full text-[10px] font-mono font-bold tracking-wider ${
+          isLight
+            ? 'bg-white/95 border border-slate-300 text-slate-700 shadow-lg shadow-slate-900/10'
+            : 'bg-[#111827]/90 border border-white/10 text-gray-400'
+        }`}>
           {stepIndex + 1} / {steps.length}
         </div>
       </div>
@@ -483,7 +555,14 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             : { maxWidth: '320px', minWidth: '240px' }),
         }}
       >
-        <div className={`bg-[#0d1424] border ${theme.border} rounded-2xl overflow-hidden`} style={{ boxShadow: `0 12px 48px rgba(0,0,0,0.7), 0 0 0 1px ${theme.shadowBorder}` }}>
+        <div
+          className={`${isLight ? 'bg-white' : 'bg-[#0d1424]'} border ${theme.border} rounded-2xl overflow-hidden transition-colors`}
+          style={{
+            boxShadow: isLight
+              ? '0 20px 45px -10px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.05)'
+              : `0 12px 48px rgba(0,0,0,0.7), 0 0 0 1px ${theme.shadowBorder}`
+          }}
+        >
           <div className={`h-[2px] bg-gradient-to-r ${theme.gradient}`} />
           <div className="p-5 pb-2">
             <div className="flex items-start gap-3 mb-3">
@@ -493,9 +572,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="text-white font-bold text-sm leading-snug">{step.title}</h3>
+              <h3 className={`font-bold text-sm leading-snug ${isLight ? 'text-slate-900 font-extrabold' : 'text-white'}`}>{step.title}</h3>
             </div>
-            <p className="text-gray-300 text-[13px] leading-relaxed pl-10">{stepBody}</p>
+            <p className={`text-[13px] leading-relaxed pl-10 ${isLight ? 'text-slate-600 font-medium' : 'text-gray-300'}`}>{stepBody}</p>
           </div>
 
           {/* Progress dots */}
@@ -508,7 +587,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                 style={{
                   width: i === stepIndex ? 18 : 6,
                   height: 6,
-                  background: i === stepIndex ? theme.progressActive : i < stepIndex ? theme.progressPast : '#1f2937',
+                  background: i === stepIndex ? theme.progressActive : i < stepIndex ? theme.progressPast : (isLight ? '#cbd5e1' : '#1f2937'),
                 }}
                 title={`Go to step ${i + 1}`}
               />
@@ -520,7 +599,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             <button
               onClick={onPrev}
               disabled={isFirst}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-25 disabled:pointer-events-none cursor-pointer"
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-25 disabled:pointer-events-none cursor-pointer ${
+                isLight
+                  ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
             >
               ← Back
             </button>

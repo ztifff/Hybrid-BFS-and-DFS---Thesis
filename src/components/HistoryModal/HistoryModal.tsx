@@ -6,6 +6,7 @@ import { PurgeModal } from './components/PurgeModal';
 import { ImportErrorModal, ImportErrorType } from './components/ImportErrorModal';
 import { ImportSuccessModal } from './components/ImportSuccessModal';
 import { useTutorial, TutorialOverlay, TutorialStep } from '../TutorialOverlay';
+import { useTheme } from '../../context/ThemeContext';
 
 const HISTORY_TUTORIAL_STEPS: TutorialStep[] = [
   {
@@ -65,6 +66,9 @@ const HISTORY_TUTORIAL_STEPS: TutorialStep[] = [
 export const HistoryModal: React.FC<HistoryModalProps> = ({
   isOpen, onClose, history, scenario, onDeleteHistory, onImportHistory,
 }) => {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+
   const [selectedIds, setSelectedIds]       = useState<Set<string>>(new Set());
   const [view, setView]                     = useState<'list' | 'detail'>('list');
   const [activeEntry, setActiveEntry]       = useState<HistoryEntry | null>(null);
@@ -232,19 +236,27 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
 
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-      <div className="bg-gray-900 border border-gray-700 rounded-lg w-full max-w-[1300px] h-[90vh] flex flex-col overflow-hidden shadow-2xl fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <div className={`rounded-xl w-full max-w-[1300px] h-[90vh] flex flex-col overflow-hidden shadow-2xl fade-in border ${
+        isLight ? 'bg-white border-slate-200' : 'bg-gray-900 border-gray-700'
+      }`}>
 
         {/* ── Header ──────────────────────────────────────────────────────── */}
-        <header className="p-4 md:p-5 border-b border-gray-800 bg-[#0a0f1e]/60 flex flex-col md:flex-row md:justify-between md:items-center gap-4 relative">
+        <header className={`p-4 md:p-5 border-b flex flex-col md:flex-row md:justify-between md:items-center gap-4 relative ${
+          isLight ? 'bg-slate-50/90 border-slate-200' : 'bg-[#0a0f1e]/60 border-gray-800'
+        }`}>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 pr-10">
-            <h2 className="text-base md:text-lg font-bold text-white tracking-tight leading-tight">
+            <h2 className={`text-base md:text-lg font-extrabold tracking-tight leading-tight ${
+              isLight ? 'text-slate-900' : 'text-white'
+            }`}>
               {view === 'list'
                 ? <>Core Simulation Storage History</>
                 : <>Performance Inspect: {activeEntry?.name}</>}
             </h2>
             {view === 'list' && (
-              <span className="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full font-mono w-fit">
+              <span className={`text-xs px-2.5 py-0.5 rounded-full font-mono font-bold w-fit ${
+                isLight ? 'bg-slate-200 text-slate-700' : 'bg-gray-800 text-gray-400'
+              }`}>
                 {filteredHistory.length} entries
               </span>
             )}
@@ -262,7 +274,11 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
                 />
                 <button
                   onClick={() => importInputRef.current?.click()}
-                  className="flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-3 py-1.5 bg-blue-900/30 hover:bg-blue-800/50 text-blue-300 hover:text-blue-200 border border-blue-700/30 hover:border-blue-600/50 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap"
+                  className={`flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap border ${
+                    isLight
+                      ? 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200'
+                      : 'bg-blue-900/30 hover:bg-blue-800/50 text-blue-300 hover:text-blue-200 border-blue-700/30 hover:border-blue-600/50'
+                  }`}
                 >
                   Import
                 </button>
@@ -273,14 +289,22 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
                       : new Set(filteredHistory.map(h => h.id))
                   )}
                   disabled={filteredHistory.length === 0}
-                  className="flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                  className={`flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap border ${
+                    isLight
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                      : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border-transparent'
+                  }`}
                 >
                   {selectedIds.size === filteredHistory.length ? 'Deselect All' : 'Select All'}
                 </button>
                 <button
                   onClick={handleExport}
                   disabled={filteredHistory.length === 0}
-                  className="flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-3 py-1.5 bg-emerald-900/30 hover:bg-emerald-800/50 text-emerald-300 hover:text-emerald-200 border border-emerald-700/30 hover:border-emerald-600/50 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                  className={`flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap border ${
+                    isLight
+                      ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300'
+                      : 'bg-emerald-900/30 hover:bg-emerald-800/50 text-emerald-300 hover:text-emerald-200 border-emerald-700/30 hover:border-emerald-600/50'
+                  }`}
                   title={selectedIds.size > 0 ? `Export ${selectedIds.size} selected record(s)` : 'Export all records'}
                 >
                   {selectedIds.size > 0 ? `Export (${selectedIds.size})` : 'Export All'}
@@ -291,7 +315,11 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
 
           <button
             onClick={onClose}
-            className="absolute top-4 md:top-5 right-4 md:right-5 text-gray-400 hover:text-white bg-gray-900 border border-gray-800 hover:border-gray-700 w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-all z-10 shrink-0"
+            className={`absolute top-4 md:top-5 right-4 md:right-5 w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-all z-10 shrink-0 font-bold ${
+              isLight
+                ? 'text-slate-500 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-300'
+                : 'text-gray-400 hover:text-white bg-gray-900 border border-gray-800 hover:border-gray-700'
+            }`}
           >
             ✕
           </button>
@@ -318,7 +346,9 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
         )}
 
         {/* ── Content ─────────────────────────────────────────────────────── */}
-        <div className="flex-1 overflow-y-auto p-6 bg-[#060b16]">
+        <div className={`flex-1 overflow-y-auto p-6 ${
+          isLight ? 'bg-slate-100/60' : 'bg-[#060b16]'
+        }`}>
           {view === 'list' ? (
             <HistoryListView
               filteredHistory={filteredHistory}
@@ -344,12 +374,16 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
         </div>
 
         {/* ── Footer ──────────────────────────────────────────────────────── */}
-        <footer className="p-4 border-t border-gray-800 bg-[#0a0f1e]/40 flex justify-between items-center">
+        <footer className={`p-4 border-t flex justify-between items-center ${
+          isLight ? 'bg-white border-slate-200' : 'border-gray-800 bg-[#0a0f1e]/40'
+        }`}>
           <div>
             {view === 'detail' && (
-              <span className="text-xs font-mono text-gray-500 uppercase tracking-wider">
+              <span className={`text-xs font-mono uppercase tracking-wider ${
+                isLight ? 'text-slate-600' : 'text-gray-500'
+              }`}>
                 Viewing Execution Pipeline:{' '}
-                <strong className="text-gray-300 font-bold font-sans">{activeEntry?.name}</strong>
+                <strong className={`font-bold font-sans ${isLight ? 'text-slate-900' : 'text-gray-300'}`}>{activeEntry?.name}</strong>
               </span>
             )}
           </div>
@@ -358,13 +392,21 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
               <>
                 <button
                   onClick={() => tutorial.start()}
-                  className="px-4 py-2 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 hover:border-blue-500 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-[0_0_15px_rgba(37,99,235,0.2)]"
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs border ${
+                    isLight
+                      ? 'bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white border-blue-300 hover:border-blue-500'
+                      : 'bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 hover:border-blue-500 shadow-[0_0_15px_rgba(37,99,235,0.2)]'
+                  }`}
                 >
                   Explain the Results
                 </button>
                 <button
                   onClick={() => setView('list')}
-                  className="px-4 py-2 bg-gray-900 border border-gray-800 hover:border-gray-700 rounded-xl text-xs font-bold text-white transition-all cursor-pointer"
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                    isLight
+                      ? 'bg-white border-slate-300 hover:bg-slate-100 text-slate-800 shadow-2xs'
+                      : 'bg-gray-900 border-gray-800 hover:border-gray-700 text-white'
+                  }`}
                 >
                   ← Return to Index
                 </button>

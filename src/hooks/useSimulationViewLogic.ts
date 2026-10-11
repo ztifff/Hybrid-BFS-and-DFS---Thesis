@@ -11,6 +11,7 @@ export function useSimulationViewLogic(scenario: ScenarioType, sim: any) {
   const [isBlockageMode, setIsBlockageMode] = useState(false);
   const [blockageBrush, setBlockageBrush] = useState<string>('');
   const [placementMode, setPlacementMode] = useState<PlacementMode>(null);
+  const [draftBlockedNodes, setDraftBlockedNodes] = useState<{ nodeId: string; label: string }[] | null>(null);
 
   // ── On-map endpoint picking ──────────────────────
   const [pickMode, setPickMode] = useState<'source' | 'dest' | null>(null);
@@ -39,27 +40,49 @@ export function useSimulationViewLogic(scenario: ScenarioType, sim: any) {
   const minDestinations = scenario === 'network' ? 2 : 1;
 
   const currentSourceId: string | null = (() => {
+    if (!sim.currentGraph) return null;
+    const nodeIds = new Set(sim.currentGraph.nodes.map((n: any) => n.id));
+    const checkNode = (id: string | null | undefined) => (id && nodeIds.has(id) ? id : null);
+
     switch (scenario) {
-      case 'network': return sim.sourceDevice || null;
-      case 'traffic': return sim.trafficSourceId || sim.currentGraph?.sourceId || null;
-      case 'evacuation': return sim.evacuationSourceId || sim.currentGraph?.sourceId || null;
-      case 'robotics': return sim.robotAssignments[0]?.robotId || sim.currentGraph?.sourceId || null;
-      case 'gameai': return sim.gameAISourceId || null;
-      default: return null;
+      case 'network':
+        return checkNode(sim.sourceDevice) || checkNode(sim.currentGraph.sourceId) || sim.currentGraph.nodes[0]?.id || null;
+      case 'traffic':
+        return checkNode(sim.trafficSourceId) || checkNode(sim.currentGraph.sourceId) || sim.currentGraph.nodes[0]?.id || null;
+      case 'evacuation':
+        return checkNode(sim.evacuationSourceId) || checkNode(sim.currentGraph.sourceId) || sim.currentGraph.nodes[0]?.id || null;
+      case 'robotics':
+        return checkNode(sim.robotAssignments[0]?.robotId) || checkNode(sim.currentGraph.sourceId) || sim.currentGraph.nodes[0]?.id || null;
+      case 'gameai':
+        return checkNode(sim.gameAISourceId) || null;
+      default:
+        return null;
     }
   })();
 
-  const currentDestIds: string[] = scenario === 'network'
-    ? sim.destinationDevices
-    : scenario === 'traffic'
-      ? (sim.trafficDestinationIds.length > 0 ? sim.trafficDestinationIds : (sim.currentGraph?.destinationIds || []))
-      : [];
+  const currentDestIds: string[] = (() => {
+    if (!sim.currentGraph) return [];
+    const nodeIds = new Set(sim.currentGraph.nodes.map((n: any) => n.id));
+
+    if (scenario === 'network') {
+      return sim.destinationDevices.filter((d: string) => nodeIds.has(d));
+    }
+    if (scenario === 'traffic') {
+      const customDests = sim.trafficDestinationIds.filter((d: string) => nodeIds.has(d));
+      if (customDests.length > 0) return customDests;
+      return (sim.currentGraph.destinationIds || []).filter((d: string) => nodeIds.has(d));
+    }
+    if (scenario === 'robotics') {
+      return Array.from<string>(new Set(sim.robotAssignments.flatMap((r: any) => r.destinations))).filter((d) => nodeIds.has(d));
+    }
+    return (sim.currentGraph.destinationIds || []).filter((d: string) => nodeIds.has(d));
+  })();
 
   const pickRuleText = (role: 'source' | 'dest'): string => {
     switch (scenario) {
       case 'network':
-        if (sim.networkRoutingMode === 'device-to-device') return 'End devices only (PCs, laptops, printers, tablets, phones)';
-        return role === 'source' ? 'Routers only (ISP / Core / Building routers)' : 'End devices or servers only';
+        if (sim.networkRoutingMode === 'device-to-device') return 'End devices only (PCs, laptops, printers, tablets — APs excluded)';
+        return role === 'source' ? 'Routers only (ISP / Core / Building routers)' : 'End devices or servers only (APs excluded)';
       case 'traffic': return 'Intersections, streets, origins or highways';
       case 'evacuation': return 'Rooms / places only';
       case 'robotics': return 'Depots / robot docks only';
@@ -73,7 +96,8 @@ export function useSimulationViewLogic(scenario: ScenarioType, sim: any) {
     if (!n) return { ok: false, reason: 'Unknown node.' };
     const t = n.type as string;
     const label = (n.label || '').toLowerCase();
-    const isEndDevice = label.includes('rack') || t === 'access_point' || t === 'end_device';
+    const isAP = t === 'wireless_ap' || (t === 'access_point' && !label.includes('rack')) || /(^|\s|[-_])ap(\s|[-_]|\d|$)/i.test(label) || /^ap[_-]/i.test(n.id);
+    const isEndDevice = (label.includes('rack') || t === 'end_device') && !isAP;
     const isRouter = t === 'datacenter' || t === 'router' || t === 'building_router';
     const pretty = (n.label || n.id).replace('\n', ' ');
 
@@ -83,6 +107,9 @@ export function useSimulationViewLogic(scenario: ScenarioType, sim: any) {
 
     switch (scenario) {
       case 'network': {
+        if (isAP) {
+          return { ok: false, reason: `${pretty} is an Access Point — APs connect wireless devices and cannot be chosen as an end device or exit.` };
+        }
         if (sim.networkRoutingMode === 'device-to-device') {
           if (!isEndDevice) return { ok: false, reason: `${pretty} is infrastructure — only end devices can be selected in Device-to-Device mode.` };
         } else if (role === 'source') {
@@ -189,15 +216,23 @@ export function useSimulationViewLogic(scenario: ScenarioType, sim: any) {
   const patchedGraph = useMemo(() => {
     if (!sim.currentGraph) return null;
     const g = { ...sim.currentGraph };
+    const nodeIds = new Set(g.nodes.map((n: any) => n.id));
+
     if (scenario === 'network') {
-      g.sourceId = sim.sourceDevice;
-      g.destinationIds = sim.destinationDevices;
+      if (sim.sourceDevice && nodeIds.has(sim.sourceDevice)) g.sourceId = sim.sourceDevice;
+      if (sim.destinationDevices.length > 0) {
+        const valid = sim.destinationDevices.filter((d: string) => nodeIds.has(d));
+        if (valid.length > 0) g.destinationIds = valid;
+      }
     }
     if (scenario === 'traffic') {
-      if (sim.trafficSourceId) g.sourceId = sim.trafficSourceId;
-      if (sim.trafficDestinationIds.length > 0) g.destinationIds = sim.trafficDestinationIds;
+      if (sim.trafficSourceId && nodeIds.has(sim.trafficSourceId)) g.sourceId = sim.trafficSourceId;
+      if (sim.trafficDestinationIds.length > 0) {
+        const valid = sim.trafficDestinationIds.filter((d: string) => nodeIds.has(d));
+        if (valid.length > 0) g.destinationIds = valid;
+      }
     }
-    if (scenario === 'evacuation' && sim.evacuationSourceId) {
+    if (scenario === 'evacuation' && sim.evacuationSourceId && nodeIds.has(sim.evacuationSourceId)) {
       g.sourceId = sim.evacuationSourceId;
     }
     if (scenario === 'gameai' && sim.gameAISourceId) {
@@ -207,7 +242,8 @@ export function useSimulationViewLogic(scenario: ScenarioType, sim: any) {
       }
     }
     if (scenario === 'robotics') {
-      g.destinationIds = Array.from(new Set(sim.robotAssignments.flatMap((r: any) => r.destinations)));
+      const robotDests = Array.from(new Set(sim.robotAssignments.flatMap((r: any) => r.destinations))).filter(d => nodeIds.has(d));
+      if (robotDests.length > 0) g.destinationIds = robotDests;
     }
     if (pickMode === 'dest' && (scenario === 'network' || scenario === 'traffic')) {
       g.destinationIds = pickDraft;
@@ -229,15 +265,32 @@ export function useSimulationViewLogic(scenario: ScenarioType, sim: any) {
 
   const previewDynamicEvents = useMemo(() => {
     if (sim.status !== 'idle' && sim.simResults) {
-      return sim.simResults.hybrid.dynamicEvents || [];
+      return (sim.simResults.hybrid.dynamicEvents || []).map((e: any) => {
+        if (e.label && e.label.includes(' at ')) return e;
+        const node = sim.currentGraph?.nodes.find((n: any) => n.id === e.nodeId);
+        const nodeName = node?.label?.trim() ? node.label.split('\n')[0].trim() : e.nodeId;
+        return {
+          ...e,
+          label: `${e.label || '🚫 Blocked'} at ${nodeName}`,
+        };
+      });
     }
-    return sim.customBlockedNodes.map((b: any) => ({
-      stepIndex: 0,
-      nodeId: b.nodeId,
-      blocked: true,
-      label: b.label
-    }));
-  }, [sim.status, sim.simResults, sim.customBlockedNodes]);
+    const nodesToUse = draftBlockedNodes ?? sim.customBlockedNodes ?? [];
+    return nodesToUse.map((b: any) => {
+      let label = b.label || BLOCKAGE_LABELS[scenario]?.[0] || '🚫 Blocked';
+      if (!label.includes(' at ')) {
+        const node = sim.currentGraph?.nodes.find((n: any) => n.id === b.nodeId);
+        const nodeName = node?.label?.trim() ? node.label.split('\n')[0].trim() : b.nodeId;
+        label = `${label} at ${nodeName}`;
+      }
+      return {
+        stepIndex: 0,
+        nodeId: b.nodeId,
+        blocked: true,
+        label,
+      };
+    });
+  }, [sim.status, sim.simResults, sim.customBlockedNodes, draftBlockedNodes, sim.currentGraph, scenario]);
 
   const baseBtnClass = "px-2.5 xl:px-4 py-1.5 xl:py-2 rounded-xl border border-slate-700/60 bg-slate-800/80 backdrop-blur-md text-slate-300 text-xs xl:text-sm font-medium transition-all duration-200 hover:bg-slate-700/80 hover:text-white hover:shadow-lg hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 disabled:pointer-events-none flex items-center gap-1.5 xl:gap-2 flex-1 sm:flex-none justify-center whitespace-nowrap";
 
@@ -298,6 +351,7 @@ export function useSimulationViewLogic(scenario: ScenarioType, sim: any) {
     isHelpOpen, setIsHelpOpen,
     isBlockageMode, setIsBlockageMode,
     blockageBrush, setBlockageBrush,
+    draftBlockedNodes, setDraftBlockedNodes,
     placementMode, setPlacementMode,
     pickMode, setPickMode,
     pickDraft, setPickDraft,

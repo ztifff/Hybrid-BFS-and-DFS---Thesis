@@ -5,9 +5,9 @@ export class RoboticsRenderer extends BaseRenderer {
     const { ctx, scenario, mapId, scale, zoom, visibleNodes, activeSteps, visibleAlgos } = options;
     const isSimultaneousMode = [visibleAlgos.bfs, visibleAlgos.dfs, visibleAlgos.hybrid].filter(Boolean).length > 1 && !options.disableSimultaneousMode;
 
-    if (scenario === 'robotics' && (mapId === 'clinic' || mapId === 'aws' || mapId === 'awsWarehouse') && options.graph?.walls) {
+    if (scenario === 'robotics' && (mapId === 'clinic' || mapId === 'aws' || mapId === 'awsWarehouse') && options.graph?.walls && options.workspaceView !== 'logical') {
       ctx.save();
-      ctx.strokeStyle = '#334155'; // Slate 700 for blueprint lines
+      ctx.strokeStyle = options.theme === 'light' ? '#94a3b8' : '#334155'; // Blueprint lines
       ctx.lineWidth = 4 / zoom;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';

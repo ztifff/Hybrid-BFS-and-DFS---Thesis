@@ -2,6 +2,7 @@ import React from 'react';
 import { ScenarioType } from '../../types';
 import { NODE_CONFIG, EDGE_CONFIG } from '../NetworkCanvas/types';
 import { Trash2, MousePointer2 } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 export type PlacementMode = 
   | { type: 'node', nodeType: string } 
@@ -40,14 +41,33 @@ export const TopologyEditor: React.FC<TopologyEditorProps> = ({
   onClearGraph,
   disabled
 }) => {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+
   const nodes = SCENARIO_NODES[scenario] || [];
   const edges = SCENARIO_EDGES[scenario] || [];
 
   return (
-    <div className={`shrink-0 bg-[#0a0f1e] border ${placementMode ? 'border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'border-gray-700'} rounded-xl p-4 flex flex-col gap-3 transition-all duration-300 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
+    <div
+      data-tutorial="tutorial-topology-editor"
+      className={`shrink-0 rounded-xl p-4 flex flex-col gap-3 transition-all duration-300 border ${
+        isLight
+          ? (placementMode ? 'bg-white border-blue-500 shadow-md' : 'bg-white border-slate-200/90 shadow-sm')
+          : (placementMode ? 'bg-[#0a0f1e] border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-[#0a0f1e] border-gray-700')
+      } ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
+    >
       <div className="flex items-center justify-between">
-        <div className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold">Topology Editor</div>
-        <button onClick={onClearGraph} className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1"><Trash2 className="w-3 h-3"/> Clear Map</button>
+        <div className={`text-[10px] uppercase tracking-[0.2em] font-extrabold ${isLight ? 'text-slate-700' : 'text-gray-500'}`}>
+          Topology Editor
+        </div>
+        <button
+          onClick={onClearGraph}
+          className={`text-xs flex items-center gap-1 font-semibold transition-colors cursor-pointer ${
+            isLight ? 'text-red-600 hover:text-red-700' : 'text-red-400 hover:text-red-300'
+          }`}
+        >
+          <Trash2 className="w-3.5 h-3.5" /> Clear Map
+        </button>
       </div>
 
       <div className="space-y-3">
@@ -55,13 +75,29 @@ export const TopologyEditor: React.FC<TopologyEditorProps> = ({
         <div className="flex gap-2">
           <button 
             onClick={() => setPlacementMode(null)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border text-xs font-medium transition-colors ${placementMode === null ? 'bg-blue-900/50 border-blue-500 text-blue-300' : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-gray-200'}`}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
+              placementMode === null
+                ? isLight
+                  ? 'bg-blue-50 border-blue-500 text-blue-700 shadow-xs'
+                  : 'bg-blue-900/50 border-blue-500 text-blue-300'
+                : isLight
+                  ? 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                  : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-gray-200'
+            }`}
           >
             <MousePointer2 className="w-4 h-4" /> Select / Pan
           </button>
           <button 
             onClick={() => setPlacementMode({ type: 'delete' })}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border text-xs font-medium transition-colors ${placementMode?.type === 'delete' ? 'bg-red-900/50 border-red-500 text-red-300' : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-gray-200'}`}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
+              placementMode?.type === 'delete'
+                ? isLight
+                  ? 'bg-red-50 border-red-500 text-red-700 shadow-xs'
+                  : 'bg-red-900/50 border-red-500 text-red-300'
+                : isLight
+                  ? 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                  : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-gray-200'
+            }`}
           >
             <Trash2 className="w-4 h-4" /> Delete Tool
           </button>
@@ -69,8 +105,12 @@ export const TopologyEditor: React.FC<TopologyEditorProps> = ({
 
         {/* Nodes Palette */}
         <div>
-          <div className="text-[9px] uppercase tracking-widest text-gray-500 mb-1.5 font-semibold">Devices / Nodes</div>
-          <div className="flex flex-wrap gap-2 bg-black/40 p-2.5 rounded-lg border border-white/5">
+          <div className={`text-[9px] uppercase tracking-widest mb-1.5 font-bold ${isLight ? 'text-slate-600' : 'text-gray-500'}`}>
+            Devices / Nodes
+          </div>
+          <div className={`flex flex-wrap gap-2 p-2.5 rounded-lg border ${
+            isLight ? 'bg-slate-100/70 border-slate-200/90' : 'bg-black/40 border-white/5'
+          }`}>
             {nodes.map(nodeType => {
               const cfg = NODE_CONFIG[nodeType];
               const isActive = placementMode?.type === 'node' && placementMode.nodeType === nodeType;
@@ -80,7 +120,15 @@ export const TopologyEditor: React.FC<TopologyEditorProps> = ({
                   key={nodeType}
                   title={tooltipTitle}
                   onClick={() => setPlacementMode({ type: 'node', nodeType })}
-                  className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-all ${isActive ? 'bg-blue-900/80 border-2 border-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)] scale-110' : 'bg-gray-800 border border-gray-700 hover:bg-gray-700 hover:border-gray-500'}`}
+                  className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-all cursor-pointer ${
+                    isActive
+                      ? isLight
+                        ? 'bg-blue-100 border-2 border-blue-600 shadow-md scale-105'
+                        : 'bg-blue-900/80 border-2 border-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)] scale-110'
+                      : isLight
+                        ? 'bg-white border border-slate-300 hover:bg-slate-50 hover:border-slate-400 shadow-2xs'
+                        : 'bg-gray-800 border border-gray-700 hover:bg-gray-700 hover:border-gray-500'
+                  }`}
                 >
                   {cfg?.icon || '⚪'}
                 </button>
@@ -92,22 +140,37 @@ export const TopologyEditor: React.FC<TopologyEditorProps> = ({
         {/* Edges Palette */}
         {edges.length > 0 && (
           <div>
-            <div className="text-[9px] uppercase tracking-widest text-gray-500 mb-1.5 font-semibold">Connections / Links</div>
-            <div className="flex flex-wrap gap-2 bg-black/40 p-2.5 rounded-lg border border-white/5">
+            <div className={`text-[9px] uppercase tracking-widest mb-1.5 font-bold ${isLight ? 'text-slate-600' : 'text-gray-500'}`}>
+              Connections / Links
+            </div>
+            <div className={`flex flex-wrap gap-2 p-2.5 rounded-lg border ${
+              isLight ? 'bg-slate-100/70 border-slate-200/90' : 'bg-black/40 border-white/5'
+            }`}>
               {edges.map(edgeType => {
                 const cfg = EDGE_CONFIG[edgeType];
                 const isActive = placementMode?.type === 'edge' && placementMode.edgeType === edgeType;
+                const strokeColor = isLight
+                  ? (cfg?.color && cfg.color !== '#fff' ? cfg.color : '#0f172a')
+                  : (cfg?.color || '#fff');
                 return (
                   <button
                     key={edgeType}
                     title={`Connect via ${edgeType.replace('_', ' ')}`}
                     onClick={() => setPlacementMode({ type: 'edge', edgeType, sourceNodeId: undefined })}
-                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${isActive ? 'bg-blue-900/80 border-2 border-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)] scale-110' : 'bg-gray-800 border border-gray-700 hover:bg-gray-700 hover:border-gray-500'}`}
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
+                      isActive
+                        ? isLight
+                          ? 'bg-blue-100 border-2 border-blue-600 shadow-md scale-105'
+                          : 'bg-blue-900/80 border-2 border-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)] scale-110'
+                        : isLight
+                          ? 'bg-white border border-slate-300 hover:bg-slate-50 hover:border-slate-400 shadow-2xs'
+                          : 'bg-gray-800 border border-gray-700 hover:bg-gray-700 hover:border-gray-500'
+                    }`}
                   >
                     <svg width="24" height="24" viewBox="0 0 24 24">
                       <line 
                         x1="4" y1="20" x2="20" y2="4" 
-                        stroke={cfg?.color || '#fff'} 
+                        stroke={strokeColor} 
                         strokeWidth={cfg?.width || 2} 
                         strokeDasharray={cfg?.dash?.join(',')}
                       />
@@ -117,10 +180,14 @@ export const TopologyEditor: React.FC<TopologyEditorProps> = ({
               })}
             </div>
             {placementMode?.type === 'edge' && !placementMode.sourceNodeId && (
-              <div className="text-xs text-blue-400 mt-2 text-center animate-pulse font-medium">Click a source node...</div>
+              <div className={`text-xs mt-2 text-center animate-pulse font-bold ${isLight ? 'text-blue-700' : 'text-blue-400'}`}>
+                Click a source node...
+              </div>
             )}
             {placementMode?.type === 'edge' && placementMode.sourceNodeId && (
-              <div className="text-xs text-green-400 mt-2 text-center animate-pulse font-medium">Click a target node...</div>
+              <div className={`text-xs mt-2 text-center animate-pulse font-bold ${isLight ? 'text-emerald-700' : 'text-green-400'}`}>
+                Click a target node...
+              </div>
             )}
           </div>
         )}

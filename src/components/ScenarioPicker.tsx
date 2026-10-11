@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Network, Bot, Car, Flame, Gamepad2 } from './icons';
 import { ScenarioType } from '../types';
 import { ScenarioInfo } from './ScenarioInfo';
+import { ThemeToggle } from './ThemeToggle';
+import { useTheme } from '../context/ThemeContext';
 
 interface ScenarioConfig {
   id: ScenarioType;
@@ -34,6 +36,8 @@ export const ScenarioPicker: React.FC<Props> = ({
   onSelectScenario,
   onStart,
 }) => {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const [scenarios, setScenarios] = useState<ScenarioConfig[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isTermsOpen, setIsTermsOpen] = useState(false);
@@ -138,12 +142,14 @@ export const ScenarioPicker: React.FC<Props> = ({
           <p className="text-gray-500 text-xs mt-1 font-mono uppercase tracking-wider">Select Graph Environment for Algorithm Benchmarking</p>
         </div>
 
-        {/* Animated System Status Readout */}
-        <div className="hidden sm:flex flex-col items-end">
-          <span className="text-[10px] text-gray-600 font-mono uppercase tracking-widest flex items-center gap-1.5">
-            System Status
-            <span className={`w-1.5 h-1.5 rounded-full ${canStart ? 'bg-emerald-500/50' : 'bg-amber-500/50'} animate-pulse`}></span>
-          </span>
+        {/* Top Right: Theme Toggle & Animated System Status Readout */}
+        <div className="flex items-center gap-4">
+          <ThemeToggle />
+          <div className="hidden sm:flex flex-col items-end">
+            <span className="text-[10px] text-gray-600 font-mono uppercase tracking-widest flex items-center gap-1.5">
+              System Status
+              <span className={`w-1.5 h-1.5 rounded-full ${canStart ? 'bg-emerald-500/50' : 'bg-amber-500/50'} animate-pulse`}></span>
+            </span>
           <span className={`text-xs font-mono font-bold tracking-wide flex items-center gap-2 ${canStart ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]' : 'text-amber-500'}`}>
             {canStart ? 'READY FOR EVALUATION' : 'INITIALIZING...'}
             <span className="w-1.5 h-3 bg-emerald-400/80 animate-[ping_1s_steps(2,start)_infinite]"></span>
@@ -166,6 +172,7 @@ export const ScenarioPicker: React.FC<Props> = ({
           )}
         </div>
       </div>
+    </div>
 
       {/* HORIZONTAL MODULE CAROUSEL */}
       <section className="mb-6 relative z-10">
@@ -180,20 +187,19 @@ export const ScenarioPicker: React.FC<Props> = ({
                   className={`
                     group relative flex flex-col items-center justify-center min-w-[150px] p-4 border transition-all duration-300 snap-center
                     ${isActive
-                      ? 'shadow-[0_0_15px_rgba(0,0,0,0.5)] transform -translate-y-1'
-                      : 'bg-gray-950 border-white/10 hover:border-white/30 hover:bg-gray-900 opacity-60 hover:opacity-100'}
+                      ? (isLight ? 'bg-white shadow-lg transform -translate-y-1' : 'shadow-[0_0_15px_rgba(0,0,0,0.5)] transform -translate-y-1')
+                      : (isLight ? 'bg-white border-slate-300 hover:border-slate-400 hover:bg-slate-50 opacity-90 hover:opacity-100 shadow-xs' : 'bg-gray-950 border-white/10 hover:border-white/30 hover:bg-gray-900 opacity-60 hover:opacity-100')}
                   `}
                   style={{
-                    // 🧠 FIX: Apply a highly transparent background (1A = ~10% opacity) and a glowing border based on the scenario's unique color!
-                    backgroundColor: isActive ? scenario.color + '1A' : undefined,
-                    borderColor: isActive ? scenario.color + '66' : undefined,
+                    backgroundColor: isActive ? (isLight ? '#ffffff' : scenario.color + '1A') : undefined,
+                    borderColor: isActive ? (isLight ? scenario.color : scenario.color + '66') : undefined,
                     borderTopColor: isActive ? scenario.color : undefined,
                     borderTopWidth: isActive ? '3px' : '1px'
                   }}
                 >
                   <span
-                    className={`mb-3 transition-transform duration-300 flex items-center justify-center ${isActive ? 'scale-110' : 'opacity-90 group-hover:scale-110 grayscale'}`}
-                    style={{ color: isActive ? scenario.color : '#9ca3af', filter: isActive ? `drop-shadow(0 0 10px ${scenario.color}80)` : 'none' }}
+                    className={`mb-3 transition-transform duration-300 flex items-center justify-center ${isActive ? 'scale-110' : (isLight ? 'opacity-90 group-hover:scale-110' : 'opacity-90 group-hover:scale-110 grayscale')}`}
+                    style={{ color: isActive ? scenario.color : (isLight ? '#475569' : '#9ca3af'), filter: isActive ? `drop-shadow(0 0 10px ${scenario.color}80)` : 'none' }}
                   >
                     {(() => {
                       const className = "w-8 h-8";
@@ -207,7 +213,7 @@ export const ScenarioPicker: React.FC<Props> = ({
                       }
                     })()}
                   </span>
-                  <span className={`text-xs font-mono tracking-widest uppercase ${isActive ? 'text-gray-100 font-bold' : 'text-gray-500'}`}>
+                  <span className={`text-xs font-mono tracking-widest uppercase ${isActive ? (isLight ? 'text-slate-900 font-extrabold' : 'text-gray-100 font-bold') : (isLight ? 'text-slate-600 font-bold' : 'text-gray-500')}`}>
                     {scenario.name.replace(' Network', '').replace(' Simulation', '')}
                   </span>
                 </button>
@@ -233,9 +239,23 @@ export const ScenarioPicker: React.FC<Props> = ({
           disabled={!canStart || isExecuting}
           onMouseEnter={() => setIsButtonHovered(true)}
           onMouseLeave={() => setIsButtonHovered(false)}
-          className="group relative overflow-hidden w-full py-4 font-mono font-bold text-sm tracking-widest uppercase transition-all duration-300 border"
+          className="group relative overflow-hidden w-full py-4 font-mono font-bold text-sm tracking-widest uppercase transition-all duration-300 border cursor-pointer disabled:cursor-not-allowed"
           style={(() => {
             const activeColor = activeScenarioConfig?.color || '#2563eb';
+            if (isLight) {
+              const bg = canStart && !isExecuting ? activeColor : '#e2e8f0';
+              const border = canStart && !isExecuting ? activeColor : '#cbd5e1';
+              const text = canStart && !isExecuting ? '#ffffff' : '#64748b';
+              const shadow = (canStart && !isExecuting)
+                ? (isButtonHovered ? `0 8px 24px ${makeHexWithAlpha(activeColor, 0.45)}` : `0 4px 12px ${makeHexWithAlpha(activeColor, 0.25)}`)
+                : undefined;
+              return {
+                backgroundColor: bg,
+                borderColor: border,
+                color: text,
+                boxShadow: shadow,
+              };
+            }
             const activeBg = makeHexWithAlpha(activeColor, canStart && !isExecuting ? (isButtonHovered ? 0.2 : 0.1) : 0.05);
             const borderColor = canStart && !isExecuting ? makeHexWithAlpha(activeColor, isButtonHovered ? 0.7 : 0.4) : '#374151';
             const textColor = canStart && !isExecuting ? activeColor : '#9ca3af';

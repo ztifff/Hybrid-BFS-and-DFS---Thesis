@@ -119,7 +119,10 @@ export function drawClemensFloorPlan(
   sy: (y: number) => number,
   zoom: number,
   visibleNodes: GraphNode[],
+  workspaceView?: 'physical' | 'logical',
+  theme?: 'dark' | 'light'
 ) {
+  const isLight = theme === 'light';
   // Detect active floor from visible nodes
   const floorId = visibleNodes.find(n => n.buildingId)?.buildingId ?? 'L1';
   const labels = FLOOR_LABELS[floorId] ?? FLOOR_LABELS['L1'];
@@ -129,11 +132,11 @@ export function drawClemensFloorPlan(
   ctx.lineJoin = 'miter';
 
   // ── 1. Building interior base fill ──────────────────────────────────────────
-  ctx.fillStyle = 'rgba(16, 22, 45, 0.82)';
+  ctx.fillStyle = isLight ? '#f8fafc' : 'rgba(16, 22, 45, 0.82)';
   ctx.fillRect(sx(0), sy(0), sx(W) - sx(0), sy(H) - sy(0));
 
   // ── 2. Corridor band fills (slightly darker / tinted) ───────────────────────
-  const corridorFill = 'rgba(8, 12, 30, 0.88)';
+  const corridorFill = isLight ? '#ffffff' : 'rgba(8, 12, 30, 0.88)';
   const corridorBands = [
     { y1: ZONE.northCorrTop,   y2: ZONE.northCorrBottom },
     { y1: ZONE.spineTop,       y2: ZONE.spineBottom },
@@ -142,6 +145,11 @@ export function drawClemensFloorPlan(
   ctx.fillStyle = corridorFill;
   corridorBands.forEach(band => {
     ctx.fillRect(sx(0), sy(band.y1), sx(W) - sx(0), sy(band.y2) - sy(band.y1));
+    if (isLight) {
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(sx(0), sy(band.y1), sx(W) - sx(0), sy(band.y2) - sy(band.y1));
+    }
   });
 
   // ── 3. Stairwell transition alcoves (blue tint) ─────────────────────────────
@@ -168,14 +176,24 @@ export function drawClemensFloorPlan(
 
     // North room row
     if (!SKIP_NORTH.has(colIdx)) {
-      ctx.fillStyle = 'rgba(22, 32, 64, 0.72)';
+      ctx.fillStyle = isLight ? '#f1f5f9' : 'rgba(22, 32, 64, 0.72)';
       ctx.fillRect(sx(x1), sy(0), sx(x2) - sx(x1), sy(ZONE.northRoomBottom) - sy(0));
+      if (isLight) {
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(sx(x1), sy(0), sx(x2) - sx(x1), sy(ZONE.northRoomBottom) - sy(0));
+      }
     }
 
     // South room row
     if (!SKIP_SOUTH.has(colIdx)) {
-      ctx.fillStyle = 'rgba(22, 32, 64, 0.72)';
+      ctx.fillStyle = isLight ? '#f1f5f9' : 'rgba(22, 32, 64, 0.72)';
       ctx.fillRect(sx(x1), sy(ZONE.southRoomTop), sx(x2) - sx(x1), sy(H) - sy(ZONE.southRoomTop));
+      if (isLight) {
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(sx(x1), sy(ZONE.southRoomTop), sx(x2) - sx(x1), sy(H) - sy(ZONE.southRoomTop));
+      }
     }
   });
 
@@ -323,7 +341,7 @@ export function drawClemensFloorPlan(
 
     // Label
     ctx.save();
-    ctx.fillStyle = 'rgba(165, 180, 252, 0.75)';
+    ctx.fillStyle = isLight ? '#1e1b4b' : 'rgba(165, 180, 252, 0.75)';
     ctx.font = `bold ${9 / zoom}px monospace`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -357,7 +375,7 @@ export function drawClemensFloorPlan(
     ctx.lineTo(sx(elev.cx), y1 + h - 2 / zoom);
     ctx.stroke();
 
-    ctx.fillStyle = 'rgba(147, 197, 253, 0.8)';
+    ctx.fillStyle = isLight ? '#1e3a8a' : 'rgba(147, 197, 253, 0.8)';
     ctx.font = `bold ${8 / zoom}px monospace`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -399,14 +417,15 @@ export function drawClemensFloorPlan(
   const SOUTH_LABEL_Y = ZONE.southRoomTop + 1200;
   const LINE_H = 12; // px gap between multi-line rows
 
-  COL_CENTERS.forEach((cx, colIdx) => {
+  if (workspaceView !== 'logical') {
+    COL_CENTERS.forEach((cx, colIdx) => {
     const northLabel = labels.north[colIdx] ?? '';
     const southLabel = labels.south[colIdx] ?? '';
     if (!northLabel && !southLabel) return;
 
     ctx.save();
-    ctx.fillStyle = 'rgba(148, 163, 184, 0.75)';
-    ctx.font = `${8.5 / zoom}px monospace`;
+    ctx.fillStyle = isLight ? '#0f172a' : 'rgba(148, 163, 184, 0.75)';
+    ctx.font = `bold ${8.5 / zoom}px monospace`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
 
@@ -419,9 +438,9 @@ export function drawClemensFloorPlan(
         ctx.fillText(line, tx, ty);
         // Underline: measure text width and draw a rect below the text
         const textW = ctx.measureText(line).width;
-        ctx.fillStyle = 'rgba(148, 163, 184, 0.4)';
+        ctx.fillStyle = isLight ? 'rgba(15, 23, 42, 0.25)' : 'rgba(148, 163, 184, 0.4)';
         ctx.fillRect(tx - textW / 2, ty + 9 / zoom, textW, 0.8 / zoom);
-        ctx.fillStyle = 'rgba(148, 163, 184, 0.75)';
+        ctx.fillStyle = isLight ? '#0f172a' : 'rgba(148, 163, 184, 0.75)';
       });
     };
 
@@ -436,7 +455,8 @@ export function drawClemensFloorPlan(
     }
 
     ctx.restore();
-  });
+    });
+  }
 
   // ── 12. Corridor spine label ─────────────────────────────────────────────────
   ctx.save();

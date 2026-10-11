@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlgoData } from '../hooks/useHistoryDetail';
+import { useTheme } from '../../../context/ThemeContext';
 
 interface BarRowProps {
   label: string;
@@ -14,10 +15,13 @@ interface BarRowProps {
 const BarRow: React.FC<BarRowProps> = ({
   label, bfsVal, dfsVal, hybVal, unit = '', lowerBetter = true, activeAlgorithms,
 }) => {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+
   const rawValues = [
-    { val: bfsVal, color: '#4ade80', active: activeAlgorithms.bfs },
-    { val: dfsVal, color: '#c084fc', active: activeAlgorithms.dfs },
-    { val: hybVal, color: '#fb923c', active: activeAlgorithms.hybrid },
+    { val: bfsVal, color: isLight ? '#047857' : '#4ade80', active: activeAlgorithms.bfs, key: 'BFS' },
+    { val: dfsVal, color: isLight ? '#7e22ce' : '#c084fc', active: activeAlgorithms.dfs, key: 'DFS' },
+    { val: hybVal, color: isLight ? '#b45309' : '#fb923c', active: activeAlgorithms.hybrid, key: 'HYB' },
   ];
   const activeVals = rawValues.filter(d => d.active).map(d => d.val);
   const values = activeVals.filter(v => v > 0);
@@ -30,24 +34,30 @@ const BarRow: React.FC<BarRowProps> = ({
   return (
     <div className="space-y-1.5">
       <div className="flex justify-between items-center">
-        <span className="text-[10px] text-gray-500 uppercase tracking-wide font-semibold">{label}</span>
+        <span className={`text-[10px] uppercase tracking-wide font-extrabold ${isLight ? 'text-slate-700' : 'text-gray-500'}`}>
+          {label}
+        </span>
       </div>
       {rawValues.filter(d => d.active).map((d, i) => (
         <div key={i} className="flex items-center gap-2">
-          <span className="text-[10px] font-mono w-7 shrink-0" style={{ color: d.color }}>
-            {d.color === '#4ade80' ? 'BFS' : d.color === '#c084fc' ? 'DFS' : 'HYB'}
+          <span className="text-[10px] font-mono font-extrabold w-7 shrink-0" style={{ color: d.color }}>
+            {d.key}
           </span>
-          <div className="flex-1 bg-gray-800/60 rounded-full h-2 overflow-hidden">
+          <div className={`flex-1 rounded-full h-2 overflow-hidden ${isLight ? 'bg-slate-200 border border-slate-300/60' : 'bg-gray-800/60'}`}>
             <div
               className={`h-full rounded-full transition-all ${
-                d.color === '#4ade80' ? 'bg-green-500' : d.color === '#c084fc' ? 'bg-purple-500' : 'bg-orange-500'
-              } ${isBest(d.val) ? 'ring-1 ring-white/30' : 'opacity-70'}`}
+                d.key === 'BFS' ? 'bg-emerald-600' : d.key === 'DFS' ? 'bg-purple-600' : 'bg-amber-600'
+              } ${isBest(d.val) ? (isLight ? 'ring-1 ring-slate-400' : 'ring-1 ring-white/30') : 'opacity-80'}`}
               style={{ width: d.val > 0 ? toW(d.val) : '2%' }}
             />
           </div>
-          <span className={`text-[10px] font-mono w-16 text-right shrink-0 ${isBest(d.val) ? 'text-white font-bold' : 'text-gray-500'}`}>
+          <span className={`text-[10px] font-mono w-16 text-right shrink-0 ${
+            isBest(d.val)
+              ? isLight ? 'text-slate-900 font-extrabold' : 'text-white font-bold'
+              : isLight ? 'text-slate-600 font-semibold' : 'text-gray-500'
+          }`}>
             {d.val > 0 ? `${d.val % 1 !== 0 ? d.val.toFixed(2) : d.val}${unit}` : 'N/A'}
-            {isBest(d.val) && <span className="ml-0.5 text-yellow-400">★</span>}
+            {isBest(d.val) && <span className={isLight ? 'ml-0.5 text-amber-600' : 'ml-0.5 text-yellow-400'}>★</span>}
           </span>
         </div>
       ))}
@@ -63,11 +73,20 @@ interface Props {
 }
 
 export const PerformanceBarChart: React.FC<Props> = ({ bfs, dfs, hyb, entryActiveAlgorithms }) => {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const aa = entryActiveAlgorithms;
+
   return (
-    <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4">
-      <div className="px-4 py-3 border-b border-gray-800 bg-gray-900/40">
-        <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
+    <div className={`rounded-xl p-4 border transition-colors ${
+      isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-gray-900/40 border-gray-800'
+    }`}>
+      <div className={`px-4 py-3 rounded-lg border ${
+        isLight ? 'bg-slate-50 border-slate-200' : 'bg-gray-900/40 border-gray-800'
+      }`}>
+        <h3 className={`text-[11px] font-extrabold uppercase tracking-[0.2em] flex items-center gap-2 ${
+          isLight ? 'text-slate-800' : 'text-gray-400'
+        }`}>
           Performance Breakdown — Visual Comparison
         </h3>
       </div>

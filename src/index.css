@@ -113,3 +113,611 @@ svg {
   border: 1px solid var(--color-glass-border);
   box-shadow: var(--shadow-glass);
 }
+
+/* ==========================================================================
+   LIGHT MODE DESIGN SYSTEM - ULTRA-HIGH CONTRAST & VISIBILITY
+   Activated via <html class="light"> or [data-theme="light"]
+   ========================================================================== */
+
+html.light, 
+html.light body, 
+html.light #root {
+  background: linear-gradient(135deg, #f8fafc, #edf2f7, #f1f5f9);
+  background-size: 200% 200%;
+  animation: breathingBg 25s ease-in-out infinite;
+  color: #0f172a;
+}
+
+/* Light Scrollbar */
+html.light ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* Light Glassmorphism */
+html.light .glass-panel {
+  background: rgba(255, 255, 255, 0.96) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.06) !important;
+  color: #0f172a !important;
+}
+
+/* Base Light Background Overrides */
+html.light .bg-gray-950,
+html.light .bg-gray-900,
+html.light .bg-slate-950,
+html.light .bg-slate-900,
+html.light .bg-slate-900\/60,
+html.light .bg-slate-900\/80,
+html.light .bg-\[\#0a0f1e\],
+html.light .bg-\[\#0a0f1e\]\/80,
+html.light .bg-\[\#0a0f1e\]\/50,
+html.light .bg-\[\#0a0f1e\]\/40,
+html.light .bg-\[\#060913\] {
+  background-color: #ffffff !important;
+}
+
+html.light .bg-gray-900\/40,
+html.light .bg-gray-900\/30,
+html.light .bg-gray-900\/60,
+html.light .bg-gray-900\/70,
+html.light .bg-gray-950\/60,
+html.light .bg-gray-950\/70,
+html.light .bg-gray-800,
+html.light .bg-slate-800,
+html.light .bg-slate-800\/80,
+html.light .bg-slate-800\/50,
+html.light .bg-slate-800\/40,
+html.light .bg-gray-800\/90,
+html.light .bg-gray-800\/80,
+html.light .bg-gray-800\/40 {
+  background-color: #f8fafc !important;
+}
+
+html.light .bg-black\/30,
+html.light .bg-black\/20,
+html.light .bg-black\/40,
+html.light .bg-black\/60 {
+  background-color: #f1f5f9 !important;
+}
+
+html.light .from-slate-800\/50,
+html.light .from-slate-800 {
+  --tw-gradient-from: #f8fafc !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+html.light .to-slate-900\/80,
+html.light .to-slate-900 {
+  --tw-gradient-to: #f1f5f9 !important;
+}
+
+/* Light Borders — Crisp and defined */
+html.light .border-gray-800,
+html.light .border-gray-700,
+html.light .border-slate-800,
+html.light .border-slate-800\/80,
+html.light .border-slate-700,
+html.light .border-slate-700\/60,
+html.light .border-slate-700\/50,
+html.light .border-slate-700\/40,
+html.light .border-slate-700\/30,
+html.light .border-gray-700\/50,
+html.light .border-gray-700\/60,
+html.light .border-gray-700\/80,
+html.light .border-gray-800\/60,
+html.light .border-gray-700\/40 {
+  border-color: #cbd5e1 !important;
+}
+
+html.light .border-gray-600 {
+  border-color: #94a3b8 !important;
+}
+
+html.light .border-white\/5,
+html.light .border-white\/10,
+html.light .border-white\/20,
+html.light .border-white\/30 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Light Text Defaults */
+html.light .text-slate-200,
+html.light .text-gray-100,
+html.light .text-gray-200 {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+html.light .text-slate-300,
+html.light .text-gray-300 {
+  color: #1e293b !important;
+  font-weight: 600 !important;
+}
+
+html.light .text-slate-400,
+html.light .text-gray-400 {
+  color: #334155 !important;
+}
+
+html.light .text-slate-500,
+html.light .text-gray-500 {
+  color: #475569 !important;
+  font-weight: 600 !important;
+}
+
+html.light .text-gray-600 {
+  color: #64748b !important;
+}
+
+/* Preserving white text strictly on solid color badges, toggles, action buttons */
+html.light .text-white:not([class*="bg-blue-"]):not([class*="bg-green-"]):not([class*="bg-emerald-"]):not([class*="bg-purple-"]):not([class*="bg-orange-"]):not([class*="bg-red-"]):not([class*="bg-cyan-"]):not([class*="bg-amber-"]):not(.keep-white) {
+  color: #0f172a !important;
+}
+
+/* Hover & Interactive States */
+html.light .hover\:bg-gray-800:hover,
+html.light .hover\:bg-slate-700\/80:hover {
+  background-color: #e2e8f0 !important;
+}
+html.light .hover\:bg-gray-700:hover {
+  background-color: #cbd5e1 !important;
+}
+html.light .hover\:text-white:hover:not([class*="bg-"]) {
+  color: #020617 !important;
+}
+html.light .hover\:border-gray-500:hover {
+  border-color: #64748b !important;
+}
+html.light .hover\:bg-white\/5:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* ==========================================================================
+   HIGH-CONTRAST COMPONENT SPECIALIZATIONS (LIGHT MODE)
+   ========================================================================== */
+
+/* 1. Left Metrics Panel */
+html.light [data-tutorial="tutorial-metrics-panel"] {
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+}
+html.light [data-tutorial="tutorial-metrics-panel"] .bg-black\/30 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+html.light [data-tutorial="tutorial-metrics-panel"] .border-slate-700\/40 {
+  border-color: #e2e8f0 !important;
+}
+html.light [data-tutorial="tutorial-metrics-panel"] .text-slate-500 {
+  color: #475569 !important;
+  font-weight: 700 !important;
+}
+html.light [data-tutorial="tutorial-metrics-panel"] .text-slate-200,
+html.light [data-tutorial="tutorial-metrics-panel"] .text-slate-300 {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  text-shadow: none !important;
+}
+
+/* 2. Playback Simulation Controls Bar */
+/* Secondary buttons: Reset, Back, Fwd, Skip, Block Nodes, Reroll Events */
+html.light [data-tutorial="tutorial-playback-controls"] button:not(.bg-green-600\/10):not(.bg-green-600\/20):not(.bg-red-600\/20):not(.bg-blue-600\/20):not(.bg-amber-600):not(.bg-blue-600) {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
+}
+html.light [data-tutorial="tutorial-playback-controls"] button:not(.bg-green-600\/10):not(.bg-green-600\/20):not(.bg-red-600\/20):not(.bg-blue-600\/20):not(.bg-amber-600):not(.bg-blue-600):hover {
+  background-color: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+}
+html.light [data-tutorial="tutorial-playback-controls"] button svg {
+  stroke: #0f172a !important;
+}
+
+/* Primary Action Button: Run Simulations / Resume */
+html.light [data-tutorial="tutorial-playback-controls"] button.bg-green-600\/10,
+html.light [data-tutorial="tutorial-playback-controls"] button.bg-green-600\/20 {
+  background-color: #16a34a !important;
+  border-color: #15803d !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.4) !important;
+}
+html.light [data-tutorial="tutorial-playback-controls"] button.bg-green-600\/10:hover,
+html.light [data-tutorial="tutorial-playback-controls"] button.bg-green-600\/20:hover {
+  background-color: #15803d !important;
+}
+html.light [data-tutorial="tutorial-playback-controls"] button.bg-green-600\/10 svg,
+html.light [data-tutorial="tutorial-playback-controls"] button.bg-green-600\/20 svg {
+  stroke: #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Pause Button */
+html.light [data-tutorial="tutorial-playback-controls"] button.bg-red-600\/20 {
+  background-color: #dc2626 !important;
+  border-color: #b91c1c !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.4) !important;
+}
+html.light [data-tutorial="tutorial-playback-controls"] button.bg-red-600\/20 svg {
+  stroke: #ffffff !important;
+}
+
+/* Replay Button */
+html.light [data-tutorial="tutorial-playback-controls"] button.bg-blue-600\/20 {
+  background-color: #2563eb !important;
+  border-color: #1d4ed8 !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4) !important;
+}
+html.light [data-tutorial="tutorial-playback-controls"] button.bg-blue-600\/20 svg {
+  stroke: #ffffff !important;
+}
+
+/* Speed Controller */
+html.light [data-tutorial="tutorial-playback-controls"] .bg-gray-800\/80 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+/* 3. Right Sidebar Panels */
+/* Dynamic Map Events */
+html.light .border-orange-500\/50.bg-orange-900\/20 {
+  background-color: #fff7ed !important;
+  border-color: #fdba74 !important;
+  color: #9a3412 !important;
+  font-weight: 700 !important;
+}
+html.light .border-green-500\/50.bg-green-900\/20 {
+  background-color: #f0fdf4 !important;
+  border-color: #86efac !important;
+  color: #166534 !important;
+  font-weight: 700 !important;
+}
+
+/* Algorithm Path Trace */
+html.light [data-tutorial="tutorial-expert-panel"] {
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+}
+html.light [data-tutorial="tutorial-expert-panel"] .bg-gray-900\/70 {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+html.light [data-tutorial="tutorial-expert-panel"] .bg-gray-900\/30 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+html.light [data-tutorial="tutorial-expert-panel"] .text-gray-500 {
+  color: #475569 !important;
+  font-weight: 700 !important;
+}
+html.light [data-tutorial="tutorial-expert-panel"] .text-white {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+}
+
+/* Dynamic Size Adjuster */
+html.light [data-tutorial="tutorial-size-adjuster"] input {
+  color: #0f172a !important;
+}
+html.light [data-tutorial="tutorial-size-adjuster"] .text-gray-400 {
+  color: #475569 !important;
+}
+html.light [data-tutorial="tutorial-size-adjuster"] button {
+  color: #475569 !important;
+}
+html.light [data-tutorial="tutorial-size-adjuster"] button:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* 4. ScenarioPicker Top Carousel & Briefing */
+html.light section .bg-gray-950 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+  opacity: 1 !important;
+}
+html.light section .text-gray-500 {
+  color: #1e293b !important;
+  font-weight: 700 !important;
+}
+html.light section button:not([style*="border-top-width: 3px"]):hover {
+  background-color: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+}
+
+/* Scenario Briefing Card */
+html.light .bg-gray-900\/40 {
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+}
+html.light .bg-gray-900\/40 .text-gray-400 {
+  color: #334155 !important;
+  font-weight: 500 !important;
+}
+html.light .bg-gray-900\/40 .bg-gray-950 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+html.light .bg-gray-900\/40 .text-gray-500 {
+  color: #475569 !important;
+  font-weight: 700 !important;
+}
+
+/* ScenarioPicker Execute Button */
+html.light button.execute-button,
+html.light button[style*="Execute Comparative Analysis"] {
+  background-color: #2563eb !important;
+  border-color: #1d4ed8 !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35) !important;
+}
+
+/* 5. Robot Assignments Modal */
+html.light .bg-gray-900.border-gray-700 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+html.light .bg-gray-800\/40 {
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+html.light .bg-gray-800\/40:hover {
+  background-color: #f8fafc !important;
+  border-color: #94a3b8 !important;
+}
+html.light .bg-blue-900\/25 {
+  background-color: #eff6ff !important;
+  border: 1px solid #3b82f6 !important;
+}
+html.light .bg-blue-900\/25 .text-blue-200 {
+  color: #1e40af !important;
+  font-weight: 700 !important;
+}
+html.light .bg-amber-900\/25 {
+  background-color: #fffbeb !important;
+  border: 1px solid #f59e0b !important;
+}
+html.light .bg-amber-900\/25 .text-amber-200 {
+  color: #92400e !important;
+  font-weight: 700 !important;
+}
+html.light .bg-gray-800\/40 .text-gray-300 {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+/* 6. Canvas Container */
+html.light [data-tutorial="tutorial-canvas"] {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 25px -4px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Inputs & Modals */
+html.light input[type="text"],
+html.light input[type="number"],
+html.light select {
+  color: #0f172a;
+}
+html.light input[type="text"]::placeholder,
+html.light input[type="number"]::placeholder {
+  color: #94a3b8;
+}
+html.light .bg-black\/80,
+html.light .bg-black\/60 {
+  background-color: rgba(15, 23, 42, 0.45) !important;
+}
+
+/* 7. Canvas Header & Mode Selector Bars */
+html.light [data-tutorial="tutorial-scenario-selectors"] .bg-gray-900\/60,
+html.light [data-tutorial="tutorial-scenario-selectors"] .bg-gray-900 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+}
+html.light [data-tutorial="tutorial-scenario-selectors"] button:not(.bg-blue-600):not(.bg-green-600):not(.bg-red-600) {
+  color: #334155 !important;
+  font-weight: 700 !important;
+}
+html.light [data-tutorial="tutorial-scenario-selectors"] button:not(.bg-blue-600):not(.bg-green-600):not(.bg-red-600):hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+html.light [data-tutorial="tutorial-scenario-selectors"] .text-gray-400 {
+  color: #475569 !important;
+  font-weight: 700 !important;
+}
+
+/* 8. CanvasControls: Floor Selector & Zoom Widget */
+html.light .bg-gray-900\/90 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08) !important;
+}
+html.light .bg-gray-900\/90 button:not(.bg-blue-600) {
+  color: #475569 !important;
+  font-weight: 700 !important;
+}
+html.light .bg-gray-900\/90 button:not(.bg-blue-600):hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+html.light .bg-gray-900\/80 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+/* 9. Robot Assignment Modal High Contrast Overrides */
+html.light .bg-green-900\/30 {
+  background-color: #dcfce7 !important;
+  border-color: #16a34a !important;
+}
+html.light .bg-green-900\/30 .text-green-300,
+html.light .text-green-300 {
+  color: #15803d !important;
+  font-weight: 800 !important;
+}
+html.light .bg-amber-950 {
+  background-color: #fef3c7 !important;
+  border-color: #f59e0b !important;
+}
+html.light .bg-amber-950 .text-amber-300,
+html.light .bg-amber-950 .text-amber-400 {
+  color: #92400e !important;
+  font-weight: 700 !important;
+}
+
+/* ==========================================================================
+   10. HISTORY MODAL & PERFORMANCE INSPECT (LIGHT MODE)
+   ========================================================================== */
+html.light .fixed.inset-0.bg-black\/85 {
+  background-color: rgba(15, 23, 42, 0.65) !important;
+}
+
+/* History Modal Container */
+html.light .bg-gray-900.border-gray-700.rounded-lg.w-full.max-w-\[1300px\] {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* History Modal Header & Footer */
+html.light header.border-b.border-gray-800.bg-\[\#0a0f1e\]\/60 {
+  background-color: #f8fafc !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+html.light footer.border-t.border-gray-800.bg-\[\#0a0f1e\]\/40 {
+  background-color: #f8fafc !important;
+  border-top-color: #e2e8f0 !important;
+}
+
+/* History Modal Main Body Content */
+html.light .bg-\[\#060b16\] {
+  background-color: #f8fafc !important;
+}
+
+/* Benchmark Table */
+html.light .bg-gray-900\/60.border-gray-800.rounded-xl {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
+}
+html.light .bg-gray-900\/60 .border-gray-800 {
+  border-color: #e2e8f0 !important;
+}
+html.light .bg-gray-900\/60 table th {
+  color: #475569 !important;
+  font-weight: 800 !important;
+}
+html.light .bg-gray-900\/60 table td {
+  border-color: #e2e8f0 !important;
+}
+
+/* Canvas Replay Box in History Detail */
+html.light .bg-\[\#0a0f1e\].rounded-xl.border-gray-800 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+html.light .h-10.bg-gray-900.border-t.border-gray-800 {
+  background-color: #f8fafc !important;
+  border-top-color: #cbd5e1 !important;
+}
+
+/* Winner Card in Light Mode */
+html.light .from-yellow-950\/30.via-amber-950\/20.to-gray-900\/40 {
+  --tw-gradient-from: #fffbeb !important;
+  --tw-gradient-stops: #fffbeb, #fef3c7, #ffffff !important;
+  border-color: #f59e0b !important;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15) !important;
+}
+html.light .from-yellow-950\/30 h3 {
+  color: #b45309 !important;
+  font-weight: 800 !important;
+}
+html.light .from-yellow-950\/30 p {
+  color: #451a03 !important;
+}
+
+/* Algorithm Movements, Bar Chart & Sim Config in History Modal */
+html.light .bg-gray-900\/40.border-gray-800.rounded-xl,
+html.light .bg-gray-900\/30.border-gray-800 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Return to Index & Secondary Buttons */
+html.light button.bg-gray-900.border-gray-800 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+html.light button.bg-gray-900.border-gray-800:hover {
+  background-color: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+}
+html.light header button.bg-gray-900.border-gray-800 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+/* History List View Cards */
+html.light .bg-gray-900\/40.hover\:bg-gray-900\/80 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+}
+html.light .bg-gray-900\/40.hover\:bg-gray-900\/80:hover {
+  background-color: #f8fafc !important;
+  border-color: #94a3b8 !important;
+}
+
+/* ==========================================================================
+   11. ROBOT FLEET STATUS SIDEBAR PANEL (LIGHT MODE)
+   ========================================================================== */
+html.light .shrink-0.bg-gray-900.border-gray-700.rounded {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
+}
+html.light .shrink-0.bg-gray-900.border-gray-700.rounded .bg-black\/40 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+html.light .shrink-0.bg-gray-900.border-gray-700.rounded .divide-white\/5 {
+  border-color: #e2e8f0 !important;
+}
+html.light .shrink-0.bg-gray-900.border-gray-700.rounded .hover\:bg-\[\#131c38\]:hover {
+  background-color: #f1f5f9 !important;
+}
+html.light .shrink-0.bg-gray-900.border-gray-700.rounded .bg-gray-800 {
+  background-color: #e2e8f0 !important;
+}
+html.light .shrink-0.bg-gray-900.border-gray-700.rounded .border-gray-800\/60 {
+  border-color: #e2e8f0 !important;
+}
+
+

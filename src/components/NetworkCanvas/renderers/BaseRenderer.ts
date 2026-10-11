@@ -36,6 +36,10 @@ export interface RenderOptions {
   robotAssignments?: import('../../../types').RobotAssignment[]; // per-robot rack allocation
   followAlgo?: 'bfs' | 'dfs' | 'hybrid' | null;
   disableSimultaneousMode?: boolean;
+  workspaceView?: 'physical' | 'logical';
+  isFinished?: boolean;
+  showHopBadges?: boolean;
+  theme?: 'dark' | 'light';
 }
 
 export abstract class BaseRenderer {
@@ -43,14 +47,30 @@ export abstract class BaseRenderer {
   protected cDFS = ALGORITHMS.find(a => a.id === 'dfs')?.color || '#c084fc';
   protected cHYB = ALGORITHMS.find(a => a.id === 'hybrid')?.color || '#fb923c';
 
-  protected renderedTextPositions: { x: number; y: number; radius: number }[] = [];
+  protected renderedTextPositions: { x: number; y: number; radius: number; width?: number; text?: string }[] = [];
 
   public render(options: RenderOptions) {
     const { ctx, canvasWidth, canvasHeight, zoom, pan } = options;
     const dpr = window.devicePixelRatio || 1;
+    const isLight = options.theme === 'light';
     
+    // Dynamic algorithm colors based on theme
+    if (isLight) {
+      this.cBFS = '#15803d'; // High-contrast deep emerald green
+      this.cDFS = '#7e22ce'; // High-contrast royal purple
+      this.cHYB = '#ea580c'; // High-contrast deep warm amber
+    } else {
+      this.cBFS = ALGORITHMS.find(a => a.id === 'bfs')?.color || '#4ade80';
+      this.cDFS = ALGORITHMS.find(a => a.id === 'dfs')?.color || '#c084fc';
+      this.cHYB = ALGORITHMS.find(a => a.id === 'hybrid')?.color || '#fb923c';
+    }
+
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    if (options.theme === 'light') {
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    }
     
     ctx.scale(dpr, dpr);
     ctx.translate(pan.x, pan.y);
@@ -61,10 +81,11 @@ export abstract class BaseRenderer {
 
     this.drawBackground(options);
     this.drawEdges(options);
-    this.drawActivePaths(options);
     this.drawVisitedEdges(options);
+    this.drawActivePaths(options);
     this.drawNodesAndLabels(options);
     this.drawEdgeLabels(options);
+    this.drawFinalPathHighlight(options);
     this.drawOverlays(options);
   }
 
@@ -98,8 +119,11 @@ export abstract class BaseRenderer {
   protected drawBackground(_options: RenderOptions) {}
 
   protected drawEdges(options: RenderOptions) {
-    const { ctx, visibleEdges, visibleNodeMap, isDatacenter, isMassive, sets } = options;
-    const baseOpacity = isDatacenter ? 0.2 : (isMassive ? 0.15 : 0.35);
+    const { ctx, visibleEdges, visibleNodeMap, isDatacenter, isMassive, sets, zoom } = options;
+    const isLight = options.theme === 'light';
+    const baseOpacity = isLight 
+      ? (isDatacenter ? 0.75 : (isMassive ? 0.75 : 0.9)) 
+      : (isDatacenter ? 0.2 : (isMassive ? 0.15 : 0.35));
 
     visibleEdges.forEach(edge => {
       const fromNode = visibleNodeMap.get(edge.from);
@@ -111,27 +135,60 @@ export abstract class BaseRenderer {
       const isExplored = (id: string) => sets.bfs.explored.has(id) || sets.dfs.explored.has(id) || sets.hyb.explored.has(id);
       const expAny = isExplored(edge.from) && isExplored(edge.to);
       const cfg = EDGE_CONFIG[edge.type] ?? EDGE_CONFIG.path;
-      const baseWidth = isDatacenter ? 0.25 : (isMassive ? 0.3 : cfg.width);
+      
+      const rawWidth = isLight
+        ? (isDatacenter ? 0.9 : (isMassive ? 1.0 : Math.max(2.5, cfg.width * 1.3)))
+        : (isDatacenter ? 0.25 : (isMassive ? 0.3 : cfg.width));
+
+      // Guarantee minimum on-screen physical thickness so zoomed-out graphs don't become invisible hair-lines
+      const minScreenPx = isLight ? (isMassive ? 1.3 : 2.0) : (isMassive ? 0.8 : 1.2);
+      const effectiveWidth = Math.max(rawWidth, minScreenPx / Math.max(zoom, 0.12));
 
       const isBlocked = options.activeBlocked.has(edge.from) || options.activeBlocked.has(edge.to);
 
       this.drawPath(ctx, edge, x1, y1, x2, y2, options.scale);
       
+      let edgeColor = cfg.color;
+      if (isLight) {
+        if (edgeColor === '#ffffff' || edgeColor === '#fff') edgeColor = '#475569';
+        else if (edgeColor === '#6ee7b7') edgeColor = '#047857'; // road: deep high-contrast pine/emerald
+        else if (edgeColor === '#c4b5fd') edgeColor = '#6d28d9'; // path / stairwell: deep purple
+        else if (edgeColor === '#fca5a5') edgeColor = '#be123c'; // corridor: deep rose
+        else if (edgeColor === '#60a5fa') edgeColor = '#1d4ed8'; // fiber: bold blue
+        else if (edgeColor === '#fdba74') edgeColor = '#c2410c'; // copper: rust amber
+        else if (edgeColor === '#fbbf24') edgeColor = '#b45309'; // auto_connect: amber
+        else if (edgeColor === '#94a3b8') edgeColor = '#334155'; // ethernet: deep slate
+        else if (edgeColor === '#06b6d4') edgeColor = '#0e7490'; // wireless: deep cyan
+      }
+
       if (isBlocked && options.scenario === 'gameai') {
-        ctx.strokeStyle = this.getRgba('#ef4444', Math.max(baseOpacity * 2, 0.6));
-        ctx.lineWidth = baseWidth * 2.5;
+        ctx.strokeStyle = this.getRgba('#ef4444', Math.max(baseOpacity * 2, 0.8));
+        ctx.lineWidth = effectiveWidth * 2.2;
+      } else if (options.scenario === 'traffic' && options.workspaceView === 'physical' && options.mapId !== 'synthetic') {
+        ctx.strokeStyle = expAny ? this.getRgba('#475569', isLight ? 0.85 : 0.5) : (isLight ? '#334155' : '#334155');
+        ctx.lineWidth = effectiveWidth * 2.5;
       } else {
-        ctx.strokeStyle = expAny ? this.getRgba('#64748b', 0.4) : this.getRgba(cfg.color, baseOpacity);
-        ctx.lineWidth = baseWidth;
+        ctx.strokeStyle = expAny 
+          ? this.getRgba(isLight ? '#475569' : '#64748b', isLight ? 0.7 : 0.4) 
+          : this.getRgba(edgeColor, baseOpacity);
+        ctx.lineWidth = effectiveWidth;
       }
       
       ctx.setLineDash(cfg.dash.length > 0 ? cfg.dash : []);
       ctx.stroke();
+
+      if (options.scenario === 'traffic' && options.workspaceView === 'physical' && options.mapId !== 'synthetic' && !isBlocked) {
+        ctx.strokeStyle = isLight ? '#1e293b' : '#475569';
+        ctx.lineWidth = effectiveWidth * 1.5;
+        ctx.stroke();
+      }
     });
   }
 
   protected drawActivePaths(options: RenderOptions) {
-    const { ctx, visibleEdges, visibleNodeMap, sets, visibleAlgos, isMassive } = options;
+    const { ctx, visibleEdges, visibleNodeMap, sets, visibleAlgos, isMassive, zoom } = options;
+    const isLight = options.theme === 'light';
+    const zoomFactor = Math.max(zoom, 0.12);
     ctx.setLineDash([]);
     visibleEdges.forEach(edge => {
       const fromNode = visibleNodeMap.get(edge.from);
@@ -148,15 +205,28 @@ export abstract class BaseRenderer {
         const x2 = this.sx(toNode.x, options), y2 = this.sy(toNode.y, options);
         this.drawPath(ctx, edge, x1, y1, x2, y2, options.scale);
         
-        if (pBFS && visibleAlgos.bfs) { ctx.strokeStyle = this.getRgba(this.cBFS, 0.9); ctx.lineWidth = isMassive ? 2.5 : 8; ctx.stroke(); }
-        if (pDFS && visibleAlgos.dfs) { ctx.strokeStyle = this.getRgba(this.cDFS, 0.95); ctx.lineWidth = isMassive ? 1.8 : 5; ctx.stroke(); }
-        if (pHYB && visibleAlgos.hybrid) { ctx.strokeStyle = this.getRgba(this.cHYB, 1); ctx.lineWidth = isMassive ? 1.2 : 3; ctx.stroke(); }
+        if (pBFS && visibleAlgos.bfs) { 
+          ctx.strokeStyle = this.getRgba(this.cBFS, 0.95); 
+          ctx.lineWidth = isMassive ? 2.5 : Math.max(8, (isLight ? 4.5 : 3.5) / zoomFactor); 
+          ctx.stroke(); 
+        }
+        if (pDFS && visibleAlgos.dfs) { 
+          ctx.strokeStyle = this.getRgba(this.cDFS, 0.95); 
+          ctx.lineWidth = isMassive ? 1.8 : Math.max(5, (isLight ? 3.5 : 2.5) / zoomFactor); 
+          ctx.stroke(); 
+        }
+        if (pHYB && visibleAlgos.hybrid) { 
+          ctx.strokeStyle = this.getRgba(this.cHYB, 1); 
+          ctx.lineWidth = isMassive ? 1.2 : Math.max(3, (isLight ? 2.8 : 2.0) / zoomFactor); 
+          ctx.stroke(); 
+        }
       }
     });
   }
 
   protected drawVisitedEdges(options: RenderOptions) {
-    const { ctx, visibleEdges, visibleNodeMap, sets, visibleAlgos, isMassive, isDatacenter } = options;
+    const { ctx, visibleEdges, visibleNodeMap, sets, visibleAlgos, isMassive, isDatacenter, zoom } = options;
+    const isLight = options.theme === 'light';
     ctx.setLineDash([]);
     visibleEdges.forEach(edge => {
       const fromNode = visibleNodeMap.get(edge.from);
@@ -166,7 +236,12 @@ export abstract class BaseRenderer {
       const x1 = this.sx(fromNode.x, options), y1 = this.sy(fromNode.y, options);
       const x2 = this.sx(toNode.x, options), y2 = this.sy(toNode.y, options);
       const cfg = EDGE_CONFIG[edge.type] ?? EDGE_CONFIG.path;
-      const baseWidth = isDatacenter ? 0.25 : (isMassive ? 0.3 : cfg.width);
+      
+      const rawWidth = isLight
+        ? (isDatacenter ? 0.8 : (isMassive ? 0.9 : Math.max(2.0, cfg.width * 1.2)))
+        : (isDatacenter ? 0.25 : (isMassive ? 0.3 : cfg.width));
+      const minScreenPx = isLight ? (isMassive ? 1.2 : 1.8) : (isMassive ? 0.7 : 1.0);
+      const effectiveWidth = Math.max(rawWidth, minScreenPx / Math.max(zoom, 0.12));
 
       const isBlocked = (id: string) => options.activeBlocked.has(id);
       const vBFS = (sets.bfs.explored.has(edge.from) && sets.bfs.explored.has(edge.to)) && !isBlocked(edge.from) && !isBlocked(edge.to) && !(sets.bfs.path.has(edge.from) && sets.bfs.path.has(edge.to));
@@ -175,27 +250,29 @@ export abstract class BaseRenderer {
 
       if (vBFS || vDFS || vHYB) {
         if (isMassive || isDatacenter) {
-          const opacity = 0.55;
-          if (vBFS && visibleAlgos.bfs) { this.drawPath(ctx, edge, x1, y1, x2, y2, options.scale); ctx.strokeStyle = this.getRgba(this.cBFS, opacity); ctx.lineWidth = baseWidth * 8.0; ctx.stroke(); }
-          if (vDFS && visibleAlgos.dfs) { this.drawPath(ctx, edge, x1, y1, x2, y2, options.scale); ctx.strokeStyle = this.getRgba(this.cDFS, opacity + 0.1); ctx.lineWidth = baseWidth * 5.0; ctx.stroke(); }
-          if (vHYB && visibleAlgos.hybrid) { this.drawPath(ctx, edge, x1, y1, x2, y2, options.scale); ctx.strokeStyle = this.getRgba(this.cHYB, opacity + 0.2); ctx.lineWidth = baseWidth * 2.0; ctx.stroke(); }
+          const opacity = isLight ? (options.isFinished ? 0.55 : 0.8) : (options.isFinished ? 0.35 : 0.55);
+          const strokeMult = options.isFinished ? 3.5 : 6.0;
+          if (vBFS && visibleAlgos.bfs) { this.drawPath(ctx, edge, x1, y1, x2, y2, options.scale); ctx.strokeStyle = this.getRgba(this.cBFS, opacity); ctx.lineWidth = effectiveWidth * strokeMult; ctx.stroke(); }
+          if (vDFS && visibleAlgos.dfs) { this.drawPath(ctx, edge, x1, y1, x2, y2, options.scale); ctx.strokeStyle = this.getRgba(this.cDFS, opacity + (options.isFinished ? 0.02 : 0.1)); ctx.lineWidth = effectiveWidth * (options.isFinished ? 3.0 : 4.5); ctx.stroke(); }
+          if (vHYB && visibleAlgos.hybrid) { this.drawPath(ctx, edge, x1, y1, x2, y2, options.scale); ctx.strokeStyle = this.getRgba(this.cHYB, opacity + (options.isFinished ? 0.04 : 0.2)); ctx.lineWidth = effectiveWidth * (options.isFinished ? 2.5 : 2.0); ctx.stroke(); }
         } else {
           const dx = x2 - x1, dy = y2 - y1;
           const len = Math.hypot(dx, dy) || 1;
           const perpX = -dy / len, perpY = dx / len;
           
-          const stackOffset = baseWidth * 1.5; 
+          const stackOffset = effectiveWidth * 1.5; 
           const algoLines = [
             { active: vBFS && visibleAlgos.bfs, color: this.cBFS, offset: -stackOffset },
             { active: vDFS && visibleAlgos.dfs, color: this.cDFS, offset: 0 },
             { active: vHYB && visibleAlgos.hybrid, color: this.cHYB, offset: stackOffset }
           ];
 
+          const edgeOpacity = isLight ? (options.isFinished ? 0.65 : 0.8) : (options.isFinished ? 0.3 : 0.35);
           algoLines.forEach(algo => {
             if (algo.active) {
               this.drawPath(ctx, edge, x1, y1, x2, y2, options.scale, perpX * algo.offset, perpY * algo.offset);
-              ctx.strokeStyle = this.getRgba(algo.color, 0.35); 
-              ctx.lineWidth = baseWidth * 1.2; 
+              ctx.strokeStyle = this.getRgba(algo.color, edgeOpacity); 
+              ctx.lineWidth = effectiveWidth * (options.isFinished ? 1.3 : 1.6); 
               ctx.stroke();
             }
           });
@@ -224,6 +301,11 @@ export abstract class BaseRenderer {
       const expBFS = visibleAlgos.bfs && sets.bfs.explored.has(node.id);
       const expDFS = visibleAlgos.dfs && sets.dfs.explored.has(node.id);
       const expHYB = visibleAlgos.hybrid && sets.hyb.explored.has(node.id);
+
+      const inPathBFS = visibleAlgos.bfs && sets.bfs.path.has(node.id);
+      const inPathDFS = visibleAlgos.dfs && sets.dfs.path.has(node.id);
+      const inPathHYB = visibleAlgos.hybrid && sets.hyb.path.has(node.id);
+      const inAnyPath = inPathBFS || inPathDFS || inPathHYB;
       
       const ringTint = isRealWorldPlace ? cfg.baseColor : null;
       const activeExplorations = [
@@ -233,7 +315,7 @@ export abstract class BaseRenderer {
       ].filter(e => e.active);
 
       const isBlockedImportant = isBlocked;
-      let r = isMassive ? (isImportant || isBlockedImportant ? 4.5 : 1.2) : cfg.radius;
+      let r = isMassive ? (isImportant || isBlockedImportant ? 4.5 : (activeExplorations.length > 0 ? 2.5 : 1.2)) : cfg.radius;
       if (isDatacenter) r = (isImportant || isBlockedImportant) ? 8 : 4.5;
       
       const currentRadii = isMassive ? [2.2, 1.2, 0.6] : [r * 0.85, r * 0.55, r * 0.25];
@@ -241,6 +323,9 @@ export abstract class BaseRenderer {
 
       let fillColor = cfg.baseColor;
       let opacity = (isMassive && !isImportant && !isBlockedImportant) ? 0.3 : 1;
+      if (options.isFinished && !inAnyPath && !isImportant && !isBlockedImportant) {
+        opacity = activeExplorations.length > 0 ? 0.5 : 0.2;
+      }
       
       const BLOCKED_ICONS: Record<string, string> = {
         traffic:    '\uD83D\uDEAB', 
@@ -292,144 +377,36 @@ export abstract class BaseRenderer {
         ctx.shadowBlur = 0; 
       }
 
-      if (isBlocked || isSource || isDest || activeExplorations.length === 0) {
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.fillStyle = this.getRgba(fillColor, opacity);
-        ctx.fill();
-        if (!isMassive || isImportant) {
-          ctx.lineWidth = isBlocked ? 2 : (isSource || isDest ? 3 : 1);
-          ctx.strokeStyle = isBlocked ? (scenario === 'evacuation' ? '#7f1d1d' : '#ef4444') : 
-                            isSource ? '#4ade80' : 
-                            isDest ? '#f87171' : '#374151';
-          ctx.stroke();
-        }
-      } else {
-        activeExplorations.forEach((exp, index) => {
+      const isPhysicalTraffic = scenario === 'traffic' && options.workspaceView === 'physical' && options.mapId !== 'synthetic';
+      const isRegularRoadNode = node.type === 'street' || node.type === 'intersection';
+      const shouldHideCircle = isPhysicalTraffic && isRegularRoadNode && !isImportant && !isBlocked;
+
+      if (!shouldHideCircle) {
+        if (isBlocked || isSource || isDest || activeExplorations.length === 0) {
           ctx.beginPath();
-          ctx.arc(cx, cy, currentRadii[index], 0, Math.PI * 2);
-          ctx.fillStyle = exp.color;
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.fillStyle = this.getRgba(fillColor, opacity);
           ctx.fill();
-          ctx.lineWidth = currentStrokes[index];
-          ctx.strokeStyle = '#ffffff';
-          ctx.stroke();
-        });
-      }
-      
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-
-      let displayLabel = node.label ? node.label.replace('\n', ' - ').trim() : '';
-      if (displayLabel.includes('_')) {
-        displayLabel = displayLabel
-          .split('_')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ');
-      }
-      if (zoom < 0.5) {
-        if (displayLabel.startsWith('Finish Line ')) displayLabel = displayLabel.replace('Finish Line ', 'FL-');
-        if (displayLabel.startsWith('Rack-')) displayLabel = displayLabel.replace('Rack-', 'R-');
-        if (displayLabel.startsWith('Core-')) displayLabel = displayLabel.replace('Core-', 'C-');
-        if (displayLabel.startsWith('Aggr-')) displayLabel = displayLabel.replace('Aggr-', 'A-');
-        if (displayLabel === 'Global Ingress') displayLabel = 'GI';
-        if (displayLabel === 'Dama King Row') displayLabel = 'KR';
-        if (displayLabel === 'Strategy AI') displayLabel = 'AI';
-      }
-      const isGenericLink = displayLabel.toLowerCase().includes('local link section') || 
-                            displayLabel.toLowerCase().includes('node/') || 
-                            displayLabel.includes('#');
-      const isKnownPlace = displayLabel && !isGenericLink;
-      const shouldShowStreetLabel = isMassive && isKnownPlace && zoom >= 1.5;
-      const shouldShowNormalLabel = (!isMassive && isKnownPlace) || isImportant;
-      const textAlpha = isImportant ? 1 : Math.max(0, Math.min(1, (zoom - 0.4) * 3));
-
-      if (textAlpha > 0) {
-        ctx.save();
-        ctx.globalAlpha = textAlpha;
-
-        if (shouldShowStreetLabel) {
-          const screenX = (cx * zoom) + pan.x;
-          const screenY = (cy * zoom) + pan.y;
-          const separationThreshold = Math.max(50 / (zoom * 0.15), 35); 
-          const isOverlapping = this.renderedTextPositions.some(pos => Math.hypot(pos.x - screenX, pos.y - screenY) < separationThreshold);
-
-          if (!isOverlapping || isImportant) {
-            const dynamicFontSize = (isImportant ? 16 : 14) / zoom; 
-            ctx.font = `${isImportant ? 'bold' : '600'} ${dynamicFontSize}px sans-serif`;
-            ctx.lineJoin = 'round';
-            ctx.lineWidth = (scenario === 'gameai' ? 5 : 3) / zoom;
-            ctx.strokeStyle = scenario === 'gameai' ? '#000000' : '#0a0f1e'; 
-            
-            const labelOffsetY = r + (10 / zoom);
-            ctx.strokeText(displayLabel, cx, cy - labelOffsetY);
-            ctx.fillStyle = isImportant ? '#fb923c' : (scenario === 'gameai' ? '#fde68a' : '#f1f5f9'); 
-            ctx.fillText(displayLabel, cx, cy - labelOffsetY);
-            this.renderedTextPositions.push({ x: screenX, y: screenY, radius: separationThreshold });
+          if (!isMassive || isImportant) {
+            ctx.lineWidth = isBlocked ? 2 : (isSource || isDest ? 3 : 1);
+            ctx.strokeStyle = isBlocked ? (scenario === 'evacuation' ? '#7f1d1d' : '#ef4444') : 
+                              isSource ? '#4ade80' : 
+                              isDest ? '#f87171' : '#374151';
+            ctx.stroke();
           }
-        } else if (shouldShowNormalLabel && displayLabel) {
-          let textY = cy;
-          if (isImportant) {
-            const screenX = (cx * zoom) + pan.x;
-            let screenY = (textY * zoom) + pan.y;
-            let attempts = 0;
-            while (attempts < 5 && this.renderedTextPositions.some(pos => Math.abs(pos.x - screenX) < 70 && Math.abs(pos.y - screenY) < 25)) {
-              screenY += 20;
-              textY += 20 / zoom;
-              attempts++;
-            }
-            this.renderedTextPositions.push({ x: screenX, y: screenY, radius: 25 });
-          }
-
-          if (isMassive && isImportant) {
-            ctx.font = `bold ${16 / zoom}px sans-serif`;
-            ctx.strokeStyle = '#0a0f1e';
-            ctx.lineWidth = 3 / zoom;
-            const labelOffsetY = r + (10 / zoom);
-            ctx.strokeText(displayLabel, cx, textY - labelOffsetY);
-            ctx.fillStyle = isSource ? '#4ade80' : isDest ? '#f87171' : '#fb923c';
-            ctx.fillText(displayLabel, cx, textY - labelOffsetY);
-          } else if (!isMassive) {
-            if (!isDatacenter) {
-              const labelSize = (isImportant ? 18 : 15) / zoom;
-              ctx.font = `${isImportant ? 'bold ' : ''}${labelSize}px sans-serif`;
-              
-              if (scenario === 'gameai') {
-                ctx.lineJoin = 'round';
-                ctx.lineWidth = 4 / zoom;
-                ctx.strokeStyle = '#000000';
-                const labelOffsetY = r + (12 / zoom);
-                ctx.strokeText(displayLabel, cx, textY + labelOffsetY);
-                ctx.fillStyle = isImportant ? '#fb923c' : '#fde68a';
-                ctx.fillText(displayLabel, cx, textY + labelOffsetY);
-              } else {
-                ctx.lineJoin = 'round';
-                ctx.lineWidth = 3 / zoom;
-                ctx.strokeStyle = '#0a0f1e';
-                const labelOffsetY = r + (12 / zoom);
-                ctx.strokeText(displayLabel, cx, textY + labelOffsetY);
-                
-                if (isImportant) {
-                  ctx.fillStyle = isSource ? '#4ade80' : isDest ? '#f87171' : '#fb923c';
-                } else {
-                  ctx.fillStyle = '#cbd5e1';
-                }
-                ctx.fillText(displayLabel, cx, textY + labelOffsetY);
-              }
-            } else {
-              const labelSize = (isImportant ? 12 : 10) / zoom;
-              const labelY = textY + r + (8 / zoom);
-              ctx.font = `${labelSize}px sans-serif`;
-              ctx.lineWidth = 2 / zoom;
-              ctx.strokeStyle = '#0f172a';
-              ctx.strokeText(displayLabel, cx, labelY);
-              ctx.fillStyle = isImportant ? (isSource ? '#4ade80' : isDest ? '#f87171' : '#fb923c') : '#f8fafc';
-              ctx.fillText(displayLabel, cx, labelY);
-            }
-          }
+        } else {
+          activeExplorations.forEach((exp, index) => {
+            ctx.beginPath();
+            ctx.arc(cx, cy, currentRadii[index], 0, Math.PI * 2);
+            ctx.fillStyle = exp.color;
+            ctx.fill();
+            ctx.lineWidth = currentStrokes[index];
+            ctx.strokeStyle = '#ffffff';
+            ctx.stroke();
+          });
         }
-        ctx.restore();
       }
-      
+
       if (!isMassive) {
         const iconSize = r * 1.1;
         ctx.font = `${iconSize}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
@@ -462,6 +439,160 @@ export abstract class BaseRenderer {
         }
       }
     });
+
+    // Pass 2: Label rendering pass with priority sorting & collision detection
+    const sortedNodes = [...visibleNodes].sort((a, b) => {
+      const aImp = a.id === sourceId || (sourceIds && sourceIds.includes(a.id)) || destinationIds.includes(a.id) || sets.bfs.current === a.id || sets.dfs.current === a.id || sets.hyb.current === a.id;
+      const bImp = b.id === sourceId || (sourceIds && sourceIds.includes(b.id)) || destinationIds.includes(b.id) || sets.bfs.current === b.id || sets.dfs.current === b.id || sets.hyb.current === b.id;
+      if (aImp && !bImp) return -1;
+      if (!aImp && bImp) return 1;
+      return 0;
+    });
+
+    sortedNodes.forEach(node => {
+      const cfg = NODE_CONFIG[node.type] ?? { icon: '🏪', radius: 18, baseColor: '#0e7490' };
+      const cx = this.sx(node.x, options), cy = this.sy(node.y, options);
+      const isSource = node.id === sourceId || (sourceIds && sourceIds.includes(node.id));
+      const isDest = destinationIds.includes(node.id);
+      const currBFS = visibleAlgos.bfs && sets.bfs.current === node.id;
+      const currDFS = visibleAlgos.dfs && sets.dfs.current === node.id;
+      const currHYB = visibleAlgos.hybrid && sets.hyb.current === node.id;
+      const isImportant = isSource || isDest || currBFS || currDFS || currHYB;
+
+      let r = isMassive ? (isImportant ? 4.5 : 1.2) : cfg.radius;
+      if (isDatacenter) r = isImportant ? 8 : 4.5;
+
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      let displayLabel = node.label ? node.label.replace('\n', ' - ').trim() : '';
+      if (scenario === 'traffic') {
+        displayLabel = displayLabel.replace(/^Jct:\s*/i, '');
+        displayLabel = displayLabel.replace(/National Highway/gi, 'Natl Hwy');
+      }
+      if (displayLabel.includes('_')) {
+        displayLabel = displayLabel
+          .split('_')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+      }
+      if (zoom < 0.5) {
+        if (displayLabel.startsWith('Finish Line ')) displayLabel = displayLabel.replace('Finish Line ', 'FL-');
+        if (displayLabel.startsWith('Rack-')) displayLabel = displayLabel.replace('Rack-', 'R-');
+        if (displayLabel.startsWith('Core-')) displayLabel = displayLabel.replace('Core-', 'C-');
+        if (displayLabel.startsWith('Aggr-')) displayLabel = displayLabel.replace('Aggr-', 'A-');
+        if (displayLabel === 'Global Ingress') displayLabel = 'GI';
+        if (displayLabel === 'Dama King Row') displayLabel = 'KR';
+        if (displayLabel === 'Strategy AI') displayLabel = 'AI';
+      }
+
+      const isGenericLink = displayLabel.toLowerCase().includes('local link section') || 
+                            displayLabel.toLowerCase().includes('node/') || 
+                            displayLabel.includes('#');
+      const isKnownPlace = displayLabel && !isGenericLink;
+      const shouldShowStreetLabel = isMassive && isKnownPlace && zoom >= 1.5;
+      const shouldShowNormalLabel = (!isMassive && isKnownPlace) || isImportant;
+
+      // In datacenter / synthetic graphs, skip unselected rack node labels when zoomed out (< 0.65x)
+      // to avoid 100+ labels smearing horizontally into an illegible black blob
+      if (isDatacenter && !isImportant && zoom < 0.65 && (node.id.startsWith('rack_') || node.type === 'rack')) {
+        return;
+      }
+
+      const textAlpha = isImportant ? 1 : Math.max(options.theme === 'light' ? 0.92 : 0.2, Math.min(1, (zoom - 0.2) * 3));
+
+      if (textAlpha > 0) {
+        ctx.save();
+        ctx.globalAlpha = textAlpha;
+
+        const isLight = options.theme === 'light';
+        const defaultStroke = isLight ? '#ffffff' : '#0a0f1e';
+        const defaultText = isLight ? '#0f172a' : '#f1f5f9';
+
+        if (shouldShowStreetLabel) {
+          const screenX = (cx * zoom) + pan.x;
+          const screenY = (cy * zoom) + pan.y;
+          const dynamicFontSize = (isImportant ? 16 : 14) / zoom; 
+          ctx.font = `${isImportant ? 'bold' : '600'} ${dynamicFontSize}px sans-serif`;
+          
+          const textWidth = ctx.measureText(displayLabel).width;
+          const isOverlapping = this.renderedTextPositions.some(pos => {
+            const dx = Math.abs(pos.x - screenX);
+            const dy = Math.abs(pos.y - screenY);
+            if (pos.text === displayLabel && dx < (textWidth * 1.5) && dy < 40) return true;
+            return dx < (textWidth / 2 + (pos.width || 0) / 2 + 10) && dy < 25;
+          });
+
+          if (!isOverlapping || isImportant) {
+            ctx.lineJoin = 'round';
+            ctx.lineWidth = (scenario === 'gameai' ? 5 : 3.5) / zoom;
+            ctx.strokeStyle = scenario === 'gameai' ? '#000000' : defaultStroke; 
+            
+            const labelOffsetY = r + (10 / zoom);
+            ctx.strokeText(displayLabel, cx, cy - labelOffsetY);
+            ctx.fillStyle = isImportant ? (isLight ? '#c2410c' : '#fb923c') : (scenario === 'gameai' ? '#fde68a' : defaultText); 
+            ctx.fillText(displayLabel, cx, cy - labelOffsetY);
+            this.renderedTextPositions.push({ x: screenX, y: screenY, radius: 0, width: textWidth, text: displayLabel });
+          }
+        } else if (shouldShowNormalLabel && displayLabel) {
+          let textY = cy;
+          let labelOffsetY = isDatacenter ? (r + (8 / zoom)) : (r + (12 / zoom));
+          let labelY = textY + labelOffsetY;
+
+          const labelSize = isDatacenter 
+            ? ((isImportant ? 13 : 10.5) / zoom) 
+            : ((isImportant ? 18 : 14.5) / zoom);
+          ctx.font = `${isImportant ? 'bold ' : '600 '}${labelSize}px sans-serif`;
+          const textWidthUnscaled = ctx.measureText(displayLabel).width;
+          const textWidthOnScreen = textWidthUnscaled * zoom;
+
+          const screenX = (cx * zoom) + pan.x;
+          let screenY = (labelY * zoom) + pan.y;
+
+          // Collision detection: skip non-important labels that would collide with already drawn labels
+          if (!isImportant) {
+            const hasCollision = this.renderedTextPositions.some(pos => {
+              const dx = Math.abs(pos.x - screenX);
+              const dy = Math.abs(pos.y - screenY);
+              return dx < ((pos.width || 40) / 2 + textWidthOnScreen / 2 + 6) && dy < 20;
+            });
+            if (hasCollision) {
+              ctx.restore();
+              return;
+            }
+          } else {
+            // Reposition important labels downward if colliding
+            let attempts = 0;
+            while (attempts < 4 && this.renderedTextPositions.some(pos => Math.abs(pos.x - screenX) < 60 && Math.abs(pos.y - screenY) < 22)) {
+              screenY += 20;
+              labelY += 20 / zoom;
+              attempts++;
+            }
+          }
+
+          ctx.lineJoin = 'round';
+          ctx.lineWidth = (isLight ? 4.5 : 3) / zoom;
+          ctx.strokeStyle = scenario === 'gameai' ? '#000000' : defaultStroke;
+          ctx.strokeText(displayLabel, cx, labelY);
+
+          if (isImportant) {
+            ctx.fillStyle = isSource ? '#16a34a' : isDest ? '#dc2626' : (isLight ? '#c2410c' : '#fb923c');
+          } else {
+            ctx.fillStyle = scenario === 'gameai' ? '#fde68a' : (isLight ? '#0f172a' : '#cbd5e1');
+          }
+          ctx.fillText(displayLabel, cx, labelY);
+
+          this.renderedTextPositions.push({
+            x: screenX,
+            y: screenY,
+            radius: 20,
+            width: textWidthOnScreen,
+            text: displayLabel
+          });
+        }
+        ctx.restore();
+      }
+    });
   }
 
   protected drawEdgeLabels(options: RenderOptions) {
@@ -470,8 +601,9 @@ export abstract class BaseRenderer {
       ctx.save();
       ctx.globalAlpha = Math.max(0, Math.min(1, (zoom - 0.7) * 3));
       ctx.font = `${Math.max(8, 12 / zoom)}px sans-serif`;
-      ctx.fillStyle = '#e2e8f0';
-      ctx.strokeStyle = '#0f172a';
+      const isLight = options.theme === 'light';
+      ctx.fillStyle = isLight ? '#0f172a' : '#e2e8f0';
+      ctx.strokeStyle = isLight ? '#ffffff' : '#0f172a';
       ctx.lineWidth = 2 / zoom;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -496,7 +628,7 @@ export abstract class BaseRenderer {
   }
 
   protected drawOverlays(options: RenderOptions) {
-    const { ctx, highlightedNodeId, destinationIds, visibleNodeMap, zoom, scale, disableSimultaneousMode, visibleAlgos } = options;
+    const { ctx, highlightedNodeId, destinationIds, visibleNodeMap, zoom, disableSimultaneousMode, visibleAlgos } = options;
     const visibleCount = [visibleAlgos.bfs, visibleAlgos.dfs, visibleAlgos.hybrid].filter(Boolean).length;
     const isSimultaneousMode = !disableSimultaneousMode && visibleCount > 1;
 
@@ -548,10 +680,10 @@ export abstract class BaseRenderer {
       if (hNode) {
         const cx = this.sx(hNode.x, options), cy = this.sy(hNode.y, options);
         const cfg = NODE_CONFIG[hNode.type] || NODE_CONFIG['place'];
-        const r = (cfg.radius / scale) * zoom;
+        const r = options.isMassive ? 4.5 : (cfg.radius || 18);
         const pulseR = r + 8 / zoom;
         ctx.save();
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 16 / zoom;
         ctx.shadowColor = '#facc15';
         ctx.strokeStyle = '#facc15';
         ctx.lineWidth = 3 / zoom;
@@ -566,5 +698,262 @@ export abstract class BaseRenderer {
         ctx.restore();
       }
     }
+  }
+
+  protected drawFinalPathHighlight(options: RenderOptions) {
+    const { ctx, visibleNodeMap, visibleEdges, visibleAlgos, activeSteps, zoom } = options;
+    const isFinished = Boolean(options.isFinished);
+
+    if (!isFinished) return;
+
+    const algos: Array<'bfs' | 'dfs' | 'hybrid'> = ['bfs', 'dfs', 'hybrid'];
+    const activeAlgos = algos.filter(a =>
+      visibleAlgos[a] &&
+      activeSteps[a]?.path &&
+      (activeSteps[a]?.path?.length ?? 0) > 1
+    );
+
+    if (activeAlgos.length === 0) return;
+
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // Phase 1: Draw Sequential Path Lines
+    activeAlgos.forEach(algo => {
+      const path = activeSteps[algo]!.path;
+      const algoColor = algo === 'bfs' ? this.cBFS : algo === 'dfs' ? this.cDFS : this.cHYB;
+      const offsetVal = activeAlgos.length > 1
+        ? (algo === 'bfs' ? -4 : algo === 'hybrid' ? 4 : 0)
+        : 0;
+
+      for (let i = 0; i < path.length - 1; i++) {
+        const u = path[i];
+        const v = path[i + 1];
+        const n1 = visibleNodeMap.get(u);
+        const n2 = visibleNodeMap.get(v);
+        if (!n1 || !n2) continue;
+
+        const x1 = this.sx(n1.x, options);
+        const y1 = this.sy(n1.y, options);
+        const x2 = this.sx(n2.x, options);
+        const y2 = this.sy(n2.y, options);
+
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const len = Math.hypot(dx, dy) || 1;
+        const perpX = (-dy / len) * (offsetVal / zoom);
+        const perpY = (dx / len) * (offsetVal / zoom);
+
+        const sx1 = x1 + perpX;
+        const sy1 = y1 + perpY;
+        const sx2 = x2 + perpX;
+        const sy2 = y2 + perpY;
+
+        const matchingEdge = visibleEdges.find(e => (e.from === u && e.to === v) || (e.from === v && e.to === u));
+
+        // 1. Outer Glow
+        ctx.shadowBlur = 14 / zoom;
+        ctx.shadowColor = algoColor;
+        ctx.strokeStyle = this.getRgba(algoColor, 0.45);
+        ctx.lineWidth = Math.max(5, 10 / zoom);
+        if (matchingEdge) {
+          this.drawPath(ctx, matchingEdge, x1, y1, x2, y2, options.scale, perpX, perpY);
+        } else {
+          ctx.beginPath();
+          ctx.moveTo(sx1, sy1);
+          ctx.lineTo(sx2, sy2);
+        }
+        ctx.stroke();
+
+        // 2. High-contrast Solid Path
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = algoColor;
+        ctx.lineWidth = Math.max(3, 5.5 / zoom);
+        if (matchingEdge) {
+          this.drawPath(ctx, matchingEdge, x1, y1, x2, y2, options.scale, perpX, perpY);
+        } else {
+          ctx.beginPath();
+          ctx.moveTo(sx1, sy1);
+          ctx.lineTo(sx2, sy2);
+        }
+        ctx.stroke();
+
+        // 3. Neon Core Highlight (bright white line in center)
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = Math.max(1, 1.8 / zoom);
+        if (matchingEdge) {
+          this.drawPath(ctx, matchingEdge, x1, y1, x2, y2, options.scale, perpX, perpY);
+        } else {
+          ctx.beginPath();
+          ctx.moveTo(sx1, sy1);
+          ctx.lineTo(sx2, sy2);
+        }
+        ctx.stroke();
+
+        // 4. Directional Chevron Flow Arrow at midpoint
+        const midX = (sx1 + sx2) / 2;
+        const midY = (sy1 + sy2) / 2;
+        const arrowDist = Math.hypot(dx, dy);
+        if (arrowDist > 16 / zoom) {
+          const arrowSize = Math.max(3, 5.5 / zoom);
+          const angle = Math.atan2(dy, dx);
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.moveTo(midX + Math.cos(angle) * arrowSize, midY + Math.sin(angle) * arrowSize);
+          ctx.lineTo(midX + Math.cos(angle + 2.4) * arrowSize, midY + Math.sin(angle + 2.4) * arrowSize);
+          ctx.lineTo(midX - Math.cos(angle) * (arrowSize * 0.3), midY - Math.sin(angle) * (arrowSize * 0.3));
+          ctx.lineTo(midX + Math.cos(angle - 2.4) * arrowSize, midY + Math.sin(angle - 2.4) * arrowSize);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+    });
+
+    // Phase 2: Draw Hop Badges on Path Nodes
+    if (options.showHopBadges !== false) {
+      // 2A. Draw single START badge ONCE (no duplicates)
+      const startNodeId = options.sourceId || (activeAlgos[0] && activeSteps[activeAlgos[0]]?.path[0]);
+      const startNode = startNodeId ? visibleNodeMap.get(startNodeId) : null;
+      if (startNode) {
+        const sx = this.sx(startNode.x, options);
+        const sy = this.sy(startNode.y, options);
+        this.drawHopBadge(ctx, sx, sy - 20 / zoom, 'START', '#052e16', '#22c55e', zoom, true);
+      }
+
+      // 2B. Draw Intermediate Hop Badges (nodes 1 through path.length - 2)
+      activeAlgos.forEach(algo => {
+        const path = activeSteps[algo]!.path;
+        const algoColor = algo === 'bfs' ? this.cBFS : algo === 'dfs' ? this.cDFS : this.cHYB;
+        const totalHops = path.length - 1;
+
+        const badgeOffsetX = activeAlgos.length > 1
+          ? (algo === 'bfs' ? -13 : algo === 'hybrid' ? 13 : 0) / zoom
+          : 0;
+        const badgeOffsetY = activeAlgos.length > 1
+          ? (algo === 'bfs' ? -13 : algo === 'hybrid' ? 13 : -15) / zoom
+          : 0;
+
+        for (let i = 1; i < path.length - 1; i++) {
+          const nodeId = path[i];
+          const node = visibleNodeMap.get(nodeId);
+          if (!node) continue;
+
+          const cx = this.sx(node.x, options) + badgeOffsetX;
+          const cy = this.sy(node.y, options) + badgeOffsetY;
+
+          const isVeryLong = totalHops > 25;
+          const skipForDensity = isVeryLong && zoom < 1.0 && (i % (totalHops > 50 ? 5 : 2) !== 0);
+
+          if (!skipForDensity) {
+            this.drawHopBadge(ctx, cx, cy, `${i}`, '#0a0f1e', algoColor, zoom, false);
+          }
+        }
+      });
+
+      // 2C. Draw Color-Coded, Non-Overlapping Destination Badges
+      const destArrivalsByNode = new Map<string, Array<{ algo: 'bfs' | 'dfs' | 'hybrid'; hops: number; color: string; bgColor: string; label: string }>>();
+
+      activeAlgos.forEach(algo => {
+        const path = activeSteps[algo]!.path;
+        if (!path || path.length < 2) return;
+        const destId = path[path.length - 1];
+        const hops = path.length - 1;
+        const algoColor = algo === 'bfs' ? this.cBFS : algo === 'dfs' ? this.cDFS : this.cHYB;
+        const bgColor = algo === 'bfs' ? '#052e16' : algo === 'dfs' ? '#2e1065' : '#431407';
+        const algoLabel = algo === 'bfs' ? 'BFS' : algo === 'dfs' ? 'DFS' : 'Hybrid';
+
+        if (!destArrivalsByNode.has(destId)) {
+          destArrivalsByNode.set(destId, []);
+        }
+        destArrivalsByNode.get(destId)!.push({
+          algo,
+          hops,
+          color: algoColor,
+          bgColor,
+          label: `${algoLabel} (${hops} hops)`
+        });
+      });
+
+      destArrivalsByNode.forEach((arrivals, destId) => {
+        const node = visibleNodeMap.get(destId);
+        if (!node) return;
+
+        const cx = this.sx(node.x, options);
+        const cy = this.sy(node.y, options);
+
+        // Draw destination pulsing target radar ring
+        ctx.save();
+        ctx.shadowBlur = 10 / zoom;
+        ctx.shadowColor = arrivals[0].color;
+        ctx.strokeStyle = arrivals[0].color;
+        ctx.lineWidth = 2 / zoom;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 14 / zoom, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+
+        // Stack badges above the destination node so they do not overlap each other or the node
+        arrivals.forEach((arr, idx) => {
+          const badgeY = cy - (20 + idx * 19) / zoom;
+          this.drawHopBadge(ctx, cx, badgeY, arr.label, arr.bgColor, arr.color, zoom, true);
+        });
+      });
+    }
+
+    ctx.restore();
+  }
+
+  protected drawHopBadge(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    text: string,
+    bgColor: string,
+    borderColor: string,
+    zoom: number,
+    isPill: boolean
+  ) {
+    ctx.save();
+    const fontSize = Math.max(9, Math.min(13, 11 / zoom));
+    ctx.font = `bold ${fontSize}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const paddingX = isPill ? Math.max(5, 7 / zoom) : Math.max(3, 4 / zoom);
+    const textWidth = ctx.measureText(text).width;
+    const badgeW = isPill ? textWidth + paddingX * 2 : Math.max(fontSize * 1.6, textWidth + paddingX * 2);
+    const badgeH = Math.max(fontSize * 1.5, 16 / zoom);
+    const radius = isPill ? badgeH / 2 : Math.max(7 / zoom, badgeH / 2);
+
+    // Glow / Drop Shadow
+    ctx.shadowBlur = 8 / zoom;
+    ctx.shadowColor = borderColor;
+
+    // Background shape
+    ctx.beginPath();
+    if (isPill) {
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(x - badgeW / 2, y - badgeH / 2, badgeW, badgeH, radius);
+      } else {
+        ctx.rect(x - badgeW / 2, y - badgeH / 2, badgeW, badgeH);
+      }
+    } else {
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+    }
+    ctx.fillStyle = bgColor;
+    ctx.fill();
+
+    // Border
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = Math.max(1.5, 2.2 / zoom);
+    ctx.stroke();
+
+    // Text Label
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(text, x, y);
+
+    ctx.restore();
   }
 }

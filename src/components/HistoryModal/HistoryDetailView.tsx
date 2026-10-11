@@ -10,6 +10,7 @@ import { SimulationConfig } from './components/SimulationConfig';
 import { EventLog } from './components/EventLog';
 import { StrategyMapEvents } from '../simulation/StrategyMapEvents';
 import { isMultiAlgorithmResult } from './historyUtils';
+import { useTheme } from '../../context/ThemeContext';
 
 interface Props {
   entry: HistoryEntry;
@@ -22,6 +23,9 @@ interface Props {
 export const HistoryDetailView: React.FC<Props> = ({
   entry, historyTimelineStep, highlightedNodeId, onSeek, onHighlight,
 }) => {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+
   const detail = useHistoryDetail(entry, historyTimelineStep);
 
   const [robotAlgo, setRobotAlgo] = useState<AlgorithmKey>(() => {
@@ -80,22 +84,26 @@ export const HistoryDetailView: React.FC<Props> = ({
 
         {/* Campus topology note */}
         {entry.scenario === 'network' && baseGraph?.nodes.some((n: any) => n.id.includes('boys') || n.label?.includes('PC-PT')) && (
-          <div data-tutorial="history-scenario-panels" className="xl:col-span-5 bg-gray-900/60 border border-indigo-900/50 rounded-xl p-4 flex flex-col gap-2 mt-[-10px]">
-            <div className="text-[10px] uppercase tracking-[0.2em] text-indigo-400 font-bold mb-1">
+          <div data-tutorial="history-scenario-panels" className={`xl:col-span-5 rounded-xl p-4 flex flex-col gap-2 mt-[-10px] border ${
+            isLight ? 'bg-indigo-50/70 border-indigo-200 text-slate-800' : 'bg-gray-900/60 border-indigo-900/50 text-gray-300'
+          }`}>
+            <div className={`text-[10px] uppercase tracking-[0.2em] font-extrabold mb-1 ${
+              isLight ? 'text-indigo-900' : 'text-indigo-400'
+            }`}>
               Campus Topology Rules Context
             </div>
-            <div className="text-[11px] text-gray-300 space-y-2 leading-relaxed">
+            <div className={`text-[11px] space-y-2 leading-relaxed ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>
               <div>
-                <p className="text-gray-100 font-semibold mb-0.5">1. Routed Traffic with ACLs</p>
-                <ul className="list-disc pl-5 space-y-0.5 text-gray-400">
+                <p className={`font-bold mb-0.5 ${isLight ? 'text-slate-900' : 'text-gray-100'}`}>1. Routed Traffic with ACLs</p>
+                <ul className={`list-disc pl-5 space-y-0.5 ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>
                   <li>Boys Block can ONLY communicate with AB1.</li>
                   <li>Girls Block can ONLY communicate with AB2.</li>
                   <li>Packets to unauthorized zones are dropped at routers.</li>
                 </ul>
               </div>
-              <div className="pt-2 border-t border-gray-800">
-                <p className="text-gray-100 font-semibold mb-0.5">2. Local Switched Traffic</p>
-                <p className="text-gray-400">
+              <div className={`pt-2 border-t ${isLight ? 'border-indigo-200/60' : 'border-gray-800'}`}>
+                <p className={`font-bold mb-0.5 ${isLight ? 'text-slate-900' : 'text-gray-100'}`}>2. Local Switched Traffic</p>
+                <p className={isLight ? 'text-slate-600' : 'text-gray-400'}>
                   Yellow Zone shares a single subnet. Traffic flows freely via Layer 2 switching, bypassing ACLs.
                 </p>
               </div>
@@ -154,7 +162,7 @@ export const HistoryDetailView: React.FC<Props> = ({
       </div>
 
       {entry.scenario === 'gameai' && (
-        <div data-tutorial="history-scenario-panels" className="bg-gray-900/40 border border-gray-800 rounded-xl p-4">
+        <div data-tutorial="history-scenario-panels">
           <StrategyMapEvents
             dynamicEvents={allEvents}
             stepIndex={maxEventStep > 0 ? maxEventStep : maxSteps}

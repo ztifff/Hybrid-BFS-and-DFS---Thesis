@@ -119,6 +119,7 @@ export interface AlgorithmStep {
   activeRobotId?: string;                     // robotId taking turn in this step
   robotPositions?: Record<string, string>;   // robotId -> current node id map for all robots
   currentLatency?: number;
+  nodesExplored?: number;
 }
 
 // ── Performance Metrics ────────────────────────────────────────────────────

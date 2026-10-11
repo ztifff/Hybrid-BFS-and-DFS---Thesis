@@ -14,6 +14,7 @@ type MultiResults = {
 export interface SimulationState {
   // Data
   currentGraph: ScenarioGraph | null;
+  currentGraphMapId: string | null;
   simResults: MultiResults | null;
   bfsResult: { pathLength: number } | null;
   history: HistoryEntry[];
@@ -182,6 +183,7 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
         model.setSavedSignatures([]);
         model.setCurrentSavedId(null);
         model.setBfsResult(null);
+        model.setSimResults(null);
         controller.setStatus('idle');
         // Start the simulated ticker immediately so progress looks alive during the
         // cold-start period while the backend is still computing its first response.
@@ -196,6 +198,7 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
         let mergedResults: any = null;
 
         while (keepFetching && isMounted) {
+          const isMapMatch = model.currentGraphMapId === model.mapId;
           const requestBody = {
             scenario: model.scenario,
             mapId: model.mapId,
@@ -208,21 +211,21 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
               }
             } : {}),
             ...(model.scenario === 'gameai' && model.gameBoard ? { gameBoard: model.gameBoard } : {}),
-            ...(model.scenario === 'network' ? {
+            ...(model.scenario === 'network' && isMapMatch ? {
               customSourceId: model.sourceDevice,
               customDestinationIds: model.destinationDevices,
               deliveryMode: model.deliveryMode
             } : {}),
-            ...(scenario === 'robotics' ? {
+            ...(scenario === 'robotics' && isMapMatch ? {
               customRobotAssignments: model.robotAssignments,
               customSourceIds: model.sourceDevices,
               customDestinationIds: model.destinationDevices,
               deliveryMode: 'multicast'
             } : {}),
-            ...(scenario === 'evacuation' && model.evacuationSourceId ? {
+            ...(scenario === 'evacuation' && isMapMatch && model.evacuationSourceId ? {
               customSourceId: model.evacuationSourceId
             } : {}),
-            ...(scenario === 'traffic' ? {
+            ...(scenario === 'traffic' && isMapMatch ? {
               ...(model.trafficSourceId ? { customSourceId: model.trafficSourceId } : {}),
               ...(model.trafficDestinationIds.length > 0 ? { customDestinationIds: model.trafficDestinationIds } : {})
             } : {}),
@@ -232,7 +235,7 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
             ...(model.customBlockedNodes?.length > 0 ? {
               customBlockedNodes: model.customBlockedNodes
             } : {}),
-            ...(model.currentGraph ? {
+            ...(model.currentGraph && isMapMatch ? {
               customGraph: model.currentGraph
             } : {})
           };
@@ -402,7 +405,10 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
     handleSkipEnd: controller.handleSkipEnd,
     playbackSpeed: controller.playbackSpeed,
     handleSpeedChange: controller.handleSpeedChange,
-    handleRerollEvents: model.handleRerollEvents,
+    handleRerollEvents: () => {
+      controller.handleReset();
+      model.handleRerollEvents();
+    },
     handleImportHistory: model.handleImportHistory,
 
     // Modals
@@ -478,6 +484,7 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
     stepEdgesUp: model.stepEdgesUp,
     stepEdgesDown: model.stepEdgesDown,
     forceRefetchGraph: model.forceRefetchGraph,
+    currentGraphMapId: model.currentGraphMapId,
     customBlockedNodes: model.customBlockedNodes,
     setCustomBlockedNodes: model.setCustomBlockedNodes,
   };

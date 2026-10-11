@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { DynamicEvent, SimulationResult, AlgorithmStep } from '../../types';
+import { useTheme } from '../../context/ThemeContext';
 
 interface Props {
   dynamicEvents: DynamicEvent[];
@@ -9,7 +10,7 @@ interface Props {
 }
 
 // ── Per-algorithm color tokens ───────────────────────────────────────────────
-const ALGO_STYLES: Record<string, { label: string; color: string; bg: string; border: string; dot: string }> = {
+const ALGO_STYLES_DARK: Record<string, { label: string; color: string; bg: string; border: string; dot: string }> = {
   bfs: {
     label: 'BFS',
     color: 'text-green-300',
@@ -30,6 +31,30 @@ const ALGO_STYLES: Record<string, { label: string; color: string; bg: string; bo
     bg: 'bg-orange-950/30',
     border: 'border-orange-500/40',
     dot: 'bg-orange-400',
+  },
+};
+
+const ALGO_STYLES_LIGHT: Record<string, { label: string; color: string; bg: string; border: string; dot: string }> = {
+  bfs: {
+    label: 'BFS',
+    color: 'text-emerald-800',
+    bg: 'bg-emerald-50/90',
+    border: 'border-emerald-200',
+    dot: 'bg-emerald-600',
+  },
+  dfs: {
+    label: 'DFS',
+    color: 'text-purple-800',
+    bg: 'bg-purple-50/90',
+    border: 'border-purple-200',
+    dot: 'bg-purple-600',
+  },
+  hybrid: {
+    label: 'Hybrid',
+    color: 'text-amber-800',
+    bg: 'bg-amber-50/90',
+    border: 'border-amber-200',
+    dot: 'bg-amber-600',
   },
 };
 
@@ -154,11 +179,18 @@ function getAlgorithmStrategy(
 }
 
 // ── Severity → visual badge ─────────────────────────────────────────────────
-const SEVERITY_BADGE: Record<string, string> = {
+const SEVERITY_BADGE_DARK: Record<string, string> = {
   reroute: 'bg-blue-900/50 text-blue-300 border-blue-500/40',
   blocked: 'bg-red-900/50 text-red-300 border-red-500/40',
   unaffected: 'bg-gray-800/60 text-gray-400 border-gray-600/40',
   phase: 'bg-yellow-900/50 text-yellow-300 border-yellow-500/40',
+};
+
+const SEVERITY_BADGE_LIGHT: Record<string, string> = {
+  reroute: 'bg-blue-100 text-blue-800 border-blue-300',
+  blocked: 'bg-red-100 text-red-800 border-red-300',
+  unaffected: 'bg-slate-200/90 text-slate-700 border-slate-300',
+  phase: 'bg-amber-100 text-amber-900 border-amber-300',
 };
 
 const SEVERITY_ICON: Record<string, string> = {
@@ -170,6 +202,12 @@ const SEVERITY_ICON: Record<string, string> = {
 
 // ── Main Component ───────────────────────────────────────────────────────────
 export const StrategyMapEvents: React.FC<Props> = ({ dynamicEvents, stepIndex, simResults, activeAlgorithms }) => {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+
+  const algoStyles = isLight ? ALGO_STYLES_LIGHT : ALGO_STYLES_DARK;
+  const severityBadges = isLight ? SEVERITY_BADGE_LIGHT : SEVERITY_BADGE_DARK;
+
   const activeStrategyEvents = useMemo(() => {
     if (!simResults) return [];
 
@@ -192,28 +230,48 @@ export const StrategyMapEvents: React.FC<Props> = ({ dynamicEvents, stepIndex, s
   }, [dynamicEvents, stepIndex, simResults, activeAlgorithms.bfs, activeAlgorithms.dfs, activeAlgorithms.hybrid]);
 
   return (
-    <div className="bg-gray-900 border border-gray-700 rounded p-3 flex flex-col shrink-0 fade-in hover:border-purple-500 transition-colors duration-500">
+    <div className={`p-3 flex flex-col shrink-0 fade-in transition-colors duration-300 ${
+      isLight 
+        ? 'bg-white border border-slate-200/90 shadow-sm rounded-xl hover:border-purple-400' 
+        : 'bg-gray-900 border border-gray-700 rounded hover:border-purple-500'
+    }`}>
       {/* ── Header ── */}
-      <div className="flex items-center mb-2 shrink-0 border-b border-gray-800 pb-2">
-        <h3 className="text-xs text-gray-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+      <div className={`flex items-center mb-2 shrink-0 border-b pb-2 ${isLight ? 'border-slate-200' : 'border-gray-800'}`}>
+        <h3 className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+          isLight ? 'text-slate-800 font-extrabold' : 'text-gray-400'
+        }`}>
           <span className="sm:hidden">🧠 </span>Strategy Map Events
         </h3>
       </div>
 
       <div
         className="flex-1 overflow-y-auto pr-1 flex flex-col gap-2"
-        style={{ maxHeight: 320, scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}
+        style={{ 
+          maxHeight: 320, 
+          scrollbarWidth: 'thin', 
+          scrollbarColor: isLight ? '#cbd5e1 transparent' : '#4b5563 transparent' 
+        }}
       >
         {activeStrategyEvents.length > 0 ? (
           activeStrategyEvents.map(({ event, responses }, idx) => (
             <div
               key={`strategy-${event.stepIndex}-${idx}`}
-              className="flex flex-col gap-1.5 p-2.5 rounded-lg border border-gray-700/60 bg-gray-900/40"
+              className={`flex flex-col gap-1.5 p-2.5 rounded-lg border transition-colors ${
+                isLight 
+                  ? 'border-slate-200/90 bg-slate-50/70 shadow-2xs' 
+                  : 'border-gray-700/60 bg-gray-900/40'
+              }`}
             >
               {/* Event title row */}
               <div className="flex items-center gap-1.5 text-[11px]">
-                <span className="font-mono text-gray-500 shrink-0">[{event.stepIndex}]</span>
-                <span className={`font-semibold ${event.blocked ? 'text-orange-400' : 'text-emerald-400'}`}>
+                <span className={`font-mono shrink-0 ${isLight ? 'text-slate-500 font-bold' : 'text-gray-500'}`}>
+                  [{event.stepIndex}]
+                </span>
+                <span className={`font-semibold ${
+                  event.blocked 
+                    ? (isLight ? 'text-amber-700 font-bold' : 'text-orange-400') 
+                    : (isLight ? 'text-emerald-700 font-bold' : 'text-emerald-400')
+                }`}>
                   <span className="sm:hidden">{event.blocked ? '⚡' : '✅'} </span>{event.label}
                 </span>
               </div>
@@ -221,7 +279,7 @@ export const StrategyMapEvents: React.FC<Props> = ({ dynamicEvents, stepIndex, s
               {/* Per-algorithm strategy rows */}
               <div className="flex flex-col gap-1 pl-1">
                 {responses.map(({ algo, action, detail, severity }) => {
-                  const style = ALGO_STYLES[algo];
+                  const style = algoStyles[algo];
                   return (
                     <div
                       key={algo}
@@ -234,13 +292,15 @@ export const StrategyMapEvents: React.FC<Props> = ({ dynamicEvents, stepIndex, s
                           <span className={`font-bold font-mono ${style.color}`}>{style.label}</span>
                         </div>
                         <span
-                          className={`px-1.5 py-0.5 rounded border text-[9px] font-bold uppercase tracking-wide ${SEVERITY_BADGE[severity]}`}
+                          className={`px-1.5 py-0.5 rounded border text-[9px] font-bold uppercase tracking-wide ${severityBadges[severity]}`}
                         >
                           {SEVERITY_ICON[severity]} {action}
                         </span>
                       </div>
                       {/* Detail text */}
-                      <span className="text-gray-400 pl-3 leading-relaxed">{detail}</span>
+                      <span className={`pl-3 leading-relaxed ${isLight ? 'text-slate-700 font-medium' : 'text-gray-400'}`}>
+                        {detail}
+                      </span>
                     </div>
                   );
                 })}
@@ -248,7 +308,7 @@ export const StrategyMapEvents: React.FC<Props> = ({ dynamicEvents, stepIndex, s
             </div>
           ))
         ) : (
-          <div className="text-xs text-gray-500 text-center mt-6 italic">
+          <div className={`text-xs text-center mt-6 italic ${isLight ? 'text-slate-500' : 'text-gray-500'}`}>
             Algorithm strategies will appear once events are triggered...
           </div>
         )}

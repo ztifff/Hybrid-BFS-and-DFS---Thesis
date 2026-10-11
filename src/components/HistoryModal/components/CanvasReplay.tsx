@@ -2,6 +2,7 @@ import React from 'react';
 import { ScenarioType } from '../../../types';
 import { NetworkCanvas } from '../../NetworkCanvas';
 import { HistoryResults } from '../types';
+import { useTheme } from '../../../context/ThemeContext';
 
 interface Props {
   baseGraph: any;
@@ -36,6 +37,9 @@ export const CanvasReplay: React.FC<Props> = ({
   onDeselect,
   onSeek,
 }) => {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+
   const fallbackRobotAssignments = robotAssignments ??
     baseGraph?.nodes
       .filter((n: any) => n.type === 'depot')
@@ -50,7 +54,9 @@ export const CanvasReplay: React.FC<Props> = ({
       }));
 
   return (
-    <div className="xl:col-span-3 h-[390px] xl:h-[390px] w-full bg-[#0a0f1e] rounded-xl border border-gray-800 overflow-hidden shadow-inner flex flex-col">
+    <div className={`xl:col-span-3 h-[390px] xl:h-[390px] w-full rounded-xl border overflow-hidden flex flex-col transition-colors ${
+      isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#0a0f1e] border-gray-800 shadow-inner'
+    }`}>
       <div className="flex-1 relative overflow-hidden">
         {baseGraph && (
           <NetworkCanvas
@@ -72,14 +78,20 @@ export const CanvasReplay: React.FC<Props> = ({
             disableSimultaneousMode={true}
             mapId={resolvedMapId}
             robotAssignments={fallbackRobotAssignments}
+            totalSteps={ultimateMax}
+            isFinished={currentStep >= ultimateMax}
           />
         )}
       </div>
 
       {/* Event Replay slider */}
-      <div className="h-10 bg-gray-900 border-t border-gray-800 flex items-center px-4 gap-3 shrink-0 shadow-[0_-5px_15px_rgba(0,0,0,0.3)] z-10">
+      <div className={`h-10 border-t flex items-center px-4 gap-3 shrink-0 z-10 ${
+        isLight ? 'bg-slate-50 border-slate-200' : 'bg-gray-900 border-gray-800 shadow-[0_-5px_15px_rgba(0,0,0,0.3)]'
+      }`}>
         <span
-          className="text-[9px] font-bold tracking-widest text-gray-500 uppercase shrink-0 cursor-help"
+          className={`text-[9px] font-extrabold tracking-widest uppercase shrink-0 cursor-help ${
+            isLight ? 'text-slate-700' : 'text-gray-500'
+          }`}
           title="Replays dynamic events (e.g., blockages). This does not replay individual algorithm pathfinding steps."
         >
           Event Replay
@@ -90,10 +102,16 @@ export const CanvasReplay: React.FC<Props> = ({
           max={ultimateMax}
           value={currentStep}
           onChange={e => onSeek(Number(e.target.value))}
-          className="flex-1 accent-indigo-500 h-1 cursor-pointer bg-gray-800 rounded-lg appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-indigo-400 [&::-webkit-slider-thumb]:rounded-full hover:[&::-webkit-slider-thumb]:bg-indigo-300 [&::-webkit-slider-thumb]:transition-all"
+          className={`flex-1 h-1.5 cursor-pointer rounded-lg appearance-none transition-all ${
+            isLight
+              ? 'bg-slate-200 accent-indigo-600 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:bg-indigo-600 [&::-webkit-slider-thumb]:rounded-full hover:[&::-webkit-slider-thumb]:bg-indigo-700'
+              : 'bg-gray-800 accent-indigo-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-indigo-400 [&::-webkit-slider-thumb]:rounded-full hover:[&::-webkit-slider-thumb]:bg-indigo-300'
+          }`}
         />
         <span
-          className="text-[10px] font-mono text-indigo-400 font-bold shrink-0 text-right w-16"
+          className={`text-[10px] font-mono font-bold shrink-0 text-right w-16 ${
+            isLight ? 'text-indigo-700' : 'text-indigo-400'
+          }`}
           title="Simulation Tick (Total Events / Time)"
         >
           Tick {currentStep}

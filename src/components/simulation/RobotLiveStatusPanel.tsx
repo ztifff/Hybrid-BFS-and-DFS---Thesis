@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { RobotAssignment, AlgorithmStep, GraphNode } from '../../types';
+import { useTheme } from '../../context/ThemeContext';
 
 interface Props {
   assignments: RobotAssignment[];
@@ -12,9 +13,9 @@ interface Props {
 }
 
 const ALGO_CONFIG = {
-  bfs:    { name: 'BFS',    barColor: '#22c55e', btnActive: 'bg-emerald-600 text-white',    textColor: 'text-emerald-400' },
-  dfs:    { name: 'DFS',    barColor: '#a855f7', btnActive: 'bg-purple-600 text-white',     textColor: 'text-purple-400'  },
-  hybrid: { name: 'HYBRID', barColor: '#f97316', btnActive: 'bg-orange-600 text-white',     textColor: 'text-orange-400'  },
+  bfs:    { name: 'BFS',    barColor: '#22c55e', btnActive: 'bg-emerald-600 text-white',    textColor: 'text-emerald-400', textColorLight: 'text-emerald-700' },
+  dfs:    { name: 'DFS',    barColor: '#a855f7', btnActive: 'bg-purple-600 text-white',     textColor: 'text-purple-400',  textColorLight: 'text-purple-700'  },
+  hybrid: { name: 'HYBRID', barColor: '#f97316', btnActive: 'bg-orange-600 text-white',     textColor: 'text-orange-400',  textColorLight: 'text-orange-700'  },
 } as const;
 
 export const RobotLiveStatusPanel: React.FC<Props> = ({
@@ -26,6 +27,8 @@ export const RobotLiveStatusPanel: React.FC<Props> = ({
   mapId,
   activeAlgorithms,
 }) => {
+  const { theme: ctxTheme } = useTheme();
+  const isLight = ctxTheme === 'light';
   const [selectedAlgo, setSelectedAlgo] = useState<'bfs' | 'dfs' | 'hybrid'>(followAlgo || 'bfs');
 
   // Determine which algos are visible (default all true)
@@ -53,29 +56,34 @@ export const RobotLiveStatusPanel: React.FC<Props> = ({
   const isBoxDeliveryMap = mapId === 'aws' || mapId === 'awsWarehouse' || mapId === 'synthetic';
   const activeStep = activeSteps[selectedAlgo] ?? activeSteps.bfs ?? activeSteps.hybrid ?? activeSteps.dfs;
   const formatLabel = (label: string) => {
-    return label
-      .replace(/\n/g, " ")
-      .replace(/Finish Line /g, "FL-")
-      .replace(/Packing Desk /g, "PD-");
+    return label.replace(/\n/g, " ");
   };
 
   const nodeMap = new Map(graphNodes.map(n => [n.id, formatLabel(n.label)]));
   const theme = ALGO_CONFIG[selectedAlgo];
 
   return (
-    <div className="shrink-0 bg-gray-900 border border-gray-700 rounded overflow-hidden fade-in hover:border-blue-500 transition-colors duration-500">
+    <div className={`shrink-0 rounded-xl overflow-hidden fade-in border transition-colors duration-300 ${
+      isLight ? 'bg-white border-slate-200/90 shadow-sm' : 'bg-gray-900 border-gray-700 hover:border-blue-500'
+    }`}>
 
       {/* ── Header ───────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-white/5 bg-black/40">
+      <div className={`flex items-center justify-between px-3 py-2 border-b ${
+        isLight ? 'bg-slate-50/90 border-slate-200' : 'bg-black/40 border-white/5'
+      }`}>
         <div className="flex items-center gap-1.5">
           <span className="text-sm sm:hidden">🤖</span>
-          <span className="text-[11px] font-bold uppercase tracking-widest text-gray-300">
+          <span className={`text-[11px] font-bold uppercase tracking-widest ${
+            isLight ? 'text-slate-800 font-extrabold' : 'text-gray-300'
+          }`}>
             Robot Fleet Status
           </span>
         </div>
 
         {/* Algorithm switcher */}
-        <div className="flex items-center gap-0.5 bg-black/40 border border-white/10 shadow-inner rounded-md p-0.5">
+        <div className={`flex items-center gap-0.5 border shadow-inner rounded-md p-0.5 ${
+          isLight ? 'bg-slate-200/70 border-slate-300' : 'bg-black/40 border-white/10'
+        }`}>
           {visibleKeys.map(key => (
             <button
               key={key}
@@ -83,7 +91,7 @@ export const RobotLiveStatusPanel: React.FC<Props> = ({
               className={`text-[10px] font-bold px-2 py-0.5 rounded transition-all cursor-pointer ${
                 selectedAlgo === key
                   ? ALGO_CONFIG[key].btnActive
-                  : 'text-gray-500 hover:text-gray-300'
+                  : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-gray-500 hover:text-gray-300'
               }`}
             >
               {ALGO_CONFIG[key].name}
@@ -93,7 +101,9 @@ export const RobotLiveStatusPanel: React.FC<Props> = ({
       </div>
 
       {/* ── Robot Cards ──────────────────────────────────────── */}
-      <div className="flex flex-col divide-y divide-white/5 max-h-[45vh] overflow-y-auto">
+      <div className={`flex flex-col divide-y max-h-[45vh] overflow-y-auto ${
+        isLight ? 'divide-slate-200' : 'divide-white/5'
+      }`}>
         {assignments.map((assignment, idx) => {
           const robotName  = nodeMap.get(assignment.robotId) ?? assignment.robotId;
 
@@ -149,34 +159,36 @@ export const RobotLiveStatusPanel: React.FC<Props> = ({
             <div
               key={assignment.robotId}
               onClick={() => locId && onRobotClick?.(locId)}
-              className="group px-3 py-2.5 hover:bg-[#131c38] transition-colors cursor-pointer"
+              className={`group px-3 py-2.5 transition-colors cursor-pointer ${
+                isLight ? 'hover:bg-slate-50' : 'hover:bg-[#131c38]'
+              }`}
               title="Click to focus on this robot on the map"
             >
               {/* Row 1: name + count */}
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <span className={`text-[11px] font-extrabold shrink-0 ${theme.textColor}`}>R{idx + 1}</span>
-                  <span className="text-[11px] font-semibold text-gray-200 truncate" title={robotName}>
+                  <span className={`text-[11px] font-extrabold shrink-0 ${isLight ? theme.textColorLight : theme.textColor}`}>R{idx + 1}</span>
+                  <span className={`text-[11px] truncate ${isLight ? 'text-slate-900 font-bold' : 'text-gray-200 font-semibold'}`} title={robotName}>
                     {robotName}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                  <span className="text-[11px] font-bold text-white tabular-nums">
-                    {totalDelivered}<span className="text-gray-500 font-normal">/{totalRequired}</span>
+                  <span className={`text-[11px] font-bold tabular-nums ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                    {totalDelivered}<span className={`font-normal ${isLight ? 'text-slate-400' : 'text-gray-500'}`}>/{totalRequired}</span>
                   </span>
-                  <span className={`text-[10px] font-bold tabular-nums ${isDone ? 'text-emerald-400' : 'text-gray-400'}`}>
+                  <span className={`text-[10px] font-bold tabular-nums ${isDone ? (isLight ? 'text-emerald-700' : 'text-emerald-400') : (isLight ? 'text-slate-500' : 'text-gray-400')}`}>
                     ({percent}%)
                   </span>
                 </div>
               </div>
 
               {/* Progress bar */}
-              <div className="w-full bg-gray-800 rounded-full h-1.5 mb-1.5 overflow-hidden">
+              <div className={`w-full rounded-full h-1.5 mb-1.5 overflow-hidden ${isLight ? 'bg-slate-200' : 'bg-gray-800'}`}>
                 <div
                   className="h-full rounded-full transition-all duration-500"
                   style={{
                     width: `${percent}%`,
-                    backgroundColor: isDone ? '#4ade80' : theme.barColor,
+                    backgroundColor: isDone ? (isLight ? '#16a34a' : '#4ade80') : theme.barColor,
                   }}
                 />
               </div>
@@ -184,20 +196,24 @@ export const RobotLiveStatusPanel: React.FC<Props> = ({
               {/* Row 2: current location + task badge */}
               <div className="flex items-center justify-between gap-2 mb-1">
                 <div className="flex items-center gap-1 min-w-0">
-                  <span className="text-[10px] group-hover:text-emerald-400 transition-colors shrink-0 sm:hidden">🎯</span>
-                  <span className="text-[10px] text-gray-400 truncate group-hover:text-gray-200 transition-colors" title={locLabel}>
+                  <span className="text-[10px] group-hover:text-emerald-500 transition-colors shrink-0 sm:hidden">🎯</span>
+                  <span className={`text-[10px] truncate transition-colors ${
+                    isLight ? 'text-slate-600 group-hover:text-slate-900' : 'text-gray-400 group-hover:text-gray-200'
+                  }`} title={locLabel}>
                     {locLabel}
                   </span>
                 </div>
-                <span className="text-[10px] font-medium text-indigo-300 shrink-0 whitespace-nowrap">
+                <span className={`text-[10px] font-semibold shrink-0 whitespace-nowrap ${
+                  isLight ? 'text-indigo-700' : 'text-indigo-300'
+                }`}>
                   {task}
                 </span>
               </div>
 
               {/* Assigned destinations list */}
               {assignment.destinations.length > 0 && (
-                <div className="mt-1 pt-1.5 border-t border-gray-800/60 space-y-1">
-                  <div className="text-[9px] uppercase tracking-wider text-gray-500 font-bold">
+                <div className={`mt-1 pt-1.5 border-t space-y-1 ${isLight ? 'border-slate-200' : 'border-gray-800/60'}`}>
+                  <div className={`text-[9px] uppercase tracking-wider font-bold ${isLight ? 'text-slate-500' : 'text-gray-500'}`}>
                     Assigned Destinations:
                   </div>
                   {assignment.destinations.map(destId => {
@@ -210,12 +226,20 @@ export const RobotLiveStatusPanel: React.FC<Props> = ({
                     return (
                       <div key={destId} className="flex items-center justify-between text-[10px] pl-1">
                         <span className={`truncate max-w-[170px] ${
-                          isReached ? 'text-emerald-300 font-medium' : isCurrent ? 'text-blue-300 font-semibold' : 'text-gray-400'
+                          isReached 
+                            ? (isLight ? 'text-emerald-700 font-semibold' : 'text-emerald-300 font-medium') 
+                            : isCurrent 
+                            ? (isLight ? 'text-blue-700 font-bold' : 'text-blue-300 font-semibold') 
+                            : (isLight ? 'text-slate-600' : 'text-gray-400')
                         }`} title={destName}>
                           <span className="sm:hidden">{isReached ? '✅ ' : isCurrent ? '🚚 ' : '📍 '}</span>{destName}
                         </span>
                         <span className={`text-[9px] font-bold shrink-0 ${
-                          isReached ? 'text-emerald-400' : isCurrent ? 'text-blue-400' : 'text-gray-500'
+                          isReached 
+                            ? (isLight ? 'text-emerald-700' : 'text-emerald-400') 
+                            : isCurrent 
+                            ? (isLight ? 'text-blue-700' : 'text-blue-400') 
+                            : (isLight ? 'text-slate-400' : 'text-gray-500')
                         }`}>
                           {isBoxDeliveryMap ? `${delivered}/${required}` : (isReached ? 'Reached' : isCurrent ? 'Arrived' : 'Pending')}
                         </span>
@@ -226,7 +250,7 @@ export const RobotLiveStatusPanel: React.FC<Props> = ({
               )}
 
               {/* hover hint */}
-              <div className="text-[9px] text-emerald-500/70 text-right mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="text-[9px] text-emerald-600 text-right mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity font-medium">
                 Click to focus <span className="sm:hidden">🔍</span>
               </div>
             </div>

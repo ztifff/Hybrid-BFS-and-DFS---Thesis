@@ -5,6 +5,7 @@ import { useCanvasAnimation } from './useCanvasAnimation';
 import { CanvasControls } from './CanvasControls';
 import { renderCanvas } from './renderer';
 import { GraphNode, AlgorithmStep } from '../../types';
+import { useTheme } from '../../context/ThemeContext';
 
 export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
   graph,
@@ -23,8 +24,17 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
   shelfBoxCounts,
   robotAssignments,
   activeAlgorithms,
+  workspaceView,
+  cursor,
+  isFinished,
+  showHopBadges = true,
+  theme: propTheme,
 }) => {
+  const { theme: ctxTheme } = useTheme();
+  const currentTheme = propTheme || ctxTheme;
   const { nodes, edges, width, height } = graph;
+
+  const isSimulationFinished = Boolean(isFinished);
 
   // Pre-scale massive maps down to ~2000x2000 so the zoom baseline is around 1.0 (to avoid hitting minZoom bounds)
   const maxMapSize = 2000;
@@ -38,7 +48,7 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
     zoom, setZoom, pan, setPan, isDragging, windowDimensions,
     handleWheel, handleMouseDown, handleMouseMove, handleMouseUp, handleMouseLeave,
     handleTouchStart, handleTouchMove, handleTouchEnd, resetZoom, hasDragged
-  } = useCanvasInteraction({ autoFit, width: drawnWidth, height: drawnHeight, onDeselect, highlightedNodeId });
+  } = useCanvasInteraction({ autoFit, width: drawnWidth, height: drawnHeight, mapId, scenario, onDeselect, highlightedNodeId });
 
   const { animateTo } = useCanvasAnimation({ setZoom, setPan });
 
@@ -154,7 +164,7 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
       setActiveFloor(node.buildingId);
     }
 
-    const targetZoom = 3.5;
+    const targetZoom = Math.max(zoom, 3.5);
     const nodeScreenX = (node.x * scale) + offsetX;
     const nodeScreenY = (node.y * scale) + offsetY;
     const containerW = containerRef.current.getBoundingClientRect().width;
@@ -230,13 +240,18 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
       graph,
       shelfBoxCounts,
       robotAssignments,
-      followAlgo
+      followAlgo,
+      workspaceView,
+      isFinished: isSimulationFinished,
+      showHopBadges,
+      theme: currentTheme
     });
   }, [
     visibleNodes, visibleEdges, visibleNodeMap, pan, zoom, sets, activeBlocked, 
     width, height, scenario, isMassive, isDatacenter, scale, offsetX, offsetY, 
     windowDimensions, highlightedNodeId, visibleAlgos, mapId, wasHistoricallyBlocked,
-    graph.sourceId, graph.destinationIds, activeSteps, followAlgo, canvasRef
+    graph.sourceId, graph.destinationIds, activeSteps, followAlgo, canvasRef,
+    workspaceView, isSimulationFinished, showHopBadges, currentTheme
   ]);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -312,8 +327,8 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
   return (
     <div 
       ref={containerRef} 
-      className="relative w-full h-full overflow-hidden" 
-      style={{ background: '#0a0f1e', cursor: isDragging ? 'grabbing' : 'grab', touchAction: 'none' }}
+      className="relative w-full h-full overflow-hidden transition-colors duration-200" 
+      style={{ background: currentTheme === 'light' ? '#f8fafc' : '#0a0f1e', cursor: cursor || (isDragging ? 'grabbing' : 'grab'), touchAction: 'none' }}
       onWheel={handleWheel} 
       onMouseDown={(e) => handleMouseDown(e, () => setFollowAlgo(null))} 
       onMouseMove={handleMouseMove} 
@@ -332,6 +347,7 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
         isFollowOpen={isFollowOpen} setIsFollowOpen={setIsFollowOpen} followAlgo={followAlgo} setFollowAlgo={setFollowAlgo}
         activeAlgorithms={activeAlgorithms}
       />
+
       <canvas ref={canvasRef} style={{ display: 'block', width: '100%', height: '100%' }} />
     </div>
   );

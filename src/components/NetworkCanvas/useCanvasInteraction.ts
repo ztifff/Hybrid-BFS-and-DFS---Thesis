@@ -5,11 +5,21 @@ interface UseCanvasInteractionProps {
   autoFit?: boolean;
   width: number;
   height: number;
+  mapId?: string;
+  scenario?: string;
   onDeselect?: () => void;
   highlightedNodeId?: string | null;
 }
 
-export function useCanvasInteraction({ autoFit, width, height, onDeselect, highlightedNodeId }: UseCanvasInteractionProps) {
+export function useCanvasInteraction({
+  autoFit = true,
+  width,
+  height,
+  mapId,
+  scenario,
+  onDeselect,
+  highlightedNodeId
+}: UseCanvasInteractionProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -21,6 +31,31 @@ export function useCanvasInteraction({ autoFit, width, height, onDeselect, highl
   
   // Track if we actually moved during a drag to prevent accidental clicks
   const hasDragged = useRef(false);
+
+  // Compute and apply full graph auto-fit
+  const fitToGraph = useCallback(() => {
+    if (!containerRef.current || width <= 0 || height <= 0) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const cw = rect.width;
+    const ch = rect.height;
+    if (cw <= 0 || ch <= 0) return;
+
+    // Use 88% of container dimensions to ensure comfortable breathing margins
+    const targetZoom = Math.min(
+      (cw * 0.88) / width,
+      (ch * 0.88) / height
+    );
+
+    // Clamp zoom to [0.1, 1.05] so huge graphs fit completely and small graphs aren't oversized
+    const clampedZoom = Math.max(0.1, Math.min(targetZoom, 1.05));
+
+    // Pan that puts the center of the drawn graph exactly at the canvas center
+    const panX = (cw / 2) * (1 - clampedZoom);
+    const panY = (ch / 2) * (1 - clampedZoom);
+
+    setZoom(clampedZoom);
+    setPan({ x: panX, y: panY });
+  }, [width, height]);
 
   // Handle Resize
   useEffect(() => {
@@ -40,20 +75,26 @@ export function useCanvasInteraction({ autoFit, width, height, onDeselect, highl
     return () => container.removeEventListener('wheel', preventPageScroll);
   }, []);
 
-  // Auto-fit Logic
+  // Auto-fit whenever scenario, map, or dimensions change
   useEffect(() => {
-    if (autoFit && containerRef.current && width > 0 && height > 0) {
-      const cw = containerRef.current.getBoundingClientRect().width;
-      const ch = containerRef.current.getBoundingClientRect().height;
-      const targetZoom = Math.min(cw / width, ch / height) * 5.05;
-      setZoom(targetZoom);
-    }
-  }, [autoFit, width, height, windowDimensions.w, windowDimensions.h]);
+    if (!autoFit) return;
+    // Short timeout allows containerRef to have its rendered geometry
+    const timer = setTimeout(() => {
+      fitToGraph();
+    }, 60);
+    return () => clearTimeout(timer);
+  }, [autoFit, width, height, mapId, scenario, fitToGraph]);
+
+  // Also auto-fit on window resize if dimensions change
+  useEffect(() => {
+    if (!autoFit) return;
+    fitToGraph();
+  }, [autoFit, windowDimensions.w, windowDimensions.h, fitToGraph]);
 
   const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
     if (highlightedNodeId) onDeselect?.();
     const scaleAdjust = e.deltaY > 0 ? 0.9 : 1.1;
-    const newZoom = Math.max(0.2, Math.min(zoom * scaleAdjust, 30)); 
+    const newZoom = Math.max(0.1, Math.min(zoom * scaleAdjust, 30)); 
     const rect = e.currentTarget.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
@@ -117,7 +158,7 @@ export function useCanvasInteraction({ autoFit, width, height, onDeselect, highl
     } else if (e.touches.length === 2 && initialPinchDist !== null) {
       const currentDist = getPinchDistance(e.touches);
       const scaleAdjust = currentDist / initialPinchDist;
-      const newZoom = Math.max(0.2, Math.min(initialPinchZoom * scaleAdjust, 30));
+      const newZoom = Math.max(0.1, Math.min(initialPinchZoom * scaleAdjust, 30));
       
       // Calculate center of pinch for smooth zooming
       const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
@@ -141,9 +182,8 @@ export function useCanvasInteraction({ autoFit, width, height, onDeselect, highl
   }, []);
 
   const resetZoom = useCallback(() => { 
-    setZoom(1); 
-    setPan({ x: 0, y: 0 }); 
-  }, []);
+    fitToGraph();
+  }, [fitToGraph]);
 
   return {
     containerRef,

@@ -38,9 +38,9 @@ export const MAX_SYNTHETIC_LINKS: Record<SizingKey, number> = {
 
 // ── Sizing tables ──────────────────────────────────────────────────────────────
 const DEFAULT_SYNTHETIC_SIZING: Record<SizingKey, GraphSizing> = {
-  network: { nodes: 28, edges: 27 },
+  network: { nodes: 100, edges: 0 },
   robotics: { nodes: 28, edges: 32 },
-  traffic: { nodes: 36, edges: 29 },
+  traffic: { nodes: 100, edges: 0 },
   evacuation: { nodes: 60, edges: 49 },
   gameai: { nodes: 65, edges: 120 }, // fallback (unused when board is known)
   'gameai-dama': { nodes: 65, edges: 112 }, // 8×8 dama = 65 natural nodes
@@ -213,7 +213,20 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
   }, [sizingKey]);
 
   const handleRerollEvents = () => {
-    setSeed(Date.now());
+    const nextSeed = Date.now();
+    setSeed(nextSeed);
+    setSimResults(null);
+    setBfsResult(null);
+
+    // Apply exit position re-randomization ONLY in network, road traffic, and game AI pathfinding
+    if (scenario === 'network' || scenario === 'traffic' || scenario === 'gameai') {
+      if (scenario === 'network') {
+        setDestinationDevices([]);
+      } else if (scenario === 'traffic') {
+        setTrafficDestinationIds([]);
+      }
+      setForceGraphRefetch((prev) => prev + 1);
+    }
   };
 
   // Data State
@@ -340,12 +353,17 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
       setPendingNavigation({ type: 'map', mapId: newMapId, reason: 'unsaved' });
     } else {
       setMapId(newMapId);
+      setCurrentGraph(null);
+      setCurrentGraphMapId(null);
       setTrafficSourceId(null);
       setTrafficDestinationIds([]);
       setSourceDevice('');
       setDestinationDevices([]);
       setEvacuationSourceId(null);
       setGameAISourceId(null);
+      setCustomBlockedNodes([]);
+      setSimResults(null);
+      setBfsResult(null);
       const mapDef = MAP_REGISTRY[scenario]?.find(m => m.id === newMapId);
       if (mapDef?.isRealWorld) setGraphSize('medium');
     }
@@ -360,6 +378,12 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     } else {
       setGameBoard(boardId);
       setMapId('synthetic');
+      setCurrentGraph(null);
+      setCurrentGraphMapId(null);
+      setGameAISourceId(null);
+      setCustomBlockedNodes([]);
+      setSimResults(null);
+      setBfsResult(null);
     }
   }, [gameBoard]);
 
@@ -414,11 +438,28 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
       onBack?.();
     } else if (pendingNavigation.type === 'map') {
       setMapId(pendingNavigation.mapId);
+      setCurrentGraph(null);
+      setCurrentGraphMapId(null);
+      setTrafficSourceId(null);
+      setTrafficDestinationIds([]);
+      setSourceDevice('');
+      setDestinationDevices([]);
+      setEvacuationSourceId(null);
+      setGameAISourceId(null);
+      setCustomBlockedNodes([]);
+      setSimResults(null);
+      setBfsResult(null);
       const mapDef = MAP_REGISTRY[scenario]?.find(m => m.id === pendingNavigation.mapId);
       if (mapDef?.isRealWorld) setGraphSize('medium');
     } else if (pendingNavigation.type === 'gameboard') {
       setGameBoard(pendingNavigation.boardId);
       setMapId('synthetic');
+      setCurrentGraph(null);
+      setCurrentGraphMapId(null);
+      setGameAISourceId(null);
+      setCustomBlockedNodes([]);
+      setSimResults(null);
+      setBfsResult(null);
     } else if (pendingNavigation.type === 'sizing') {
       updateSyntheticSizing(pendingNavigation.field, pendingNavigation.value);
     } else if (pendingNavigation.type === 'sizing_step') {
@@ -625,7 +666,9 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
         if (scenario === 'gameai') graphParams.set('gameBoard', gameBoard);
         if (scenario === 'network') {
           graphParams.set('customSourceId', sourceDevice);
-          graphParams.set('customDestinationIds', JSON.stringify(destinationDevices));
+          if (destinationDevices.length > 0) {
+            graphParams.set('customDestinationIds', JSON.stringify(destinationDevices));
+          }
         }
 
         if (scenario === 'robotics' && roboticsInitializedMap.current === mapId) {
@@ -633,13 +676,13 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
           graphParams.set('customDestinationIds', JSON.stringify(destinationDevices_robotics));
         }
 
-        // Evacuation: pass user-selected starting room as customSourceId
-        if (scenario === 'evacuation' && evacuationSourceId) {
+        // Evacuation: pass user-selected starting room as customSourceId ONLY if on same map
+        if (scenario === 'evacuation' && currentGraphMapId === mapId && evacuationSourceId) {
           graphParams.set('customSourceId', evacuationSourceId);
         }
 
-        // Traffic: pass user-selected custom source and destination
-        if (scenario === 'traffic') {
+        // Traffic: pass user-selected custom source and destination ONLY if on same map
+        if (scenario === 'traffic' && currentGraphMapId === mapId) {
           if (trafficSourceId) graphParams.set('customSourceId', trafficSourceId);
           if (trafficDestinationIds.length > 0) graphParams.set('customDestinationIds', JSON.stringify(trafficDestinationIds));
         }
@@ -685,11 +728,18 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
 
     if (scenario === 'network' && currentGraph) {
       const allNodes = currentGraph.nodes;
+      const isAPNode = (n: any) =>
+        n.type === 'wireless_ap' ||
+        (n.type === 'access_point' && !n.label?.toLowerCase().includes('rack')) ||
+        (n.label && /(^|\s|[-_])ap(\s|[-_]|\d|$)/i.test(n.label)) ||
+        (n.id && /^ap[_-]/i.test(n.id));
+
       const possibleDests = allNodes.filter(n => {
+        if (isAPNode(n)) return false;
         if (networkRoutingMode === 'device-to-device') {
-          return n.label.toLowerCase().includes('rack') || n.type === 'access_point' || n.type === 'end_device';
+          return n.label.toLowerCase().includes('rack') || n.type === 'end_device';
         }
-        return n.label.toLowerCase().includes('rack') || n.type === 'server' || n.type === 'access_point' || n.type === 'end_device';
+        return n.label.toLowerCase().includes('rack') || n.type === 'server' || n.type === 'end_device';
       });
 
       let currentSource = sourceDevice;
@@ -721,38 +771,59 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
         }
       }
 
-      const validDestinations = destinationDevices.filter(d => d !== currentSource && possibleDests.some(n => n.id === d));
-
-      // Ensure at least 2 destinations are selected (if available) so it doesn't default to empty
-      const availableDests = possibleDests.filter(e => e.id !== currentSource && !validDestinations.includes(e.id));
-      const needed = 2 - validDestinations.length;
-
-      if (needed > 0 && availableDests.length > 0) {
-        const srcNode = allNodes.find(n => n.id === currentSource);
-        let sortedDests = [...availableDests];
-        
-        if (mapId === 'campus') {
-          sortedDests.sort((a, b) => {
-            const aIsAB1 = a.id.includes('ab1') || a.id.includes('AB1');
-            const bIsAB1 = b.id.includes('ab1') || b.id.includes('AB1');
-            if (aIsAB1 && !bIsAB1) return -1;
-            if (!aIsAB1 && bIsAB1) return 1;
-            return 0;
-          });
-        } else if (srcNode) {
-          // Sort by physical distance (furthest first) for realistic long-distance defaults
-          sortedDests.sort((a, b) => {
-            const distA = Math.hypot(a.x - srcNode.x, a.y - srcNode.y);
-            const distB = Math.hypot(b.x - srcNode.x, b.y - srcNode.y);
-            return distB - distA; 
-          });
+      // Compute hop distances from currentSource to ensure exits are farther away
+      const getHopDistances = (src: string) => {
+        const adj = new Map<string, string[]>();
+        currentGraph.edges.forEach(e => {
+          if (!adj.has(e.from)) adj.set(e.from, []);
+          if (!adj.has(e.to)) adj.set(e.to, []);
+          adj.get(e.from)!.push(e.to);
+          adj.get(e.to)!.push(e.from);
+        });
+        const dists = new Map<string, number>();
+        const q = [src];
+        dists.set(src, 0);
+        while (q.length > 0) {
+          const u = q.shift()!;
+          const d = dists.get(u)!;
+          for (const v of adj.get(u) || []) {
+            if (!dists.has(v)) {
+              dists.set(v, d + 1);
+              q.push(v);
+            }
+          }
         }
+        return dists;
+      };
 
-        const farDests = sortedDests.slice(0, needed);
-        const newDests = [...validDestinations, ...farDests.map(e => e.id)];
-        setDestinationDevices(newDests);
-      } else if (validDestinations.length !== destinationDevices.length) {
-        setDestinationDevices(validDestinations);
+      const hopDists = getHopDistances(currentSource);
+
+      const validDestinations = destinationDevices.filter(d => d !== currentSource && possibleDests.some(n => n.id === d));
+      const graphDests = (currentGraph.destinationIds || []).filter(id => id !== currentSource && possibleDests.some(n => n.id === id));
+
+      if (validDestinations.length === 0 && graphDests.length > 0) {
+        setDestinationDevices(graphDests);
+      } else {
+        // Prioritize candidates with greater hop distance from the start node
+        const availableDests = possibleDests
+          .filter(e => e.id !== currentSource && !validDestinations.includes(e.id))
+          .sort((a, b) => (hopDists.get(b.id) || 0) - (hopDists.get(a.id) || 0));
+
+        const needed = 2 - validDestinations.length;
+
+        if (needed > 0 && availableDests.length > 0) {
+          const fallbackDests = graphDests.filter(id => !validDestinations.includes(id));
+          const toAdd = fallbackDests.slice(0, needed);
+          const stillNeeded = needed - toAdd.length;
+          if (stillNeeded > 0) {
+            const extra = availableDests.filter(n => !toAdd.includes(n.id)).slice(0, stillNeeded);
+            setDestinationDevices([...validDestinations, ...toAdd, ...extra.map(n => n.id)]);
+          } else {
+            setDestinationDevices([...validDestinations, ...toAdd]);
+          }
+        } else if (validDestinations.length !== destinationDevices.length) {
+          setDestinationDevices(validDestinations);
+        }
       }
     }
   }, [currentGraph, networkRoutingMode, sourceDevice, destinationDevices, mapId]);
@@ -822,6 +893,42 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     }
   }, [currentGraph, scenario, mapId]);
 
+  // Synchronize traffic endpoints if the map changes or if endpoints do not exist in currentGraph
+  useEffect(() => {
+    if (scenario === 'traffic' && currentGraph && currentGraphMapId === mapId) {
+      const nodeIds = new Set(currentGraph.nodes.map(n => n.id));
+      if (trafficSourceId && !nodeIds.has(trafficSourceId)) {
+        setTrafficSourceId(null);
+      }
+      if (trafficDestinationIds.length > 0) {
+        const valid = trafficDestinationIds.filter(id => nodeIds.has(id));
+        if (valid.length !== trafficDestinationIds.length) {
+          setTrafficDestinationIds(valid);
+        }
+      }
+    }
+  }, [scenario, currentGraph, currentGraphMapId, mapId, trafficSourceId, trafficDestinationIds]);
+
+  // Synchronize evacuation endpoint if map changes or invalid
+  useEffect(() => {
+    if (scenario === 'evacuation' && currentGraph && currentGraphMapId === mapId) {
+      const nodeIds = new Set(currentGraph.nodes.map(n => n.id));
+      if (evacuationSourceId && !nodeIds.has(evacuationSourceId)) {
+        setEvacuationSourceId(null);
+      }
+    }
+  }, [scenario, currentGraph, currentGraphMapId, mapId, evacuationSourceId]);
+
+  // Synchronize game AI endpoint if board changes or invalid
+  useEffect(() => {
+    if (scenario === 'gameai' && currentGraph) {
+      const nodeIds = new Set(currentGraph.nodes.map(n => n.id));
+      if (gameAISourceId && !nodeIds.has(gameAISourceId)) {
+        setGameAISourceId(null);
+      }
+    }
+  }, [scenario, currentGraph, gameAISourceId]);
+
   return {
     scenario,
     gameBoard, setGameBoard,
@@ -855,6 +962,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     activeAlgorithms, setActiveAlgorithms,
 
     currentGraph, setCurrentGraph, isGraphLoading,
+    currentGraphMapId,
     simResults, setSimResults,
     bfsResult, setBfsResult,
     isComputing, setIsComputing,

@@ -18,6 +18,9 @@ import { GraphNode } from '../../../../../types';
 const W = 50000;
 const H = 37000;
 
+let currentWorkspaceView: 'physical' | 'logical' | undefined = undefined;
+let currentThemeIsLight = false;
+
 // ── Color palette ─────────────────────────────────────────────────────────────
 const C = {
   outdoor:    'rgba(6, 10, 22, 0.97)',
@@ -60,12 +63,23 @@ function vLine(ctx: CanvasRenderingContext2D, sx: (x:number)=>number, sy: (y:num
   ctx.beginPath(); ctx.moveTo(sx(x), sy(y1)); ctx.lineTo(sx(x), sy(y2)); ctx.stroke();
 }
 
-function label(ctx: CanvasRenderingContext2D, sx: (x:number)=>number, sy: (y:number)=>number, zoom: number, text: string, cx: number, cy: number, color = 'rgba(190,210,240,0.92)', sizePx = 7) {
+function label(ctx: CanvasRenderingContext2D, sx: (x:number)=>number, sy: (y:number)=>number, zoom: number, text: string, cx: number, cy: number, color?: string, sizePx = 7) {
+  if (currentWorkspaceView === 'logical') return;
   ctx.save();
   const lines = text.split('\n');
   ctx.font = `bold ${sizePx / zoom}px Arial, sans-serif`;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillStyle = color;
+  let effectiveColor = color;
+  if (currentThemeIsLight) {
+    if (!effectiveColor || effectiveColor === 'rgba(190,210,240,0.92)') {
+      effectiveColor = '#0f172a';
+    }
+  } else {
+    if (!effectiveColor) {
+      effectiveColor = 'rgba(190,210,240,0.92)';
+    }
+  }
+  ctx.fillStyle = effectiveColor;
   const lineH = (sizePx + 1) / zoom;
   lines.forEach((ln, i) => {
     ctx.fillText(ln, sx(cx), sy(cy) + (i - (lines.length - 1) / 2) * lineH);
@@ -111,8 +125,6 @@ function drawStairs(ctx: CanvasRenderingContext2D, sx: (x:number)=>number, sy: (
   ctx.beginPath(); ctx.moveTo(rx + pw/2, ry); ctx.lineTo(rx + pw/2, ry + ph); ctx.stroke();
 }
 
-
-
 function drawExitSign(ctx: CanvasRenderingContext2D, sx: (x:number)=>number, sy: (y:number)=>number, zoom: number, wx: number, wy: number, sublabel: string) {
   const cx = sx(wx); const cy = sy(wy);
   const bw = 52 / zoom; const bh = 24 / zoom;
@@ -127,21 +139,30 @@ function drawExitSign(ctx: CanvasRenderingContext2D, sx: (x:number)=>number, sy:
   ctx.fillText(sublabel, cx, cy + 6 / zoom);
 }
 
-function drawBaseLayout(ctx: CanvasRenderingContext2D, sx: (x:number)=>number, sy: (y:number)=>number, zoom: number, wt: number, wp: number, floorId: string) {
+function drawBaseLayout(ctx: CanvasRenderingContext2D, sx: (x:number)=>number, sy: (y:number)=>number, zoom: number, wt: number, wp: number, floorId: string, isLight = false) {
   // ── Main building rectangle ──
-  fillStroke(ctx, sx, sy, 2000, 2000, 46000, 33000, C.storeFill, C.partitionH, wt);
+  fillStroke(ctx, sx, sy, 2000, 2000, 46000, 33000, isLight ? '#f1f5f9' : C.storeFill, isLight ? '#cbd5e1' : C.partitionH, wt);
 
   // ── Corridors (`#` Grid Layout, exact proportions to images) ──
-  fillRect(ctx, sx, sy, 2000, 10000, 46000, 4000, C.corridor); // Top Horizontal
-  fillRect(ctx, sx, sy, 2000, 25000, 46000, 4000, C.corridor); // Bottom Horizontal
-  fillRect(ctx, sx, sy, 13000, 14000, 4000, 11000, C.corridor); // Left Vertical
-  fillRect(ctx, sx, sy, 33000, 14000, 4000, 11000, C.corridor); // Right Vertical
-  fillRect(ctx, sx, sy, 23000, 2, 4000, 8000, C.corridor);  // North Vertical
-  fillRect(ctx, sx, sy, 23000, 29000, 4000, 6000, C.corridor); // South Vertical
+  const corr = isLight ? '#ffffff' : C.corridor;
+  fillRect(ctx, sx, sy, 2000, 10000, 46000, 4000, corr); // Top Horizontal
+  fillRect(ctx, sx, sy, 2000, 25000, 46000, 4000, corr); // Bottom Horizontal
+  fillRect(ctx, sx, sy, 13000, 14000, 4000, 11000, corr); // Left Vertical
+  fillRect(ctx, sx, sy, 33000, 14000, 4000, 11000, corr); // Right Vertical
+  fillRect(ctx, sx, sy, 23000, 2, 4000, 8000, corr);  // North Vertical
+  fillRect(ctx, sx, sy, 23000, 29000, 4000, 6000, corr); // South Vertical
 
   // ── Green Atrium (Center) ──
-  fillStroke(ctx, sx, sy, 17000, 14000, 16000, 11000, 'rgba(12,60,35,0.92)', 'rgba(20,180,80,0.60)', 2 / zoom);
-  fillRect(ctx, sx, sy, 18000, 15000, 14000, 9000, 'rgba(8,45,25,0.96)');
+  fillStroke(
+    ctx, sx, sy, 17000, 14000, 16000, 11000,
+    isLight ? 'rgba(220, 252, 231, 0.95)' : 'rgba(12,60,35,0.92)',
+    isLight ? 'rgba(34, 197, 94, 0.7)' : 'rgba(20,180,80,0.60)',
+    2 / zoom
+  );
+  fillRect(
+    ctx, sx, sy, 18000, 15000, 14000, 9000,
+    isLight ? 'rgba(187, 247, 208, 0.85)' : 'rgba(8,45,25,0.96)'
+  );
 
   // ── Vertical Access ──
   drawStairs(ctx, sx, sy, zoom, 25000, 7000, 1000, 2400);            
@@ -211,8 +232,13 @@ export function drawAyalaFloorPlan(
   sx: (x: number) => number,
   sy: (y: number) => number,
   zoom: number,
-  visibleNodes: GraphNode[]
+  visibleNodes: GraphNode[],
+  workspaceView?: 'physical' | 'logical',
+  theme?: 'dark' | 'light'
 ) {
+  currentWorkspaceView = workspaceView;
+  currentThemeIsLight = theme === 'light';
+  const isLight = currentThemeIsLight;
   const floorId = visibleNodes.find(n => n.buildingId)?.buildingId ?? 'GL';
 
   ctx.save();
@@ -223,11 +249,11 @@ export function drawAyalaFloorPlan(
   const wp = 1.0 / zoom;  // thin interior partition
 
   // ── Outdoor background ──
-  ctx.fillStyle = C.outdoor;
+  ctx.fillStyle = isLight ? '#f8fafc' : C.outdoor;
   ctx.fillRect(sx(0), sy(0), sx(W) - sx(0), sy(H) - sy(0));
 
   // ── Draw base layout (Corridors, Partitions, Stairs, Atrium) ──
-  drawBaseLayout(ctx, sx, sy, zoom, wt, wp, floorId);
+  drawBaseLayout(ctx, sx, sy, zoom, wt, wp, floorId, isLight);
 
   // ══════════════════════════════════════════════════════════════════════════════
   //  GROUND FLOOR (GL)
