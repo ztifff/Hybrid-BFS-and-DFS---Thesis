@@ -112,7 +112,8 @@ export type PendingNavigation =
   | { type: 'gameboard'; boardId: GameAIBoard; reason?: PendingNavigationReason }
   | { type: 'sizing'; field: keyof GraphSizing; value: number; reason?: PendingNavigationReason }
   | { type: 'sizing_step'; action: 'nodesUp' | 'nodesDown' | 'edgesUp' | 'edgesDown'; reason?: PendingNavigationReason }
-  | { type: 'robot_assignment'; reason: 'inprogress' };
+  | { type: 'robot_assignment'; reason: 'inprogress' }
+  | { type: 'topology_edit'; reason: PendingNavigationReason };
 
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -431,7 +432,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
 
   const confirmPendingNavigation = useCallback(() => {
     if (!pendingNavigation) return;
-    if (pendingNavigation.type === 'reset' || pendingNavigation.type === 'skip' || pendingNavigation.type === 'reroll' || pendingNavigation.type === 'robot_assignment') {
+    if (pendingNavigation.type === 'reset' || pendingNavigation.type === 'skip' || pendingNavigation.type === 'reroll' || pendingNavigation.type === 'robot_assignment' || pendingNavigation.type === 'topology_edit') {
       pendingActionCallbackRef.current?.();
       pendingActionCallbackRef.current = null;
     } else if (pendingNavigation.type === 'back') {
@@ -504,6 +505,18 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
   const requestRobotAssignmentOpen = useCallback((onOpen: () => void) => {
     pendingActionCallbackRef.current = onOpen;
     setPendingNavigation({ type: 'robot_assignment', reason: 'inprogress' });
+  }, []);
+
+  const requestTopologyEdit = useCallback((onConfirm: () => void, status: string, saved: boolean) => {
+    if (status === 'running' || status === 'paused') {
+      pendingActionCallbackRef.current = onConfirm;
+      setPendingNavigation({ type: 'topology_edit', reason: 'inprogress' });
+    } else if (status === 'done' && !saved) {
+      pendingActionCallbackRef.current = onConfirm;
+      setPendingNavigation({ type: 'topology_edit', reason: 'unsaved' });
+    } else {
+      onConfirm();
+    }
   }, []);
 
 
@@ -1000,6 +1013,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     requestSkip,
     requestReroll,
     requestRobotAssignmentOpen,
+    requestTopologyEdit,
     confirmPendingNavigation,
 
     // Synthetic size stepper actions

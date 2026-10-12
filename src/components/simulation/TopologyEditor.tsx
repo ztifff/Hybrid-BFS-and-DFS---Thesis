@@ -34,6 +34,21 @@ const SCENARIO_EDGES: Record<ScenarioType, string[]> = {
   gameai: []
 };
 
+const getEdgeStrokeColor = (edgeType: string, isLight: boolean): string => {
+  if (isLight) {
+    if (edgeType === 'copper_straight' || edgeType === 'copper_crossover') return '#334155'; // Deep visible slate on white
+    if (edgeType === 'fiber') return '#2563eb';
+    if (edgeType === 'auto_connect') return '#d97706';
+    if (edgeType === 'serial') return '#dc2626';
+    if (edgeType === 'wireless') return '#0891b2';
+    if (edgeType === 'road') return '#059669';
+    if (edgeType === 'corridor') return '#e11d48';
+    if (edgeType === 'path' || edgeType === 'stairwell') return '#7c3aed';
+    return '#334155';
+  }
+  return EDGE_CONFIG[edgeType]?.color || '#ffffff';
+};
+
 export const TopologyEditor: React.FC<TopologyEditorProps> = ({
   scenario,
   placementMode,
@@ -78,10 +93,10 @@ export const TopologyEditor: React.FC<TopologyEditorProps> = ({
             className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
               placementMode === null
                 ? isLight
-                  ? 'bg-blue-50 border-blue-500 text-blue-700 shadow-xs'
-                  : 'bg-blue-900/50 border-blue-500 text-blue-300'
+                  ? 'bg-blue-600 border-blue-600 !text-white shadow-sm'
+                  : 'bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-500/30'
                 : isLight
-                  ? 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                  ? 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900 shadow-2xs'
                   : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-gray-200'
             }`}
           >
@@ -92,10 +107,10 @@ export const TopologyEditor: React.FC<TopologyEditorProps> = ({
             className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
               placementMode?.type === 'delete'
                 ? isLight
-                  ? 'bg-red-50 border-red-500 text-red-700 shadow-xs'
-                  : 'bg-red-900/50 border-red-500 text-red-300'
+                  ? 'bg-red-600 border-red-600 !text-white shadow-sm'
+                  : 'bg-red-600 border-red-500 text-white shadow-md shadow-red-500/30'
                 : isLight
-                  ? 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                  ? 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900 shadow-2xs'
                   : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-gray-200'
             }`}
           >
@@ -149,9 +164,7 @@ export const TopologyEditor: React.FC<TopologyEditorProps> = ({
               {edges.map(edgeType => {
                 const cfg = EDGE_CONFIG[edgeType];
                 const isActive = placementMode?.type === 'edge' && placementMode.edgeType === edgeType;
-                const strokeColor = isLight
-                  ? (cfg?.color && cfg.color !== '#fff' ? cfg.color : '#0f172a')
-                  : (cfg?.color || '#fff');
+                const strokeColor = getEdgeStrokeColor(edgeType, isLight);
                 return (
                   <button
                     key={edgeType}

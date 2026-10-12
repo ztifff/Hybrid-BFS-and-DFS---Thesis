@@ -40,6 +40,27 @@ export function useCanvasInteraction({
     const ch = rect.height;
     if (cw <= 0 || ch <= 0) return;
 
+    if (scenario === 'gameai') {
+      // The game board (Dama / Checkers) is a ~400-440px cluster centered at (width/2, height/2).
+      // Standard full-canvas auto-fit treats the entire 1600x1200 arena as content,
+      // resulting in a tiny 0.3x zoom where the board is barely visible.
+      // Fit directly to the ~440px board bounds with comfortable margins.
+      const boardContentSize = 440;
+      const targetZoom = Math.min(
+        (cw * 0.82) / boardContentSize,
+        (ch * 0.82) / boardContentSize
+      );
+      const clampedZoom = Math.max(0.65, Math.min(targetZoom, 1.25));
+
+      // Pan that puts the center of the drawn graph exactly at the canvas center
+      const panX = (cw / 2) * (1 - clampedZoom);
+      const panY = (ch / 2) * (1 - clampedZoom);
+
+      setZoom(clampedZoom);
+      setPan({ x: panX, y: panY });
+      return;
+    }
+
     // Use 88% of container dimensions to ensure comfortable breathing margins
     const targetZoom = Math.min(
       (cw * 0.88) / width,
@@ -55,7 +76,7 @@ export function useCanvasInteraction({
 
     setZoom(clampedZoom);
     setPan({ x: panX, y: panY });
-  }, [width, height]);
+  }, [width, height, scenario]);
 
   // Handle Resize
   useEffect(() => {

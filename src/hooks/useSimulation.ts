@@ -114,6 +114,7 @@ export interface SimulationState {
   requestSkip: (onSkip: () => void, status: string, saved: boolean) => void;
   requestReroll: (onReroll: () => void, status: string, saved: boolean) => void;
   requestRobotAssignmentOpen: (onOpen: () => void) => void;
+  requestTopologyEdit: (onConfirm: () => void, status: string, saved: boolean) => void;
   confirmPendingNavigation: () => void;
 
   stepNodesUp: () => void;
@@ -240,7 +241,7 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
             } : {})
           };
 
-          const response = await fetch(`http://localhost:3200/api/simulation/run?offset=${currentOffset}&limit=${limit}`, {
+          const response = await fetch(`https://backend-1e4y.onrender.com/api/simulation/run?offset=${currentOffset}&limit=${limit}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestBody)
@@ -464,6 +465,7 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
     requestSkip: model.requestSkip,
     requestReroll: model.requestReroll,
     requestRobotAssignmentOpen: model.requestRobotAssignmentOpen,
+    requestTopologyEdit: model.requestTopologyEdit,
     confirmPendingNavigation: model.confirmPendingNavigation,
     requestSizingChange: model.requestSizingChange,
     requestSizingStep: (action: 'nodesUp' | 'nodesDown' | 'edgesUp' | 'edgesDown', status: string, saved: boolean) => {

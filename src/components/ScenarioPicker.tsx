@@ -46,7 +46,7 @@ export const ScenarioPicker: React.FC<Props> = ({
   useEffect(() => {
     const fetchScenarios = async () => {
       try {
-        const response = await fetch('http://localhost:3200/api/scenarios');
+        const response = await fetch('https://backend-1e4y.onrender.com/api/scenarios');
         if (!response.ok) return;
         const json = await response.json();
         if (json.success && Array.isArray(json.data)) {
@@ -150,29 +150,29 @@ export const ScenarioPicker: React.FC<Props> = ({
               System Status
               <span className={`w-1.5 h-1.5 rounded-full ${canStart ? 'bg-emerald-500/50' : 'bg-amber-500/50'} animate-pulse`}></span>
             </span>
-          <span className={`text-xs font-mono font-bold tracking-wide flex items-center gap-2 ${canStart ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]' : 'text-amber-500'}`}>
-            {canStart ? 'READY FOR EVALUATION' : 'INITIALIZING...'}
-            <span className="w-1.5 h-3 bg-emerald-400/80 animate-[ping_1s_steps(2,start)_infinite]"></span>
-          </span>
-          {canStart && (
-            <div className="w-full h-0.5 bg-gray-800 mt-1.5 overflow-hidden rounded-full relative">
-              <div className="absolute top-0 bottom-0 left-0 w-1/3 bg-emerald-500/50 rounded-full"
-                style={{ animation: 'translateX 2s linear infinite' }}>
-                <style>
-                  {`
+            <span className={`text-xs font-mono font-bold tracking-wide flex items-center gap-2 ${canStart ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]' : 'text-amber-500'}`}>
+              {canStart ? 'READY FOR EVALUATION' : 'INITIALIZING...'}
+              <span className="w-1.5 h-3 bg-emerald-400/80 animate-[ping_1s_steps(2,start)_infinite]"></span>
+            </span>
+            {canStart && (
+              <div className="w-full h-0.5 bg-gray-800 mt-1.5 overflow-hidden rounded-full relative">
+                <div className="absolute top-0 bottom-0 left-0 w-1/3 bg-emerald-500/50 rounded-full"
+                  style={{ animation: 'translateX 2s linear infinite' }}>
+                  <style>
+                    {`
                         @keyframes translateX {
                           0% { transform: translateX(-100%); opacity: 0; }
                           50% { opacity: 1; }
                           100% { transform: translateX(300%); opacity: 0; }
                         }
                       `}
-                </style>
+                  </style>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
-    </div>
 
       {/* HORIZONTAL MODULE CAROUSEL */}
       <section className="mb-6 relative z-10">

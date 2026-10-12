@@ -260,6 +260,15 @@ html.light .text-white:not([class*="bg-blue-"]):not([class*="bg-green-"]):not([c
   color: #0f172a !important;
 }
 
+html.light button.bg-blue-600,
+html.light button.bg-blue-500,
+html.light button.bg-blue-700,
+html.light .glass-panel button.bg-blue-600,
+html.light .glass-panel button.bg-blue-500,
+html.light .glass-panel button.bg-blue-700 {
+  color: #ffffff !important;
+}
+
 /* Hover & Interactive States */
 html.light .hover\:bg-gray-800:hover,
 html.light .hover\:bg-slate-700\/80:hover {
@@ -418,12 +427,17 @@ html.light [data-tutorial="tutorial-size-adjuster"] input {
 html.light [data-tutorial="tutorial-size-adjuster"] .text-gray-400 {
   color: #475569 !important;
 }
-html.light [data-tutorial="tutorial-size-adjuster"] button {
+html.light [data-tutorial="tutorial-size-adjuster"] button:not(.bg-blue-600):not(.bg-blue-500) {
   color: #475569 !important;
 }
-html.light [data-tutorial="tutorial-size-adjuster"] button:hover {
+html.light [data-tutorial="tutorial-size-adjuster"] button:not(.bg-blue-600):not(.bg-blue-500):hover {
   background-color: #e2e8f0 !important;
   color: #0f172a !important;
+}
+html.light [data-tutorial="tutorial-size-adjuster"] button.bg-blue-600:hover,
+html.light [data-tutorial="tutorial-size-adjuster"] button.bg-blue-500:hover {
+  background-color: #1d4ed8 !important;
+  color: #ffffff !important;
 }
 
 /* 4. ScenarioPicker Top Carousel & Briefing */

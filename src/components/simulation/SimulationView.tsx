@@ -233,15 +233,53 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     pickDisabled,
   } = useSimulationViewLogic(scenario, sim);
 
+  const getMapTabButtonClass = (isActive: boolean) => {
+    if (isActive) {
+      if (isLight) {
+        switch (scenario) {
+          case 'network': return 'bg-blue-600 border-blue-600 !text-white shadow-sm ring-1 ring-blue-500/20';
+          case 'robotics': return 'bg-orange-600 border-orange-600 !text-white shadow-sm ring-1 ring-orange-500/20';
+          case 'traffic': return 'bg-emerald-600 border-emerald-600 !text-white shadow-sm ring-1 ring-emerald-500/20';
+          case 'evacuation': return 'bg-red-600 border-red-600 !text-white shadow-sm ring-1 ring-red-500/20';
+          case 'gameai': return 'bg-purple-600 border-purple-600 !text-white shadow-sm ring-1 ring-purple-500/20';
+          default: return 'bg-blue-600 border-blue-600 !text-white shadow-sm';
+        }
+      } else {
+        switch (scenario) {
+          case 'network': return 'bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-500/30';
+          case 'robotics': return 'bg-orange-600 border-orange-500 text-white shadow-md shadow-orange-500/30';
+          case 'traffic': return 'bg-emerald-600 border-emerald-500 text-white shadow-md shadow-emerald-500/30';
+          case 'evacuation': return 'bg-red-600 border-red-500 text-white shadow-md shadow-red-500/30';
+          case 'gameai': return 'bg-purple-600 border-purple-500 text-white shadow-md shadow-purple-500/30';
+          default: return 'bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-500/30';
+        }
+      }
+    }
+
+    if (isLight) {
+      return 'bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-300 shadow-2xs hover:border-slate-400';
+    } else {
+      return 'bg-gray-800/90 hover:bg-gray-700 text-gray-300 hover:text-white border border-gray-700 hover:border-gray-600';
+    }
+  };
+
   // Entering a topology tool cancels endpoint picking and blockage painting,
   // so only one canvas interaction mode is active at a time.
   const setPlacementModeSafe: typeof setPlacementMode = (value) => {
-    cancelPicking();
-    setIsBlockageMode(false);
-    setPlacementMode(value);
+    if (value === null) {
+      setPlacementMode(null);
+      return;
+    }
+
+    sim.requestTopologyEdit(() => {
+      sim.handleReset();
+      cancelPicking();
+      setIsBlockageMode(false);
+      setPlacementMode(value);
+    }, sim.status, sim.isCurrentSaved);
   };
 
-  const editorDisabled = sim.isComputing || sim.isGraphLoading || sim.status === 'running';
+  const editorDisabled = sim.isComputing || sim.isGraphLoading;
 
   // ── Custom blockage helpers ─────────────────────────────────────────────────
   // NOTE: adjust `setCustomBlockedNodes` if your useSimulation exposes a different setter name.
@@ -425,6 +463,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               : 'You have unsaved simulation results. Are you sure you want to discard them and switch game boards?';
           if (type === 'robot_assignment')
             return 'The simulation is currently paused. Changing robot assignments requires a full reset. Do you want to stop the simulation and open the assignment panel?';
+          if (type === 'topology_edit')
+            return isInProgress
+              ? 'The simulation is currently running. Editing the topology will stop the simulation and discard current results.'
+              : 'You have unsaved simulation results. Are you sure you want to discard them and edit the topology?';
           return 'Are you sure you want to proceed?';
         })();
 
@@ -438,27 +480,36 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
           if (type === 'map') return isInProgress ? 'Stop & Switch' : 'Discard & Switch';
           if (type === 'gameboard') return isInProgress ? 'Stop & Switch' : 'Discard & Switch';
           if (type === 'robot_assignment') return 'Stop & Open';
+          if (type === 'topology_edit') return isInProgress ? 'Stop & Edit' : 'Discard & Edit';
           return 'Confirm';
         })();
 
         return (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn p-4">
-            <div className={`bg-gray-900 border rounded-xl p-6 max-w-sm w-full shadow-2xl scale-in ${borderColor}`}>
-              <h3 className={`font-bold text-lg mb-2 flex items-center gap-2 ${titleColor}`}>
+            <div className={`rounded-xl p-6 max-w-sm w-full shadow-2xl scale-in border ${
+              isLight ? 'bg-white border-slate-200 text-slate-800 shadow-2xl' : `bg-gray-900 ${borderColor}`
+            }`}>
+              <h3 className={`font-bold text-lg mb-2 flex items-center gap-2 ${
+                isLight ? (isInProgress ? 'text-blue-600' : 'text-amber-700') : titleColor
+              }`}>
                 <span className="text-xl">{icon}</span>
                 {title}
               </h3>
-              <p className="text-gray-300 text-sm mb-6 leading-relaxed">{body}</p>
+              <p className={`text-sm mb-6 leading-relaxed ${isLight ? 'text-slate-600' : 'text-gray-300'}`}>{body}</p>
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => sim.setPendingNavigation(null)}
-                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm font-medium transition-colors"
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                    isLight 
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300' 
+                      : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                  }`}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={sim.confirmPendingNavigation}
-                  className={`px-4 py-2 text-white rounded-lg text-sm font-bold transition-colors shadow-lg ${btnColor}`}
+                  className={`px-4 py-2 text-white rounded-lg text-sm font-bold transition-colors shadow-lg cursor-pointer ${btnColor}`}
                 >
                   {confirmLabel}
                 </button>
@@ -687,16 +738,13 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               {/* Row 2: Map Presets & Workspace Toggle Side-by-Side */}
               <div className="flex items-center justify-center gap-2 flex-wrap w-full">
                 {scenario === 'gameai' && (
-                  <div className="flex items-center gap-1.5 justify-center overflow-x-auto max-w-full" style={{ scrollbarWidth: 'none' }}>
+                  <div className={`flex items-center gap-1.5 p-1 rounded-xl border ${isLight ? 'bg-slate-100/90 border-slate-200' : 'bg-gray-900/60 border-gray-800'} overflow-x-auto max-w-full`} style={{ scrollbarWidth: 'none' }}>
                     {GAME_AI_BOARDS.map(({ id, label }) => (
                       <button
                         key={id}
                         onClick={() => sim.requestBoardChange(id, sim.status, sim.isCurrentSaved)}
                         disabled={sim.isComputing || sim.isGraphLoading}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${sim.gameBoard === id
-                          ? activeTabClass
-                          : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
-                          }`}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5 border ${getMapTabButtonClass(sim.gameBoard === id)}`}
                       >
                         {label}
                       </button>
@@ -705,16 +753,13 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 )}
 
                 {(scenario === 'traffic' || scenario === 'evacuation' || scenario === 'robotics' || scenario === 'network') && (
-                  <div className="flex items-center gap-1.5 justify-center overflow-x-auto max-w-full" style={{ scrollbarWidth: 'none' }}>
+                  <div className={`flex items-center gap-1.5 p-1 rounded-xl border ${isLight ? 'bg-slate-100/90 border-slate-200' : 'bg-gray-900/60 border-gray-800'} overflow-x-auto max-w-full`} style={{ scrollbarWidth: 'none' }}>
                     {MAP_REGISTRY[scenario]?.map(mapDef => (
                       <button
                         key={mapDef.id}
                         onClick={() => sim.requestMapChange(mapDef.id, sim.status, sim.isCurrentSaved)}
                         disabled={sim.isComputing || sim.isGraphLoading}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 ${sim.mapId === mapDef.id
-                          ? activeTabClass
-                          : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
-                          }`}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5 border ${getMapTabButtonClass(sim.mapId === mapDef.id)}`}
                       >
                         {mapDef.label}
                       </button>
@@ -949,6 +994,21 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                       
                       // Topology Editor: Delete Node
                       if (placementMode?.type === 'delete') {
+                        if (sim.status === 'running' || sim.status === 'paused' || (sim.status === 'done' && !sim.isCurrentSaved)) {
+                          sim.requestTopologyEdit(() => {
+                            sim.handleReset();
+                            sim.setCurrentGraph?.(prev => {
+                              if (!prev) return prev;
+                              return {
+                                ...prev,
+                                nodes: prev.nodes.filter(n => n.id !== nodeId),
+                                edges: prev.edges.filter(e => e.from !== nodeId && e.to !== nodeId)
+                              };
+                            });
+                          }, sim.status, sim.isCurrentSaved);
+                          return;
+                        }
+                        if (sim.status !== 'idle') sim.handleReset();
                         sim.setCurrentGraph?.(prev => {
                           if (!prev) return prev;
                           return {
@@ -1013,6 +1073,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                               }
                             }
 
+                            if (sim.status !== 'idle') sim.handleReset();
                             sim.setCurrentGraph?.(prev => {
                               if (!prev) return prev;
                               const newEdge = {
@@ -1042,6 +1103,20 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     }}
                     onEdgeClick={(edgeId) => {
                       if (placementMode?.type === 'delete') {
+                        if (sim.status === 'running' || sim.status === 'paused' || (sim.status === 'done' && !sim.isCurrentSaved)) {
+                          sim.requestTopologyEdit(() => {
+                            sim.handleReset();
+                            sim.setCurrentGraph?.(prev => {
+                              if (!prev) return prev;
+                              return {
+                                ...prev,
+                                edges: prev.edges.filter(e => e.id !== edgeId)
+                              };
+                            });
+                          }, sim.status, sim.isCurrentSaved);
+                          return;
+                        }
+                        if (sim.status !== 'idle') sim.handleReset();
                         sim.setCurrentGraph?.(prev => {
                           if (!prev) return prev;
                           return {
@@ -1053,6 +1128,24 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     }}
                     onCanvasClick={(x, y) => {
                       if (placementMode?.type === 'node') {
+                        if (sim.status === 'running' || sim.status === 'paused' || (sim.status === 'done' && !sim.isCurrentSaved)) {
+                          sim.requestTopologyEdit(() => {
+                            sim.handleReset();
+                            const newNodeId = `${placementMode.nodeType}_${Date.now()}`;
+                            const newNode = {
+                              id: newNodeId,
+                              type: placementMode.nodeType,
+                              label: placementMode.nodeType.replace(/_/g, ' '),
+                              x,
+                              y,
+                              level: 0,
+                              status: 'active'
+                            };
+                            sim.setCurrentGraph?.(prev => prev ? { ...prev, nodes: [...prev.nodes, newNode] } : prev);
+                          }, sim.status, sim.isCurrentSaved);
+                          return;
+                        }
+                        if (sim.status !== 'idle') sim.handleReset();
                         sim.setCurrentGraph?.(prev => {
                           if (!prev) return prev;
                           const newNodeId = `${placementMode.nodeType}_${Date.now()}`;
@@ -1327,11 +1420,16 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             {sim.mapId === 'synthetic' && (
               <div data-tutorial="tutorial-size-adjuster" className="shrink-0 glass-panel rounded-xl p-4 flex flex-col gap-2 fade-in hover:shadow-glow-blue transition-shadow duration-500 relative overflow-hidden">
                 {isManuallyEdited && (
-                  <div className="absolute inset-0 bg-black/70 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-4 text-center animate-in fade-in">
-                    <span className="text-xs text-gray-300 font-medium mb-2">Map has been manually edited.</span>
+                  <div className={`absolute inset-0 z-10 flex flex-col items-center justify-center p-4 text-center animate-in fade-in ${
+                    isLight 
+                      ? 'bg-white/95 backdrop-blur-xs border border-slate-200 shadow-sm' 
+                      : 'bg-black/70 backdrop-blur-[2px]'
+                  }`}>
+                    <span className={`text-xs font-bold mb-2.5 ${isLight ? 'text-slate-800' : 'text-gray-300'}`}>Map has been manually edited.</span>
                     <button 
                       onClick={() => sim.forceRefetchGraph(true)}
-                      className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] uppercase tracking-wider font-bold px-4 py-2 rounded-lg transition-colors shadow-[0_0_15px_rgba(37,99,235,0.3)]"
+                      style={{ color: '#ffffff' }}
+                      className="bg-blue-600 hover:bg-blue-500 !text-white text-[11px] uppercase tracking-wider font-extrabold px-4 py-2 rounded-lg transition-colors shadow-md shadow-blue-600/30 cursor-pointer"
                     >
                       Reset to Default Map
                     </button>
@@ -1510,7 +1608,14 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 scenario={scenario}
                 placementMode={placementMode}
                 setPlacementMode={setPlacementModeSafe}
-                onClearGraph={() => sim.setCurrentGraph?.(prev => prev ? { ...prev, nodes: [], edges: [] } : prev)}
+                onClearGraph={() => {
+                  sim.requestTopologyEdit(() => {
+                    if (window.confirm('Are you sure you want to clear the entire map? This will delete all nodes.')) {
+                      sim.handleReset();
+                      sim.setCurrentGraph?.(prev => prev ? { ...prev, nodes: [], edges: [] } : prev);
+                    }
+                  }, sim.status, sim.isCurrentSaved);
+                }}
                 disabled={editorDisabled}
               />
             )}
@@ -1532,23 +1637,44 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
       {/* ── Save Result Modal ──────────────────────────────────────────────────── */}
       {sim.isSaveModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 transition-opacity">
-          <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-md flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden">
+          <div className={`rounded-xl w-full max-w-md flex flex-col shadow-2xl overflow-hidden border ${
+            isLight ? 'bg-white border-slate-200 text-slate-900' : 'bg-gray-900 border-gray-700 text-white shadow-[0_0_50px_rgba(0,0,0,0.8)]'
+          }`}>
             <div className="p-6">
-              <h3 className="text-lg font-bold text-white mb-2">💾 Save Result to History</h3>
-              <p className="text-sm text-gray-400 mb-5">Enter a custom name for this simulation run to easily identify it later.</p>
+              <h3 className={`text-lg font-bold mb-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>💾 Save Result to History</h3>
+              <p className={`text-sm mb-5 ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>Enter a custom name for this simulation run to easily identify it later.</p>
               <input
                 type="text"
                 value={sim.saveNameInput}
                 onChange={(e) => sim.setSaveNameInput(e.target.value)}
                 placeholder={sim.saveDefaultName}
-                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium"
+                className={`w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2 font-medium transition-all ${
+                  isLight
+                    ? 'bg-slate-50 border border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-blue-500/20 placeholder:text-slate-400'
+                    : 'bg-gray-800 border border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500'
+                }`}
                 autoFocus
                 onKeyDown={(e) => e.key === 'Enter' && sim.confirmSaveResult()}
               />
             </div>
-            <div className="bg-gray-950 border-t border-gray-800 p-4 flex justify-end gap-3">
-              <button onClick={() => sim.setIsSaveModalOpen(false)} className="px-5 py-2.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold text-sm transition-all cursor-pointer">Cancel</button>
-              <button onClick={() => sim.confirmSaveResult()} disabled={sim.isCurrentSaved || sim.isComputing} className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)] cursor-pointer">Save Result</button>
+            <div className={`border-t p-4 flex justify-end gap-3 ${
+              isLight ? 'bg-slate-50 border-slate-200' : 'bg-gray-950 border-gray-800'
+            }`}>
+              <button 
+                onClick={() => sim.setIsSaveModalOpen(false)} 
+                className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all cursor-pointer ${
+                  isLight ? 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-300' : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                }`}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => sim.confirmSaveResult()} 
+                disabled={sim.isCurrentSaved || sim.isComputing} 
+                className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)] cursor-pointer disabled:opacity-50"
+              >
+                Save Result
+              </button>
             </div>
           </div>
         </div>
