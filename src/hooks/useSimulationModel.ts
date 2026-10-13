@@ -3,6 +3,7 @@ import { GameAIBoard, GraphSizing, RobotAssignment, ScenarioGraph, ScenarioType,
 import { loadLocalHistory, persistLocalHistory } from '../utils/historyHelpers';
 import { HistoryEntry } from '../components/HistoryModal';
 import { MAP_REGISTRY } from '../config/mapRegistry';
+import { BUILT_IN_MAP_LAYOUTS } from '../data/defaultMapLayouts';
 
 export type MultiResultsLocal = {
   bfs: SimulationResult;
@@ -705,19 +706,22 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
           graphParams.set('customSourceId', gameAISourceId);
         }
 
-        const response = await fetch(`http://localhost:3200/api/network/graph?${graphParams}`);
+        const response = await fetch(`https://backend-1e4y.onrender.com/api/network/graph?${graphParams}`);
         if (!response.ok) throw new Error(`Graph API Error: ${response.statusText}`);
         const json = await response.json();
 
         if (isMounted) {
           let newGraph = json.data;
-          
+
           // Apply saved node positions & custom elements from localStorage if available
           try {
             const savedKey = `saved_node_positions_${scenario}_${mapId}`;
             const defaultKey = `default_node_layout_${scenario}_${mapId}`;
-            const storedKey = localStorage.getItem(savedKey) ? savedKey : defaultKey;
-            const raw = localStorage.getItem(storedKey);
+            const savedRaw = localStorage.getItem(savedKey);
+            const userDefaultRaw = localStorage.getItem(defaultKey);
+            const storedKey = savedRaw ? savedKey : defaultKey;
+            const builtInLayout = BUILT_IN_MAP_LAYOUTS[`${scenario}:${mapId}`];
+            const raw = savedRaw ?? userDefaultRaw ?? (builtInLayout ? JSON.stringify(builtInLayout) : null);
             if (raw) {
               const parsed = JSON.parse(raw);
               // Upgrade saved synthetic warehouse snapshots to the current
@@ -905,8 +909,10 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
             try {
               const raw = localStorage.getItem(`saved_node_positions_${scenario}_${mapId}`)
                 ?? localStorage.getItem(`default_node_layout_${scenario}_${mapId}`);
-              if (!raw) return false;
-              const parsed = JSON.parse(raw);
+              const parsed = raw
+                ? JSON.parse(raw)
+                : BUILT_IN_MAP_LAYOUTS[`${scenario}:${mapId}`];
+              if (!parsed) return false;
               return Array.isArray(parsed.nodes) && Array.isArray(parsed.edges);
             } catch {
               return false;
@@ -932,7 +938,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
               nodes: newGraph.nodes.map((node: any) => node.type === 'place' ? { ...node, type: 'room' } : node),
             };
           }
-          
+
           setCurrentGraph(newGraph);
           setCurrentGraphMapId(mapId);
           setIsGraphLoading(false);
@@ -967,7 +973,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
       });
 
       let currentSource = sourceDevice;
-      
+
       if (networkRoutingMode === 'default' && allNodes.length > 0) {
         // Default mode: source must be a router-class node (ISP / core / building router).
         const ROUTER_TYPES = ['datacenter', 'router', 'building_router'];
@@ -1058,7 +1064,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
   useEffect(() => {
     if (scenario === 'robotics' && currentGraph && currentGraphMapId === mapId) {
       const allDepots = currentGraph.nodes.filter(n => n.type === 'depot' || n.type === 'place' || n.id.includes('Robot') || n.label.includes('Start')).map(n => n.id);
-      
+
       const destNodes = currentGraph.nodes
         .filter(n => n.type === 'delivery_bay')
         .map(n => n.id);
