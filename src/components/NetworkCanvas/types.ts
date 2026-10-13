@@ -10,8 +10,12 @@ export interface NetworkCanvasProps {
   highlightedNodeId?: string | null;
   onDeselect?: () => void;
   onNodeClick?: (nodeId: string) => void;
+  onNodeDoubleClick?: (nodeId: string) => void;
   onEdgeClick?: (edgeId: string) => void;
-  onCanvasClick?: (x: number, y: number) => void;
+  onCanvasClick?: (x: number, y: number, activeFloor?: string) => void;
+  isMoveMode?: boolean;
+  placementModeType?: 'node' | 'edge' | 'delete' | 'move' | 'rename' | null;
+  onNodeMoveEnd?: (nodeId: string, x: number, y: number) => void;
   mapId?: string;
   autoFit?: boolean;
   shelfBoxCounts?: Map<string, number>; // nodeId → box count for AWS Warehouse shelf visualization
@@ -27,43 +31,46 @@ export interface NetworkCanvasProps {
   theme?: 'dark' | 'light';
 }
 
-export const NODE_CONFIG: Record<string, { icon: string; radius: number; baseColor: string }> = {
-  datacenter: { icon: '🌐', radius: 28, baseColor: '#1e40af' },
-  building_router: { icon: '🌐', radius: 22, baseColor: '#1e40af' },
-  router: { icon: '🌐', radius: 22, baseColor: '#1e40af' },
-  multilayer_switch: { icon: '🎛️', radius: 17, baseColor: '#1d4ed8' },
-  floor_router: { icon: '🎛️', radius: 17, baseColor: '#1d4ed8' }, // Fallback
-  access_switch: { icon: '🔌', radius: 17, baseColor: '#2563eb' },
-  switch: { icon: '🔌', radius: 17, baseColor: '#2563eb' }, // Fallback for backend cached data
-  access_point: { icon: '💻', radius: 14, baseColor: '#0ea5e9' },
-  end_device: { icon: '💻', radius: 14, baseColor: '#0ea5e9' },
-  server: { icon: '🗄️', radius: 16, baseColor: '#475569' },
-  wireless_ap: { icon: '📡', radius: 15, baseColor: '#10b981' },
+export const NODE_CONFIG: Record<string, { icon: string; iconImg?: string; radius: number; baseColor: string }> = {
+  datacenter: { icon: '🌐', iconImg: '/networkIcons/carrier routing system.jpg', radius: 26, baseColor: '#1e3a8a' },
+  isp: { icon: '🌐', iconImg: '/networkIcons/carrier routing system.jpg', radius: 26, baseColor: '#1e3a8a' },
+  building_router: { icon: '🌐', iconImg: '/networkIcons/router.jpg', radius: 24, baseColor: '#1e40af' },
+  router: { icon: '🌐', iconImg: '/networkIcons/router.jpg', radius: 24, baseColor: '#1e40af' },
+  multilayer_switch: { icon: '🎛️', iconImg: '/networkIcons/layer 3 switch.jpg', radius: 20, baseColor: '#1d4ed8' },
+  floor_router: { icon: '🎛️', iconImg: '/networkIcons/layer 3 switch.jpg', radius: 20, baseColor: '#1d4ed8' }, // Fallback
+  access_switch: { icon: '🔌', iconImg: '/networkIcons/workgroup switch.jpg', radius: 18, baseColor: '#2563eb' },
+  switch: { icon: '🔌', iconImg: '/networkIcons/workgroup switch.jpg', radius: 18, baseColor: '#2563eb' }, // Fallback for backend cached data
+  access_point: { icon: '📡', iconImg: '/networkIcons/accesspoint.jpg', radius: 16, baseColor: '#10b981' },
+  end_device: { icon: '💻', iconImg: '/networkIcons/pc.jpg', radius: 16, baseColor: '#0ea5e9' },
+  server: { icon: '🗄️', iconImg: '/networkIcons/fileserver.jpg', radius: 18, baseColor: '#475569' },
+  wireless_ap: { icon: '📡', iconImg: '/networkIcons/accesspoint.jpg', radius: 16, baseColor: '#10b981' },
   failed: { icon: '💥', radius: 17, baseColor: '#450a0a' },
-  depot: { icon: '🏭', radius: 28, baseColor: '#92400e' },
-  zone: { icon: '📦', radius: 22, baseColor: '#b45309' },
-  aisle: { icon: '🔧', radius: 17, baseColor: '#d97706' },
-  shelf: { icon: '🔧', radius: 17, baseColor: '#d97706' },
-  delivery_bay: { icon: '🚚', radius: 14, baseColor: '#f59e0b' },
+  depot: { icon: '🏭', iconImg: '/RoboticsMaps/icons/robot.png', radius: 28, baseColor: '#92400e' },
+  zone: { icon: '📦', iconImg: '/RoboticsMaps/icons/move.png', radius: 22, baseColor: '#b45309' },
+  aisle: { icon: '🔧', iconImg: '/RoboticsMaps/icons/move.png', radius: 17, baseColor: '#d97706' },
+  shelf: { icon: '🔧', iconImg: '/RoboticsMaps/icons/store.png', radius: 17, baseColor: '#d97706' },
+  delivery_bay: { icon: '🚚', iconImg: '/RoboticsMaps/icons/loading-bay.png', radius: 14, baseColor: '#f59e0b' },
   blocked: { icon: '🚧', radius: 17, baseColor: '#7f1d1d' },
   origin: { icon: '🏙️', radius: 28, baseColor: '#065f46' },
   highway: { icon: '🛣️', radius: 22, baseColor: '#047857' },
   intersection: { icon: '🚦', radius: 17, baseColor: '#059669' },
   street: { icon: '🚗', radius: 14, baseColor: '#10b981' },
   closed: { icon: '🚫', radius: 17, baseColor: '#7f1d1d' },
-  start: { icon: '🏬', radius: 24, baseColor: '#0e7490' },
-  emergency_exit: { icon: '🚪', radius: 22, baseColor: '#b91c1c' },
-  corridor: { icon: '🚶', radius: 17, baseColor: '#dc2626' },
-  stairwell: { icon: '🪜', radius: 17, baseColor: '#ef4444' },
-  fire: { icon: '⛔', radius: 17, baseColor: '#7f1d1d' },
+  start: { icon: 'start', radius: 24, baseColor: '#0e7490' },
+  emergency_exit: { icon: 'emergency_exit', radius: 22, baseColor: '#b91c1c' },
+  corridor: { icon: 'corridor', radius: 17, baseColor: '#dc2626' },
+  stairwell: { icon: 'stairwell', radius: 17, baseColor: '#ef4444' },
+  fire: { icon: 'fire', radius: 17, baseColor: '#7f1d1d' },
   strategy_planner: { icon: '🔵', radius: 14, baseColor: '#9333ea' },
   winning_square: { icon: '🏁', radius: 14, baseColor: '#dc2626' },
   board_tile: { icon: '⚪', radius: 8, baseColor: '#64748b' },
   blocked_tile: { icon: '🔴', radius: 10, baseColor: '#ef4444' },
-  place: { icon: '🏬', radius: 20, baseColor: '#0e7490' },
-  shop: { icon: '🏬', radius: 20, baseColor: '#0e7490' },
-  restaurant: { icon: '🍽️', radius: 18, baseColor: '#0e7490' },
-  amenity: { icon: '🏬', radius: 18, baseColor: '#0e7490' },
+  place: { icon: 'place', radius: 20, baseColor: '#0e7490' },
+  shop: { icon: 'place', radius: 20, baseColor: '#0e7490' },
+  restaurant: { icon: 'place', radius: 18, baseColor: '#0e7490' },
+  amenity: { icon: 'place', radius: 18, baseColor: '#0e7490' },
+  cinema: { icon: 'cinema', radius: 22, baseColor: '#7c3aed' },
+  room: { icon: 'room', radius: 18, baseColor: '#0e7490' },
 };
 
 export const EDGE_CONFIG: Record<string, { color: string; dash: number[]; width: number }> = {

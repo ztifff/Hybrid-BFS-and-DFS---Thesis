@@ -49,7 +49,7 @@ const DEFAULT_SYNTHETIC_SIZING: Record<SizingKey, GraphSizing> = {
 
 export const MAX_SYNTHETIC_NODES: Record<SizingKey, number> = {
   network: 220,
-  robotics: 217,
+  robotics: 141,
   traffic: 220,
   evacuation: 144,
   gameai: 145,
@@ -85,7 +85,7 @@ export function getNextGameAINodes(currentNodes: number, direction: 'up' | 'down
 }
 
 export function getNextRoboticsNodes(currentNodes: number, direction: 'up' | 'down'): number {
-  const sizes = [13, 16, 19, 25, 29, 33, 36, 41, 46, 55, 61, 67, 71, 78, 85, 97, 105, 113, 118, 127, 136, 151, 161, 171, 177, 188, 199, 217];
+  const sizes = [13, 16, 19, 25, 29, 33, 36, 41, 46, 55, 61, 67, 71, 78, 85, 97, 105, 113, 118, 127, 136, 141];
   let currentIndex = sizes.findIndex(s => s >= currentNodes);
   if (currentIndex === -1) currentIndex = sizes.length - 1;
 
@@ -337,7 +337,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
   // So they are returned as factory functions that the view/controller can call with
   // those values. The actual guard wiring happens in `useSimulation`.
   const requestBack = useCallback((status: string, saved: boolean) => {
-    if (status === 'running' || status === 'paused') {
+    if (status === 'running') {
       setPendingNavigation({ type: 'back', reason: 'inprogress' });
     } else if (status === 'done' && !saved) {
       setPendingNavigation({ type: 'back', reason: 'unsaved' });
@@ -508,7 +508,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
   }, []);
 
   const requestTopologyEdit = useCallback((onConfirm: () => void, status: string, saved: boolean) => {
-    if (status === 'running' || status === 'paused') {
+    if (status === 'running') {
       pendingActionCallbackRef.current = onConfirm;
       setPendingNavigation({ type: 'topology_edit', reason: 'inprogress' });
     } else if (status === 'done' && !saved) {
@@ -712,14 +712,225 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
         if (isMounted) {
           let newGraph = json.data;
           
+          // Apply saved node positions & custom elements from localStorage if available
+          try {
+            const savedKey = `saved_node_positions_${scenario}_${mapId}`;
+            const defaultKey = `default_node_layout_${scenario}_${mapId}`;
+            const storedKey = localStorage.getItem(savedKey) ? savedKey : defaultKey;
+            const raw = localStorage.getItem(storedKey);
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              // Upgrade saved synthetic warehouse snapshots to the current
+              // three-aisles-per-delivery-bay layout while retaining other
+              // saved node positions and custom topology edits.
+              if (scenario === 'robotics' && mapId === 'synthetic' && Array.isArray(parsed.nodes) && Array.isArray(parsed.edges)) {
+                const isGeneratedBayId = (id: string) => /^dest_finish_\d+$/.test(id);
+                const previousBayIds = new Set<string>(parsed.nodes
+                  .filter((node: any) => node.type === 'delivery_bay' && isGeneratedBayId(node.id))
+                  .map((node: any) => node.id));
+                const currentBayNodes = newGraph.nodes.filter((node: any) => node.type === 'delivery_bay' && isGeneratedBayId(node.id));
+                const currentBayIds = new Set<string>(currentBayNodes.map((node: any) => node.id));
+
+                parsed.nodes = [
+                  ...parsed.nodes.filter((node: any) => !previousBayIds.has(node.id)),
+                  ...currentBayNodes,
+                ];
+                parsed.edges = [
+                  ...parsed.edges.filter((edge: any) => !previousBayIds.has(edge.from) && !previousBayIds.has(edge.to)),
+                  ...newGraph.edges.filter((edge: any) => currentBayIds.has(edge.from) || currentBayIds.has(edge.to)),
+                ];
+                if (Array.isArray(parsed.customEdges)) {
+                  parsed.customEdges = parsed.customEdges.filter((edge: any) => !previousBayIds.has(edge.from) && !previousBayIds.has(edge.to));
+                }
+                parsed.destinationIds = [
+                  ...newGraph.destinationIds,
+                  ...(Array.isArray(parsed.destinationIds) ? parsed.destinationIds.filter((id: string) => !previousBayIds.has(id) && !currentBayIds.has(id)) : []),
+                ];
+                parsed.width = newGraph.width;
+                parsed.height = newGraph.height;
+                localStorage.setItem(storedKey, JSON.stringify(parsed));
+              }
+              const isAWSWarehouse = scenario === 'robotics' && (mapId === 'aws' || mapId === 'awsWarehouse');
+              const priorAwsLayoutVersion = Number(parsed.awsLayoutVersion ?? 0);
+              const awsLayoutVersion = 5;
+              if (isAWSWarehouse && priorAwsLayoutVersion < awsLayoutVersion) {
+                const rackCenters: Record<string, number> = {
+                  shelf_a1: 10000, shelf_a2: 20000, shelf_b1: 30000, shelf_b2: 40000,
+                  shelf_d1: 10000, shelf_e1: 20000, shelf_e3: 30000, shelf_f1: 40000,
+                  shelf_d2: 10000, shelf_e2: 20000, shelf_e4: 30000, shelf_f2: 40000,
+                };
+                const aisleCenters: Record<string, number> = {
+                  w: 6250, mw: 16250, me: 26250, e: 36250,
+                };
+                const migrateNodeX = (node: any) => {
+                  let x = node.x;
+                  // Give the two perimeter service zones breathing room while
+                  // carrying any user-moved positions along with the wider plan.
+                  if (priorAwsLayoutVersion < 2) {
+                    if (node.id === 'clutter_a' || node.id === 'pallet_jack') {
+                      if (Math.abs(x - 5000) < 1) x = -2500;
+                    } else if (node.id === 'clutter_b' || node.id === 'trash_cans') {
+                      if (Math.abs(x - 45000) < 1) x = 52500;
+                    }
+                    x = 25000 + (x - 25000) * 1.25;
+                  }
+                  if (rackCenters[node.id] !== undefined) x = rackCenters[node.id];
+                  const aisleMatch = String(node.id).match(/^(?:front|mid|back|lower|bottom)_(w|mw|me|e)$/);
+                  if (aisleMatch) x = aisleCenters[aisleMatch[1]];
+                  if (node.id === 'dest_desk_a') x = 10000;
+                  if (node.id === 'dest_desk_b') x = 40000;
+                  const y = ['dest_desk_a', 'dest_desk_b', 'depot_secondary'].includes(node.id) ? 44000 : node.y;
+                  return { ...node, x, y };
+                };
+                if (Array.isArray(parsed.nodes)) parsed.nodes = parsed.nodes.map(migrateNodeX);
+                if (Array.isArray(parsed.customNodes)) parsed.customNodes = parsed.customNodes.map(migrateNodeX);
+                const positions = parsed.positions || (!Array.isArray(parsed) ? parsed : null);
+                if (positions && typeof positions === 'object') {
+                  for (const [nodeId, position] of Object.entries(positions) as [string, any][]) {
+                    if (!position || typeof position.x !== 'number') continue;
+                    let x = position.x;
+                    if (priorAwsLayoutVersion < 2) {
+                      if ((nodeId === 'clutter_a' || nodeId === 'pallet_jack') && Math.abs(x - 5000) < 1) x = -2500;
+                      if ((nodeId === 'clutter_b' || nodeId === 'trash_cans') && Math.abs(x - 45000) < 1) x = 52500;
+                      x = 25000 + (x - 25000) * 1.25;
+                    }
+                    if (rackCenters[nodeId] !== undefined) x = rackCenters[nodeId];
+                    const aisleMatch = nodeId.match(/^(?:front|mid|back|lower|bottom)_(w|mw|me|e)$/);
+                    if (aisleMatch) x = aisleCenters[aisleMatch[1]];
+                    if (nodeId === 'dest_desk_a') x = 10000;
+                    if (nodeId === 'dest_desk_b') x = 40000;
+                    const y = ['dest_desk_a', 'dest_desk_b', 'depot_secondary'].includes(nodeId) ? 44000 : position.y;
+                    positions[nodeId] = { ...position, x, y };
+                  }
+                }
+
+                if (priorAwsLayoutVersion < 3 && Array.isArray(parsed.nodes) && Array.isArray(parsed.edges)) {
+                  const movedNodes = new Set(['dest_desk_a', 'dest_desk_b', 'depot_secondary']);
+                  parsed.nodes = parsed.nodes.map((node: any) =>
+                    movedNodes.has(node.id) ? { ...node, y: 44000 } : node
+                  );
+                  const existingNodeIds = new Set(parsed.nodes.map((node: any) => node.id));
+                  const addedStorageNodes = newGraph.nodes.filter((node: any) =>
+                    /^(shelf_[gh]\d|lower_|bottom_)/.test(node.id) && !existingNodeIds.has(node.id)
+                  );
+                  parsed.nodes = [...parsed.nodes, ...addedStorageNodes];
+                  const allNodeIds = new Set(parsed.nodes.map((node: any) => node.id));
+                  const existingEdgeIds = new Set(parsed.edges.map((edge: any) => edge.id));
+                  const addedStorageEdges = newGraph.edges.filter((edge: any) =>
+                    (/^(shelf_[gh]\d|lower_|bottom_)/.test(edge.from) || /^(shelf_[gh]\d|lower_|bottom_)/.test(edge.to)) &&
+                    allNodeIds.has(edge.from) && allNodeIds.has(edge.to) && !existingEdgeIds.has(edge.id)
+                  );
+                  parsed.edges = [...parsed.edges, ...addedStorageEdges];
+                }
+                parsed.height = 51000;
+                parsed.awsLayoutVersion = awsLayoutVersion;
+                localStorage.setItem(storedKey, JSON.stringify(parsed));
+              }
+              // Keep AWS utility exits classified as delivery bays in older
+              // saved topology snapshots so they remain selectable in assignments.
+              if (isAWSWarehouse) {
+                const utilityExitIds = ['clutter_a', 'clutter_b', 'pallet_jack', 'trash_cans'];
+                const utilityExitIdSet = new Set(utilityExitIds);
+                let topologyChanged = false;
+                const normalizeUtilityNodes = (nodes: any[]) => nodes.map(node => {
+                  if (utilityExitIdSet.has(node.id) && node.type !== 'delivery_bay') {
+                    topologyChanged = true;
+                    return { ...node, type: 'delivery_bay' };
+                  }
+                  return node;
+                });
+                if (Array.isArray(parsed.nodes)) parsed.nodes = normalizeUtilityNodes(parsed.nodes);
+                if (Array.isArray(parsed.customNodes)) parsed.customNodes = normalizeUtilityNodes(parsed.customNodes);
+                if (Array.isArray(parsed.destinationIds)) {
+                  const normalizedDestinations = [...new Set([...parsed.destinationIds, ...utilityExitIds])];
+                  if (normalizedDestinations.length !== parsed.destinationIds.length) topologyChanged = true;
+                  parsed.destinationIds = normalizedDestinations;
+                }
+                if (topologyChanged) localStorage.setItem(storedKey, JSON.stringify(parsed));
+              }
+              if (scenario === 'robotics' && mapId === 'clinic') {
+                let topologyChanged = false;
+                const normalizeClinicCorridors = (nodes: any[]) => nodes.map(node => {
+                  if (node.type === 'shelf' && String(node.label || '').toLowerCase().includes('corridor')) {
+                    topologyChanged = true;
+                    return { ...node, type: 'zone' };
+                  }
+                  return node;
+                });
+                if (Array.isArray(parsed.nodes)) parsed.nodes = normalizeClinicCorridors(parsed.nodes);
+                if (Array.isArray(parsed.customNodes)) parsed.customNodes = normalizeClinicCorridors(parsed.customNodes);
+                if (topologyChanged) localStorage.setItem(storedKey, JSON.stringify(parsed));
+              }
+              const hasTopologySnapshot = Array.isArray(parsed.nodes) && Array.isArray(parsed.edges);
+              if (hasTopologySnapshot) {
+                newGraph = {
+                  ...newGraph,
+                  nodes: parsed.nodes,
+                  edges: parsed.edges,
+                  ...(typeof parsed.sourceId === 'string' ? { sourceId: parsed.sourceId } : {}),
+                  ...(Array.isArray(parsed.sourceIds) ? { sourceIds: parsed.sourceIds } : {}),
+                  ...(Array.isArray(parsed.destinationIds) ? { destinationIds: parsed.destinationIds } : {}),
+                  ...(typeof parsed.width === 'number' ? { width: parsed.width } : {}),
+                  ...(typeof parsed.height === 'number' ? { height: parsed.height } : {}),
+                };
+              }
+              const positions: Record<string, { x: number; y: number }> = parsed.positions || (parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null);
+              if (positions && !hasTopologySnapshot) {
+                newGraph.nodes = newGraph.nodes.map((n: any) => {
+                  const saved = positions[n.id];
+                  if (saved && typeof saved.x === 'number' && typeof saved.y === 'number') {
+                    return { ...n, x: saved.x, y: saved.y };
+                  }
+                  return n;
+                });
+              }
+              // Also restore any saved custom nodes/edges that might not exist in backend graph
+              if (!hasTopologySnapshot && Array.isArray(parsed.customNodes) && parsed.customNodes.length > 0) {
+                const existingNodeIds = new Set(newGraph.nodes.map((n: any) => n.id));
+                const extraNodes = parsed.customNodes.filter((n: any) => !existingNodeIds.has(n.id));
+                newGraph.nodes = [...newGraph.nodes, ...extraNodes];
+              }
+              if (!hasTopologySnapshot && Array.isArray(parsed.customEdges) && parsed.customEdges.length > 0) {
+                const existingEdgeIds = new Set(newGraph.edges.map((e: any) => e.id));
+                const extraEdges = parsed.customEdges.filter((e: any) => !existingEdgeIds.has(e.id));
+                newGraph.edges = [...newGraph.edges, ...extraEdges];
+              }
+            }
+          } catch (e) {
+            console.error('Failed to load saved node positions from localStorage:', e);
+          }
+
           // Preserve manually added custom nodes and edges ONLY if the map is the same
-          if (currentGraph && currentGraphMapId === mapId) {
+          const hasSavedTopologySnapshot = (() => {
+            try {
+              const raw = localStorage.getItem(`saved_node_positions_${scenario}_${mapId}`)
+                ?? localStorage.getItem(`default_node_layout_${scenario}_${mapId}`);
+              if (!raw) return false;
+              const parsed = JSON.parse(raw);
+              return Array.isArray(parsed.nodes) && Array.isArray(parsed.edges);
+            } catch {
+              return false;
+            }
+          })();
+          if (!hasSavedTopologySnapshot && currentGraph && currentGraphMapId === mapId) {
             const customNodes = currentGraph.nodes.filter(n => /_\d{13}$/.test(n.id));
             const customEdges = currentGraph.edges.filter(e => /_\d{13}$/.test(e.id));
             if (customNodes.length > 0 || customEdges.length > 0) {
-              newGraph.nodes = [...newGraph.nodes, ...customNodes];
-              newGraph.edges = [...newGraph.edges, ...customEdges];
+              const existingNodeIds = new Set(newGraph.nodes.map((n: any) => n.id));
+              const existingEdgeIds = new Set(newGraph.edges.map((e: any) => e.id));
+              const missingNodes = customNodes.filter(n => !existingNodeIds.has(n.id));
+              const missingEdges = customEdges.filter(e => !existingEdgeIds.has(e.id));
+              if (missingNodes.length > 0) newGraph.nodes = [...newGraph.nodes, ...missingNodes];
+              if (missingEdges.length > 0) newGraph.edges = [...newGraph.edges, ...missingEdges];
             }
+          }
+
+          // Synthetic evacuation nodes represent rooms; migrate older saved layouts that used "place".
+          if (scenario === 'evacuation' && mapId === 'synthetic') {
+            newGraph = {
+              ...newGraph,
+              nodes: newGraph.nodes.map((node: any) => node.type === 'place' ? { ...node, type: 'room' } : node),
+            };
           }
           
           setCurrentGraph(newGraph);
@@ -877,7 +1088,8 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
               priorityDest: a.priorityDest && destNodes.includes(a.priorityDest) ? a.priorityDest : undefined,
             }));
 
-          // Ensure at least the first robot has a valid destination if available
+          // Preserve the prior default assignment behavior while removing stale
+          // assignments to nodes that are no longer delivery bays.
           if (cleaned.length > 0 && cleaned[0].destinations.length === 0 && destNodes.length > 0) {
             const fallbackDests = destNodes.slice(0, 2);
             cleaned[0].destinations = fallbackDests;
@@ -925,9 +1137,15 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
   // Synchronize evacuation endpoint if map changes or invalid
   useEffect(() => {
     if (scenario === 'evacuation' && currentGraph && currentGraphMapId === mapId) {
-      const nodeIds = new Set(currentGraph.nodes.map(n => n.id));
-      if (evacuationSourceId && !nodeIds.has(evacuationSourceId)) {
-        setEvacuationSourceId(null);
+      const isRoom = (node: any) => ['place', 'origin', 'room', 'start', 'cinema'].includes(node.type);
+      const isValidRoomId = (id: string | null | undefined) =>
+        !!id && currentGraph.nodes.some(node => node.id === id && isRoom(node));
+
+      if (!isValidRoomId(evacuationSourceId)) {
+        const nextSourceId = isValidRoomId(currentGraph.sourceId)
+          ? currentGraph.sourceId
+          : currentGraph.nodes.find(isRoom)?.id ?? null;
+        if (evacuationSourceId !== nextSourceId) setEvacuationSourceId(nextSourceId);
       }
     }
   }, [scenario, currentGraph, currentGraphMapId, mapId, evacuationSourceId]);

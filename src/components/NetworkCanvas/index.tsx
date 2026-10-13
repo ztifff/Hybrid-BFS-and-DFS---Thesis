@@ -1,11 +1,14 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { NetworkCanvasProps } from './types';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
+import { NetworkCanvasProps, NODE_CONFIG } from './types';
 import { useCanvasInteraction } from './useCanvasInteraction';
 import { useCanvasAnimation } from './useCanvasAnimation';
 import { CanvasControls } from './CanvasControls';
 import { renderCanvas } from './renderer';
 import { GraphNode, AlgorithmStep } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
+import { onCiscoIconsChange } from '../../utils/ciscoIcons';
+import { onSMRosaBlueprintChange } from './renderers/scenarios/evacuation/smRosaFloorPlan';
+import { onEvacuationIconsChange } from './evacuationNodeIcons';
 
 export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
   graph,
@@ -17,8 +20,12 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
   highlightedNodeId,
   onDeselect,
   onNodeClick,
+  onNodeDoubleClick,
   onEdgeClick,
   onCanvasClick,
+  isMoveMode,
+  placementModeType,
+  onNodeMoveEnd,
   mapId,
   autoFit,
   shelfBoxCounts,
@@ -55,8 +62,30 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
   const [activeFloor, setActiveFloor] = useState<string>('L1');
   const [followAlgo, setFollowAlgo] = useState<'bfs' | 'dfs' | 'hybrid' | null>(null);
   const [visibleAlgos, setVisibleAlgos] = useState({ bfs: true, dfs: true, hybrid: true });
-  const [isShowOpen, setIsShowOpen] = useState(false);
-  const [isFollowOpen, setIsFollowOpen] = useState(false);
+  const [iconRevision, setIconRevision] = useState(0);
+
+  // Node movement and hover states
+  const [draggedNodePos, setDraggedNodePos] = useState<{ id: string; x: number; y: number } | null>(null);
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  const nodeDragRef = useRef<{
+    nodeId: string;
+    initialNodeX: number;
+    initialNodeY: number;
+    offsetNodeX: number;
+    offsetNodeY: number;
+    hasMoved: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    const unsubIcons = onCiscoIconsChange(() => setIconRevision(r => r + 1));
+    const unsubBlueprint = onSMRosaBlueprintChange(() => setIconRevision(r => r + 1));
+    const unsubEvacuationIcons = onEvacuationIconsChange(() => setIconRevision(r => r + 1));
+    return () => {
+      unsubIcons();
+      unsubBlueprint();
+      unsubEvacuationIcons();
+    };
+  }, []);
 
   // Sync header pill toggles → canvas visibility
   useEffect(() => {
@@ -139,10 +168,18 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
 
   const wasHistoricallyBlocked = historicalBlockedNodeIds ?? new Set<string>();
 
-  const visibleNodes = useMemo(() => {
+  const baseVisibleNodes = useMemo(() => {
     if (!isLayeredMap) return nodes;
-    return nodes.filter(n => !n.buildingId || n.buildingId === activeFloor);
+    // Keep stairwells visible across floors so users can see the vertical
+    // connections, while hiding rooms, exits, and corridors belonging to the
+    // other floor. Nodes without a floor assignment remain shared/global.
+    return nodes.filter(n => !n.buildingId || n.buildingId === activeFloor || n.type === 'stairwell');
   }, [nodes, activeFloor, isLayeredMap]);
+
+  const visibleNodes = useMemo(() => {
+    if (!draggedNodePos) return baseVisibleNodes;
+    return baseVisibleNodes.map(n => n.id === draggedNodePos.id ? { ...n, x: draggedNodePos.x, y: draggedNodePos.y } : n);
+  }, [baseVisibleNodes, draggedNodePos]);
 
   const visibleNodeMap = useMemo(() => {
     const map = new Map<string, GraphNode>();
@@ -223,6 +260,7 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
       offsetY,
       scenario,
       mapId,
+      activeFloor,
       isDatacenter,
       isMassive,
       visibleNodes,
@@ -230,7 +268,9 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
       visibleNodeMap,
       activeBlocked,
       wasHistoricallyBlocked,
-      highlightedNodeId,
+      highlightedNodeId: draggedNodePos 
+        ? draggedNodePos.id 
+        : (hoveredNodeId && (isMoveMode || placementModeType === 'rename') ? hoveredNodeId : highlightedNodeId),
       sourceId: graph.sourceId,
       sourceIds: graph.sourceIds,
       destinationIds: graph.destinationIds,
@@ -251,65 +291,256 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
     width, height, scenario, isMassive, isDatacenter, scale, offsetX, offsetY, 
     windowDimensions, highlightedNodeId, visibleAlgos, mapId, wasHistoricallyBlocked,
     graph.sourceId, graph.destinationIds, activeSteps, followAlgo, canvasRef,
-    workspaceView, isSimulationFinished, showHopBadges, currentTheme
+    workspaceView, isSimulationFinished, showHopBadges, currentTheme, iconRevision, activeFloor,
+    draggedNodePos, hoveredNodeId, isMoveMode, placementModeType
   ]);
+
+  // Coordinate helper
+  const getCanvasCoords = (clientX: number, clientY: number) => {
+    if (!containerRef.current) return null;
+    const rect = containerRef.current.getBoundingClientRect();
+    const mouseX = clientX - rect.left;
+    const mouseY = clientY - rect.top;
+    return {
+      x: (mouseX - pan.x) / zoom,
+      y: (mouseY - pan.y) / zoom,
+    };
+  };
+
+  // Zoom-aware Node hit test helper (guarantees minimum screen hit target)
+  const findNodeAtCoords = (x: number, y: number) => {
+    let hitNode: GraphNode | null = null;
+    let minDist = Infinity;
+    const minScreenHitPx = 36;
+    const effectiveMinRadius = minScreenHitPx / Math.max(zoom, 0.1);
+
+    for (const node of visibleNodes) {
+      const cx = (node.x * scale) + offsetX;
+      const cy = (node.y * scale) + offsetY;
+      const dx = cx - x;
+      const dy = cy - y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const nodeCfgRadius = (NODE_CONFIG[node.type]?.radius || 20) * 1.5;
+      const hitRadius = Math.max(effectiveMinRadius, nodeCfgRadius);
+      if (dist < hitRadius && dist < minDist) {
+        minDist = dist;
+        hitNode = node;
+      }
+    }
+    return hitNode;
+  };
+
+  // Global mouseup listener to guarantee drag release anywhere on screen
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      if (nodeDragRef.current) {
+        const { nodeId, hasMoved } = nodeDragRef.current;
+        const currentPos = draggedNodePos;
+        nodeDragRef.current = null;
+        setDraggedNodePos(null);
+
+        if (hasMoved && currentPos && onNodeMoveEnd) {
+          onNodeMoveEnd(nodeId, currentPos.x, currentPos.y);
+        }
+      }
+    };
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
+  }, [draggedNodePos, onNodeMoveEnd]);
+
+  // Drag & Move Mouse Handlers
+  const onMouseDownWrapper = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    const coords = getCanvasCoords(e.clientX, e.clientY);
+    if (coords && isMoveMode) {
+      const hitNode = findNodeAtCoords(coords.x, coords.y);
+      if (hitNode) {
+        setFollowAlgo(null);
+        nodeDragRef.current = {
+          nodeId: hitNode.id,
+          initialNodeX: hitNode.x,
+          initialNodeY: hitNode.y,
+          offsetNodeX: hitNode.x - ((coords.x - offsetX) / scale),
+          offsetNodeY: hitNode.y - ((coords.y - offsetY) / scale),
+          hasMoved: false
+        };
+        setDraggedNodePos({ id: hitNode.id, x: hitNode.x, y: hitNode.y });
+        return;
+      }
+    }
+    handleMouseDown(e, () => setFollowAlgo(null));
+  };
+
+  const onMouseMoveWrapper = (e: React.MouseEvent<HTMLDivElement>) => {
+    const coords = getCanvasCoords(e.clientX, e.clientY);
+
+    // Dynamic hover feedback in move or rename mode
+    if (coords && !nodeDragRef.current && (isMoveMode || placementModeType === 'rename')) {
+      const hitNode = findNodeAtCoords(coords.x, coords.y);
+      setHoveredNodeId(hitNode ? hitNode.id : null);
+    } else if (hoveredNodeId && !nodeDragRef.current && !isMoveMode && placementModeType !== 'rename') {
+      setHoveredNodeId(null);
+    }
+
+    if (nodeDragRef.current && coords) {
+      const { nodeId, offsetNodeX, offsetNodeY, initialNodeX, initialNodeY } = nodeDragRef.current;
+      const rawX = ((coords.x - offsetX) / scale) + offsetNodeX;
+      const rawY = ((coords.y - offsetY) / scale) + offsetNodeY;
+      const clampedX = Math.round(Math.max(20, Math.min(width - 20, rawX)));
+      const clampedY = Math.round(Math.max(20, Math.min(height - 20, rawY)));
+
+      if (Math.abs(clampedX - initialNodeX) > 2 || Math.abs(clampedY - initialNodeY) > 2) {
+        nodeDragRef.current.hasMoved = true;
+        hasDragged.current = true;
+      }
+
+      setDraggedNodePos({ id: nodeId, x: clampedX, y: clampedY });
+      return;
+    }
+
+    handleMouseMove(e);
+  };
+
+  const onMouseUpWrapper = () => {
+    if (nodeDragRef.current) {
+      const { nodeId, hasMoved } = nodeDragRef.current;
+      const currentPos = draggedNodePos;
+      nodeDragRef.current = null;
+      setDraggedNodePos(null);
+
+      if (hasMoved && currentPos && onNodeMoveEnd) {
+        onNodeMoveEnd(nodeId, currentPos.x, currentPos.y);
+      }
+      return;
+    }
+
+    handleMouseUp();
+  };
+
+  const onMouseLeaveWrapper = () => {
+    if (nodeDragRef.current) {
+      const { nodeId, hasMoved } = nodeDragRef.current;
+      const currentPos = draggedNodePos;
+      nodeDragRef.current = null;
+      setDraggedNodePos(null);
+
+      if (hasMoved && currentPos && onNodeMoveEnd) {
+        onNodeMoveEnd(nodeId, currentPos.x, currentPos.y);
+      }
+    }
+    setHoveredNodeId(null);
+    handleMouseLeave();
+  };
+
+  const onDoubleClickWrapper = (e: React.MouseEvent<HTMLDivElement>) => {
+    const coords = getCanvasCoords(e.clientX, e.clientY);
+    if (!coords || !onNodeDoubleClick) return;
+    const hitNode = findNodeAtCoords(coords.x, coords.y);
+    if (hitNode) {
+      onNodeDoubleClick(hitNode.id);
+    }
+  };
+
+  // Drag & Move Touch Handlers
+  const onTouchStartWrapper = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 1 && isMoveMode) {
+      const coords = getCanvasCoords(e.touches[0].clientX, e.touches[0].clientY);
+      if (coords) {
+        const hitNode = findNodeAtCoords(coords.x, coords.y);
+        if (hitNode) {
+          setFollowAlgo(null);
+          nodeDragRef.current = {
+            nodeId: hitNode.id,
+            initialNodeX: hitNode.x,
+            initialNodeY: hitNode.y,
+            offsetNodeX: hitNode.x - ((coords.x - offsetX) / scale),
+            offsetNodeY: hitNode.y - ((coords.y - offsetY) / scale),
+            hasMoved: false
+          };
+          setDraggedNodePos({ id: hitNode.id, x: hitNode.x, y: hitNode.y });
+          return;
+        }
+      }
+    }
+    handleTouchStart(e, () => setFollowAlgo(null));
+  };
+
+  const onTouchMoveWrapper = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (nodeDragRef.current && e.touches.length === 1) {
+      const coords = getCanvasCoords(e.touches[0].clientX, e.touches[0].clientY);
+      if (coords) {
+        const { nodeId, offsetNodeX, offsetNodeY, initialNodeX, initialNodeY } = nodeDragRef.current;
+        const rawX = ((coords.x - offsetX) / scale) + offsetNodeX;
+        const rawY = ((coords.y - offsetY) / scale) + offsetNodeY;
+        const clampedX = Math.round(Math.max(20, Math.min(width - 20, rawX)));
+        const clampedY = Math.round(Math.max(20, Math.min(height - 20, rawY)));
+
+        if (Math.abs(clampedX - initialNodeX) > 2 || Math.abs(clampedY - initialNodeY) > 2) {
+          nodeDragRef.current.hasMoved = true;
+          hasDragged.current = true;
+        }
+
+        setDraggedNodePos({ id: nodeId, x: clampedX, y: clampedY });
+        return;
+      }
+    }
+    handleTouchMove(e);
+  };
+
+  const onTouchEndWrapper = () => {
+    if (nodeDragRef.current) {
+      const { nodeId, hasMoved } = nodeDragRef.current;
+      const currentPos = draggedNodePos;
+      nodeDragRef.current = null;
+      setDraggedNodePos(null);
+
+      if (hasMoved && currentPos && onNodeMoveEnd) {
+        onNodeMoveEnd(nodeId, currentPos.x, currentPos.y);
+      }
+      return;
+    }
+    handleTouchEnd();
+  };
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current || !onNodeClick) return;
     if (hasDragged.current) return; // Ignore click if we were dragging
 
-    const rect = containerRef.current.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+    const coords = getCanvasCoords(e.clientX, e.clientY);
+    if (!coords) return;
+    const { x, y } = coords;
 
-    // Reverse transform to find canvas coordinates (matches BaseRenderer.ts: translate(pan), then scale(zoom))
-    const x = (mouseX - pan.x) / zoom;
-    const y = (mouseY - pan.y) / zoom;
+    const hitNode = findNodeAtCoords(x, y);
 
-    let clickedNodeId: string | null = null;
-    let minDist = Infinity;
-
-    for (const node of visibleNodes) {
-      const cx = (node.x * scale) + offsetX;
-      const cy = (node.y * scale) + offsetY;
-      
-      const dx = cx - x;
-      const dy = cy - y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      
-      if (dist < 30 && dist < minDist) {
-        minDist = dist;
-        clickedNodeId = node.id;
-      }
-    }
-
-    if (clickedNodeId) {
-      onNodeClick(clickedNodeId);
+    if (hitNode) {
+      onNodeClick(hitNode.id);
     } else {
       let clickedEdgeId: string | null = null;
-      let minEdgeDistSq = 100; // within 10 virtual pixels distance squared
-      
-      for (const edge of visibleEdges) {
-        const fromNode = visibleNodeMap.get(edge.from);
-        const toNode = visibleNodeMap.get(edge.to);
-        if (!fromNode || !toNode) continue;
-        
-        const cx1 = (fromNode.x * scale) + offsetX;
-        const cy1 = (fromNode.y * scale) + offsetY;
-        const cx2 = (toNode.x * scale) + offsetX;
-        const cy2 = (toNode.y * scale) + offsetY;
-        
-        const l2 = (cx2 - cx1)**2 + (cy2 - cy1)**2;
-        if (l2 === 0) continue;
-        let t = ((x - cx1) * (cx2 - cx1) + (y - cy1) * (cy2 - cy1)) / l2;
-        t = Math.max(0, Math.min(1, t));
-        const projX = cx1 + t * (cx2 - cx1);
-        const projY = cy1 + t * (cy2 - cy1);
-        const distSq = (x - projX)**2 + (y - projY)**2;
-        
-        if (distSq < minEdgeDistSq) {
-          minEdgeDistSq = distSq;
-          clickedEdgeId = edge.id;
+      if (placementModeType === 'delete') {
+        let minEdgeDistSq = 100; // within 10 virtual pixels distance squared
+
+        for (const edge of visibleEdges) {
+          const fromNode = visibleNodeMap.get(edge.from);
+          const toNode = visibleNodeMap.get(edge.to);
+          if (!fromNode || !toNode) continue;
+
+          const cx1 = (fromNode.x * scale) + offsetX;
+          const cy1 = (fromNode.y * scale) + offsetY;
+          const cx2 = (toNode.x * scale) + offsetX;
+          const cy2 = (toNode.y * scale) + offsetY;
+
+          const l2 = (cx2 - cx1)**2 + (cy2 - cy1)**2;
+          if (l2 === 0) continue;
+          let t = ((x - cx1) * (cx2 - cx1) + (y - cy1) * (cy2 - cy1)) / l2;
+          t = Math.max(0, Math.min(1, t));
+          const projX = cx1 + t * (cx2 - cx1);
+          const projY = cy1 + t * (cy2 - cy1);
+          const distSq = (x - projX)**2 + (y - projY)**2;
+
+          if (distSq < minEdgeDistSq) {
+            minEdgeDistSq = distSq;
+            clickedEdgeId = edge.id;
+          }
         }
       }
 
@@ -319,32 +550,47 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
         onDeselect?.();
         const nodeX = (x - offsetX) / scale;
         const nodeY = (y - offsetY) / scale;
-        onCanvasClick?.(nodeX, nodeY);
+        onCanvasClick?.(nodeX, nodeY, activeFloor);
       }
     }
   };
+
+  const effectiveCursor = useMemo(() => {
+    if (isMoveMode) {
+      if (draggedNodePos) return 'grabbing';
+      if (hoveredNodeId) return 'grab';
+      return 'move';
+    }
+    if (placementModeType === 'rename') {
+      if (hoveredNodeId) return 'pointer';
+      return 'default';
+    }
+    if (cursor) return cursor;
+    return isDragging ? 'grabbing' : 'grab';
+  }, [isMoveMode, draggedNodePos, hoveredNodeId, placementModeType, cursor, isDragging]);
 
   return (
     <div 
       ref={containerRef} 
       className="relative w-full h-full overflow-hidden transition-colors duration-200" 
-      style={{ background: currentTheme === 'light' ? '#f8fafc' : '#0a0f1e', cursor: cursor || (isDragging ? 'grabbing' : 'grab'), touchAction: 'none' }}
+      style={{ background: currentTheme === 'light' ? '#f8fafc' : '#0a0f1e', cursor: effectiveCursor, touchAction: 'none' }}
       onWheel={handleWheel} 
-      onMouseDown={(e) => handleMouseDown(e, () => setFollowAlgo(null))} 
-      onMouseMove={handleMouseMove} 
-      onMouseUp={handleMouseUp} 
-      onMouseLeave={handleMouseLeave}
+      onMouseDown={onMouseDownWrapper} 
+      onMouseMove={onMouseMoveWrapper} 
+      onMouseUp={onMouseUpWrapper} 
+      onMouseLeave={onMouseLeaveWrapper}
       onClick={handleCanvasClick}
-      onTouchStart={(e) => handleTouchStart(e, () => setFollowAlgo(null))}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      onTouchCancel={handleTouchEnd}
+      onDoubleClick={onDoubleClickWrapper}
+      onTouchStart={onTouchStartWrapper}
+      onTouchMove={onTouchMoveWrapper}
+      onTouchEnd={onTouchEndWrapper}
+      onTouchCancel={onTouchEndWrapper}
     >
       <CanvasControls
         zoom={zoom} setZoom={setZoom} resetZoom={resetZoom}
         isLayeredMap={isLayeredMap} activeFloor={activeFloor} setActiveFloor={setActiveFloor} uniqueFloors={uniqueFloors}
-        isShowOpen={isShowOpen} setIsShowOpen={setIsShowOpen} visibleAlgos={visibleAlgos} toggleAlgo={toggleAlgo}
-        isFollowOpen={isFollowOpen} setIsFollowOpen={setIsFollowOpen} followAlgo={followAlgo} setFollowAlgo={setFollowAlgo}
+        visibleAlgos={visibleAlgos} toggleAlgo={toggleAlgo}
+        followAlgo={followAlgo} setFollowAlgo={setFollowAlgo}
         activeAlgorithms={activeAlgorithms}
       />
 

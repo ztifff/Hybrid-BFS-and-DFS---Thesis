@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { TutorialOverlay } from '../TutorialOverlay';
 
-import { ScenarioType } from '../../types';
+import { ScenarioGraph, ScenarioType } from '../../types';
 import { useSimulation } from '../../hooks/useSimulation';
 import { useSimulationViewLogic } from '../../hooks/useSimulationViewLogic';
 import { MAX_SYNTHETIC_NODES, MIN_SYNTHETIC_NODES, MIN_SYNTHETIC_LINKS, MAX_SYNTHETIC_LINKS, GAME_AI_BOARDS, SizingKey } from '../../hooks/useSimulationModel';
@@ -25,6 +25,7 @@ import { ExpertModePanel } from './ExpertModePanel';
 import { TopologyEditor } from './TopologyEditor';
 import { ThemeToggle } from '../ThemeToggle';
 import { useTheme } from '../../context/ThemeContext';
+import { PenLine, Move, Save, RotateCcw, Check } from 'lucide-react';
 
 const SIZE_ADJUSTER_THEME: Record<string, { border: string; text: string }> = {
   robotics: { border: 'focus-within:border-orange-500', text: 'text-orange-300' },
@@ -271,6 +272,15 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
       return;
     }
 
+    // A paused run can enter an editor tool without resetting until an actual
+    // graph change is made and confirmed.
+    if (sim.status === 'paused') {
+      cancelPicking();
+      setIsBlockageMode(false);
+      setPlacementMode(value);
+      return;
+    }
+
     sim.requestTopologyEdit(() => {
       sim.handleReset();
       cancelPicking();
@@ -279,7 +289,249 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     }, sim.status, sim.isCurrentSaved);
   };
 
-  const editorDisabled = sim.isComputing || sim.isGraphLoading;
+  const editorDisabled = sim.isComputing || sim.isGraphLoading || sim.status === 'running';
+
+  // ── Topology Node Move & Rename Handlers ────────────────────────────────────
+  const [renamingNode, setRenamingNode] = useState<{ id: string; label: string; type: string } | null>(null);
+  const [renameInput, setRenameInput] = useState<string>('');
+
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+  const [isSavedRecently, setIsSavedRecently] = useState<boolean>(false);
+  const [isDefaultSavedRecently, setIsDefaultSavedRecently] = useState<boolean>(false);
+  const [hasCustomPositions, setHasCustomPositions] = useState<boolean>(false);
+  const [isLayoutAtDefault, setIsLayoutAtDefault] = useState<boolean>(true);
+  const shouldShowResetLayout = hasUnsavedChanges || (hasCustomPositions && !isLayoutAtDefault);
+  const [undoHistory, setUndoHistory] = useState<ScenarioGraph[]>([]);
+
+  useEffect(() => {
+    setUndoHistory([]);
+  }, [scenario, sim.mapId]);
+
+  const recordUndo = () => {
+    if (sim.currentGraph) {
+      setUndoHistory(previous => [...previous.slice(-49), sim.currentGraph!]);
+    }
+  };
+
+  const prepareForTopologyMutation = () => {
+    if (sim.status === 'paused') sim.preservePausedProgressForEdit();
+    else sim.handleReset();
+  };
+
+  const handleUndoTopology = () => {
+    const previous = undoHistory[undoHistory.length - 1];
+    if (!previous) return;
+    const applyUndo = () => {
+      prepareForTopologyMutation();
+      setUndoHistory(history => history.slice(0, -1));
+      sim.setCurrentGraph?.(() => previous);
+      markTopologyUnsaved();
+    };
+    if (sim.status === 'running' || sim.status === 'paused' || (sim.status === 'done' && !sim.isCurrentSaved)) {
+      sim.requestTopologyEdit(applyUndo, sim.status, sim.isCurrentSaved);
+      return;
+    }
+    applyUndo();
+  };
+
+  // Check if custom saved positions exist for current scenario + mapId
+  useEffect(() => {
+    try {
+      const savedRaw = localStorage.getItem(`saved_node_positions_${scenario}_${sim.mapId}`);
+      const defaultRaw = localStorage.getItem(`default_node_layout_${scenario}_${sim.mapId}`);
+      setHasCustomPositions(Boolean(savedRaw || defaultRaw));
+      if (!savedRaw) {
+        setIsLayoutAtDefault(true);
+      } else if (!defaultRaw) {
+        setIsLayoutAtDefault(false);
+      } else {
+        const saved = JSON.parse(savedRaw);
+        const defaultLayout = JSON.parse(defaultRaw);
+        const comparable = (layout: any) => JSON.stringify({
+          positions: layout.positions,
+          nodes: layout.nodes,
+          edges: layout.edges,
+          sourceId: layout.sourceId,
+          sourceIds: layout.sourceIds,
+          destinationIds: layout.destinationIds,
+          width: layout.width,
+          height: layout.height,
+        });
+        setIsLayoutAtDefault(comparable(saved) === comparable(defaultLayout));
+      }
+      setHasUnsavedChanges(false);
+      setIsSavedRecently(false);
+      setIsDefaultSavedRecently(false);
+    } catch {
+      setHasCustomPositions(false);
+      setIsLayoutAtDefault(true);
+    }
+  }, [scenario, sim.mapId]);
+
+  const createLayoutSnapshot = () => {
+    if (!sim.currentGraph) return null;
+    const positions: Record<string, { x: number; y: number }> = {};
+    sim.currentGraph.nodes.forEach((n: any) => {
+      positions[n.id] = { x: n.x, y: n.y };
+    });
+    return {
+      positions,
+      // Save the full topology so deleted backend edges and edits to existing
+      // nodes are restored alongside custom nodes and edges.
+      nodes: sim.currentGraph.nodes,
+      edges: sim.currentGraph.edges,
+      sourceId: sim.currentGraph.sourceId,
+      sourceIds: sim.currentGraph.sourceIds,
+      destinationIds: sim.currentGraph.destinationIds,
+      width: sim.currentGraph.width,
+      height: sim.currentGraph.height,
+      customNodes: sim.currentGraph.nodes.filter((n: any) => /_\d{13}$/.test(n.id)),
+      customEdges: sim.currentGraph.edges.filter((e: any) => /_\d{13}$/.test(e.id)),
+      ...(scenario === 'robotics' && (sim.mapId === 'aws' || sim.mapId === 'awsWarehouse') ? { awsLayoutVersion: 5 } : {}),
+      updatedAt: Date.now()
+    };
+  };
+
+  const handleSavePositions = () => {
+    const data = createLayoutSnapshot();
+    if (!data) return;
+    try {
+      localStorage.setItem(`saved_node_positions_${scenario}_${sim.mapId}`, JSON.stringify(data));
+      setHasUnsavedChanges(false);
+      setHasCustomPositions(true);
+      try {
+        const defaultRaw = localStorage.getItem(`default_node_layout_${scenario}_${sim.mapId}`);
+        if (!defaultRaw) {
+          setIsLayoutAtDefault(false);
+        } else {
+          const defaultLayout = JSON.parse(defaultRaw);
+          setIsLayoutAtDefault(JSON.stringify({
+            positions: data.positions, nodes: data.nodes, edges: data.edges,
+            sourceId: data.sourceId, sourceIds: data.sourceIds, destinationIds: data.destinationIds,
+            width: data.width, height: data.height,
+          }) === JSON.stringify({
+            positions: defaultLayout.positions, nodes: defaultLayout.nodes, edges: defaultLayout.edges,
+            sourceId: defaultLayout.sourceId, sourceIds: defaultLayout.sourceIds, destinationIds: defaultLayout.destinationIds,
+            width: defaultLayout.width, height: defaultLayout.height,
+          }));
+        }
+      } catch {
+        setIsLayoutAtDefault(false);
+      }
+      setIsSavedRecently(true);
+      setTimeout(() => setIsSavedRecently(false), 3000);
+    } catch (err) {
+      console.error('Failed to save node positions:', err);
+    }
+  };
+
+  const handleSaveAsDefault = () => {
+    const data = createLayoutSnapshot();
+    if (!data) return;
+    try {
+      localStorage.setItem(`default_node_layout_${scenario}_${sim.mapId}`, JSON.stringify(data));
+      // Keep the live layout in sync immediately; the default remains as the
+      // baseline that Reset Layout will restore later.
+      localStorage.setItem(`saved_node_positions_${scenario}_${sim.mapId}`, JSON.stringify(data));
+      setHasUnsavedChanges(false);
+      setHasCustomPositions(true);
+      setIsLayoutAtDefault(true);
+      setIsSavedRecently(false);
+      setIsDefaultSavedRecently(true);
+      setTimeout(() => setIsDefaultSavedRecently(false), 3000);
+    } catch (err) {
+      console.error('Failed to save default topology layout:', err);
+    }
+  };
+
+  const handleResetPositions = () => {
+    let hasSavedDefault = false;
+    try {
+      hasSavedDefault = Boolean(localStorage.getItem(`default_node_layout_${scenario}_${sim.mapId}`));
+    } catch {
+      // Continue with the backend default if browser storage is unavailable.
+    }
+    const resetMessage = hasSavedDefault
+      ? 'Reset this map to its saved default layout?'
+      : 'Reset all node positions back to the original default layout?';
+    if (window.confirm(resetMessage)) {
+      try {
+        localStorage.removeItem(`saved_node_positions_${scenario}_${sim.mapId}`);
+      } catch (err) {
+        console.error('Failed to remove saved node positions:', err);
+      }
+      try {
+        setHasCustomPositions(Boolean(localStorage.getItem(`default_node_layout_${scenario}_${sim.mapId}`)));
+      } catch {
+        setHasCustomPositions(false);
+      }
+      setHasUnsavedChanges(false);
+      sim.forceRefetchGraph(true);
+      setIsLayoutAtDefault(true);
+    }
+  };
+
+  const handleNodeMoveEnd = (nodeId: string, x: number, y: number) => {
+    const commitMove = () => {
+      recordUndo();
+      sim.setCurrentGraph?.(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          nodes: prev.nodes.map(n => n.id === nodeId ? { ...n, x, y } : n)
+        };
+      });
+      setHasUnsavedChanges(true);
+      setIsSavedRecently(false);
+      setIsLayoutAtDefault(false);
+    };
+
+    if (sim.status === 'running' || sim.status === 'paused' || (sim.status === 'done' && !sim.isCurrentSaved)) {
+      sim.requestTopologyEdit(() => {
+        prepareForTopologyMutation();
+        commitMove();
+      }, sim.status, sim.isCurrentSaved);
+      return;
+    }
+    if (sim.status !== 'idle') sim.handleReset();
+    commitMove();
+  };
+
+  const markTopologyUnsaved = () => {
+    setHasUnsavedChanges(true);
+    setIsSavedRecently(false);
+    setIsLayoutAtDefault(false);
+  };
+
+  const handleConfirmNodeRename = () => {
+    if (!renamingNode) return;
+    const trimmed = renameInput.trim();
+    if (!trimmed) return;
+    const targetNodeId = renamingNode.id;
+
+    const commitRename = () => {
+      recordUndo();
+      sim.setCurrentGraph?.(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          nodes: prev.nodes.map(n => n.id === targetNodeId ? { ...n, label: trimmed } : n)
+        };
+      });
+      setRenamingNode(null);
+      markTopologyUnsaved();
+    };
+
+    if (sim.status === 'running' || sim.status === 'paused' || (sim.status === 'done' && !sim.isCurrentSaved)) {
+      sim.requestTopologyEdit(() => {
+        prepareForTopologyMutation();
+        commitRename();
+      }, sim.status, sim.isCurrentSaved);
+      return;
+    }
+    if (sim.status !== 'idle') sim.handleReset();
+    commitRename();
+  };
 
   // ── Custom blockage helpers ─────────────────────────────────────────────────
   // NOTE: adjust `setCustomBlockedNodes` if your useSimulation exposes a different setter name.
@@ -288,7 +540,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     | undefined;
 
   const blockedList: { nodeId: string; label: string }[] = draftBlockedNodes ?? (sim as any).customBlockedNodes ?? [];
-  const blockageDisabled = sim.isComputing || sim.isGraphLoading || sim.status !== 'idle';
+  const blockageDisabled = sim.isComputing || sim.isGraphLoading || sim.status === 'running';
   const [showHopBadges, setShowHopBadges] = useState(true);
 
   const handlePathNodeClick = (nodeId: string) => {
@@ -320,7 +572,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   }, [sim.currentGraph]);
 
   const toggleBlockNode = (nodeId: string) => {
-    if (!setCustomBlocked) return;
+    if (!setCustomBlocked || sim.isComputing) return;
     const node = sim.currentGraph?.nodes.find(n => n.id === nodeId);
     if (!node) return;
     // Don't allow blocking the start / exits
@@ -329,19 +581,17 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     const nodeName = node.label?.trim() ? node.label.split('\n')[0].trim() : nodeId;
     const labelWithNode = `${blockageBrush} at ${nodeName}`;
 
-    setDraftBlockedNodes(prev => {
-      const current: { nodeId: string; label: string }[] = prev ?? (sim as any).customBlockedNodes ?? [];
-      const existing = current.find(b => b.nodeId === nodeId);
-      if (existing) {
-        // If clicking with a different brush, update its type
-        if (!existing.label.startsWith(blockageBrush)) {
-          return current.map(b => b.nodeId === nodeId ? { nodeId, label: labelWithNode } : b);
-        }
-        // If clicking with the same brush, toggle off (unblock)
-        return current.filter(b => b.nodeId !== nodeId);
-      }
-      return [...current, { nodeId, label: labelWithNode }];
-    });
+    const current: { nodeId: string; label: string }[] = draftBlockedNodes ?? (sim as any).customBlockedNodes ?? [];
+    const existing = current.find(b => b.nodeId === nodeId);
+    const next = existing
+      ? existing.label.startsWith(blockageBrush)
+        ? current.filter(b => b.nodeId !== nodeId)
+        : current.map(b => b.nodeId === nodeId ? { nodeId, label: labelWithNode } : b)
+      : [...current, { nodeId, label: labelWithNode }];
+
+    if (sim.status === 'paused') sim.preservePausedProgressForEdit();
+    setDraftBlockedNodes(next);
+    setCustomBlocked(() => next);
   };
 
   const toggleBlockageMode = () => {
@@ -358,21 +608,20 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
       setDraftBlockedNodes(normalized);
       setIsBlockageMode(true);
     } else {
-      if (draftBlockedNodes) {
-        setCustomBlocked?.(() => draftBlockedNodes);
-      }
       setDraftBlockedNodes(null);
       setIsBlockageMode(false);
     }
   };
 
-  // Leave blockage mode whenever a run starts
+  // Leave edit modes while playback is actively running. They can be entered
+  // again after pausing.
   useEffect(() => {
-    if (sim.status !== 'idle' || sim.isComputing) {
+    if (sim.status === 'running' || (sim.isComputing && sim.status !== 'paused')) {
       setIsBlockageMode(false);
       setDraftBlockedNodes(null);
+      setPlacementMode(null);
     }
-  }, [sim.status, sim.isComputing]);
+  }, [sim.status, sim.isComputing, setDraftBlockedNodes, setIsBlockageMode, setPlacementMode]);
 
   // ── Endpoint bar labels ─────────────────────────────────────────────────────
   const srcLabel =
@@ -660,6 +909,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   optimalPathLength={sim.bfsResult?.pathLength ?? 0}
                   activeAlgorithms={sim.activeAlgorithms}
                   mapId={sim.mapId}
+                  robotAssignments={sim.robotAssignments}
                 />
               </div>
             ) : (
@@ -949,12 +1199,20 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                       {label}
                     </button>
                   ))}
-                  <span className={`ml-1 text-xs ${isLight ? 'text-amber-800 font-semibold' : 'text-amber-300/80'}`}>Click nodes ({blockedList.length} blocked)</span>
+                  <span className={`ml-1 text-xs ${isLight ? 'text-amber-800 font-semibold' : 'text-amber-300/80'}`}>
+                    {sim.isComputing ? 'Updating route…' : `Click nodes to apply immediately (${blockedList.length} blocked)`}
+                  </span>
                   
                   <div className="flex items-center gap-2 ml-2">
                     {blockedList.length > 0 && setCustomBlocked && (
                       <button
-                        onClick={() => setDraftBlockedNodes([])}
+                        onClick={() => {
+                          if (sim.isComputing) return;
+                          if (sim.status === 'paused') sim.preservePausedProgressForEdit();
+                          setDraftBlockedNodes([]);
+                          setCustomBlocked(() => []);
+                        }}
+                        disabled={sim.isComputing}
                         className={`px-2.5 py-1 rounded-md border font-bold cursor-pointer transition-colors ${
                           isLight
                             ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700'
@@ -968,9 +1226,78 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                       onClick={toggleBlockageMode}
                       className="px-3.5 py-1 rounded-md bg-amber-600 hover:bg-amber-500 text-white font-bold cursor-pointer transition-colors shadow-lg shadow-amber-500/20"
                     >
-                      Done
+                      Exit
                     </button>
                   </div>
+                </div>
+              )}
+
+              {/* Floating Move Mode Action Banner */}
+              {placementMode?.type === 'move' && (
+                <div className={`absolute top-3 left-1/2 -translate-x-1/2 z-30 max-w-[95%] flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl border backdrop-blur-md text-xs shadow-2xl animate-in fade-in slide-in-from-top-2 ${
+                  isLight
+                    ? 'border-indigo-500 bg-white/95 text-indigo-950 shadow-indigo-900/10'
+                    : 'border-indigo-500/60 bg-gray-950/95 text-indigo-200 shadow-indigo-950/50'
+                }`}>
+                  <div className="flex items-center gap-1.5 font-bold whitespace-nowrap text-[11px] sm:text-xs">
+                    <Move className="w-3.5 h-3.5 text-indigo-500 animate-pulse shrink-0" />
+                    <span>Move Mode: Drag nodes to position</span>
+                  </div>
+
+                  <div className={`h-3.5 w-px ${isLight ? 'bg-slate-300' : 'bg-white/20'} shrink-0`} />
+
+                  <button
+                    type="button"
+                    onClick={handleSavePositions}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer shadow-sm whitespace-nowrap ${
+                      isSavedRecently
+                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/30'
+                        : hasUnsavedChanges
+                          ? isLight
+                            ? 'bg-blue-600 hover:bg-blue-700 text-white ring-2 ring-blue-400/50 shadow-md shadow-blue-500/20'
+                            : 'bg-blue-600 hover:bg-blue-500 text-white ring-2 ring-blue-400/40 shadow-blue-500/30'
+                          : isLight
+                            ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300'
+                            : 'bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700'
+                    }`}
+                    title="Save all node positions to persist even after reloading the page"
+                  >
+                    {isSavedRecently ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-white" />
+                        <span>Saved ✓</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-3.5 h-3.5" />
+                        <span>{hasUnsavedChanges ? 'Save Positions •' : 'Save Positions'}</span>
+                      </>
+                    )}
+                  </button>
+
+                  {shouldShowResetLayout && (
+                    <button
+                      type="button"
+                      onClick={handleResetPositions}
+                      className={`px-2 py-1 rounded-lg border font-semibold transition-all cursor-pointer flex items-center gap-1 whitespace-nowrap ${
+                        isLight
+                          ? 'bg-white border-slate-300 text-slate-700 hover:bg-red-50 hover:text-red-600 hover:border-red-300 shadow-2xs'
+                          : 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-red-950/30 hover:text-red-400 hover:border-red-800/60'
+                      }`}
+                      title="Reset layout to default backend positions"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      <span>Reset</span>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => setPlacementModeSafe(null)}
+                    className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold cursor-pointer transition-colors shadow-lg shadow-indigo-500/20 whitespace-nowrap text-xs"
+                  >
+                    Done
+                  </button>
                 </div>
               )}
               {patchedGraph ? (
@@ -984,19 +1311,45 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     highlightedNodeId={highlightedNodeId}
                     workspaceView={workspaceView}
                     autoFit={true}
-                    cursor={(pickMode || isBlockageMode || !!placementMode) ? 'crosshair' : undefined}
+                    cursor={(pickMode || isBlockageMode || (placementMode && placementMode.type !== 'move' && placementMode.type !== 'rename')) ? 'crosshair' : undefined}
+                    isMoveMode={placementMode?.type === 'move'}
+                    placementModeType={placementMode?.type || null}
+                    onNodeMoveEnd={handleNodeMoveEnd}
+                    onNodeDoubleClick={(nodeId) => {
+                      const node = patchedGraph.nodes.find((n: any) => n.id === nodeId);
+                      if (node) {
+                        setRenamingNode({ id: nodeId, label: node.label || node.id, type: node.type });
+                        setRenameInput(node.label || node.id);
+                      }
+                    }}
                     onDeselect={() => setHighlightedNodeId(null)}
                     onNodeClick={(nodeId) => {
                       // 1. Endpoint picking has priority
                       if (pickMode) { handlePickClick(nodeId); return; }
                       // 2. Custom blockage painting
                       if (isBlockageMode) { toggleBlockNode(nodeId); return; }
+
+                      // Topology Editor: Move Node (click is handled via dragging)
+                      if (placementMode?.type === 'move') {
+                        return;
+                      }
+
+                      // Topology Editor: Rename Node
+                      if (placementMode?.type === 'rename') {
+                        const node = patchedGraph.nodes.find((n: any) => n.id === nodeId);
+                        if (node) {
+                          setRenamingNode({ id: nodeId, label: node.label || node.id, type: node.type });
+                          setRenameInput(node.label || node.id);
+                        }
+                        return;
+                      }
                       
                       // Topology Editor: Delete Node
                       if (placementMode?.type === 'delete') {
                         if (sim.status === 'running' || sim.status === 'paused' || (sim.status === 'done' && !sim.isCurrentSaved)) {
                           sim.requestTopologyEdit(() => {
-                            sim.handleReset();
+                            prepareForTopologyMutation();
+                            recordUndo();
                             sim.setCurrentGraph?.(prev => {
                               if (!prev) return prev;
                               return {
@@ -1005,10 +1358,12 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                                 edges: prev.edges.filter(e => e.from !== nodeId && e.to !== nodeId)
                               };
                             });
+                            markTopologyUnsaved();
                           }, sim.status, sim.isCurrentSaved);
                           return;
                         }
-                        if (sim.status !== 'idle') sim.handleReset();
+                        if (sim.status !== 'idle') prepareForTopologyMutation();
+                        recordUndo();
                         sim.setCurrentGraph?.(prev => {
                           if (!prev) return prev;
                           return {
@@ -1017,6 +1372,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                             edges: prev.edges.filter(e => e.from !== nodeId && e.to !== nodeId)
                           };
                         });
+                        markTopologyUnsaved();
                         return;
                       }
 
@@ -1073,7 +1429,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                               }
                             }
 
-                            if (sim.status !== 'idle') sim.handleReset();
+                            if (sim.status !== 'idle') prepareForTopologyMutation();
+                            recordUndo();
                             sim.setCurrentGraph?.(prev => {
                               if (!prev) return prev;
                               const newEdge = {
@@ -1090,6 +1447,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                                 edges: [...prev.edges, newEdge]
                               };
                             });
+                            markTopologyUnsaved();
                           }
                           setPlacementModeSafe({ ...placementMode, sourceNodeId: undefined });
                         }
@@ -1105,7 +1463,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                       if (placementMode?.type === 'delete') {
                         if (sim.status === 'running' || sim.status === 'paused' || (sim.status === 'done' && !sim.isCurrentSaved)) {
                           sim.requestTopologyEdit(() => {
-                            sim.handleReset();
+                            prepareForTopologyMutation();
+                            recordUndo();
                             sim.setCurrentGraph?.(prev => {
                               if (!prev) return prev;
                               return {
@@ -1113,10 +1472,12 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                                 edges: prev.edges.filter(e => e.id !== edgeId)
                               };
                             });
+                            markTopologyUnsaved();
                           }, sim.status, sim.isCurrentSaved);
                           return;
                         }
-                        if (sim.status !== 'idle') sim.handleReset();
+                        if (sim.status !== 'idle') prepareForTopologyMutation();
+                        recordUndo();
                         sim.setCurrentGraph?.(prev => {
                           if (!prev) return prev;
                           return {
@@ -1124,13 +1485,37 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                             edges: prev.edges.filter(e => e.id !== edgeId)
                           };
                         });
+                        markTopologyUnsaved();
                       }
                     }}
-                    onCanvasClick={(x, y) => {
+                    onCanvasClick={(x, y, activeFloor) => {
                       if (placementMode?.type === 'node') {
+                        if (scenario === 'evacuation' && ['building', 'city', 'synthetic'].includes(sim.mapId ?? '')) {
+                          const isSMRosa = sim.mapId === 'building';
+                          const isAyala = sim.mapId === 'city';
+                          const mapWidth = isSMRosa ? 180000 : isAyala ? 67200 : 58000;
+                          const mapHeight = isSMRosa ? 126500 : isAyala ? 53200 : 36000;
+                          const minY = isSMRosa && activeFloor === 'L2' ? 19900 : 0;
+                          if (x < 0 || x > mapWidth || y < minY || y > mapHeight) {
+                            showConnectionError('Place nodes within the current floor plan.');
+                            return;
+                          }
+                        }
+                        if (scenario === 'robotics' && ['aws', 'awsWarehouse', 'clinic'].includes(sim.mapId ?? '')) {
+                          const isAwsWarehouse = sim.mapId === 'aws' || sim.mapId === 'awsWarehouse';
+                          // AWS placement bounds follow the horizontally transformed perimeter wall.
+                          const bounds = isAwsWarehouse
+                            ? { minX: -13750, maxX: 62500, minY: -3600, maxY: 47000 }
+                            : { minX: -48.28, maxX: 1541, minY: -81.08, maxY: 1264 };
+                          if (x < bounds.minX || x > bounds.maxX || y < bounds.minY || y > bounds.maxY) {
+                            showConnectionError('Place nodes within the building floor plan.');
+                            return;
+                          }
+                        }
                         if (sim.status === 'running' || sim.status === 'paused' || (sim.status === 'done' && !sim.isCurrentSaved)) {
                           sim.requestTopologyEdit(() => {
-                            sim.handleReset();
+                            prepareForTopologyMutation();
+                            recordUndo();
                             const newNodeId = `${placementMode.nodeType}_${Date.now()}`;
                             const newNode = {
                               id: newNodeId,
@@ -1138,14 +1523,19 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                               label: placementMode.nodeType.replace(/_/g, ' '),
                               x,
                               y,
+                              ...(scenario === 'evacuation' && ['building', 'city', 'synthetic'].includes(sim.mapId ?? '')
+                                ? { buildingId: activeFloor ?? 'GL' }
+                                : {}),
                               level: 0,
                               status: 'active'
                             };
                             sim.setCurrentGraph?.(prev => prev ? { ...prev, nodes: [...prev.nodes, newNode] } : prev);
+                            markTopologyUnsaved();
                           }, sim.status, sim.isCurrentSaved);
                           return;
                         }
-                        if (sim.status !== 'idle') sim.handleReset();
+                        if (sim.status !== 'idle') prepareForTopologyMutation();
+                        recordUndo();
                         sim.setCurrentGraph?.(prev => {
                           if (!prev) return prev;
                           const newNodeId = `${placementMode.nodeType}_${Date.now()}`;
@@ -1155,6 +1545,9 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                             label: placementMode.nodeType.replace(/_/g, ' '),
                             x,
                             y,
+                            ...(scenario === 'evacuation' && ['building', 'city', 'synthetic'].includes(sim.mapId ?? '')
+                              ? { buildingId: activeFloor ?? 'GL' }
+                              : {}),
                             level: 0,
                             status: 'active'
                           };
@@ -1163,6 +1556,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                             nodes: [...prev.nodes, newNode]
                           };
                         });
+                        markTopologyUnsaved();
                       }
                     }}
                     mapId={sim.mapId}
@@ -1249,11 +1643,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   <button
                     disabled={sim.isComputing || sim.isGraphLoading}
                     onClick={() => {
-                      if (isBlockageMode && draftBlockedNodes) {
-                        setCustomBlocked?.(() => draftBlockedNodes);
-                        setDraftBlockedNodes(null);
-                        setIsBlockageMode(false);
-                      }
+                      if (isBlockageMode) toggleBlockageMode();
                       sim.handleRun();
                     }}
                     className={`${primaryBtnClass} bg-green-600/10 border border-green-500/60 text-green-400 hover:bg-green-600/30 hover:shadow-green-900/40`}
@@ -1282,7 +1672,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 <button
                   disabled={blockageDisabled}
                   onClick={toggleBlockageMode}
-                  title={blockageDisabled ? 'Reset the simulation to edit blocked nodes' : 'Paint blocked nodes on the map'}
+                  title={blockageDisabled ? 'Pause the simulation to edit blocked nodes' : 'Paint blocked nodes on the map'}
                   className={`${scenarioBtnClass} ${isBlockageMode ? activeTabClass : ''}`}
                 >
                   <Ico name="block" /> Block Nodes
@@ -1290,6 +1680,17 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 <button disabled={sim.isComputing || sim.isGraphLoading} onClick={() => sim.requestReroll(sim.handleRerollEvents, sim.status, sim.isCurrentSaved)} className={scenarioBtnClass}>
                   <Ico name="reroll" /> Reroll Events
                 </button>
+
+                {shouldShowResetLayout && (
+                  <button
+                    disabled={sim.isComputing || sim.isGraphLoading}
+                    onClick={handleResetPositions}
+                    title="Reset node positions back to default layout"
+                    className={`${scenarioBtnClass} hover:text-red-400`}
+                  >
+                    <RotateCcw className="w-4 h-4 shrink-0" /> Reset Layout
+                  </button>
+                )}
 
                 {/* Speed Controller */}
                 <SpeedController
@@ -1602,23 +2003,31 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               </div>
             )}
 
-            {/* Topology Editor (synthetic maps only) */}
-            {sim.mapId === 'synthetic' && (
-              <TopologyEditor
-                scenario={scenario}
-                placementMode={placementMode}
-                setPlacementMode={setPlacementModeSafe}
-                onClearGraph={() => {
-                  sim.requestTopologyEdit(() => {
-                    if (window.confirm('Are you sure you want to clear the entire map? This will delete all nodes.')) {
-                      sim.handleReset();
-                      sim.setCurrentGraph?.(prev => prev ? { ...prev, nodes: [], edges: [] } : prev);
-                    }
-                  }, sim.status, sim.isCurrentSaved);
-                }}
-                disabled={editorDisabled}
-              />
-            )}
+            {/* Game AI topology is governed by the board rules. */}
+            {scenario !== 'gameai' && <TopologyEditor
+              scenario={scenario}
+              mapId={sim.mapId}
+              placementMode={placementMode}
+              setPlacementMode={setPlacementModeSafe}
+              onClearGraph={() => {
+                sim.requestTopologyEdit(() => {
+                  if (window.confirm('Are you sure you want to clear the entire map? This will delete all nodes.')) {
+                    prepareForTopologyMutation();
+                  recordUndo();
+                    sim.setCurrentGraph?.(prev => prev ? { ...prev, nodes: [], edges: [] } : prev);
+                  markTopologyUnsaved();
+                  }
+                }, sim.status, sim.isCurrentSaved);
+              }}
+              onSavePositions={handleSavePositions}
+              onSaveAsDefault={handleSaveAsDefault}
+              onUndo={handleUndoTopology}
+              canUndo={undoHistory.length > 0}
+              hasUnsavedChanges={hasUnsavedChanges}
+              isSavedRecently={isSavedRecently}
+              isDefaultSavedRecently={isDefaultSavedRecently}
+              disabled={editorDisabled}
+            />}
           </ResizableSidebar>
         </div>
       </div>
@@ -1674,6 +2083,96 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)] cursor-pointer disabled:opacity-50"
               >
                 Save Result
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Rename Node Modal ──────────────────────────────────────────────────── */}
+      {renamingNode && (
+        <div 
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 transition-opacity animate-fadeIn"
+          onClick={() => setRenamingNode(null)}
+        >
+          <div 
+            className={`rounded-xl w-full max-w-md flex flex-col shadow-2xl overflow-hidden border ${
+              isLight ? 'bg-white border-slate-200 text-slate-900 shadow-xl' : 'bg-gray-900 border-gray-700 text-white shadow-[0_0_50px_rgba(0,0,0,0.8)]'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${
+                  isLight ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-amber-950/60 text-amber-400 border border-amber-700/50'
+                }`}>
+                  <PenLine className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className={`text-lg font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                    Rename Node
+                  </h3>
+                  <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>
+                    Change the display label for this device
+                  </p>
+                </div>
+              </div>
+
+              {/* Node Info Badge */}
+              <div className={`flex items-center gap-2 p-2.5 rounded-lg border text-xs mb-4 font-mono ${
+                isLight ? 'bg-slate-100 border-slate-200 text-slate-700' : 'bg-black/40 border-gray-800 text-gray-300'
+              }`}>
+                <span className={`px-2 py-0.5 rounded text-[11px] font-sans font-bold uppercase tracking-wider ${
+                  isLight ? 'bg-amber-100 text-amber-800' : 'bg-amber-900/40 text-amber-300'
+                }`}>
+                  {renamingNode.type.replace(/_/g, ' ')}
+                </span>
+                <span className="truncate text-[11px] text-gray-400">ID: {renamingNode.id}</span>
+              </div>
+
+              <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${
+                isLight ? 'text-slate-700' : 'text-gray-300'
+              }`}>
+                Node Name / Label
+              </label>
+              <input
+                type="text"
+                value={renameInput}
+                onChange={(e) => setRenameInput(e.target.value)}
+                placeholder="Enter node label..."
+                className={`w-full rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 font-medium text-sm transition-all ${
+                  isLight
+                    ? 'bg-slate-50 border border-slate-300 text-slate-900 focus:border-amber-500 focus:ring-amber-500/20 placeholder:text-slate-400'
+                    : 'bg-gray-800 border border-gray-600 text-white focus:border-amber-500 focus:ring-amber-500'
+                }`}
+                autoFocus
+                onFocus={(e) => e.target.select()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleConfirmNodeRename();
+                  if (e.key === 'Escape') setRenamingNode(null);
+                }}
+              />
+            </div>
+            
+            <div className={`border-t p-4 flex justify-end gap-3 ${
+              isLight ? 'bg-slate-50 border-slate-200' : 'bg-gray-950 border-gray-800'
+            }`}>
+              <button 
+                type="button"
+                onClick={() => setRenamingNode(null)} 
+                className={`px-5 py-2.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${
+                  isLight ? 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-300' : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                }`}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button"
+                onClick={handleConfirmNodeRename}
+                disabled={!renameInput.trim()} 
+                className="px-6 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs transition-all shadow-[0_0_15px_rgba(217,119,6,0.3)] cursor-pointer disabled:opacity-50"
+              >
+                Save Name
               </button>
             </div>
           </div>

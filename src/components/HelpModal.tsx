@@ -17,7 +17,7 @@ const SCENARIO_MAPS: Record<ScenarioType, { name: string; description: string }[
     { name: '🏫 Campus Network', description: 'A university campus network featuring active Access Control Lists (ACLs). Demonstrates strict subnet routing rules where Boys Block (192.168.3.x) can only reach AB1, Girls Block can only reach AB2, and Yellow Zones bypass routers using Layer 2 switching.' },
   ],
   robotics: [
-    { name: '🧪 Synthetic', description: 'A generated warehouse grid layout that dynamically expands horizontally with up to 18 finish line exit destinations as node density increases. Features 3D storage shelf box pillars and 3D delivery storage grids.' },
+    { name: '🧪 Synthetic', description: 'A generated warehouse grid layout with a maximum of 141 nodes, up to 18 aisles, and 6 delivery bays (one bay per three aisles). Features 3D storage shelf box pillars and 3D delivery storage grids.' },
     { name: '🏭 AWS Warehouse', description: 'Inspired by Amazon Fulfillment Center layouts. Features a Central Depot (source), multiple shelf zones organized in rows, and Delivery Bay targets. Shelf-blocking events simulate real robot-shelf collision events.' },
     { name: '🏥 Clinic Building', description: 'Models a multi-room clinic or hospital floor. Narrow corridors and many dead-end rooms make this a prime test for DFS trap sensitivity and Hybrid backtracking.' },
   ],
@@ -277,14 +277,13 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose, onStartTutorial 
           {tab === 'canvas' && (
             <>
               <Section title="Show Panel (Top-Left of Canvas)">
-                <p className="text-sm text-gray-400 mb-2">Click <strong>SHOW ▼</strong> to expand. Lets you toggle the visibility of each algorithm's coloring on the canvas.</p>
+                <p className="text-sm text-gray-400 mb-2">Use the three always-visible circles below <strong>SHOW</strong> to toggle each algorithm's path coloring on the canvas. A filled circle means that algorithm is visible; hover to see its name.</p>
                 <Item label="BFS / DFS / Hybrid toggle" icon="👁️">Click to hide or show that algorithm's explored regions, path lines, and search head rings. Useful for isolating one algorithm for comparison — e.g., hide BFS and DFS to see only the Hybrid path in orange.</Item>
                 <Item label="ON / OFF indicator">Shows the current visibility state. Dot color matches the algorithm's color scheme.</Item>
               </Section>
               <Section title="Follow Panel (Top-Right of Canvas)">
-                <p className="text-sm text-gray-400 mb-2">Click <strong>FOLLOW ▼</strong> to expand. Auto-pans the camera to track a specific algorithm's search head as it explores the graph.</p>
-                <Item label="BFS / DFS / Hybrid">Select one to start following that algorithm. The canvas smoothly pans each step to keep the active search head centered. The 📡 icon appears when tracking is active.</Item>
-                <Item label="Stop Following">Appears when following is active. Click to release camera control back to you. Also deactivated automatically when you drag the canvas.</Item>
+                <p className="text-sm text-gray-400 mb-2">Use the three always-visible circles below <strong>FOLLOW</strong> to choose which algorithm's search head the camera tracks. A filled circle marks the selected algorithm; hover to see its name.</p>
+                <Item label="Stop Following">Click the selected circle again to release camera control. Following also stops automatically when you drag the canvas.</Item>
               </Section>
               <Section title="Zoom Controls (Bottom-Right of Canvas)">
                 <Item label="+ Button" icon="🔍">Zooms into the canvas at the current view center (1.5× per click).</Item>
@@ -405,11 +404,11 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose, onStartTutorial 
                       Controls how many nodes are generated in the synthetic graph. The strict mathematical bounds for this scenario to ensure valid layouts are:
                       <ul className="list-disc list-inside mt-2 mb-2 ml-4 text-gray-400">
                         {scenario === 'network' && <li><strong>Network Routing:</strong> 7 to 220 nodes</li>}
-                        {scenario === 'robotics' && <li><strong>Robotics / Warehouse:</strong> 13 to 217 nodes</li>}
+                        {scenario === 'robotics' && <li><strong>Robotics / Warehouse:</strong> 13 to 141 nodes</li>}
                         {scenario === 'traffic' && <li><strong>Road Traffic:</strong> 9 to 220 nodes</li>}
                         {scenario === 'evacuation' && <li><strong>Emergency Evacuation:</strong> 28 to 144 nodes</li>}
                       </ul>
-                      {scenario === 'robotics' && 'On Synthetic Robotics maps, increasing nodes automatically expands the layout horizontally with up to 18 finish line exit destinations.'}
+                      {scenario === 'robotics' && 'On Synthetic Robotics maps, increasing nodes expands the layout up to 18 aisles. Each delivery bay serves three aisles, for a maximum of 6 delivery bays.'}
                     </Item>
                     <Item label="Links" icon="🔗">Controls edge connectivity. Link counts automatically scale with node density to ensure dense graphs remain 100% pathable and connected.</Item>
                     <Item label="Generated X nodes / Y links" icon="📋">Displays actual generated node and edge counts after structure generation.</Item>

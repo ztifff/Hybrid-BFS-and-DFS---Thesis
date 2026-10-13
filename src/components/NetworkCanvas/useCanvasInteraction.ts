@@ -61,18 +61,20 @@ export function useCanvasInteraction({
       return;
     }
 
-    // Use 88% of container dimensions to ensure comfortable breathing margins
+    // Use comfortable breathing margins, accounting for top HUD and bottom floor controls in evacuation
+    const marginY = scenario === 'evacuation' ? 0.78 : 0.88;
+    const marginX = scenario === 'evacuation' ? 0.85 : 0.88;
     const targetZoom = Math.min(
-      (cw * 0.88) / width,
-      (ch * 0.88) / height
+      (cw * marginX) / width,
+      (ch * marginY) / height
     );
 
     // Clamp zoom to [0.1, 1.05] so huge graphs fit completely and small graphs aren't oversized
     const clampedZoom = Math.max(0.1, Math.min(targetZoom, 1.05));
 
-    // Pan that puts the center of the drawn graph exactly at the canvas center
+    // Pan that puts the center of the drawn graph at canvas center, with slight upward bias in evacuation for floor buttons
     const panX = (cw / 2) * (1 - clampedZoom);
-    const panY = (ch / 2) * (1 - clampedZoom);
+    const panY = (ch / 2) * (1 - clampedZoom) - (scenario === 'evacuation' ? 18 : 0);
 
     setZoom(clampedZoom);
     setPan({ x: panX, y: panY });

@@ -11,14 +11,10 @@ interface CanvasControlsProps {
   activeFloor: string;
   setActiveFloor: (floor: string) => void;
   uniqueFloors?: string[];
-  // Show Panel
-  isShowOpen: boolean;
-  setIsShowOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  // Algorithm visibility
   visibleAlgos: { bfs: boolean; dfs: boolean; hybrid: boolean };
   toggleAlgo: (algo: 'bfs' | 'dfs' | 'hybrid') => void;
-  // Follow Panel
-  isFollowOpen: boolean;
-  setIsFollowOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  // Follow algorithm
   followAlgo: 'bfs' | 'dfs' | 'hybrid' | null;
   setFollowAlgo: (algo: 'bfs' | 'dfs' | 'hybrid' | null) => void;
   // External algorithm active state (from header pills)
@@ -28,8 +24,7 @@ interface CanvasControlsProps {
 export const CanvasControls: React.FC<CanvasControlsProps> = ({
   zoom, setZoom, resetZoom,
   isLayeredMap, activeFloor, setActiveFloor, uniqueFloors = [],
-  isShowOpen, setIsShowOpen, visibleAlgos, toggleAlgo,
-  isFollowOpen, setIsFollowOpen, followAlgo, setFollowAlgo,
+  visibleAlgos, toggleAlgo, followAlgo, setFollowAlgo,
   activeAlgorithms,
 }) => {
   const { theme } = useTheme();
@@ -37,146 +32,30 @@ export const CanvasControls: React.FC<CanvasControlsProps> = ({
 
   return (
     <>
-      {/* Show Panel (Dropdown) — TOP LEFT */}
-      <div className="absolute top-3 left-3 z-20">
-        <button
-          onClick={() => setIsShowOpen(o => !o)}
-          className={`flex items-center gap-1.5 backdrop-blur-sm border rounded-xl px-3 py-1.5 shadow-lg cursor-pointer transition-colors ${
-            isLight
-              ? 'bg-white/95 border-slate-300 hover:border-slate-400 text-slate-800'
-              : 'bg-gray-900/90 border-gray-700 hover:border-gray-500 text-gray-300'
-          }`}
-        >
-          <span className={`text-[9px] uppercase tracking-widest font-bold select-none ${isLight ? 'text-slate-700' : 'text-gray-400'}`}>Show</span>
-          {!visibleAlgos.bfs    && <span className="w-2 h-2 rounded-full bg-green-500 opacity-40" />}
-          {!visibleAlgos.dfs    && <span className="w-2 h-2 rounded-full bg-purple-500 opacity-40" />}
-          {!visibleAlgos.hybrid && <span className="w-2 h-2 rounded-full bg-orange-500 opacity-40" />}
-          <span className={`text-[9px] ${isLight ? 'text-slate-500' : 'text-gray-600'}`}>{isShowOpen ? '▲' : '▼'}</span>
-        </button>
-        {isShowOpen && (
-          <div className={`mt-1 flex flex-col gap-1 backdrop-blur-sm border rounded-xl px-2 py-2 shadow-xl ${
-            isLight
-              ? 'bg-white/98 border-slate-300 text-slate-900 shadow-slate-300/40'
-              : 'bg-gray-900/95 border-gray-700 shadow-black/50'
-          }`}>
-            {([
-              { 
-                algo: 'bfs',    
-                label: 'BFS',    
-                on: isLight ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-green-600 text-white border-green-500',  
-                off: isLight ? 'text-slate-600 border-slate-200 bg-slate-50 hover:bg-slate-100' : 'text-gray-500 border-gray-700' 
-              },
-              { 
-                algo: 'dfs',    
-                label: 'DFS',    
-                on: isLight ? 'bg-purple-600 text-white border-purple-500' : 'bg-purple-600 text-white border-purple-500', 
-                off: isLight ? 'text-slate-600 border-slate-200 bg-slate-50 hover:bg-slate-100' : 'text-gray-500 border-gray-700' 
-              },
-              { 
-                algo: 'hybrid', 
-                label: 'Hybrid', 
-                on: isLight ? 'bg-amber-600 text-white border-amber-500' : 'bg-orange-600 text-white border-orange-500', 
-                off: isLight ? 'text-slate-600 border-slate-200 bg-slate-50 hover:bg-slate-100' : 'text-gray-500 border-gray-700' 
-              },
-            ] as const).map(({ algo, label, on, off }) => {
-              const isGloballyDisabled = activeAlgorithms ? !activeAlgorithms[algo] : false;
-              return (
-                <button
-                  key={algo}
-                  onClick={() => !isGloballyDisabled && toggleAlgo(algo)}
-                  disabled={isGloballyDisabled}
-                  title={isGloballyDisabled ? `${label} is hidden from the header — click the pill to re-enable` : undefined}
-                  className={`px-3 py-1 rounded-lg text-[10px] font-bold border transition-all flex items-center gap-2 ${
-                    isGloballyDisabled
-                      ? isLight ? 'opacity-40 cursor-not-allowed border-slate-200 text-slate-400 bg-slate-100' : 'opacity-40 cursor-not-allowed border-gray-700 text-gray-500 bg-gray-800/30'
-                      : `cursor-pointer ${visibleAlgos[algo] ? on : off}`
-                  }`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full ${
-                    algo === 'bfs' ? 'bg-green-500' : algo === 'dfs' ? 'bg-purple-500' : 'bg-orange-500'
-                  } ${(isGloballyDisabled || !visibleAlgos[algo]) ? 'opacity-30' : 'opacity-100'}`} />
-                  {isGloballyDisabled ? '⊘ ' : ''}{label}
-                  <span className="ml-auto text-[9px] opacity-75">
-                    {isGloballyDisabled ? 'LOCKED' : visibleAlgos[algo] ? 'ON' : 'OFF'}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        )}
+      <div className="absolute top-3 left-3 z-20 flex flex-col items-center gap-1.5">
+        <span className={`text-[8px] uppercase tracking-[0.18em] font-extrabold ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>Show</span>
+        <div className={`flex items-center gap-1.5 rounded-full border px-2 py-1 backdrop-blur-sm shadow-lg ${isLight ? 'bg-white/90 border-slate-300' : 'bg-gray-900/85 border-gray-700'}`}>
+          {(['bfs', 'dfs', 'hybrid'] as const).map((algo, index) => {
+            const colors = { bfs: 'bg-green-500', dfs: 'bg-purple-500', hybrid: 'bg-orange-500' };
+            const isEnabled = activeAlgorithms ? activeAlgorithms[algo] : true;
+            const isVisible = visibleAlgos[algo];
+            const ring = { bfs: 'border-green-500', dfs: 'border-purple-500', hybrid: 'border-orange-500' }[algo];
+            return <React.Fragment key={algo}>{index > 0 && <span className={`h-3 w-px ${isLight ? 'bg-slate-300' : 'bg-gray-700'}`} />}<button type="button" aria-label={`${isVisible ? 'Hide' : 'Show'} ${algo.toUpperCase()} on canvas`} aria-pressed={isVisible} title={isEnabled ? `${isVisible ? 'Hide' : 'Show'} ${algo.toUpperCase()}` : `${algo.toUpperCase()} is disabled in the algorithm selector`} disabled={!isEnabled} onClick={() => toggleAlgo(algo)} className={`h-5 w-5 rounded-full border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${ring} ${isVisible && isEnabled ? colors[algo] : `${isLight ? 'bg-white' : 'bg-gray-950'} opacity-50`} ${isEnabled ? 'cursor-pointer hover:scale-110' : 'cursor-not-allowed opacity-30'}`} /></React.Fragment>;
+          })}
+        </div>
       </div>
-
-      {/* Follow Panel (Dropdown) — TOP RIGHT */}
-      <div className="absolute top-3 right-3 z-20">
-        <button
-          onClick={() => setIsFollowOpen(o => !o)}
-          className={`flex items-center gap-1.5 backdrop-blur-sm border rounded-xl px-3 py-1.5 shadow-lg cursor-pointer transition-colors ${
-            followAlgo
-              ? isLight
-                ? 'bg-blue-50 border-blue-400 text-blue-700 hover:border-blue-500'
-                : 'bg-blue-900/60 border-blue-500/60 hover:border-blue-400 text-blue-200'
-              : isLight
-                ? 'bg-white/95 border-slate-300 hover:border-slate-400 text-slate-800'
-                : 'bg-gray-900/90 border-gray-700 hover:border-gray-500 text-gray-300'
-          }`}
-        >
-          <span className={`text-[9px] uppercase tracking-widest font-bold select-none ${isLight ? 'text-slate-700' : 'text-gray-400'}`}>Follow</span>
-          {followAlgo && <span className={`text-[9px] font-bold ${isLight ? 'text-blue-700' : 'text-blue-300'}`}>{followAlgo.toUpperCase()}</span>}
-          <span className={`text-[9px] ${isLight ? 'text-slate-500' : 'text-gray-600'}`}>{isFollowOpen ? '▲' : '▼'}</span>
-        </button>
-        {isFollowOpen && (
-          <div className={`mt-1 flex flex-col gap-1 backdrop-blur-sm border rounded-xl px-2 py-2 shadow-xl ${
-            isLight
-              ? 'bg-white/98 border-slate-300 text-slate-900 shadow-slate-300/40'
-              : 'bg-gray-900/95 border-gray-700 shadow-black/50'
-          }`}>
-            {(['bfs', 'dfs', 'hybrid'] as const).map((algo) => {
-              const colors = {
-                bfs:    { 
-                  active: isLight ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-green-600 text-white border-green-500',  
-                  inactive: isLight ? 'text-slate-700 border-slate-200 hover:border-emerald-600 hover:bg-slate-50' : 'text-gray-400 border-gray-700 hover:border-green-700' 
-                },
-                dfs:    { 
-                  active: isLight ? 'bg-purple-600 text-white border-purple-500' : 'bg-purple-600 text-white border-purple-500', 
-                  inactive: isLight ? 'text-slate-700 border-slate-200 hover:border-purple-600 hover:bg-slate-50' : 'text-gray-400 border-gray-700 hover:border-purple-700' 
-                },
-                hybrid: { 
-                  active: isLight ? 'bg-amber-600 text-white border-amber-500' : 'bg-orange-600 text-white border-orange-500', 
-                  inactive: isLight ? 'text-slate-700 border-slate-200 hover:border-amber-600 hover:bg-slate-50' : 'text-gray-400 border-gray-700 hover:border-orange-700' 
-                },
-              };
-              const dotColor = { bfs: 'bg-green-500', dfs: 'bg-purple-500', hybrid: 'bg-orange-500' };
-              const isActive = followAlgo === algo;
-              const isVisible = visibleAlgos[algo];
-              return (
-                <button
-                  key={algo}
-                  disabled={!isVisible}
-                  onClick={() => setFollowAlgo(isActive ? null : algo)}
-                  className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase border transition-all flex items-center gap-2 ${
-                    !isVisible ? isLight ? 'opacity-30 cursor-not-allowed border-slate-200 text-slate-400' : 'opacity-30 cursor-not-allowed border-gray-700 text-gray-500' :
-                    isActive ? colors[algo].active + ' cursor-pointer shadow-sm' : colors[algo].inactive + ' cursor-pointer'
-                  }`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full ${dotColor[algo]} ${isActive ? 'opacity-100' : 'opacity-30'}`} />
-                  {isActive ? '📡 ' : ''}{algo}
-                </button>
-              );
-            })}
-            {followAlgo && (
-              <button
-                onClick={() => setFollowAlgo(null)}
-                className={`mt-0.5 px-3 py-1 rounded-lg text-[9px] font-bold border transition-all cursor-pointer ${
-                  isLight
-                    ? 'text-red-700 border-red-300 hover:bg-red-50'
-                    : 'text-red-400 border-red-900/50 hover:bg-red-900/20'
-                }`}
-              >
-                Stop Following
-              </button>
-            )}
-          </div>
-        )}
+      <div className="absolute top-3 right-3 z-20 flex flex-col items-center gap-1.5">
+        <span className={`text-[8px] uppercase tracking-[0.18em] font-extrabold ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>Follow</span>
+        <div className={`flex items-center gap-1.5 rounded-full border px-2 py-1 backdrop-blur-sm shadow-lg ${isLight ? 'bg-white/90 border-slate-300' : 'bg-gray-900/85 border-gray-700'}`}>
+          {(['bfs', 'dfs', 'hybrid'] as const).map((algo, index) => {
+            const colors = { bfs: 'bg-green-500', dfs: 'bg-purple-500', hybrid: 'bg-orange-500' };
+            const isEnabled = activeAlgorithms ? activeAlgorithms[algo] : true;
+            const isFollowing = followAlgo === algo;
+            const isVisible = visibleAlgos[algo];
+            const ring = { bfs: 'border-green-500', dfs: 'border-purple-500', hybrid: 'border-orange-500' }[algo];
+            return <React.Fragment key={algo}>{index > 0 && <span className={`h-3 w-px ${isLight ? 'bg-slate-300' : 'bg-gray-700'}`} />}<button type="button" aria-label={`${isFollowing ? 'Stop following' : 'Follow'} ${algo.toUpperCase()}`} aria-pressed={isFollowing} title={!isEnabled ? `${algo.toUpperCase()} is disabled in the algorithm selector` : !isVisible ? `Show ${algo.toUpperCase()} before following it` : `${isFollowing ? 'Stop following' : 'Follow'} ${algo.toUpperCase()}`} disabled={!isVisible || !isEnabled} onClick={() => setFollowAlgo(isFollowing ? null : algo)} className={`h-5 w-5 rounded-full border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${ring} ${isFollowing ? colors[algo] : `${isLight ? 'bg-white' : 'bg-gray-950'}`} ${isVisible && isEnabled ? 'cursor-pointer hover:scale-110' : 'cursor-not-allowed opacity-30'}`} /></React.Fragment>;
+          })}
+        </div>
       </div>
 
       {/* Layered Map Floor Controls */}

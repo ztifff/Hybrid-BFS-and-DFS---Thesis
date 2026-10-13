@@ -10,9 +10,9 @@ export class EvacuationRenderer extends BaseRenderer {
       const sy = (y: number) => this.sy(y, options);
 
       if (options.mapId === 'city' || options.mapId === 'ayala') {
-        drawAyalaFloorPlan(options.ctx, sx, sy, options.zoom, options.visibleNodes, options.workspaceView, options.theme);
+        drawAyalaFloorPlan(options.ctx, sx, sy, options.zoom, options.visibleNodes, options.workspaceView, options.theme, options.activeFloor);
       } else if (options.mapId === 'building') {
-        drawSMRosaFloorPlan(options.ctx, sx, sy, options.zoom, options.visibleNodes, options.workspaceView, options.theme);
+        drawSMRosaFloorPlan(options.ctx, sx, sy, options.zoom, options.visibleNodes, options.workspaceView, options.theme, options.activeFloor);
       } else if (options.mapId === 'synthetic') {
         drawClemensFloorPlan(options.ctx, sx, sy, options.zoom, options.visibleNodes, options.workspaceView, options.theme);
       }

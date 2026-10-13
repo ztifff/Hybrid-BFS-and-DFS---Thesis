@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlgorithmType, ScenarioType, SimulationResult, AlgorithmStep } from '../../types';
+import { AlgorithmType, ScenarioType, SimulationResult, AlgorithmStep, RobotAssignment } from '../../types';
 import { getScenario, ALGORITHMS } from '../../config/scenarios';
 import { getAdaptabilityScore, getPathOptimality, getCompletionRate, getMemoryInMB } from '../../utils/metricsHelpers';
 import { useTheme } from '../../context/ThemeContext';
@@ -15,6 +15,7 @@ interface Props {
   optimalPathLength?: number;
   activeAlgorithms?: { bfs: boolean; dfs: boolean; hybrid: boolean };
   mapId?: string;
+  robotAssignments?: RobotAssignment[];
 }
 export const MetricsPanel: React.FC<Props> = ({
   multiResults,
@@ -27,6 +28,7 @@ export const MetricsPanel: React.FC<Props> = ({
   optimalPathLength,
   activeAlgorithms = { bfs: true, dfs: true, hybrid: true },
   mapId,
+  robotAssignments = [],
 }) => {
   const { theme } = useTheme();
   const isLight = theme === 'light';
@@ -83,9 +85,22 @@ export const MetricsPanel: React.FC<Props> = ({
     const hasDeliveredCounts = stepData?.deliveredBoxCounts !== undefined;
     let completion = { percentage: 0, label: '0.0%' };
     if (!isStart) {
-      if (scenario === 'robotics' && mapId === 'aws' && hasDeliveredCounts && stepData?.deliveredBoxCounts) {
-        const totalDelivered = Object.values(stepData.deliveredBoxCounts).reduce((a, b) => a + b, 0);
-        const pct = Math.min(100, (totalDelivered / 12) * 100);
+      if (scenario === 'robotics' && mapId !== 'clinic' && hasDeliveredCounts && stepData?.deliveredBoxCounts) {
+        const boxTargets = new Map<string, number>();
+        const assigned = robotAssignments.filter(assignment => assignment.destinations.length > 0);
+        if (assigned.length > 0) {
+          assigned.forEach(assignment => assignment.destinations.forEach(destinationId => {
+            boxTargets.set(destinationId, (boxTargets.get(destinationId) ?? 0) + (assignment.boxCounts?.[destinationId] ?? 6));
+          }));
+        } else {
+          (resultData?.graph.destinationIds ?? []).forEach(destinationId => boxTargets.set(destinationId, 6));
+        }
+        const totalRequired = [...boxTargets.values()].reduce((sum, count) => sum + count, 0);
+        const totalDelivered = [...boxTargets.keys()].reduce(
+          (sum, destinationId) => sum + Math.min(stepData.deliveredBoxCounts?.[destinationId] ?? 0, boxTargets.get(destinationId) ?? 0),
+          0
+        );
+        const pct = totalRequired > 0 ? Math.min(100, (totalDelivered / totalRequired) * 100) : 0;
         completion = { percentage: pct, label: `${pct.toFixed(1)}%` };
       } else if (status === 'done' && resultData && resultData.metrics.completionRate !== undefined) {
         completion = { percentage: resultData.metrics.completionRate, label: `${resultData.metrics.completionRate.toFixed(1)}%` };

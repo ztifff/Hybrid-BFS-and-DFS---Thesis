@@ -1,28 +1,40 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ScenarioType } from '../../types';
 import { NODE_CONFIG, EDGE_CONFIG } from '../NetworkCanvas/types';
-import { Trash2, MousePointer2 } from 'lucide-react';
+import { Trash2, MousePointer2, Move, PenLine, Save, Undo2, Check, Star } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { getCiscoIconDataUrl, onCiscoIconsChange } from '../../utils/ciscoIcons';
+import { EvacuationNodeIcon } from '../NetworkCanvas/evacuationNodeIcons';
 
-export type PlacementMode = 
-  | { type: 'node', nodeType: string } 
-  | { type: 'edge', edgeType: string, sourceNodeId?: string } 
-  | { type: 'delete' } 
+export type PlacementMode =
+  | { type: 'node', nodeType: string }
+  | { type: 'edge', edgeType: string, sourceNodeId?: string }
+  | { type: 'delete' }
+  | { type: 'move' }
+  | { type: 'rename' }
   | null;
 
 interface TopologyEditorProps {
   scenario: ScenarioType;
+  mapId?: string;
   placementMode: PlacementMode;
   setPlacementMode: React.Dispatch<React.SetStateAction<PlacementMode>>;
   onClearGraph: () => void;
+  onSavePositions?: () => void;
+  onSaveAsDefault?: () => void;
+  onUndo?: () => void;
+  canUndo?: boolean;
+  hasUnsavedChanges?: boolean;
+  isSavedRecently?: boolean;
+  isDefaultSavedRecently?: boolean;
   disabled?: boolean;
 }
 
 const SCENARIO_NODES: Record<ScenarioType, string[]> = {
-  network: ['router', 'multilayer_switch', 'access_switch', 'wireless_ap', 'end_device', 'server'],
+  network: ['datacenter', 'router', 'multilayer_switch', 'access_switch', 'wireless_ap', 'end_device', 'server'],
   traffic: ['origin', 'highway', 'intersection', 'street'],
   robotics: ['depot', 'zone', 'shelf', 'delivery_bay'],
-  evacuation: ['start', 'emergency_exit', 'corridor', 'stairwell'],
+  evacuation: ['start', 'emergency_exit', 'corridor', 'stairwell', 'place', 'room', 'cinema'],
   gameai: ['strategy_planner', 'winning_square', 'board_tile']
 };
 
@@ -51,25 +63,54 @@ const getEdgeStrokeColor = (edgeType: string, isLight: boolean): string => {
 
 export const TopologyEditor: React.FC<TopologyEditorProps> = ({
   scenario,
+  mapId,
   placementMode,
   setPlacementMode,
   onClearGraph,
+  onSavePositions,
+  onSaveAsDefault,
+  onUndo,
+  canUndo,
+  hasUnsavedChanges,
+  isSavedRecently,
+  isDefaultSavedRecently,
   disabled
 }) => {
   const { theme } = useTheme();
   const isLight = theme === 'light';
+  const [, setIconTick] = useState(0);
 
-  const nodes = SCENARIO_NODES[scenario] || [];
+  useEffect(() => {
+    return onCiscoIconsChange(() => setIconTick(t => t + 1));
+  }, []);
+
+  const nodes = scenario === 'evacuation' && mapId === 'synthetic'
+    ? SCENARIO_NODES[scenario].filter(nodeType => nodeType !== 'place')
+    : scenario === 'robotics' && mapId === 'clinic'
+      ? SCENARIO_NODES[scenario].filter(nodeType => nodeType !== 'shelf')
+      : SCENARIO_NODES[scenario] || [];
   const edges = SCENARIO_EDGES[scenario] || [];
+
+  const getBorderAndShadow = () => {
+    if (!placementMode) {
+      return isLight ? 'bg-white border-slate-200/90 shadow-sm' : 'bg-[#0a0f1e] border-gray-700';
+    }
+    if (placementMode.type === 'move') {
+      return isLight ? 'bg-white border-indigo-500 shadow-md shadow-indigo-500/10' : 'bg-[#0a0f1e] border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.3)]';
+    }
+    if (placementMode.type === 'rename') {
+      return isLight ? 'bg-white border-amber-500 shadow-md shadow-amber-500/10' : 'bg-[#0a0f1e] border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]';
+    }
+    if (placementMode.type === 'delete') {
+      return isLight ? 'bg-white border-red-500 shadow-md shadow-red-500/10' : 'bg-[#0a0f1e] border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]';
+    }
+    return isLight ? 'bg-white border-blue-500 shadow-md shadow-blue-500/10' : 'bg-[#0a0f1e] border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]';
+  };
 
   return (
     <div
       data-tutorial="tutorial-topology-editor"
-      className={`shrink-0 rounded-xl p-4 flex flex-col gap-3 transition-all duration-300 border ${
-        isLight
-          ? (placementMode ? 'bg-white border-blue-500 shadow-md' : 'bg-white border-slate-200/90 shadow-sm')
-          : (placementMode ? 'bg-[#0a0f1e] border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-[#0a0f1e] border-gray-700')
-      } ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
+      className={`shrink-0 rounded-xl p-4 flex flex-col gap-3 transition-all duration-300 border ${getBorderAndShadow()} ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
     >
       <div className="flex items-center justify-between">
         <div className={`text-[10px] uppercase tracking-[0.2em] font-extrabold ${isLight ? 'text-slate-700' : 'text-gray-500'}`}>
@@ -77,55 +118,181 @@ export const TopologyEditor: React.FC<TopologyEditorProps> = ({
         </div>
         <button
           onClick={onClearGraph}
-          className={`text-xs flex items-center gap-1 font-semibold transition-colors cursor-pointer ${
-            isLight ? 'text-red-600 hover:text-red-700' : 'text-red-400 hover:text-red-300'
-          }`}
+          className={`text-xs flex items-center gap-1 font-semibold transition-colors cursor-pointer ${isLight ? 'text-red-600 hover:text-red-700' : 'text-red-400 hover:text-red-300'
+            }`}
         >
           <Trash2 className="w-3.5 h-3.5" /> Clear Map
         </button>
       </div>
 
+      {/* Save & Reset Positions Controls */}
+      {onSavePositions && (
+        <div className={`flex flex-col gap-1.5 p-2.5 rounded-lg border ${isLight ? 'bg-blue-50/60 border-blue-200' : 'bg-blue-950/20 border-blue-900/40'
+          }`}>
+          <div className="flex items-center justify-between">
+            <span className={`text-[10px] font-bold uppercase tracking-wider ${isLight ? 'text-blue-900' : 'text-blue-300'}`}>
+              Node Layout Persistence
+            </span>
+            {hasUnsavedChanges && (
+              <span className="flex items-center gap-1 text-[10px] text-amber-500 font-bold animate-pulse">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
+                Unsaved edits
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onSavePositions}
+              disabled={disabled}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer shadow-sm ${isSavedRecently
+                ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/30'
+                : hasUnsavedChanges
+                  ? isLight
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white ring-2 ring-blue-400/50 shadow-md shadow-blue-500/20'
+                    : 'bg-blue-600 hover:bg-blue-500 text-white ring-2 ring-blue-400/40 shadow-blue-500/30'
+                  : isLight
+                    ? 'bg-white hover:bg-slate-50 text-slate-800 border border-slate-300'
+                    : 'bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700'
+                }`}
+              title="Save all node positions to persist even after reloading the page"
+            >
+              {isSavedRecently ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-white" />
+                  <span>Saved ✓</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-3.5 h-3.5" />
+                  <span>Save Positions</span>
+                </>
+              )}
+            </button>
+            {onUndo && (
+              <button
+                type="button"
+                onClick={onUndo}
+                disabled={disabled || !canUndo}
+                className={`py-1.5 px-2.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${canUndo
+                  ? isLight
+                    ? 'bg-white border-slate-300 text-slate-700 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 shadow-2xs'
+                    : 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-blue-950/30 hover:text-blue-300 hover:border-blue-800/60'
+                  : 'opacity-35 pointer-events-none border-transparent text-gray-500'
+                  }`}
+                title="Undo the most recent topology edit"
+              >
+                <Undo2 className="w-3.5 h-3.5" />
+                <span>Undo</span>
+              </button>
+            )}
+          </div>
+          {onSaveAsDefault && (
+            <button
+              type="button"
+              onClick={onSaveAsDefault}
+              disabled={disabled}
+              className={`w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer shadow-sm ${isLight
+                ? 'bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800'
+                : 'bg-amber-950/30 hover:bg-amber-900/40 border border-amber-800/50 text-amber-300'
+                }`}
+              title="Make this topology the default restored by Reset Layout"
+            >
+              {isDefaultSavedRecently ? <Check className="w-3.5 h-3.5" /> : <Star className="w-3.5 h-3.5" />}
+              <span>{isDefaultSavedRecently ? 'Default Saved ✓' : 'Save as Default'}</span>
+            </button>
+          )}
+          <span className={`text-[9px] leading-tight ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>
+            Saved layouts persist after reload. Reset restores the saved default.
+          </span>
+        </div>
+      )}
+
       <div className="space-y-3">
-        {/* Cursor / Delete Tools */}
-        <div className="flex gap-2">
-          <button 
+        {/* Action Tools: Select/Pan, Move, Rename, Delete */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
             onClick={() => setPlacementMode(null)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
-              placementMode === null
-                ? isLight
-                  ? 'bg-blue-600 border-blue-600 !text-white shadow-sm'
-                  : 'bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-500/30'
-                : isLight
-                  ? 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900 shadow-2xs'
-                  : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-gray-200'
-            }`}
+            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border text-xs font-bold transition-all cursor-pointer ${placementMode === null
+              ? isLight
+                ? 'bg-blue-600 border-blue-600 !text-white shadow-sm'
+                : 'bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-500/30'
+              : isLight
+                ? 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900 shadow-2xs'
+                : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-gray-200'
+              }`}
           >
-            <MousePointer2 className="w-4 h-4" /> Select / Pan
+            <MousePointer2 className="w-3.5 h-3.5 shrink-0" /> Select / Pan
           </button>
-          <button 
-            onClick={() => setPlacementMode({ type: 'delete' })}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
-              placementMode?.type === 'delete'
-                ? isLight
-                  ? 'bg-red-600 border-red-600 !text-white shadow-sm'
-                  : 'bg-red-600 border-red-500 text-white shadow-md shadow-red-500/30'
-                : isLight
-                  ? 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900 shadow-2xs'
-                  : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-gray-200'
-            }`}
+          <button
+            type="button"
+            onClick={() => setPlacementMode({ type: 'move' })}
+            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border text-xs font-bold transition-all cursor-pointer ${placementMode?.type === 'move'
+              ? isLight
+                ? 'bg-indigo-600 border-indigo-600 !text-white shadow-sm'
+                : 'bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-500/30'
+              : isLight
+                ? 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900 shadow-2xs'
+                : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-gray-200'
+              }`}
           >
-            <Trash2 className="w-4 h-4" /> Delete Tool
+            <Move className="w-3.5 h-3.5 shrink-0" /> Move Node
+          </button>
+          <button
+            type="button"
+            onClick={() => setPlacementMode({ type: 'rename' })}
+            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border text-xs font-bold transition-all cursor-pointer ${placementMode?.type === 'rename'
+              ? isLight
+                ? 'bg-amber-600 border-amber-600 !text-white shadow-sm'
+                : 'bg-amber-600 border-amber-500 text-white shadow-md shadow-amber-500/30'
+              : isLight
+                ? 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900 shadow-2xs'
+                : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-gray-200'
+              }`}
+          >
+            <PenLine className="w-3.5 h-3.5 shrink-0" /> Rename
+          </button>
+          <button
+            type="button"
+            onClick={() => setPlacementMode({ type: 'delete' })}
+            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border text-xs font-bold transition-all cursor-pointer ${placementMode?.type === 'delete'
+              ? isLight
+                ? 'bg-red-600 border-red-600 !text-white shadow-sm'
+                : 'bg-red-600 border-red-500 text-white shadow-md shadow-red-500/30'
+              : isLight
+                ? 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900 shadow-2xs'
+                : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-gray-200'
+              }`}
+          >
+            <Trash2 className="w-3.5 h-3.5 shrink-0" /> Delete Tool
           </button>
         </div>
+
+        {/* Dynamic Mode Helper Hint */}
+        {placementMode?.type === 'move' && (
+          <div className={`text-xs text-center font-bold animate-pulse ${isLight ? 'text-indigo-700' : 'text-indigo-400'}`}>
+            Drag any node to move freely...
+          </div>
+        )}
+        {placementMode?.type === 'rename' && (
+          <div className={`text-xs text-center font-bold animate-pulse ${isLight ? 'text-amber-700' : 'text-amber-400'}`}>
+            Click any node to rename it...
+          </div>
+        )}
+        {placementMode?.type === 'delete' && (
+          <div className={`text-xs text-center font-bold animate-pulse ${isLight ? 'text-red-700' : 'text-red-400'}`}>
+            Click a node or link to delete...
+          </div>
+        )}
 
         {/* Nodes Palette */}
         <div>
           <div className={`text-[9px] uppercase tracking-widest mb-1.5 font-bold ${isLight ? 'text-slate-600' : 'text-gray-500'}`}>
             Devices / Nodes
           </div>
-          <div className={`flex flex-wrap gap-2 p-2.5 rounded-lg border ${
-            isLight ? 'bg-slate-100/70 border-slate-200/90' : 'bg-black/40 border-white/5'
-          }`}>
+          <div className={`flex flex-wrap gap-2 p-2.5 rounded-lg border ${isLight ? 'bg-slate-100/70 border-slate-200/90' : 'bg-black/40 border-white/5'
+            }`}>
             {nodes.map(nodeType => {
               const cfg = NODE_CONFIG[nodeType];
               const isActive = placementMode?.type === 'node' && placementMode.nodeType === nodeType;
@@ -135,17 +302,32 @@ export const TopologyEditor: React.FC<TopologyEditorProps> = ({
                   key={nodeType}
                   title={tooltipTitle}
                   onClick={() => setPlacementMode({ type: 'node', nodeType })}
-                  className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-all cursor-pointer ${
-                    isActive
-                      ? isLight
-                        ? 'bg-blue-100 border-2 border-blue-600 shadow-md scale-105'
-                        : 'bg-blue-900/80 border-2 border-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)] scale-110'
-                      : isLight
-                        ? 'bg-white border border-slate-300 hover:bg-slate-50 hover:border-slate-400 shadow-2xs'
-                        : 'bg-gray-800 border border-gray-700 hover:bg-gray-700 hover:border-gray-500'
-                  }`}
+                  className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-all cursor-pointer ${isActive
+                    ? isLight
+                      ? 'bg-blue-100 border-2 border-blue-600 shadow-md scale-105'
+                      : 'bg-blue-900/80 border-2 border-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)] scale-110'
+                    : isLight
+                      ? 'bg-white border border-slate-300 hover:bg-slate-50 hover:border-slate-400 shadow-2xs'
+                      : 'bg-gray-800 border border-gray-700 hover:bg-gray-700 hover:border-gray-500'
+                    }`}
                 >
-                  {cfg?.icon || '⚪'}
+                  {scenario === 'evacuation' ? (
+                    <EvacuationNodeIcon
+                      type={cfg?.icon ?? nodeType}
+                      size={25}
+                      color={isActive ? '#1d4ed8' : (isLight ? '#334155' : '#cbd5e1')}
+                      strokeWidth={1.8}
+                      filter={isLight ? 'none' : 'invert(1)'}
+                    />
+                  ) : cfg?.iconImg ? (
+                    <img
+                      src={getCiscoIconDataUrl(cfg.iconImg)}
+                      alt={nodeType}
+                      className={`w-6 h-6 object-contain ${scenario === 'robotics' ? 'bg-white rounded p-0.5' : ''}`}
+                    />
+                  ) : (
+                    cfg?.icon || '⚪'
+                  )}
                 </button>
               );
             })}
@@ -158,9 +340,8 @@ export const TopologyEditor: React.FC<TopologyEditorProps> = ({
             <div className={`text-[9px] uppercase tracking-widest mb-1.5 font-bold ${isLight ? 'text-slate-600' : 'text-gray-500'}`}>
               Connections / Links
             </div>
-            <div className={`flex flex-wrap gap-2 p-2.5 rounded-lg border ${
-              isLight ? 'bg-slate-100/70 border-slate-200/90' : 'bg-black/40 border-white/5'
-            }`}>
+            <div className={`flex flex-wrap gap-2 p-2.5 rounded-lg border ${isLight ? 'bg-slate-100/70 border-slate-200/90' : 'bg-black/40 border-white/5'
+              }`}>
               {edges.map(edgeType => {
                 const cfg = EDGE_CONFIG[edgeType];
                 const isActive = placementMode?.type === 'edge' && placementMode.edgeType === edgeType;
@@ -170,21 +351,20 @@ export const TopologyEditor: React.FC<TopologyEditorProps> = ({
                     key={edgeType}
                     title={`Connect via ${edgeType.replace('_', ' ')}`}
                     onClick={() => setPlacementMode({ type: 'edge', edgeType, sourceNodeId: undefined })}
-                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
-                      isActive
-                        ? isLight
-                          ? 'bg-blue-100 border-2 border-blue-600 shadow-md scale-105'
-                          : 'bg-blue-900/80 border-2 border-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)] scale-110'
-                        : isLight
-                          ? 'bg-white border border-slate-300 hover:bg-slate-50 hover:border-slate-400 shadow-2xs'
-                          : 'bg-gray-800 border border-gray-700 hover:bg-gray-700 hover:border-gray-500'
-                    }`}
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all cursor-pointer ${isActive
+                      ? isLight
+                        ? 'bg-blue-100 border-2 border-blue-600 shadow-md scale-105'
+                        : 'bg-blue-900/80 border-2 border-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)] scale-110'
+                      : isLight
+                        ? 'bg-white border border-slate-300 hover:bg-slate-50 hover:border-slate-400 shadow-2xs'
+                        : 'bg-gray-800 border border-gray-700 hover:bg-gray-700 hover:border-gray-500'
+                      }`}
                   >
                     <svg width="24" height="24" viewBox="0 0 24 24">
-                      <line 
-                        x1="4" y1="20" x2="20" y2="4" 
-                        stroke={strokeColor} 
-                        strokeWidth={cfg?.width || 2} 
+                      <line
+                        x1="4" y1="20" x2="20" y2="4"
+                        stroke={strokeColor}
+                        strokeWidth={cfg?.width || 2}
                         strokeDasharray={cfg?.dash?.join(',')}
                       />
                     </svg>

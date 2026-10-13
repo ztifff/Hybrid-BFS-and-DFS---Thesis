@@ -70,6 +70,7 @@ export interface SimulationState {
   handleSkipEnd: () => void;
   handleRerollEvents: () => void;
   handleImportHistory: (entries: HistoryEntry[]) => void;
+  preservePausedProgressForEdit: () => void;
 
   // Modals
   isHistoryModalOpen: boolean;
@@ -140,6 +141,10 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
 
   // Initialize the Controller
   const controller = useSimulationController(model);
+  const pausedEditStepRef = useRef<number | null>(null);
+  const preservePausedProgressForEdit = () => {
+    if (controller.status === 'paused') pausedEditStepRef.current = controller.stepIndex;
+  };
 
   // Track backend computation progress (0–100)
   const [computeProgress, setComputeProgress] = useState(0);
@@ -179,18 +184,21 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
     let isMounted = true;
 
     const fetchGraphData = async () => {
+      const resumePausedAt = pausedEditStepRef.current;
       try {
         model.setIsComputing(true);
         model.setSavedSignatures([]);
         model.setCurrentSavedId(null);
         model.setBfsResult(null);
-        model.setSimResults(null);
-        controller.setStatus('idle');
+        if (resumePausedAt === null) {
+          model.setSimResults(null);
+          controller.setStatus('idle');
+        }
         // Start the simulated ticker immediately so progress looks alive during the
         // cold-start period while the backend is still computing its first response.
         startTicker();
 
-        controller.setStepIndex(0);
+        if (resumePausedAt === null) controller.setStepIndex(0);
         controller.stopAnimation();
 
         let currentOffset = 0;
@@ -299,7 +307,14 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
             stopTicker();
             setComputeProgress(100);
             await new Promise(resolve => setTimeout(resolve, 550));
-            if (isMounted) model.setIsComputing(false);
+            if (isMounted) {
+              model.setIsComputing(false);
+              if (resumePausedAt !== null && pausedEditStepRef.current === resumePausedAt) {
+                controller.setStepIndex(Math.min(resumePausedAt, Math.max(0, totalSteps - 1)));
+                controller.setStatus('paused');
+                pausedEditStepRef.current = null;
+              }
+            }
           } else {
             currentOffset += limit;
           }
@@ -311,6 +326,7 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
           model.setIsComputing(false);
           controller.setStatus('idle');
           setComputeProgress(0);
+          pausedEditStepRef.current = null;
         }
       }
     };
@@ -411,6 +427,7 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
       model.handleRerollEvents();
     },
     handleImportHistory: model.handleImportHistory,
+    preservePausedProgressForEdit,
 
     // Modals
     isHistoryModalOpen: model.isHistoryModalOpen,

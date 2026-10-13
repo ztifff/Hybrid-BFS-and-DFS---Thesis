@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ScenarioType } from '../types';
 import { ALGORITHMS } from '../config/scenarios';
 import { useTheme } from '../context/ThemeContext';
+import { getCiscoIconDataUrl, onCiscoIconsChange } from '../utils/ciscoIcons';
+import { EvacuationNodeIcon } from './NetworkCanvas/evacuationNodeIcons';
 
 interface Props {
   scenario: ScenarioType;
@@ -12,25 +14,27 @@ interface LegendItem {
   color: string;
   label: string;
   icon?: string;
+  iconImg?: string;
   dashed?: boolean;
   type?: string;
 }
 
 const SCENARIO_NODE_ITEMS: Record<ScenarioType, LegendItem[]> = {
   network: [
-    { color: '#1e40af', label: 'Core Router / ISP', icon: '🌐' },
-    { color: '#1d4ed8', label: 'Multilayer Switch', icon: '🎛️' },
-    { color: '#2563eb', label: 'Access / Floor Switch', icon: '🔌' },
-    { color: '#10b981', label: 'Wireless Access Point', icon: '📡' },
-    { color: '#0ea5e9', label: 'End Device (PC/Laptop)', icon: '💻' },
-    { color: '#475569', label: 'Server', icon: '🗄️' },
+    { color: '#1e3a8a', label: 'ISP / Gateway', icon: '🌐', iconImg: '/networkIcons/carrier routing system.jpg' },
+    { color: '#1e40af', label: 'Core Router', icon: '🌐', iconImg: '/networkIcons/router.jpg' },
+    { color: '#1d4ed8', label: 'Multilayer Switch', icon: '🎛️', iconImg: '/networkIcons/layer 3 switch.jpg' },
+    { color: '#2563eb', label: 'Access / Floor Switch', icon: '🔌', iconImg: '/networkIcons/workgroup switch.jpg' },
+    { color: '#10b981', label: 'Wireless Access Point', icon: '📡', iconImg: '/networkIcons/accesspoint.jpg' },
+    { color: '#0ea5e9', label: 'End Device (PC/Laptop)', icon: '💻', iconImg: '/networkIcons/pc.jpg' },
+    { color: '#475569', label: 'Server', icon: '🗄️', iconImg: '/networkIcons/fileserver.jpg' },
     { color: '#450a0a', label: 'Failed Component', icon: '💥' },
   ],
   robotics: [
-    { color: '#92400e', label: 'Central Depot (Source)', icon: '🏭' },
-    { color: '#b45309', label: 'Warehouse Zone', icon: '📦' },
-    { color: '#d97706', label: 'Shelf', icon: '🔧' },
-    { color: '#f59e0b', label: 'Delivery Bay (Target)', icon: '🚚' },
+    { color: '#92400e', label: 'Central Depot (Source)', icon: '🏭', iconImg: '/RoboticsMaps/icons/robot.png' },
+    { color: '#b45309', label: 'Warehouse Zone', icon: '📦', iconImg: '/RoboticsMaps/icons/move.png' },
+    { color: '#d97706', label: 'Shelf', icon: '🔧', iconImg: '/RoboticsMaps/icons/store.png' },
+    { color: '#f59e0b', label: 'Delivery Bay (Target)', icon: '🚚', iconImg: '/RoboticsMaps/icons/loading-bay.png' },
     { color: '#450a0a', label: 'Blocked Aisle', icon: '🚧' },
   ],
   traffic: [
@@ -41,11 +45,14 @@ const SCENARIO_NODE_ITEMS: Record<ScenarioType, LegendItem[]> = {
     { color: '#450a0a', label: 'Road Closure', icon: '🚫' },
   ],
   evacuation: [
-    { color: '#0e7490', label: 'Real-World Place (Source)', icon: '🏬' },
-    { color: '#b91c1c', label: 'Emergency Exit (Target)', icon: '🚪' },
-    { color: '#dc2626', label: 'Corridor', icon: '🚶' },
-    { color: '#ef4444', label: 'Stairwell', icon: '🪜' },
-    { color: '#7f1d1d', label: 'Route Blocked', icon: '⛔' },
+    { color: '#0e7490', label: 'Start Room', type: 'start' },
+    { color: '#0e7490', label: 'Place', type: 'place' },
+    { color: '#0e7490', label: 'Room', type: 'room' },
+    { color: '#7c3aed', label: 'Cinema', type: 'cinema' },
+    { color: '#b91c1c', label: 'Emergency Exit', type: 'emergency_exit' },
+    { color: '#dc2626', label: 'Corridor', type: 'corridor' },
+    { color: '#ef4444', label: 'Stairwell', type: 'stairwell' },
+    { color: '#7f1d1d', label: 'Route Blocked', type: 'blocked' },
   ],
   gameai: [
     { color: '#9333ea', label: 'Strategy Planner (Source)', icon: '🔵' },
@@ -67,7 +74,9 @@ const EDGE_ITEMS: Record<ScenarioType, LegendItem[]> = {
     { color: '#c4b5fd', label: 'Robot Path' },
   ],
   traffic: [
-    { color: '#6ee7b7', label: 'Road / Street' },
+    { color: '#ef4444', label: 'Expressway (SLEX)' },
+    { color: '#f97316', label: 'Arterial / National Highway' },
+    { color: '#64748b', label: 'Local Street / Avenue' },
   ],
   evacuation: [
     { color: '#fca5a5', label: 'Corridor', dashed: true },
@@ -81,11 +90,21 @@ const EDGE_ITEMS: Record<ScenarioType, LegendItem[]> = {
 export const Legend: React.FC<Props> = ({ scenario, mapId }) => {
   const { theme } = useTheme();
   const isLight = theme === 'light';
+  const [, setIconTick] = useState(0);
+
+  useEffect(() => {
+    return onCiscoIconsChange(() => setIconTick(t => t + 1));
+  }, []);
 
   const rawItems = SCENARIO_NODE_ITEMS[scenario] ?? [];
+  const mapSpecificItems = scenario === 'evacuation' && mapId === 'synthetic'
+    ? rawItems.filter(item => item.type !== 'place')
+    : scenario === 'robotics' && mapId === 'clinic'
+      ? rawItems.filter(item => item.label !== 'Shelf')
+      : rawItems;
   // For gameai: replace the generic icons with the board-appropriate icons
   const nodeItems = scenario === 'gameai'
-    ? rawItems.map(item => {
+    ? mapSpecificItems.map(item => {
       if (item.label === 'Opponent Piece (Blocked)') {
         return { ...item, icon: mapId === 'dama' ? '🔻' : '🔴' };
       }
@@ -94,7 +113,7 @@ export const Legend: React.FC<Props> = ({ scenario, mapId }) => {
       }
       return item;
     })
-    : rawItems;
+    : mapSpecificItems;
 
   const edgeItems = (EDGE_ITEMS[scenario] ?? []).map(item => {
     // In light mode, pale slate/white-ish copper cables blend into white background
@@ -128,13 +147,26 @@ export const Legend: React.FC<Props> = ({ scenario, mapId }) => {
           {nodeItems.map((item) => (
             <div key={item.label} className="flex items-center gap-2">
               <div
-                className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-xs"
+                className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center p-0.5 overflow-hidden transition-transform duration-200"
                 style={{
-                  backgroundColor: item.color,
-                  border: isLight ? '1.5px solid rgba(0,0,0,0.15)' : '1.5px solid #555'
+                  backgroundColor: item.iconImg
+                    ? (item.iconImg.startsWith('/RoboticsMaps/icons/') || isLight ? '#ffffff' : 'rgba(15, 23, 42, 0.95)')
+                    : item.color,
+                  border: isLight ? `1.5px solid ${item.color}` : `1.5px solid ${item.color}`,
+                  boxShadow: isLight ? '0 1px 2px rgba(0,0,0,0.08)' : '0 1px 4px rgba(0,0,0,0.4)'
                 }}
               >
-                {item.icon}
+                {scenario === 'evacuation' && item.type ? (
+                  <EvacuationNodeIcon type={item.type} size={17} color="#ffffff" strokeWidth={1.8} filter="invert(1)" />
+                ) : item.iconImg ? (
+                  <img
+                    src={getCiscoIconDataUrl(item.iconImg)}
+                    alt={item.label}
+                    className="w-4 h-4 object-contain"
+                  />
+                ) : (
+                  <span className="text-xs leading-none">{item.icon}</span>
+                )}
               </div>
               <span className={`text-xs leading-tight ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>
                 {item.label}

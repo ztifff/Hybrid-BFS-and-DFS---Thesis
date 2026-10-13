@@ -1,6 +1,8 @@
 import { GraphNode, GraphEdge, ScenarioType, AlgorithmStep } from '../../../types';
 import { NODE_CONFIG, EDGE_CONFIG } from '../types';
 import { ALGORITHMS } from '../../../config/scenarios';
+import { getCiscoIconPath, getCiscoIconCanvas } from '../../../utils/ciscoIcons';
+import { drawEvacuationNodeIcon } from '../evacuationNodeIcons';
 
 export interface RenderOptions {
   ctx: CanvasRenderingContext2D;
@@ -13,6 +15,7 @@ export interface RenderOptions {
   offsetY: number;
   scenario: ScenarioType;
   mapId?: string;
+  activeFloor?: string;
   isDatacenter: boolean;
   isMassive: boolean;
   visibleNodes: GraphNode[];
@@ -165,8 +168,25 @@ export abstract class BaseRenderer {
         ctx.strokeStyle = this.getRgba('#ef4444', Math.max(baseOpacity * 2, 0.8));
         ctx.lineWidth = effectiveWidth * 2.2;
       } else if (options.scenario === 'traffic' && options.workspaceView === 'physical' && options.mapId !== 'synthetic') {
-        ctx.strokeStyle = expAny ? this.getRgba('#475569', isLight ? 0.85 : 0.5) : (isLight ? '#334155' : '#334155');
-        ctx.lineWidth = effectiveWidth * 2.5;
+        const lbl = (edge.label || '').toLowerCase();
+        const isHighway = lbl.includes('south luzon') || lbl.includes('slex') || lbl.includes('expressway');
+        const isPrimary = lbl.includes('national') || lbl.includes('mayapa') || lbl.includes('pulo-diezmo') || lbl.includes('arterial');
+
+        let roadBaseColor = isLight ? '#94a3b8' : '#334155';
+        let roadWidth = effectiveWidth * 2.0;
+
+        if (isHighway) {
+          roadBaseColor = isLight ? '#b91c1c' : '#dc2626'; // High-contrast Red Expressway (SLEX)
+          roadWidth = effectiveWidth * 3.4;
+        } else if (isPrimary) {
+          roadBaseColor = isLight ? '#c2410c' : '#ea580c'; // Warm Orange Arterial Thoroughfare
+          roadWidth = effectiveWidth * 2.5;
+        }
+
+        ctx.strokeStyle = expAny 
+          ? this.getRgba(roadBaseColor, isLight ? 0.75 : 0.45) 
+          : this.getRgba(roadBaseColor, isLight ? 0.95 : 0.85);
+        ctx.lineWidth = roadWidth;
       } else {
         ctx.strokeStyle = expAny 
           ? this.getRgba(isLight ? '#475569' : '#64748b', isLight ? 0.7 : 0.4) 
@@ -178,9 +198,23 @@ export abstract class BaseRenderer {
       ctx.stroke();
 
       if (options.scenario === 'traffic' && options.workspaceView === 'physical' && options.mapId !== 'synthetic' && !isBlocked) {
-        ctx.strokeStyle = isLight ? '#1e293b' : '#475569';
-        ctx.lineWidth = effectiveWidth * 1.5;
-        ctx.stroke();
+        const lbl = (edge.label || '').toLowerCase();
+        const isHighway = lbl.includes('south luzon') || lbl.includes('slex') || lbl.includes('expressway');
+        const isPrimary = lbl.includes('national') || lbl.includes('mayapa') || lbl.includes('pulo-diezmo') || lbl.includes('arterial');
+
+        if (isHighway) {
+          ctx.strokeStyle = isLight ? '#fca5a5' : '#f87171'; // SLEX inner luminous ribbon
+          ctx.lineWidth = effectiveWidth * 1.8;
+          ctx.stroke();
+        } else if (isPrimary) {
+          ctx.strokeStyle = isLight ? '#fed7aa' : '#fb923c'; // Arterial inner warm ribbon
+          ctx.lineWidth = effectiveWidth * 1.3;
+          ctx.stroke();
+        } else {
+          ctx.strokeStyle = isLight ? '#e2e8f0' : '#475569'; // Clean road center
+          ctx.lineWidth = effectiveWidth * 1.0;
+          ctx.stroke();
+        }
       }
     });
   }
@@ -316,6 +350,7 @@ export abstract class BaseRenderer {
 
       const isBlockedImportant = isBlocked;
       let r = isMassive ? (isImportant || isBlockedImportant ? 4.5 : (activeExplorations.length > 0 ? 2.5 : 1.2)) : cfg.radius;
+      if (scenario === 'robotics' && mapId === 'synthetic' && node.type === 'delivery_bay') r = isMassive ? 3 : 9;
       if (isDatacenter) r = (isImportant || isBlockedImportant) ? 8 : 4.5;
       
       const currentRadii = isMassive ? [2.2, 1.2, 0.6] : [r * 0.85, r * 0.55, r * 0.25];
@@ -381,42 +416,120 @@ export abstract class BaseRenderer {
       const isRegularRoadNode = node.type === 'street' || node.type === 'intersection';
       const shouldHideCircle = isPhysicalTraffic && isRegularRoadNode && !isImportant && !isBlocked;
 
+      const nodeIconSrc = scenario === 'network'
+        ? (getCiscoIconPath(node) || cfg.iconImg)
+        : scenario === 'robotics' ? cfg.iconImg : null;
+      const isLight = options.theme === 'light';
+
       if (!shouldHideCircle) {
-        if (isBlocked || isSource || isDest || activeExplorations.length === 0) {
-          ctx.beginPath();
-          ctx.arc(cx, cy, r, 0, Math.PI * 2);
-          ctx.fillStyle = this.getRgba(fillColor, opacity);
-          ctx.fill();
-          if (!isMassive || isImportant) {
-            ctx.lineWidth = isBlocked ? 2 : (isSource || isDest ? 3 : 1);
-            ctx.strokeStyle = isBlocked ? (scenario === 'evacuation' ? '#7f1d1d' : '#ef4444') : 
-                              isSource ? '#4ade80' : 
-                              isDest ? '#f87171' : '#374151';
+        if (nodeIconSrc && !isMassive) {
+          if (isBlocked) {
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.fillStyle = this.getRgba('#dc2626', opacity);
+            ctx.fill();
+            ctx.lineWidth = 2.5;
+            ctx.strokeStyle = '#ef4444';
+            ctx.stroke();
+          } else {
+            // Stacked outer rings for active algorithm exploration
+            if (activeExplorations.length > 0) {
+              activeExplorations.forEach((exp, index) => {
+                ctx.beginPath();
+                ctx.arc(cx, cy, r + 2.5 + (index * 2.5), 0, Math.PI * 2);
+                ctx.strokeStyle = exp.color;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+              });
+            }
+
+            // Clean badge circular background
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.fillStyle = scenario === 'robotics' || isLight ? '#ffffff' : 'rgba(15, 23, 42, 0.92)';
+            ctx.fill();
+
+            // Device role border
+            ctx.lineWidth = isImportant ? 2.5 : 1.5;
+            ctx.strokeStyle = isSource
+              ? (isLight ? '#16a34a' : '#4ade80')
+              : isDest
+              ? (isReachedDest ? '#22c55e' : '#f87171')
+              : (isLight ? (fillColor || '#334155') : (fillColor || '#38bdf8'));
             ctx.stroke();
           }
         } else {
-          activeExplorations.forEach((exp, index) => {
+          if (isBlocked || isSource || isDest || activeExplorations.length === 0) {
             ctx.beginPath();
-            ctx.arc(cx, cy, currentRadii[index], 0, Math.PI * 2);
-            ctx.fillStyle = exp.color;
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.fillStyle = this.getRgba(fillColor, opacity);
             ctx.fill();
-            ctx.lineWidth = currentStrokes[index];
-            ctx.strokeStyle = '#ffffff';
-            ctx.stroke();
-          });
+            if (!isMassive || isImportant) {
+              ctx.lineWidth = isBlocked ? 2 : (isSource || isDest ? 3 : 1);
+              ctx.strokeStyle = isBlocked ? (scenario === 'evacuation' ? '#7f1d1d' : '#ef4444') : 
+                                isSource ? '#4ade80' : 
+                                isDest ? '#f87171' : '#374151';
+              ctx.stroke();
+            }
+          } else {
+            activeExplorations.forEach((exp, index) => {
+              ctx.beginPath();
+              ctx.arc(cx, cy, currentRadii[index], 0, Math.PI * 2);
+              ctx.fillStyle = exp.color;
+              ctx.fill();
+              ctx.lineWidth = currentStrokes[index];
+              ctx.strokeStyle = '#ffffff';
+              ctx.stroke();
+            });
+          }
         }
       }
 
       if (!isMassive) {
-        const iconSize = r * 1.1;
-        ctx.font = `${iconSize}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        let displayIcon = cfg.icon;
-        if (scenario === 'gameai' && isSource) {
-          displayIcon = mapId === 'dama' ? '🔷' : '🔵';
+        if (nodeIconSrc && !isBlocked) {
+          const ciscoCanvas = getCiscoIconCanvas(nodeIconSrc);
+          if (ciscoCanvas) {
+            const imgW = ciscoCanvas.width || 1;
+            const imgH = ciscoCanvas.height || 1;
+            const aspect = imgW / imgH;
+            const targetDim = r * 1.45;
+            let dw = targetDim;
+            let dh = targetDim / aspect;
+            if (dh > targetDim) {
+              dh = targetDim;
+              dw = targetDim * aspect;
+            }
+            ctx.drawImage(ciscoCanvas, cx - dw / 2, cy - dh / 2, dw, dh);
+          } else {
+            const iconSize = r * 1.0;
+            ctx.font = `${iconSize}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(cfg.icon, cx, cy);
+          }
+        } else if (scenario === 'evacuation' && drawEvacuationNodeIcon(
+          ctx,
+          isBlocked ? 'blocked' : (isSource ? 'start' : node.type),
+          cx,
+          cy,
+          r * 1.1
+        )) {
+          // The shared pictograms are also used by the editor palette and legend.
+        } else {
+          const iconSize = r * 1.1;
+          ctx.font = `${iconSize}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          let displayIcon = cfg.icon;
+          const nodeLabelLower = (node.label || '').toLowerCase();
+          const nodeIdLower = (node.id || '').toLowerCase();
+          if (nodeLabelLower.includes('cinema') || nodeIdLower.includes('cinema')) {
+            displayIcon = '🎬';
+          } else if (scenario === 'gameai' && isSource) {
+            displayIcon = mapId === 'dama' ? '🔷' : '🔵';
+          }
+          ctx.fillText(isBlocked ? blockedIcon : displayIcon, cx, cy);
         }
-        ctx.fillText(isBlocked ? blockedIcon : displayIcon, cx, cy);
 
         // Render carried package badge on active robot node ONLY after picking up from a shelf
         if (scenario === 'robotics' && (sets.bfs.current === node.id || sets.dfs.current === node.id || sets.hyb.current === node.id)) {
@@ -431,10 +544,40 @@ export abstract class BaseRenderer {
             return passedShelf && !isAtDeskOrDepot;
           };
 
-          const isCarrying = checkCarrying(activeSteps.bfs) || checkCarrying(activeSteps.dfs) || checkCarrying(activeSteps.hybrid);
-          if (isCarrying) {
-            ctx.font = `${r * 0.9}px sans-serif`;
-            ctx.fillText('📦', cx + r * 0.75, cy - r * 0.75);
+          const carryingAlgos = [
+            { active: visibleAlgos.bfs && checkCarrying(activeSteps.bfs), color: '#22c55e' },
+            { active: visibleAlgos.dfs && checkCarrying(activeSteps.dfs), color: '#a855f7' },
+            { active: visibleAlgos.hybrid && checkCarrying(activeSteps.hybrid), color: '#f97316' },
+          ].filter(algo => algo.active);
+          if (carryingAlgos.length > 0) {
+            const badgeX = cx + r * 0.75;
+            const badgeY = cy - r * 0.75;
+            const badgeSize = Math.max(10, r * 0.9);
+            ctx.beginPath();
+            ctx.arc(badgeX, badgeY, badgeSize * 0.58, 0, Math.PI * 2);
+            ctx.fillStyle = options.workspaceView === 'logical' ? carryingAlgos[0].color : '#fff7ed';
+            ctx.fill();
+            ctx.lineWidth = Math.max(1, 1.5 / zoom);
+            ctx.strokeStyle = options.workspaceView === 'logical' ? '#0f172a' : '#c2410c';
+            ctx.stroke();
+            if (options.workspaceView === 'logical') {
+              const stripeW = badgeSize * 0.7 / carryingAlgos.length;
+              carryingAlgos.forEach((algo, index) => {
+                ctx.fillStyle = algo.color;
+                ctx.fillRect(badgeX - badgeSize * 0.35 + index * stripeW, badgeY - badgeSize * 0.35, stripeW, badgeSize * 0.7);
+              });
+            } else {
+              const boxIcon = getCiscoIconCanvas('/RoboticsMaps/icons/box.png');
+              if (boxIcon) {
+              const iconSize = badgeSize * 0.76;
+              ctx.drawImage(boxIcon, badgeX - iconSize / 2, badgeY - iconSize / 2, iconSize, iconSize);
+              } else {
+                ctx.font = `${badgeSize * 0.8}px sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('📦', badgeX, badgeY);
+              }
+            }
           }
         }
       }
@@ -491,7 +634,12 @@ export abstract class BaseRenderer {
                             displayLabel.includes('#');
       const isKnownPlace = displayLabel && !isGenericLink;
       const shouldShowStreetLabel = isMassive && isKnownPlace && zoom >= 1.5;
-      const shouldShowNormalLabel = (!isMassive && isKnownPlace) || isImportant;
+      const isAWSWarehouse = scenario === 'robotics' && (mapId === 'aws' || mapId === 'awsWarehouse');
+      // At a full-building view the AWS blueprint and graph contain many nearby
+      // infrastructure nodes. Keep their markers visible, but defer ordinary
+      // labels until the user zooms in; source, destination, and active nodes
+      // remain labelled at every zoom level.
+      const shouldShowNormalLabel = ((!isMassive && isKnownPlace) && (!isAWSWarehouse || zoom >= 0.45)) || isImportant;
 
       // In datacenter / synthetic graphs, skip unselected rack node labels when zoomed out (< 0.65x)
       // to avoid 100+ labels smearing horizontally into an illegible black blob
@@ -597,16 +745,18 @@ export abstract class BaseRenderer {
 
   protected drawEdgeLabels(options: RenderOptions) {
     const { ctx, isMassive, zoom, scenario, visibleEdges, visibleNodeMap } = options;
-    if (!isMassive && zoom >= 0.7 && scenario !== 'gameai') {
+    const showNetworkPorts = scenario === 'network' && options.workspaceView === 'physical';
+    if (!isMassive && (showNetworkPorts ? zoom >= 1 : zoom >= 0.7) && scenario !== 'gameai') {
       ctx.save();
-      ctx.globalAlpha = Math.max(0, Math.min(1, (zoom - 0.7) * 3));
-      ctx.font = `${Math.max(8, 12 / zoom)}px sans-serif`;
+      ctx.globalAlpha = showNetworkPorts ? 0.95 : Math.max(0, Math.min(1, (zoom - 0.7) * 3));
+      ctx.font = showNetworkPorts ? `${Math.max(8, Math.min(11, 9 / zoom))}px monospace` : `${Math.max(8, 12 / zoom)}px sans-serif`;
       const isLight = options.theme === 'light';
       ctx.fillStyle = isLight ? '#0f172a' : '#e2e8f0';
       ctx.strokeStyle = isLight ? '#ffffff' : '#0f172a';
       ctx.lineWidth = 2 / zoom;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
+      const occupiedLabels: Array<{ left: number; right: number; top: number; bottom: number }> = [];
   
       visibleEdges.forEach(edge => {
         const fromNode = visibleNodeMap.get(edge.from);
@@ -619,12 +769,63 @@ export abstract class BaseRenderer {
         const mi = (y1 + y2) / 2;
   
         const unit = scenario === 'evacuation' ? 's' : scenario === 'network' ? 'ms' : 'm';
-        const label = edge.label || `${edge.latency}${unit}`;
+        const label = showNetworkPorts
+          ? this.getNetworkPortLabel(edge, options)
+          : edge.label || `${edge.latency}${unit}`;
+        if (!label) return;
+        if (showNetworkPorts) {
+          const width = ctx.measureText(label).width + 8;
+          const height = 14;
+          const rect = { left: midX - width / 2, right: midX + width / 2, top: mi - height / 2, bottom: mi + height / 2 };
+          if (occupiedLabels.some(other => rect.left < other.right && rect.right > other.left && rect.top < other.bottom && rect.bottom > other.top)) return;
+          occupiedLabels.push(rect);
+        }
         ctx.strokeText(label, midX, mi);
         ctx.fillText(label, midX, mi);
       });
       ctx.restore();
     }
+  }
+
+  private getNetworkPortLabel(edge: GraphEdge, options: RenderOptions): string | null {
+    if (edge.type === 'wireless') return 'Wi-Fi';
+    const graph = options.graph;
+    if (!graph) return null;
+    const mapId = options.mapId;
+    const knownCompanyPorts: Record<string, string> = {
+      'mlt_sw1|acc_vlan50': 'Gi1/0/7',
+      'mlt_sw1|core_r2': 'Gi1/0/2',
+      'mlt_sw1|acc_vlan40': 'Gi1/0/6',
+      'mlt_sw1|acc_vlan20': 'Gi1/0/4',
+      'mlt_sw1|acc_vlan80': 'Gi1/0/8',
+      'mlt_sw1|acc_vlan30': 'Gi1/0/5',
+      'mlt_sw1|core_r1': 'Gi1/0/1',
+      'mlt_sw1|acc_vlan10': 'Gi1/0/3',
+    };
+    const knownCompanyRemotePorts: Record<string, string> = {
+      core_r1: 'Gi0/0', core_r2: 'Gi0/0', acc_vlan50: 'Fa0/1', acc_vlan40: 'Fa0/1',
+      acc_vlan20: 'Fa0/1', acc_vlan80: 'Fa0/1', acc_vlan30: 'Fa0/1', acc_vlan10: 'Fa0/1',
+    };
+    const portAt = (nodeId: string, otherId: string): string => {
+      if (mapId === 'companybusiness' && nodeId === 'mlt_sw1') {
+        return knownCompanyPorts[`${nodeId}|${otherId}`] || 'Gi1/0/9';
+      }
+      if (mapId === 'companybusiness' && knownCompanyRemotePorts[nodeId] && otherId === 'mlt_sw1') {
+        return knownCompanyRemotePorts[nodeId];
+      }
+      const node = graph.nodes.find(item => item.id === nodeId);
+      const type = node?.type || '';
+      const isSerial = edge.type === 'serial';
+      const adjacent = graph.edges.filter(item =>
+        item.type !== 'wireless' && (item.type === 'serial') === isSerial && (item.from === nodeId || item.to === nodeId)
+      );
+      const portIndex = adjacent.findIndex(item => item.id === edge.id) + 1;
+      if (edge.type === 'serial') return `Se0/0/${Math.max(0, portIndex - 1)}`;
+      if (type.includes('router') || type === 'datacenter') return `Gi0/${Math.max(0, portIndex - 1)}`;
+      if (type.includes('switch')) return `Gi1/0/${portIndex}`;
+      return 'Fa0/1';
+    };
+    return `${portAt(edge.from, edge.to)} ↔ ${portAt(edge.to, edge.from)}`;
   }
 
   protected drawOverlays(options: RenderOptions) {

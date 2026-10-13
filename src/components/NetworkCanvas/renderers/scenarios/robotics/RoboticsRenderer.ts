@@ -1,28 +1,39 @@
 import { BaseRenderer, RenderOptions } from '../../BaseRenderer';
+import { drawClinicBlueprintPlan } from './clinicBlueprintPlan';
+import { drawAWSBlueprintPlan } from './awsBlueprintPlan';
+import { getCiscoIconCanvas } from '../../../../../utils/ciscoIcons';
 
 export class RoboticsRenderer extends BaseRenderer {
   protected drawBackground(options: RenderOptions) {
-    const { ctx, scenario, mapId, scale, zoom, visibleNodes, activeSteps, visibleAlgos } = options;
-    const isSimultaneousMode = [visibleAlgos.bfs, visibleAlgos.dfs, visibleAlgos.hybrid].filter(Boolean).length > 1 && !options.disableSimultaneousMode;
+    const { ctx, scenario, mapId, scale, zoom, visibleNodes, activeSteps, visibleAlgos, workspaceView } = options;
 
-    if (scenario === 'robotics' && (mapId === 'clinic' || mapId === 'aws' || mapId === 'awsWarehouse') && options.graph?.walls && options.workspaceView !== 'logical') {
-      ctx.save();
-      ctx.strokeStyle = options.theme === 'light' ? '#94a3b8' : '#334155'; // Blueprint lines
-      ctx.lineWidth = 4 / zoom;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      
-      const activeFloor = visibleNodes.length > 0 ? (visibleNodes[0].buildingId || 'L1') : 'L1';
-      
-      options.graph.walls.forEach(wall => {
-        if (!wall.level || wall.level === activeFloor || wall.level === 'warehouse' || wall.level === 'all') {
-          ctx.beginPath();
-          ctx.moveTo(this.sx(wall.x1, options), this.sy(wall.y1, options));
-          ctx.lineTo(this.sx(wall.x2, options), this.sy(wall.y2, options));
-          ctx.stroke();
-        }
-      });
-      ctx.restore();
+    if (scenario === 'robotics' && mapId === 'clinic') {
+      const sx = (x: number) => this.sx(x, options);
+      const sy = (y: number) => this.sy(y, options);
+      drawClinicBlueprintPlan(
+        ctx,
+        sx,
+        sy,
+        zoom,
+        visibleNodes,
+        options.graph?.walls,
+        options.workspaceView,
+        options.theme || 'dark'
+      );
+    } else if (scenario === 'robotics' && (mapId === 'aws' || mapId === 'awsWarehouse')) {
+      const sx = (x: number) => this.sx(x, options);
+      const sy = (y: number) => this.sy(y, options);
+      drawAWSBlueprintPlan(
+        ctx,
+        sx,
+        sy,
+        zoom,
+        scale,
+        visibleNodes,
+        options.graph?.walls,
+        options.workspaceView,
+        options.theme || 'dark'
+      );
     }
 
     if (scenario === 'robotics' && options.shelfBoxCounts) {
@@ -31,24 +42,28 @@ export class RoboticsRenderer extends BaseRenderer {
         'shelf_a1','shelf_a2','shelf_b1','shelf_b2','shelf_d1','shelf_d2','shelf_e1','shelf_e2','shelf_e3','shelf_e4','shelf_f1','shelf_f2'
       ]);
 
-      const cellW_world = 2500;
-      const cellH_world = 1666.67;
+      // Match the widened three-bay × two-level rack modules in the AWS plan.
+      // Match the actual 7.5 m × 5 m rack slots drawn by the AWS blueprint.
+      const cellW_world = 7500;
+      const cellH_world = 2500;
+      const boxIcon = workspaceView === 'logical' ? null : getCiscoIconCanvas('/RoboticsMaps/icons/box.png');
 
       visibleNodes.forEach(node => {
         const isStorageShelf = mapId !== 'clinic' && (AWS_SHELF_NODES.has(node.id) || (node.id.startsWith('shelf_') && !node.id.startsWith('dest_')) || node.type === 'shelf' || node.type === 'aisle');
         if (isStorageShelf) {
+          const rackCenterX = node.x;
           const bfsPicked = activeSteps.bfs?.pickedUpBoxCounts?.[node.id] ?? 0;
           const dfsPicked = activeSteps.dfs?.pickedUpBoxCounts?.[node.id] ?? 0;
           const hybPicked = activeSteps.hybrid?.pickedUpBoxCounts?.[node.id] ?? 0;
 
-          let boxIndex = 0;
-          for (let row = 0; row < 3; row++) {
-            for (let col = 0; col < 2; col++) {
-              boxIndex++;
-              const worldX1 = node.x - 2500 + col * cellW_world;
-              const worldX2 = node.x - 2500 + (col + 1) * cellW_world;
-              const worldY1 = node.y - 2500 + row * cellH_world;
-              const worldY2 = node.y - 2500 + (row + 1) * cellH_world;
+          for (let row = 0; row < 2; row++) {
+            for (let col = 0; col < 3; col++) {
+              const slotW = cellW_world / 3;
+              const slotH = cellH_world;
+              const worldX1 = rackCenterX - cellW_world / 2 + col * slotW;
+              const worldX2 = rackCenterX - cellW_world / 2 + (col + 1) * slotW;
+              const worldY1 = node.y - cellH_world + row * slotH;
+              const worldY2 = node.y - cellH_world + (row + 1) * slotH;
 
               const screenX1 = this.sx(worldX1, options);
               const screenX2 = this.sx(worldX2, options);
@@ -58,8 +73,10 @@ export class RoboticsRenderer extends BaseRenderer {
               const cellW = screenX2 - screenX1;
               const cellH = screenY2 - screenY1;
 
-              const padX = cellW * 0.12;
-              const padY = cellH * 0.12;
+              // Match the carton footprint to the full rack slot, leaving a
+              // narrow clearance so adjacent boxes remain visually distinct.
+              const padX = cellW * 0.025;
+              const padY = cellH * 0.025;
 
               const bx = screenX1 + padX;
               const by = screenY1 + padY;
@@ -70,34 +87,33 @@ export class RoboticsRenderer extends BaseRenderer {
               ctx.lineWidth = Math.max(0.5, 1 / zoom);
               ctx.strokeRect(bx, by, bw, bh);
 
-              const algosInSlot = [
-                { key: 'bfs', color: '#22c55e', stroke: '#14532d', remaining: boxIndex <= (6 - bfsPicked), visible: visibleAlgos.bfs },
-                { key: 'dfs', color: '#a855f7', stroke: '#581c87', remaining: boxIndex <= (6 - dfsPicked), visible: visibleAlgos.dfs },
-                { key: 'hybrid', color: '#f97316', stroke: '#7c2d12', remaining: boxIndex <= (6 - hybPicked), visible: visibleAlgos.hybrid }
-              ].filter(a => a.visible || isSimultaneousMode);
-
-              const numPillars = algosInSlot.length || 1;
-              const pillarGap = Math.max(0.5, 1 / zoom);
-              const pillarW = (bw - (numPillars - 1) * pillarGap) / numPillars;
-
-              algosInSlot.forEach((algo, idx) => {
-                const px = bx + idx * (pillarW + pillarGap);
-                const py = by;
-                const pw = Math.max(1, pillarW);
-                const ph = bh;
-
-                if (algo.remaining) {
+              const algo = col === 0
+                ? { color: '#22c55e', stroke: '#14532d', picked: bfsPicked, visible: visibleAlgos.bfs }
+                : col === 1
+                  ? { color: '#a855f7', stroke: '#581c87', picked: dfsPicked, visible: visibleAlgos.dfs }
+                  : { color: '#f97316', stroke: '#7c2d12', picked: hybPicked, visible: visibleAlgos.hybrid };
+              // Each rack is exactly 3 columns × 2 rows: two packages per
+              // algorithm, with one algorithm color assigned to each column.
+              const isRemaining = algo.visible && row >= Math.min(2, algo.picked);
+              if (isRemaining) {
+                const packSize = Math.min(bw * 0.98, bh * 0.98);
+                const packX = bx + (bw - packSize) / 2;
+                const packY = by + (bh - packSize) / 2;
+                // Logical view uses a solid color tile. Physical view uses a
+                // white carton and places the algorithm color beneath it.
+                ctx.fillStyle = boxIcon ? '#fff' : algo.color;
+                ctx.fillRect(packX, packY, packSize, packSize);
+                ctx.strokeStyle = algo.stroke;
+                ctx.lineWidth = Math.max(0.75, 1 / zoom);
+                ctx.strokeRect(packX, packY, packSize, packSize);
+                if (boxIcon) {
+                  const bandH = Math.max(2 / zoom, packSize * 0.16);
+                  const iconSize = packSize * 0.74;
+                  ctx.drawImage(boxIcon, packX + (packSize - iconSize) / 2, packY + (packSize - bandH - iconSize) / 2, iconSize, iconSize);
                   ctx.fillStyle = algo.color;
-                  ctx.fillRect(px, py, pw, ph);
-                  ctx.strokeStyle = algo.stroke;
-                  ctx.lineWidth = Math.max(0.5, 1 / zoom);
-                  ctx.strokeRect(px, py, pw, ph);
-                } else {
-                  ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-                  ctx.lineWidth = Math.max(0.5, 0.8 / zoom);
-                  ctx.strokeRect(px, py, pw, ph);
+                  ctx.fillRect(packX, packY + packSize - bandH, packSize, bandH);
                 }
-              });
+              }
             }
           }
         }
@@ -155,9 +171,10 @@ export class RoboticsRenderer extends BaseRenderer {
           const cols = 3;
           const rows = Math.ceil(requiredCount / 3);
           
-          const algoSpacing = 2400; // Distance between algorithm blocks
-          const slotSizeWorldW = 2400;
-          const slotSizeWorldH = 1600;
+          // Keep all three algorithm batches inside the widened outbound desk.
+          const algoSpacing = 2000;
+          const slotSizeWorldW = 1800;
+          const slotSizeWorldH = 1400;
           const slotScreenSizeW = slotSizeWorldW * scale;
           const slotScreenSizeH = slotSizeWorldH * scale;
 
@@ -198,11 +215,18 @@ export class RoboticsRenderer extends BaseRenderer {
               const pSize = Math.min(slotScreenSizeW / cols, slotScreenSizeH / rows) * 0.9;
 
               if (i < algo.delivered) {
-                ctx.fillStyle = algo.fillColor;
+                ctx.fillStyle = boxIcon ? '#fff' : algo.fillColor;
                 ctx.fillRect(px, py, pSize, pSize);
                 ctx.strokeStyle = algo.strokeColor;
                 ctx.lineWidth = Math.max(0.5, 1 / zoom);
                 ctx.strokeRect(px, py, pSize, pSize);
+                if (boxIcon) {
+                  const bandH = Math.max(2 / zoom, pSize * 0.18);
+                  const iconSize = pSize * 0.7;
+                  ctx.drawImage(boxIcon, px + (pSize - iconSize) / 2, py + (pSize - bandH - iconSize) / 2, iconSize, iconSize);
+                  ctx.fillStyle = algo.fillColor;
+                  ctx.fillRect(px, py + pSize - bandH, pSize, bandH);
+                }
               } else {
                 ctx.strokeStyle = algo.emptyStroke;
                 ctx.lineWidth = Math.max(0.5, 1 / zoom);

@@ -43,6 +43,7 @@ export function useSimulationViewLogic(scenario: ScenarioType, sim: any) {
     if (!sim.currentGraph) return null;
     const nodeIds = new Set(sim.currentGraph.nodes.map((n: any) => n.id));
     const checkNode = (id: string | null | undefined) => (id && nodeIds.has(id) ? id : null);
+    const isEvacuationRoom = (node: any) => ['place', 'origin', 'room', 'start', 'cinema'].includes(node.type);
 
     switch (scenario) {
       case 'network':
@@ -50,7 +51,10 @@ export function useSimulationViewLogic(scenario: ScenarioType, sim: any) {
       case 'traffic':
         return checkNode(sim.trafficSourceId) || checkNode(sim.currentGraph.sourceId) || sim.currentGraph.nodes[0]?.id || null;
       case 'evacuation':
-        return checkNode(sim.evacuationSourceId) || checkNode(sim.currentGraph.sourceId) || sim.currentGraph.nodes[0]?.id || null;
+        return [sim.evacuationSourceId, sim.currentGraph.sourceId]
+          .find(id => id && sim.currentGraph.nodes.some((node: any) => node.id === id && isEvacuationRoom(node)))
+          || sim.currentGraph.nodes.find((node: any) => isEvacuationRoom(node))?.id
+          || null;
       case 'robotics':
         return checkNode(sim.robotAssignments[0]?.robotId) || checkNode(sim.currentGraph.sourceId) || sim.currentGraph.nodes[0]?.id || null;
       case 'gameai':
@@ -128,7 +132,7 @@ export function useSimulationViewLogic(scenario: ScenarioType, sim: any) {
         return { ok: true };
       }
       case 'evacuation':
-        if (!['place', 'origin', 'room'].includes(t)) return { ok: false, reason: `${pretty} is not a room — evacuees must start inside a room.` };
+        if (!['place', 'origin', 'room', 'start', 'cinema'].includes(t)) return { ok: false, reason: `${pretty} is not a room — evacuees must start inside a room.` };
         return { ok: true };
       case 'robotics':
         if (!['depot', 'place'].includes(t)) return { ok: false, reason: `${pretty} is not a depot — robots must start at a depot.` };
@@ -232,8 +236,12 @@ export function useSimulationViewLogic(scenario: ScenarioType, sim: any) {
         if (valid.length > 0) g.destinationIds = valid;
       }
     }
-    if (scenario === 'evacuation' && sim.evacuationSourceId && nodeIds.has(sim.evacuationSourceId)) {
-      g.sourceId = sim.evacuationSourceId;
+    if (scenario === 'evacuation') {
+      const isEvacuationRoom = (node: any) => ['place', 'origin', 'room', 'start', 'cinema'].includes(node.type);
+      const validSourceId = [sim.evacuationSourceId, g.sourceId]
+        .find(id => id && nodeIds.has(id) && isEvacuationRoom(g.nodes.find((node: any) => node.id === id)))
+        || g.nodes.find((node: any) => isEvacuationRoom(node))?.id;
+      if (validSourceId) g.sourceId = validSourceId;
     }
     if (scenario === 'gameai' && sim.gameAISourceId) {
       const entryNode = g.nodes.find((n: any) => n.id === sim.gameAISourceId);
