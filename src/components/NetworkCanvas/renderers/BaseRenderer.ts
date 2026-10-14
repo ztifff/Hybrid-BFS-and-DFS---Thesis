@@ -647,7 +647,11 @@ export abstract class BaseRenderer {
         return;
       }
 
-      const textAlpha = isImportant ? 1 : Math.max(options.theme === 'light' ? 0.92 : 0.2, Math.min(1, (zoom - 0.2) * 3));
+      // Let labels recede at overview zoom in both themes. Keep the start point
+      // and active search heads legible, while destinations and ordinary room
+      // labels fade so they don't cover the floor plan.
+      const isActiveLabel = isSource || currBFS || currDFS || currHYB;
+      const textAlpha = isActiveLabel ? 1 : Math.max(0, Math.min(1, (zoom - 0.2) * 1.25));
 
       if (textAlpha > 0) {
         ctx.save();

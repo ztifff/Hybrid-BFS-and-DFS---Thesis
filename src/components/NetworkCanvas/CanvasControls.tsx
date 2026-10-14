@@ -29,6 +29,9 @@ export const CanvasControls: React.FC<CanvasControlsProps> = ({
 }) => {
   const { theme } = useTheme();
   const isLight = theme === 'light';
+  const visibleEnabledCount = (['bfs', 'dfs', 'hybrid'] as const).filter(
+    algo => visibleAlgos[algo] && (activeAlgorithms ? activeAlgorithms[algo] : true),
+  ).length;
 
   return (
     <>
@@ -39,8 +42,9 @@ export const CanvasControls: React.FC<CanvasControlsProps> = ({
             const colors = { bfs: 'bg-green-500', dfs: 'bg-purple-500', hybrid: 'bg-orange-500' };
             const isEnabled = activeAlgorithms ? activeAlgorithms[algo] : true;
             const isVisible = visibleAlgos[algo];
+            const isLastVisible = isVisible && isEnabled && visibleEnabledCount <= 1;
             const ring = { bfs: 'border-green-500', dfs: 'border-purple-500', hybrid: 'border-orange-500' }[algo];
-            return <React.Fragment key={algo}>{index > 0 && <span className={`h-3 w-px ${isLight ? 'bg-slate-300' : 'bg-gray-700'}`} />}<button type="button" aria-label={`${isVisible ? 'Hide' : 'Show'} ${algo.toUpperCase()} on canvas`} aria-pressed={isVisible} title={isEnabled ? `${isVisible ? 'Hide' : 'Show'} ${algo.toUpperCase()}` : `${algo.toUpperCase()} is disabled in the algorithm selector`} disabled={!isEnabled} onClick={() => toggleAlgo(algo)} className={`h-5 w-5 rounded-full border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${ring} ${isVisible && isEnabled ? colors[algo] : `${isLight ? 'bg-white' : 'bg-gray-950'} opacity-50`} ${isEnabled ? 'cursor-pointer hover:scale-110' : 'cursor-not-allowed opacity-30'}`} /></React.Fragment>;
+            return <React.Fragment key={algo}>{index > 0 && <span className={`h-3 w-px ${isLight ? 'bg-slate-300' : 'bg-gray-700'}`} />}<button type="button" aria-label={`${isVisible ? 'Hide' : 'Show'} ${algo.toUpperCase()} on canvas`} aria-pressed={isVisible} title={!isEnabled ? `${algo.toUpperCase()} is disabled in the algorithm selector` : isLastVisible ? `At least one algorithm must stay visible` : `${isVisible ? 'Hide' : 'Show'} ${algo.toUpperCase()}`} disabled={!isEnabled || isLastVisible} onClick={() => toggleAlgo(algo)} className={`h-5 w-5 rounded-full border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${ring} ${isVisible && isEnabled ? colors[algo] : `${isLight ? 'bg-white' : 'bg-gray-950'} opacity-50`} ${isEnabled && !isLastVisible ? 'cursor-pointer hover:scale-110' : 'cursor-not-allowed opacity-30'}`} /></React.Fragment>;
           })}
         </div>
       </div>

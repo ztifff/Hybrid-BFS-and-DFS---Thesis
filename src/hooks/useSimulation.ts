@@ -86,6 +86,7 @@ export interface SimulationState {
   confirmSaveResult: () => void;
   openSaveModal: () => void;
   handleDeleteHistory: (ids: string[]) => void;
+  handleRestoreHistory: (entries: HistoryEntry[]) => void;
 
   // Evacuation: user-selectable start point
   evacuationSourceId: string | null;
@@ -443,6 +444,7 @@ export function useSimulation(params: { scenario: ScenarioType; onBack?: () => v
     confirmSaveResult,
     openSaveModal: model.openSaveModal,
     handleDeleteHistory: model.handleDeleteHistory,
+    handleRestoreHistory: model.handleRestoreHistory,
 
     // Evacuation: user-selectable start point (city + building maps)
     evacuationSourceId: model.evacuationSourceId,

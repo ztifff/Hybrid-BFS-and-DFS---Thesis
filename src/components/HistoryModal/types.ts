@@ -37,6 +37,7 @@ export interface HistoryModalProps {
   history: HistoryEntry[];
   scenario?: ScenarioType;
   onDeleteHistory: (ids: string[]) => void;
+  onRestoreHistory: (entries: HistoryEntry[]) => void;
   onImportHistory: (entries: HistoryEntry[]) => void;
   activeAlgorithms?: { bfs: boolean; dfs: boolean; hybrid: boolean };
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { TutorialOverlay } from '../TutorialOverlay';
 
 import { ScenarioGraph, ScenarioType } from '../../types';
@@ -298,6 +298,16 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   const [isSavedRecently, setIsSavedRecently] = useState<boolean>(false);
   const [isDefaultSavedRecently, setIsDefaultSavedRecently] = useState<boolean>(false);
+  const [defaultUndoSeconds, setDefaultUndoSeconds] = useState(0);
+  const defaultLayoutUndoSnapshot = useRef<{
+    defaultRaw: string | null;
+    savedRaw: string | null;
+    hasUnsavedChanges: boolean;
+    hasCustomPositions: boolean;
+    isLayoutAtDefault: boolean;
+    isSavedRecently: boolean;
+  } | null>(null);
+  const defaultUndoInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const [hasCustomPositions, setHasCustomPositions] = useState<boolean>(false);
   const [isLayoutAtDefault, setIsLayoutAtDefault] = useState<boolean>(true);
   const shouldShowResetLayout = hasUnsavedChanges || (hasCustomPositions && !isLayoutAtDefault);
@@ -305,6 +315,16 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
   useEffect(() => {
     setUndoHistory([]);
+  }, [scenario, sim.mapId]);
+
+  useEffect(() => {
+    setDefaultUndoSeconds(0);
+    defaultLayoutUndoSnapshot.current = null;
+    if (defaultUndoInterval.current) clearInterval(defaultUndoInterval.current);
+    defaultUndoInterval.current = null;
+    return () => {
+      if (defaultUndoInterval.current) clearInterval(defaultUndoInterval.current);
+    };
   }, [scenario, sim.mapId]);
 
   const recordUndo = () => {
@@ -429,6 +449,14 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     const data = createLayoutSnapshot();
     if (!data) return;
     try {
+      defaultLayoutUndoSnapshot.current = {
+        defaultRaw: localStorage.getItem(`default_node_layout_${scenario}_${sim.mapId}`),
+        savedRaw: localStorage.getItem(`saved_node_positions_${scenario}_${sim.mapId}`),
+        hasUnsavedChanges,
+        hasCustomPositions,
+        isLayoutAtDefault,
+        isSavedRecently,
+      };
       localStorage.setItem(`default_node_layout_${scenario}_${sim.mapId}`, JSON.stringify(data));
       // Keep the live layout in sync immediately; the default remains as the
       // baseline that Reset Layout will restore later.
@@ -438,9 +466,46 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
       setIsLayoutAtDefault(true);
       setIsSavedRecently(false);
       setIsDefaultSavedRecently(true);
-      setTimeout(() => setIsDefaultSavedRecently(false), 3000);
+      setTimeout(() => setIsDefaultSavedRecently(false), 5000);
+      if (defaultUndoInterval.current) clearInterval(defaultUndoInterval.current);
+      setDefaultUndoSeconds(5);
+      defaultUndoInterval.current = setInterval(() => {
+        setDefaultUndoSeconds(seconds => {
+          if (seconds <= 1) {
+            if (defaultUndoInterval.current) clearInterval(defaultUndoInterval.current);
+            defaultUndoInterval.current = null;
+            defaultLayoutUndoSnapshot.current = null;
+            return 0;
+          }
+          return seconds - 1;
+        });
+      }, 1000);
     } catch (err) {
       console.error('Failed to save default topology layout:', err);
+    }
+  };
+
+  const handleUndoSaveAsDefault = () => {
+    const snapshot = defaultLayoutUndoSnapshot.current;
+    if (!snapshot) return;
+    try {
+      const restoreStorageValue = (key: string, value: string | null) => {
+        if (value === null) localStorage.removeItem(key);
+        else localStorage.setItem(key, value);
+      };
+      restoreStorageValue(`default_node_layout_${scenario}_${sim.mapId}`, snapshot.defaultRaw);
+      restoreStorageValue(`saved_node_positions_${scenario}_${sim.mapId}`, snapshot.savedRaw);
+      setHasUnsavedChanges(snapshot.hasUnsavedChanges);
+      setHasCustomPositions(snapshot.hasCustomPositions);
+      setIsLayoutAtDefault(snapshot.isLayoutAtDefault);
+      setIsSavedRecently(snapshot.isSavedRecently);
+      setIsDefaultSavedRecently(false);
+      defaultLayoutUndoSnapshot.current = null;
+      if (defaultUndoInterval.current) clearInterval(defaultUndoInterval.current);
+      defaultUndoInterval.current = null;
+      setDefaultUndoSeconds(0);
+    } catch (err) {
+      console.error('Failed to undo default topology save:', err);
     }
   };
 
@@ -2021,6 +2086,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               }}
               onSavePositions={handleSavePositions}
               onSaveAsDefault={handleSaveAsDefault}
+              onUndoSaveAsDefault={handleUndoSaveAsDefault}
+              defaultUndoSeconds={defaultUndoSeconds}
               onUndo={handleUndoTopology}
               canUndo={undoHistory.length > 0}
               hasUnsavedChanges={hasUnsavedChanges}
@@ -2039,6 +2106,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         history={sim.history}
         scenario={scenario}
         onDeleteHistory={sim.handleDeleteHistory}
+        onRestoreHistory={sim.handleRestoreHistory}
         onImportHistory={sim.handleImportHistory}
         activeAlgorithms={sim.activeAlgorithms}
       />

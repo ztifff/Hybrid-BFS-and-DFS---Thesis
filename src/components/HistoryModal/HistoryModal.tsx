@@ -7,6 +7,7 @@ import { ImportErrorModal, ImportErrorType } from './components/ImportErrorModal
 import { ImportSuccessModal } from './components/ImportSuccessModal';
 import { useTutorial, TutorialOverlay, TutorialStep } from '../TutorialOverlay';
 import { useTheme } from '../../context/ThemeContext';
+import { Undo2 } from 'lucide-react';
 
 const HISTORY_TUTORIAL_STEPS: TutorialStep[] = [
   {
@@ -64,7 +65,7 @@ const HISTORY_TUTORIAL_STEPS: TutorialStep[] = [
 ];
 
 export const HistoryModal: React.FC<HistoryModalProps> = ({
-  isOpen, onClose, history, scenario, onDeleteHistory, onImportHistory,
+  isOpen, onClose, history, scenario, onDeleteHistory, onRestoreHistory, onImportHistory,
 }) => {
   const { theme } = useTheme();
   const isLight = theme === 'light';
@@ -77,6 +78,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
   const [historyTimelineStep, setHistoryTimelineStep] = useState<number>(-1);
   const [importError, setImportError]       = useState<ImportErrorType | null>(null);
   const [importSuccess, setImportSuccess]   = useState<{ count: number; scenario: string } | null>(null);
+  const [pendingDeleteUndo, setPendingDeleteUndo] = useState<{ entries: HistoryEntry[]; seconds: number } | null>(null);
   const importInputRef = React.useRef<HTMLInputElement>(null);
   
   const tutorial = useTutorial('hybrid_sim_history_tutorial_v1', HISTORY_TUTORIAL_STEPS);
@@ -90,8 +92,19 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
       setIsPurgeModalOpen(false);
       setHighlightedNodeId(null);
       setHistoryTimelineStep(-1);
+      setPendingDeleteUndo(null);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!pendingDeleteUndo) return;
+    const timer = window.setTimeout(() => {
+      setPendingDeleteUndo(current => current && current.seconds > 1
+        ? { ...current, seconds: current.seconds - 1 }
+        : null);
+    }, 1000);
+    return () => window.clearTimeout(timer);
+  }, [pendingDeleteUndo]);
 
   // Reset timeline when opening a new entry
   useEffect(() => {
@@ -115,7 +128,9 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
 
   const handleBulkDelete = () => {
     if (selectedIds.size === 0) return;
+    const deletedEntries = history.filter(entry => selectedIds.has(entry.id));
     onDeleteHistory(Array.from(selectedIds));
+    if (deletedEntries.length > 0) setPendingDeleteUndo({ entries: deletedEntries, seconds: 5 });
     setSelectedIds(new Set());
     setIsPurgeModalOpen(false);
   };
@@ -374,10 +389,29 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
         </div>
 
         {/* ── Footer ──────────────────────────────────────────────────────── */}
-        <footer className={`p-4 border-t flex justify-between items-center ${
+        <footer className={`p-4 border-t flex justify-between items-center gap-3 ${
           isLight ? 'bg-white border-slate-200' : 'border-gray-800 bg-[#0a0f1e]/40'
         }`}>
-          <div>
+          <div className="min-w-0">
+            {view === 'list' && pendingDeleteUndo && (
+              <div className={`flex flex-wrap items-center gap-2 text-xs ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>
+                <span>Deleted {pendingDeleteUndo.entries.length} record{pendingDeleteUndo.entries.length === 1 ? '' : 's'}.</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onRestoreHistory(pendingDeleteUndo.entries);
+                    setPendingDeleteUndo(null);
+                  }}
+                  className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 font-bold border transition-colors ${isLight
+                    ? 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100'
+                    : 'bg-blue-950/50 border-blue-800/60 text-blue-300 hover:bg-blue-900/70'
+                  }`}
+                  aria-label={`Undo deletion, ${pendingDeleteUndo.seconds} seconds remaining`}
+                >
+                  <Undo2 className="w-3.5 h-3.5" /> Undo · {pendingDeleteUndo.seconds}s
+                </button>
+              </div>
+            )}
             {view === 'detail' && (
               <span className={`text-xs font-mono uppercase tracking-wider ${
                 isLight ? 'text-slate-600' : 'text-gray-500'

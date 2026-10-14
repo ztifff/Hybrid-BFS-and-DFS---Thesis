@@ -52,6 +52,7 @@ export class RoboticsRenderer extends BaseRenderer {
         const isStorageShelf = mapId !== 'clinic' && (AWS_SHELF_NODES.has(node.id) || (node.id.startsWith('shelf_') && !node.id.startsWith('dest_')) || node.type === 'shelf' || node.type === 'aisle');
         if (isStorageShelf) {
           const rackCenterX = node.x;
+          const rackCenterY = node.y;
           const bfsPicked = activeSteps.bfs?.pickedUpBoxCounts?.[node.id] ?? 0;
           const dfsPicked = activeSteps.dfs?.pickedUpBoxCounts?.[node.id] ?? 0;
           const hybPicked = activeSteps.hybrid?.pickedUpBoxCounts?.[node.id] ?? 0;
@@ -62,8 +63,8 @@ export class RoboticsRenderer extends BaseRenderer {
               const slotH = cellH_world;
               const worldX1 = rackCenterX - cellW_world / 2 + col * slotW;
               const worldX2 = rackCenterX - cellW_world / 2 + (col + 1) * slotW;
-              const worldY1 = node.y - cellH_world + row * slotH;
-              const worldY2 = node.y - cellH_world + (row + 1) * slotH;
+              const worldY1 = rackCenterY - cellH_world + row * slotH;
+              const worldY2 = rackCenterY - cellH_world + (row + 1) * slotH;
 
               const screenX1 = this.sx(worldX1, options);
               const screenX2 = this.sx(worldX2, options);
@@ -96,7 +97,7 @@ export class RoboticsRenderer extends BaseRenderer {
               // algorithm, with one algorithm color assigned to each column.
               const isRemaining = algo.visible && row >= Math.min(2, algo.picked);
               if (isRemaining) {
-                const packSize = Math.min(bw * 0.98, bh * 0.98);
+                const packSize = Math.min(bw * 0.9, bh * 0.9);
                 const packX = bx + (bw - packSize) / 2;
                 const packY = by + (bh - packSize) / 2;
                 // Logical view uses a solid color tile. Physical view uses a

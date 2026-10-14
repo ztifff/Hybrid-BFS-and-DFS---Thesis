@@ -22,6 +22,8 @@ interface TopologyEditorProps {
   onClearGraph: () => void;
   onSavePositions?: () => void;
   onSaveAsDefault?: () => void;
+  onUndoSaveAsDefault?: () => void;
+  defaultUndoSeconds?: number;
   onUndo?: () => void;
   canUndo?: boolean;
   hasUnsavedChanges?: boolean;
@@ -69,6 +71,8 @@ export const TopologyEditor: React.FC<TopologyEditorProps> = ({
   onClearGraph,
   onSavePositions,
   onSaveAsDefault,
+  onUndoSaveAsDefault,
+  defaultUndoSeconds = 0,
   onUndo,
   canUndo,
   hasUnsavedChanges,
@@ -188,19 +192,35 @@ export const TopologyEditor: React.FC<TopologyEditorProps> = ({
             )}
           </div>
           {onSaveAsDefault && (
-            <button
-              type="button"
-              onClick={onSaveAsDefault}
-              disabled={disabled}
-              className={`w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer shadow-sm ${isLight
-                ? 'bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800'
-                : 'bg-amber-950/30 hover:bg-amber-900/40 border border-amber-800/50 text-amber-300'
-                }`}
-              title="Make this topology the default restored by Reset Layout"
-            >
-              {isDefaultSavedRecently ? <Check className="w-3.5 h-3.5" /> : <Star className="w-3.5 h-3.5" />}
-              <span>{isDefaultSavedRecently ? 'Default Saved ✓' : 'Save as Default'}</span>
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={onSaveAsDefault}
+                disabled={disabled}
+                className={`w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer shadow-sm ${isLight
+                  ? 'bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800'
+                  : 'bg-amber-950/30 hover:bg-amber-900/40 border border-amber-800/50 text-amber-300'
+                  }`}
+                title="Make this topology the default restored by Reset Layout"
+              >
+                {isDefaultSavedRecently ? <Check className="w-3.5 h-3.5" /> : <Star className="w-3.5 h-3.5" />}
+                <span>{isDefaultSavedRecently ? 'Default Saved ✓' : 'Save as Default'}</span>
+              </button>
+              {defaultUndoSeconds > 0 && onUndoSaveAsDefault && (
+                <button
+                  type="button"
+                  onClick={onUndoSaveAsDefault}
+                  className={`w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer border ${isLight
+                    ? 'bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-800'
+                    : 'bg-blue-950/30 hover:bg-blue-900/40 border-blue-800/50 text-blue-300'
+                    }`}
+                  title="Restore the previous default layout"
+                >
+                  <Undo2 className="w-3.5 h-3.5" />
+                  <span>Undo Save · {defaultUndoSeconds}s</span>
+                </button>
+              )}
+            </>
           )}
           <span className={`text-[9px] leading-tight ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>
             Saved layouts persist after reload. Reset restores the saved default.

@@ -107,6 +107,11 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
   const toggleAlgo = (algo: 'bfs' | 'dfs' | 'hybrid') => {
     setVisibleAlgos(prev => {
       const willBeHidden = prev[algo];
+      const hasAnotherVisibleAlgo = (['bfs', 'dfs', 'hybrid'] as const).some(
+        candidate => candidate !== algo && prev[candidate] && (activeAlgorithms ? activeAlgorithms[candidate] : true),
+      );
+      // Keep at least one enabled algorithm visible on the canvas.
+      if (willBeHidden && !hasAnotherVisibleAlgo) return prev;
       if (willBeHidden && followAlgo === algo) {
         setFollowAlgo(null);
       }

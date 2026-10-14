@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTheme } from '../../../context/ThemeContext';
 
 interface Props {
   count: number;
@@ -6,9 +7,12 @@ interface Props {
   onClose: () => void;
 }
 
-export const ImportSuccessModal: React.FC<Props> = ({ count, scenario, onClose }) => (
+export const ImportSuccessModal: React.FC<Props> = ({ count, scenario, onClose }) => {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+  return (
   <div className="absolute inset-0 z-[70] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fadeIn p-4">
-    <div className="bg-[#0d1117] border border-emerald-500/40 rounded-2xl w-full max-w-md shadow-2xl shadow-emerald-900/30 overflow-hidden scale-in">
+    <div className={`${isLight ? 'bg-white border-emerald-200' : 'bg-[#0d1117] border-emerald-500/40'} border rounded-2xl w-full max-w-md shadow-2xl shadow-emerald-900/30 overflow-hidden scale-in`}>
       <div className="bg-gradient-to-r from-emerald-900/80 via-green-800/60 to-emerald-900/80 px-6 py-4 border-b border-emerald-500/30 flex items-center gap-3">
         <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center text-xl shrink-0">
           <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
@@ -20,7 +24,7 @@ export const ImportSuccessModal: React.FC<Props> = ({ count, scenario, onClose }
       </div>
 
       <div className="px-6 py-5 space-y-4">
-        <p className="text-gray-300 text-sm leading-relaxed">
+        <p className={`${isLight ? 'text-slate-700' : 'text-gray-300'} text-sm leading-relaxed`}>
           Successfully imported simulation records into the{' '}
           <strong className="text-emerald-400">
             {scenario.charAt(0).toUpperCase() + scenario.slice(1)}
@@ -28,21 +32,21 @@ export const ImportSuccessModal: React.FC<Props> = ({ count, scenario, onClose }
           scenario history.
         </p>
 
-        <div className="flex items-center gap-4 bg-black/40 rounded-xl p-4 border border-white/5">
+        <div className={`flex items-center gap-4 rounded-xl p-4 border ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-black/40 border-white/5'}`}>
           <div className="flex-1 text-center">
-            <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-1.5">Records Imported</div>
+            <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-gray-500'} uppercase tracking-widest mb-1.5`}>Records Imported</div>
             <span className="text-3xl font-black text-emerald-400">{count}</span>
           </div>
-          <div className="w-px h-10 bg-white/10 shrink-0" />
+          <div className={`w-px h-10 ${isLight ? 'bg-slate-200' : 'bg-white/10'} shrink-0`} />
           <div className="flex-1 text-center">
-            <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-1.5">Scenario</div>
+            <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-gray-500'} uppercase tracking-widest mb-1.5`}>Scenario</div>
             <span className="inline-block px-3 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold uppercase tracking-wider">
               {scenario}
             </span>
           </div>
         </div>
 
-        <p className="text-gray-500 text-xs leading-relaxed">
+        <p className={`${isLight ? 'text-slate-600' : 'text-gray-500'} text-xs leading-relaxed`}>
           Your imported records are now visible in the history list and are ready for review.
         </p>
       </div>
@@ -57,4 +61,5 @@ export const ImportSuccessModal: React.FC<Props> = ({ count, scenario, onClose }
       </div>
     </div>
   </div>
-);
+  );
+};

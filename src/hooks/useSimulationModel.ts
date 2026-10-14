@@ -243,6 +243,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
   const [activeAlgorithms, setActiveAlgorithms] = useState({ bfs: true, dfs: true, hybrid: true });
 
   const [savedSignatures, setSavedSignatures] = useState<string[]>([]);
+  const deletedSavedResultSnapshot = useRef<{ id: string; signatures: string[] } | null>(null);
   const currentSignature = `${activeAlgorithms.bfs}-${activeAlgorithms.dfs}-${activeAlgorithms.hybrid}`;
   const isCurrentSaved = savedSignatures.includes(currentSignature);
 
@@ -556,10 +557,30 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     }
     setHistory(updatedHistory);
     if (currentSavedId && ids.includes(currentSavedId)) {
+      deletedSavedResultSnapshot.current = { id: currentSavedId, signatures: savedSignatures };
       setSavedSignatures([]);
       setCurrentSavedId(null);
     }
-  }, [history, currentSavedId]);
+  }, [history, currentSavedId, savedSignatures]);
+
+  const handleRestoreHistory = useCallback((entries: HistoryEntry[]) => {
+    if (entries.length === 0) return;
+    const existingIds = new Set(history.map(entry => entry.id));
+    const restored = [...entries.filter(entry => !existingIds.has(entry.id)), ...history]
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    for (const sc of ['network', 'robotics', 'traffic', 'evacuation', 'gameai']) {
+      persistLocalHistory(sc, restored.filter(entry => entry.scenario === sc)).catch(err => {
+        console.error('Failed to restore history after undo:', err);
+      });
+    }
+    setHistory(restored);
+    const deletedSavedResult = deletedSavedResultSnapshot.current;
+    if (deletedSavedResult && entries.some(entry => entry.id === deletedSavedResult.id)) {
+      setCurrentSavedId(deletedSavedResult.id);
+      setSavedSignatures(deletedSavedResult.signatures);
+      deletedSavedResultSnapshot.current = null;
+    }
+  }, [history]);
 
   const handleImportHistory = useCallback((entries: HistoryEntry[]) => {
     if (!entries || entries.length === 0) return;
@@ -1186,7 +1207,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
     robotAssignments, setRobotAssignments,
     deliveryMode, setDeliveryMode,
 
-    history, handleDeleteHistory, handleImportHistory, confirmSaveResult, openSaveModal,
+    history, handleDeleteHistory, handleRestoreHistory, handleImportHistory, confirmSaveResult, openSaveModal,
     isCurrentSaved,
     setSavedSignatures,
     currentSavedId, setCurrentSavedId,
