@@ -10,7 +10,6 @@ export interface NetworkCanvasProps {
   highlightedNodeId?: string | null;
   onDeselect?: () => void;
   onNodeClick?: (nodeId: string) => void;
-  onNodeDoubleClick?: (nodeId: string) => void;
   onEdgeClick?: (edgeId: string) => void;
   onCanvasClick?: (x: number, y: number, activeFloor?: string) => void;
   isMoveMode?: boolean;

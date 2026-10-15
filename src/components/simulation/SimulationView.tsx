@@ -292,6 +292,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const editorDisabled = sim.isComputing || sim.isGraphLoading || sim.status === 'running';
 
   // ── Topology Node Move & Rename Handlers ────────────────────────────────────
+  const MAX_NODE_LABEL_LENGTH = 32;
   const [renamingNode, setRenamingNode] = useState<{ id: string; label: string; type: string } | null>(null);
   const [renameInput, setRenameInput] = useState<string>('');
 
@@ -570,7 +571,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
   const handleConfirmNodeRename = () => {
     if (!renamingNode) return;
-    const trimmed = renameInput.trim();
+    const trimmed = renameInput.trim().slice(0, MAX_NODE_LABEL_LENGTH);
     if (!trimmed) return;
     const targetNodeId = renamingNode.id;
 
@@ -1380,13 +1381,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     isMoveMode={placementMode?.type === 'move'}
                     placementModeType={placementMode?.type || null}
                     onNodeMoveEnd={handleNodeMoveEnd}
-                    onNodeDoubleClick={(nodeId) => {
-                      const node = patchedGraph.nodes.find((n: any) => n.id === nodeId);
-                      if (node) {
-                        setRenamingNode({ id: nodeId, label: node.label || node.id, type: node.type });
-                        setRenameInput(node.label || node.id);
-                      }
-                    }}
                     onDeselect={() => setHighlightedNodeId(null)}
                     onNodeClick={(nodeId) => {
                       // 1. Endpoint picking has priority
@@ -1403,8 +1397,9 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                       if (placementMode?.type === 'rename') {
                         const node = patchedGraph.nodes.find((n: any) => n.id === nodeId);
                         if (node) {
-                          setRenamingNode({ id: nodeId, label: node.label || node.id, type: node.type });
-                          setRenameInput(node.label || node.id);
+                          const label = (node.label || node.id).slice(0, MAX_NODE_LABEL_LENGTH);
+                          setRenamingNode({ id: nodeId, label, type: node.type });
+                          setRenameInput(label);
                         }
                         return;
                       }
@@ -2207,6 +2202,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 type="text"
                 value={renameInput}
                 onChange={(e) => setRenameInput(e.target.value)}
+                maxLength={MAX_NODE_LABEL_LENGTH}
                 placeholder="Enter node label..."
                 className={`w-full rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 font-medium text-sm transition-all ${
                   isLight
@@ -2220,6 +2216,9 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   if (e.key === 'Escape') setRenamingNode(null);
                 }}
               />
+              <p className={`mt-1 text-[11px] text-right ${isLight ? 'text-slate-500' : 'text-gray-500'}`}>
+                {renameInput.length}/{MAX_NODE_LABEL_LENGTH} characters
+              </p>
             </div>
             
             <div className={`border-t p-4 flex justify-end gap-3 ${

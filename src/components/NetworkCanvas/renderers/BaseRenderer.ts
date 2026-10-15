@@ -352,6 +352,7 @@ export abstract class BaseRenderer {
       let r = isMassive ? (isImportant || isBlockedImportant ? 4.5 : (activeExplorations.length > 0 ? 2.5 : 1.2)) : cfg.radius;
       if (scenario === 'robotics' && mapId === 'synthetic' && node.type === 'delivery_bay') r = isMassive ? 3 : 9;
       if (isDatacenter) r = (isImportant || isBlockedImportant) ? 8 : 4.5;
+      if (scenario === 'robotics' && mapId === 'synthetic') r *= 0.6;
       
       const currentRadii = isMassive ? [2.2, 1.2, 0.6] : [r * 0.85, r * 0.55, r * 0.25];
       const currentStrokes = isMassive ? [0.5, 0.3, 0.1] : [2, 1.5, 1];
@@ -691,9 +692,15 @@ export abstract class BaseRenderer {
           let labelOffsetY = isDatacenter ? (r + (8 / zoom)) : (r + (12 / zoom));
           let labelY = textY + labelOffsetY;
 
-          const labelSize = isDatacenter 
-            ? ((isImportant ? 13 : 10.5) / zoom) 
-            : ((isImportant ? 18 : 14.5) / zoom);
+          const baseLabelSize = isDatacenter
+            ? (isImportant ? 13 : 10.5)
+            : (isImportant ? 18 : 14.5);
+          // Keep compensating for zoom so labels remain readable, but stop
+          // increasing their world-space size at very low zoom levels.
+          const overviewLengthScale = zoom < 0.3 && displayLabel.length > 14
+            ? Math.sqrt(14 / displayLabel.length)
+            : 1;
+          const labelSize = Math.min(baseLabelSize / zoom, 72) * overviewLengthScale;
           ctx.font = `${isImportant ? 'bold ' : '600 '}${labelSize}px sans-serif`;
           const textWidthUnscaled = ctx.measureText(displayLabel).width;
           const textWidthOnScreen = textWidthUnscaled * zoom;
@@ -723,7 +730,7 @@ export abstract class BaseRenderer {
           }
 
           ctx.lineJoin = 'round';
-          ctx.lineWidth = (isLight ? 4.5 : 3) / zoom;
+          ctx.lineWidth = Math.min((isLight ? 4.5 : 3) / zoom, labelSize * 0.2);
           ctx.strokeStyle = scenario === 'gameai' ? '#000000' : defaultStroke;
           ctx.strokeText(displayLabel, cx, labelY);
 

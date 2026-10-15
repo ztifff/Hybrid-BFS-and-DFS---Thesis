@@ -47,6 +47,7 @@ export class RoboticsRenderer extends BaseRenderer {
       const cellW_world = 7500;
       const cellH_world = 2500;
       const boxIcon = workspaceView === 'logical' ? null : getCiscoIconCanvas('/RoboticsMaps/icons/box.png');
+      const stackLayers = Math.max(1, options.robotAssignments?.length ?? 1);
 
       visibleNodes.forEach(node => {
         const isStorageShelf = mapId !== 'clinic' && (AWS_SHELF_NODES.has(node.id) || (node.id.startsWith('shelf_') && !node.id.startsWith('dest_')) || node.type === 'shelf' || node.type === 'aisle');
@@ -76,7 +77,7 @@ export class RoboticsRenderer extends BaseRenderer {
 
               // Match the carton footprint to the full rack slot, leaving a
               // narrow clearance so adjacent boxes remain visually distinct.
-              const padX = cellW * 0.025;
+              const padX = cellW * 0.09;
               const padY = cellH * 0.025;
 
               const bx = screenX1 + padX;
@@ -93,26 +94,40 @@ export class RoboticsRenderer extends BaseRenderer {
                 : col === 1
                   ? { color: '#a855f7', stroke: '#581c87', picked: dfsPicked, visible: visibleAlgos.dfs }
                   : { color: '#f97316', stroke: '#7c2d12', picked: hybPicked, visible: visibleAlgos.hybrid };
-              // Each rack is exactly 3 columns × 2 rows: two packages per
-              // algorithm, with one algorithm color assigned to each column.
-              const isRemaining = algo.visible && row >= Math.min(2, algo.picked);
-              if (isRemaining) {
+              // Each rack has two package slots per algorithm. Add a card
+              // behind each slot for every configured robot, so inventory
+              // grows with the fleet without adding more rows or columns.
+              if (algo.visible) {
                 const packSize = Math.min(bw * 0.9, bh * 0.9);
                 const packX = bx + (bw - packSize) / 2;
                 const packY = by + (bh - packSize) / 2;
-                // Logical view uses a solid color tile. Physical view uses a
-                // white carton and places the algorithm color beneath it.
-                ctx.fillStyle = boxIcon ? '#fff' : algo.color;
-                ctx.fillRect(packX, packY, packSize, packSize);
-                ctx.strokeStyle = algo.stroke;
-                ctx.lineWidth = Math.max(0.75, 1 / zoom);
-                ctx.strokeRect(packX, packY, packSize, packSize);
-                if (boxIcon) {
-                  const bandH = Math.max(2 / zoom, packSize * 0.16);
-                  const iconSize = packSize * 0.74;
-                  ctx.drawImage(boxIcon, packX + (packSize - iconSize) / 2, packY + (packSize - bandH - iconSize) / 2, iconSize, iconSize);
-                  ctx.fillStyle = algo.color;
-                  ctx.fillRect(packX, packY + packSize - bandH, packSize, bandH);
+                const stackStep = Math.min(8, packSize * 0.12);
+                const stackSpan = (stackLayers - 1) * stackStep;
+
+                for (let layer = 0; layer < stackLayers; layer++) {
+                  const boxIndex = row * stackLayers + layer;
+                  if (boxIndex < algo.picked) continue;
+
+                  // Draw deeper cartons first, offset slightly up and left,
+                  // while centering the full stack footprint in its slot.
+                  const stackOffset = (stackLayers - 1 - layer) * stackStep;
+                  const boxX = packX + stackSpan / 2 - stackOffset;
+                  const boxY = packY + stackSpan / 2 - stackOffset;
+
+                  // Logical view uses a solid color tile. Physical view uses
+                  // a white carton and places the algorithm color beneath it.
+                  ctx.fillStyle = boxIcon ? '#fff' : algo.color;
+                  ctx.fillRect(boxX, boxY, packSize, packSize);
+                  ctx.strokeStyle = algo.stroke;
+                  ctx.lineWidth = Math.max(0.75, 1 / zoom);
+                  ctx.strokeRect(boxX, boxY, packSize, packSize);
+                  if (boxIcon) {
+                    const bandH = Math.max(2 / zoom, packSize * 0.16);
+                    const iconSize = packSize * 0.74;
+                    ctx.drawImage(boxIcon, boxX + (packSize - iconSize) / 2, boxY + (packSize - bandH - iconSize) / 2, iconSize, iconSize);
+                    ctx.fillStyle = algo.color;
+                    ctx.fillRect(boxX, boxY + packSize - bandH, packSize, bandH);
+                  }
                 }
               }
             }

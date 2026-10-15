@@ -14,7 +14,7 @@ interface Props {
 }
 
 export const RobotAssignmentPanel: React.FC<Props> = ({
-  assignments,
+  assignments: savedAssignments,
   setAssignments,
   depotNodes,
   shelfNodes,
@@ -24,9 +24,11 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
   onRequestOpenWhileActive,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [draftAssignments, setDraftAssignments] = useState<RobotAssignment[]>(savedAssignments);
   const [activeRobotId, setActiveRobotId] = useState<string | null>(null);
   const [minRobotWarning, setMinRobotWarning] = useState(false);
   const [minDestWarning, setMinDestWarning] = useState(false);
+  const assignments = isOpen ? draftAssignments : savedAssignments;
 
   const isBoxDeliveryMap = mapId === 'aws' || mapId === 'awsWarehouse' || mapId === 'synthetic';
 
@@ -54,7 +56,7 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
   };
 
   const toggleDestination = (robotId: string, shelfId: string) => {
-    setAssignments(assignments.map(a => {
+    setDraftAssignments(assignments.map(a => {
       if (a.robotId !== robotId) return a;
       const hasIt = a.destinations.includes(shelfId);
       
@@ -76,14 +78,14 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
   };
 
   const togglePriority = (robotId: string, shelfId: string) => {
-    setAssignments(assignments.map(a => {
+    setDraftAssignments(assignments.map(a => {
       if (a.robotId !== robotId) return a;
       return { ...a, priorityDest: a.priorityDest === shelfId ? undefined : shelfId };
     }));
   };
 
   const setBoxCount = (robotId: string, shelfId: string, count: number) => {
-    setAssignments(assignments.map(a => {
+    setDraftAssignments(assignments.map(a => {
       if (a.robotId !== robotId) return a;
       return { ...a, boxCounts: { ...(a.boxCounts ?? {}), [shelfId]: Math.min(6, Math.max(1, count)) } };
     }));
@@ -96,14 +98,14 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
       setTimeout(() => setMinRobotWarning(false), 3000);
       return;
     }
-    setAssignments(assignments.filter(a => a.robotId !== robotId));
+    setDraftAssignments(assignments.filter(a => a.robotId !== robotId));
     if (activeRobotId === robotId) setActiveRobotId(null);
   };
 
   const addRobot = (robotId: string) => {
     if (assignments.some(a => a.robotId === robotId)) return;
     const newAssignments = [...assignments, { robotId, destinations: [] }];
-    setAssignments(newAssignments);
+    setDraftAssignments(newAssignments);
     setActiveRobotId(robotId);
   };
 
@@ -121,8 +123,13 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
       onClick={() => {
         if (!disabled) {
           const doOpen = () => {
+            setDraftAssignments(savedAssignments.map(a => ({
+              ...a,
+              destinations: [...a.destinations],
+              boxCounts: a.boxCounts ? { ...a.boxCounts } : undefined,
+            })));
             setIsOpen(true);
-            if (!activeRobotId && assignments.length > 0) setActiveRobotId(assignments[0].robotId);
+            if (!activeRobotId && savedAssignments.length > 0) setActiveRobotId(savedAssignments[0].robotId);
           };
           if (simStatus === 'paused' && onRequestOpenWhileActive) {
             onRequestOpenWhileActive(doOpen);
@@ -447,7 +454,10 @@ export const RobotAssignmentPanel: React.FC<Props> = ({
                 {isBoxDeliveryMap ? <> · {totalBoxes} box{totalBoxes !== 1 ? "es" : ""} configured</> : ""}
               </div>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  setAssignments(draftAssignments);
+                  setIsOpen(false);
+                }}
                 className="px-5 py-2 bg-green-700 hover:bg-green-600 text-white text-sm font-bold rounded-lg transition-colors cursor-pointer shadow-md"
               >
                 Save & Close

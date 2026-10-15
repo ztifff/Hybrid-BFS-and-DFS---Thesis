@@ -20,7 +20,6 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
   highlightedNodeId,
   onDeselect,
   onNodeClick,
-  onNodeDoubleClick,
   onEdgeClick,
   onCanvasClick,
   isMoveMode,
@@ -437,15 +436,6 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
     handleMouseLeave();
   };
 
-  const onDoubleClickWrapper = (e: React.MouseEvent<HTMLDivElement>) => {
-    const coords = getCanvasCoords(e.clientX, e.clientY);
-    if (!coords || !onNodeDoubleClick) return;
-    const hitNode = findNodeAtCoords(coords.x, coords.y);
-    if (hitNode) {
-      onNodeDoubleClick(hitNode.id);
-    }
-  };
-
   // Drag & Move Touch Handlers
   const onTouchStartWrapper = (e: React.TouchEvent<HTMLDivElement>) => {
     if (e.touches.length === 1 && isMoveMode) {
@@ -585,7 +575,6 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
       onMouseUp={onMouseUpWrapper} 
       onMouseLeave={onMouseLeaveWrapper}
       onClick={handleCanvasClick}
-      onDoubleClick={onDoubleClickWrapper}
       onTouchStart={onTouchStartWrapper}
       onTouchMove={onTouchMoveWrapper}
       onTouchEnd={onTouchEndWrapper}
