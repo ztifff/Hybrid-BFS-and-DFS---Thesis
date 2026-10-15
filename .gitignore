@@ -39,3 +39,20 @@ run_stats.cjs
 
 # statistical analysis folder
 statistical_analysis/
+
+# python helper scripts
+*.py
+__pycache__/
+
+# manuscript documents (and Word lock files)
+*.docx
+~$*
+
+# editor / agent folders
+.idea/
+.agents/
+.qa/
+
+# scratch & QA output folders
+scratch/
+docx_qa_*/

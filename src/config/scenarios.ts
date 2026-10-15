@@ -6,7 +6,7 @@ export const SCENARIOS: ScenarioConfig[] = [
     name: 'Network Routing',
     icon: '🌐',
     description:
-      'A critical software update is routed from the company\'s ISP uplink through a three-tier enterprise network to end devices across three floors. The network includes core routers, distribution switches, and VLAN-isolated access switches. BFS explores the oldest waiting node first (FIFO); DFS explores the newest waiting node first (LIFO). Hybrid keeps one shared frontier and continuously shifts its selection toward newer entries as the frontier grows or expands quickly, and toward older entries as pressure eases. It does not alternate on a fixed step count or discard pending nodes.',
+      'A critical software update is routed from the company\'s ISP uplink through a three-tier enterprise network to end devices across three floors. The network includes core routers, distribution switches, and VLAN-isolated access switches. BFS chooses the oldest place in its waiting list; DFS chooses the newest. Hybrid also keeps a waiting list: when it grows or grows quickly, Hybrid chooses farther toward the newest places; when it is small or shrinking, it chooses nearer the oldest. It recalculates every step and keeps all waiting places.',
     dynamicDescription: 'VLAN isolation and core router failover events mid-routing',
     sourceLabel: 'ISP Gateway',
     destinationLabel: 'End Device',
@@ -106,7 +106,7 @@ export const ALGORITHMS: AlgorithmConfig[] = [
     id: 'hybrid',
     name: 'Hybrid BFS-DFS',
     description:
-      'Uses one shared frontier and recalculates a smoothed pressure score before every expansion. The score combines frontier size against a soft reference budget (10% of graph nodes, minimum 8 and no larger than the graph) with recent frontier growth. Low pressure favors older entries (BFS-like); high pressure favors newer entries (DFS-like), with intermediate pressure selecting between them. Pending nodes are preserved; there are no fixed 10-step turns.',
+      'Keeps discovered but not-yet-expanded places in one waiting list. A pressure score rises when that list is large for the map or grows quickly. Low pressure selects near the oldest waiting place (BFS-like); higher pressure shifts the selection toward newer places (DFS-like). For example, with [A, B, C, D, E] ordered oldest to newest, illustrative pressures of 20%, 50%, and 80% select near B, C, and D. These percentages are not switch thresholds. The 10% reference budget helps measure pressure but does not limit or discard the waiting list. Hybrid recalculates its choice every step rather than taking fixed-length BFS/DFS turns.',
     color: '#f97316',
     textColor: 'text-orange-400',
     borderColor: 'border-orange-500',
