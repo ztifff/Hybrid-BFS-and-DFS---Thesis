@@ -28,6 +28,7 @@ export function useCanvasInteraction({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [windowDimensions, setWindowDimensions] = useState({ w: 0, h: 0 });
+  const [containerSize, setContainerSize] = useState({ w: 0, h: 0 });
   
   // Track if we actually moved during a drag to prevent accidental clicks
   const hasDragged = useRef(false);
@@ -88,6 +89,19 @@ export function useCanvasInteraction({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Refit against the canvas itself when responsive panels or orientation change its size.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(([entry]) => {
+      if (!entry) return;
+      const { width: w, height: h } = entry.contentRect;
+      setContainerSize(previous => previous.w === w && previous.h === h ? previous : { w, h });
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
   // Prevent Page Scroll when wheeling over canvas
   useEffect(() => {
     const container = containerRef.current;
@@ -112,7 +126,7 @@ export function useCanvasInteraction({
   useEffect(() => {
     if (!autoFit) return;
     fitToGraph();
-  }, [autoFit, windowDimensions.w, windowDimensions.h, fitToGraph]);
+  }, [autoFit, containerSize.w, containerSize.h, fitToGraph]);
 
   const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
     if (highlightedNodeId) onDeselect?.();
@@ -128,6 +142,27 @@ export function useCanvasInteraction({
     }));
     setZoom(newZoom);
   }, [highlightedNodeId, zoom, onDeselect]);
+
+  // Button zooms preserve the point at the center of the canvas instead of
+  // scaling around the map origin (0, 0).
+  const zoomAtCenter = useCallback((factor: number) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect || zoom <= 0) return;
+
+    const nextZoom = Math.max(0.1, Math.min(zoom * factor, 30));
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const zoomRatio = nextZoom / zoom;
+
+    setPan(previous => ({
+      x: centerX - (centerX - previous.x) * zoomRatio,
+      y: centerY - (centerY - previous.y) * zoomRatio,
+    }));
+    setZoom(nextZoom);
+  }, [zoom]);
+
+  const zoomIn = useCallback(() => zoomAtCenter(1.5), [zoomAtCenter]);
+  const zoomOut = useCallback(() => zoomAtCenter(1 / 1.5), [zoomAtCenter]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>, stopFollow: () => void) => {
     if (highlightedNodeId) onDeselect?.();
@@ -217,7 +252,10 @@ export function useCanvasInteraction({
     setPan,
     isDragging,
     windowDimensions,
+    containerSize,
     handleWheel,
+    zoomIn,
+    zoomOut,
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,

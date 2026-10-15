@@ -52,8 +52,8 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
 
   const {
     containerRef, canvasRef,
-    zoom, setZoom, pan, setPan, isDragging, windowDimensions,
-    handleWheel, handleMouseDown, handleMouseMove, handleMouseUp, handleMouseLeave,
+    zoom, setZoom, pan, setPan, isDragging, windowDimensions, containerSize,
+    handleWheel, zoomIn, zoomOut, handleMouseDown, handleMouseMove, handleMouseUp, handleMouseLeave,
     handleTouchStart, handleTouchMove, handleTouchEnd, resetZoom, hasDragged
   } = useCanvasInteraction({ autoFit, width: drawnWidth, height: drawnHeight, mapId, scenario, onDeselect, highlightedNodeId });
 
@@ -298,7 +298,7 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
   }, [
     visibleNodes, visibleEdges, visibleNodeMap, pan, zoom, sets, activeBlocked, 
     width, height, scenario, isMassive, isDatacenter, scale, offsetX, offsetY, 
-    windowDimensions, highlightedNodeId, visibleAlgos, mapId, wasHistoricallyBlocked,
+    windowDimensions, containerSize, highlightedNodeId, visibleAlgos, mapId, wasHistoricallyBlocked,
     graph.sourceId, graph.destinationIds, activeSteps, followAlgo, canvasRef,
     workspaceView, isSimulationFinished, showHopBadges, currentTheme, iconRevision, activeFloor,
     draggedNodePos, hoveredNodeId, isMoveMode, placementModeType, edgePreview, edgePreviewCursor
@@ -447,6 +447,7 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
 
   // Drag & Move Touch Handlers
   const onTouchStartWrapper = (e: React.TouchEvent<HTMLDivElement>) => {
+    hasDragged.current = false;
     if (e.touches.length === 1 && isMoveMode) {
       const coords = getCanvasCoords(e.touches[0].clientX, e.touches[0].clientY);
       if (coords) {
@@ -470,6 +471,7 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
   };
 
   const onTouchMoveWrapper = (e: React.TouchEvent<HTMLDivElement>) => {
+    hasDragged.current = true;
     if (nodeDragRef.current && e.touches.length === 1) {
       const coords = getCanvasCoords(e.touches[0].clientX, e.touches[0].clientY);
       if (coords) {
@@ -610,7 +612,7 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
       onTouchCancel={onTouchEndWrapper}
     >
       <CanvasControls
-        zoom={zoom} setZoom={setZoom} resetZoom={resetZoom}
+        zoom={zoom} zoomIn={zoomIn} zoomOut={zoomOut} resetZoom={resetZoom}
         isLayeredMap={isLayeredMap} activeFloor={activeFloor} setActiveFloor={setActiveFloor} uniqueFloors={uniqueFloors}
         visibleAlgos={visibleAlgos} toggleAlgo={toggleAlgo}
         followAlgo={followAlgo} setFollowAlgo={setFollowAlgo}

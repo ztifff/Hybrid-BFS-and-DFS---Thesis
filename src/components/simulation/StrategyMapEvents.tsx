@@ -125,18 +125,19 @@ function getAlgorithmStrategy(
     }
   }
 
-  // 2. Phase detection (hybrid-specific)
-  // Only trigger a phase switch if we are genuinely transitioning between algorithmic modes (e.g., BFS -> DFS)
-  const isTruePhaseSwitch =
-    algorithm === 'hybrid' &&
-    before?.phaseLabel?.includes('Mode:') &&
-    atEvent?.phaseLabel?.includes('Mode:') &&
-    before.phaseLabel !== atEvent.phaseLabel;
+  // 2. Hybrid bias detection. Pressure changes continuously, so report only
+  // when its readable bias category changes, not for every score update.
+  const getHybridBias = (label?: string) =>
+    label?.match(/\bBias:\s*(BFS-leaning|Balanced|DFS-leaning)/)?.[1];
+  const previousBias = getHybridBias(before?.phaseLabel);
+  const currentBias = getHybridBias(atEvent?.phaseLabel);
+  const isHybridBiasShift =
+    algorithm === 'hybrid' && previousBias !== undefined && currentBias !== undefined && previousBias !== currentBias;
 
-  if (isTruePhaseSwitch) {
+  if (isHybridBiasShift) {
     return {
-      action: 'Phase Switch',
-      detail: `Switched from ${before!.phaseLabel} to ${atEvent.phaseLabel} in response to the event`,
+      action: 'Search Bias Shift',
+      detail: `Frontier pressure shifted Hybrid from ${previousBias} toward ${currentBias} around this event.`,
       severity: 'phase',
     };
   }

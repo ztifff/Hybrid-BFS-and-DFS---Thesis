@@ -928,7 +928,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         );
       })()}
 
-      <div className="min-h-screen lg:h-screen w-full max-w-[100vw] bg-transparent text-white flex flex-col relative z-0 lg:overflow-hidden fade-in">
+      <div className="min-h-[100dvh] lg:h-screen w-full max-w-[100vw] bg-transparent text-white flex flex-col relative z-0 lg:overflow-hidden fade-in">
         {/* Help Modal */}
         {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} scenario={scenario} onStartTutorial={tutorial.start} />}
 
@@ -1043,7 +1043,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
           </div>
         </header>
 
-        <div className="flex flex-col lg:flex-row flex-1 lg:min-h-0 overflow-y-auto lg:overflow-hidden">
+        <div className="flex flex-col lg:flex-row flex-1 min-h-0 lg:min-h-0 overflow-y-auto lg:overflow-hidden">
 
           {/* ── Left Sidebar: Metrics ─────────────────────────────────────────── */}
           <ResizableSidebar
@@ -1052,7 +1052,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             defaultWidth={320}
             minWidth={260}
             maxWidth={450}
-            className="border-b lg:border-b-0 lg:border-r border-gray-800 lg:max-h-[calc(100vh-theme(spacing.20))] bg-[#0a0f1e]/50 backdrop-blur-sm"
+            className="order-2 lg:order-none border-b lg:border-b-0 lg:border-r border-gray-800 lg:max-h-[calc(100vh-theme(spacing.20))] bg-[#0a0f1e]/50 backdrop-blur-sm"
             innerClassName="p-4 flex flex-col gap-4"
           >
             {sim.simResults && !sim.isComputing && sim.currentGraph ? (
@@ -1139,7 +1139,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
           </ResizableSidebar>
 
           {/* ── Main Canvas Area ──────────────────────────────────────────────── */}
-          <main className="flex-1 flex flex-col items-center justify-between px-3 py-1.5 sm:px-4 sm:py-2 w-full relative min-h-0 lg:overflow-hidden overflow-y-auto">
+          <main className="order-1 lg:order-none flex-1 flex flex-col items-center justify-start lg:justify-between gap-2 px-2 py-2 sm:px-4 sm:py-2 w-full relative min-h-0 overflow-visible lg:overflow-hidden">
 
             {/* Scenario / Map / Board selectors */}
             <div className="mb-1.5 flex flex-col items-center gap-1.5 w-full shrink-0">
@@ -1300,7 +1300,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             {/* Canvas */}
             <div
               data-tutorial="tutorial-canvas"
-              className={`rounded-2xl overflow-hidden border w-full relative flex-1 min-h-[300px] h-0 shadow-[0_0_48px_rgba(37,99,235,0.1)] transition-colors ${pickMode ? 'border-cyan-500/70 cursor-crosshair' : isBlockageMode ? 'border-amber-500/70 cursor-crosshair' : 'border-gray-700'}`}
+              className={`rounded-2xl overflow-hidden border w-full relative flex-none h-[52dvh] min-h-[320px] max-h-[560px] lg:flex-1 lg:min-h-[300px] lg:h-0 lg:max-h-none shadow-[0_0_48px_rgba(37,99,235,0.1)] transition-colors ${pickMode ? 'border-cyan-500/70 cursor-crosshair' : isBlockageMode ? 'border-amber-500/70 cursor-crosshair' : 'border-gray-700'}`}
               style={{ maxWidth: 1400 }}
             >
               {/* In-Canvas Floating Interactive Mode HUDs */}
@@ -1757,7 +1757,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
             defaultWidth={360}
             minWidth={300}
             maxWidth={480}
-            className="border-t lg:border-t-0 lg:border-l border-white/5 lg:max-h-[calc(100vh-theme(spacing.20))] bg-[#0a0f1e]/50 backdrop-blur-sm"
+            className="order-3 lg:order-none border-t lg:border-t-0 lg:border-l border-white/5 lg:max-h-[calc(100vh-theme(spacing.20))] bg-[#0a0f1e]/50 backdrop-blur-sm"
             innerClassName="p-4 flex flex-col gap-4"
           >
 

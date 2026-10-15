@@ -6,7 +6,7 @@ export const SCENARIOS: ScenarioConfig[] = [
     name: 'Network Routing',
     icon: '🌐',
     description:
-      'A critical software update must be routed from the company\'s ISP uplink down through the enterprise network to all end devices across 3 floors. The network follows a real-world Cisco 3-tier architecture: Core Layer (ISP-1/ISP-2 → CORE-R1/CORE-R2) → Distribution Layer (Multilayer Switches) → Access Layer (VLAN-isolated Floor Switches for Sales, HR, Finance, Admin, ICT, and the Server Room). BFS broadcasts hop-by-hop; DFS dives deep into one VLAN first; Hybrid uses BFS across distribution tiers and DFS within each VLAN branch.',
+      'A critical software update is routed from the company\'s ISP uplink through a three-tier enterprise network to end devices across three floors. The network includes core routers, distribution switches, and VLAN-isolated access switches. BFS explores the oldest waiting node first (FIFO); DFS explores the newest waiting node first (LIFO). Hybrid keeps one shared frontier and continuously shifts its selection toward newer entries as the frontier grows or expands quickly, and toward older entries as pressure eases. It does not alternate on a fixed step count or discard pending nodes.',
     dynamicDescription: 'VLAN isolation and core router failover events mid-routing',
     sourceLabel: 'ISP Gateway',
     destinationLabel: 'End Device',
@@ -106,7 +106,7 @@ export const ALGORITHMS: AlgorithmConfig[] = [
     id: 'hybrid',
     name: 'Hybrid BFS-DFS',
     description:
-      'BFS at the macro level (between top-level hubs) and DFS at the micro level (within each sub-network). In network routing: broadcasts to all buildings simultaneously via BFS, then each building performs DFS internally — optimal parallelism.',
+      'Uses one shared frontier and recalculates a smoothed pressure score before every expansion. The score combines frontier size against a soft reference budget (10% of graph nodes, minimum 8 and no larger than the graph) with recent frontier growth. Low pressure favors older entries (BFS-like); high pressure favors newer entries (DFS-like), with intermediate pressure selecting between them. Pending nodes are preserved; there are no fixed 10-step turns.',
     color: '#f97316',
     textColor: 'text-orange-400',
     borderColor: 'border-orange-500',

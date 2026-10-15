@@ -48,12 +48,17 @@ export const ResizableSidebar: React.FC<ResizableSidebarProps> = ({
       <div className={`flex items-center p-2 shrink-0 border-b border-gray-800 ${isCollapsed ? 'justify-center' : (side === 'right' ? 'justify-start' : 'justify-end')}`}>
         <button
           onClick={toggleCollapse}
-          className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-gray-800 text-gray-500 hover:text-white transition-colors cursor-pointer"
+          aria-label={`${isCollapsed ? 'Show' : 'Hide'} ${side === 'left' ? 'metrics' : 'tools'} panel`}
+          aria-expanded={!isCollapsed}
+          className="w-auto min-w-7 h-7 px-2 flex items-center justify-center rounded-md hover:bg-gray-800 text-gray-500 hover:text-white transition-colors cursor-pointer"
           title={isCollapsed ? "Expand Panel" : "Collapse Panel"}
         >
           {isCollapsed 
             ? (side === 'left' ? '❯' : '❮') 
             : (side === 'left' ? '❮' : '❯')}
+          <span className="text-[10px] font-semibold ml-1">
+            {side === 'left' ? 'Metrics' : 'Tools'}
+          </span>
         </button>
       </div>
 

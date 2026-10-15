@@ -38,7 +38,7 @@ const SCENARIO_MAPS: Record<ScenarioType, { name: string; description: string }[
 
 const SCENARIO_DYNAMIC_EVENTS: Record<ScenarioType, { event: string; icon: string; cause: string; resolution: string }[]> = {
   network: [
-    { event: 'Cable Unplugged / Overheating Switch', icon: '💥', cause: 'A router, switch, or link fails mid-simulation. The node turns red-orange and is marked as blocked.', resolution: 'The algorithms detect the blocked node and immediately reroute around it. BFS finds the next shortest alternate path; DFS dives deep into branches; Hybrid balances between the two. The event panel shows "Path Severed: [Algorithm]" for any algorithm whose active path was disrupted.' },
+    { event: 'Cable Unplugged / Overheating Switch', icon: '💥', cause: 'A router, switch, or link fails mid-simulation. The node turns red-orange and is marked as blocked.', resolution: 'The algorithms detect the blocked node and reroute around it. BFS selects the oldest waiting node; DFS selects the newest. Hybrid adjusts its selection bias continuously using frontier size and recent growth. The event panel shows "Path Severed: [Algorithm]" for any algorithm whose active path was disrupted.' },
     { event: 'Rack Power Loss / Massive DDoS Attack', icon: '💥', cause: 'A major cascading failure blocks a node and its immediate neighbors (AoE block).', resolution: 'Algorithms must reroute around a much larger blocked area. Tests wide-area detour efficiency.' },
     { event: 'Restored (Cable Reconnected / Cooling / Power / Attack Mitigated)', icon: '✅', cause: 'A previously failed component or cluster comes back online.', resolution: 'The node becomes unblocked. Algorithms may reconsider it for future path segments. This tests whether the pathfinder can adapt to improving conditions.' },
   ],
@@ -67,6 +67,7 @@ const SCENARIO_DYNAMIC_EVENTS: Record<ScenarioType, { event: string; icon: strin
 
 // ── Tab definitions ────────────────────────────────────────────────────────────
 const TABS = [
+  { id: 'algorithms', label: 'Algorithm Logic', icon: '🔀' },
   { id: 'metrics',   label: 'Live Metrics',   icon: '📊' },
   { id: 'legend',    label: 'Legend',         icon: '🗺️' },
   { id: 'canvas',    label: 'Canvas Controls',icon: '🎮' },
@@ -234,6 +235,14 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose, onStartTutorial 
           })()}
 
           {/* ── LIVE METRICS ── */}
+          {tab === 'algorithms' && (
+            <Section title="How Each Algorithm Selects the Next Node">
+              <Item label="BFS — Queue (FIFO)" icon="">Adds discovered nodes to the back of a queue and explores the oldest waiting node first, spreading outward level by level.</Item>
+              <Item label="DFS — Stack (LIFO)" icon="">Adds discovered nodes to a stack and explores the newest waiting node first, following one branch deeper before backtracking.</Item>
+              <Item label="Hybrid — Frontier Pressure" icon="">Keeps all pending nodes in one shared frontier and recalculates a smoothed pressure score before each expansion. Pressure combines frontier size against a soft reference budget (10% of the map, minimum 8 nodes, capped at the map size) and recent frontier growth. Low pressure favors older entries (BFS-like); rising pressure gradually favors newer entries (DFS-like), with balanced selection in between. The budget is not a hard cap: nodes are never discarded, and there are no fixed 10-step turns.</Item>
+            </Section>
+          )}
+
           {tab === 'metrics' && (
             <>
               <Section title="Live Metrics Panel (Left Sidebar)">

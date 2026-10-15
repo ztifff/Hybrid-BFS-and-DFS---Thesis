@@ -91,7 +91,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   {
     target: 'tutorial-topology-editor',
     title: 'Topology Editor',
-    body: 'Allows you to manually customize the graph by adding or removing nodes and edges before the simulation starts.',
+    body: 'Allows you to manually customize the graph by adding or removing nodes and edges before the simulation starts or while it is paused.',
     placement: 'left',
   },
   {
@@ -103,7 +103,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   {
     target: 'tutorial-playback-controls',
     title: 'Simulation Controls',
-    body: 'Use Block Nodes to manually place hazards. Run, Pause, Resume, step forward/back, Reset, or Skip to end. Reroll Events generates a new dynamic hazard.',
+    body: 'Run Simulations starts the run; Pause and Resume appear while it runs. Use Back and Fwd to move through steps, Skip to jump to the end, or Reset to start over. Block Nodes places hazards, Reroll Events generates new ones, and the speed slider adjusts playback.',
     placement: 'top',
   },
   {
@@ -432,6 +432,23 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     return () => clearTimeout(timer);
   }, [isOpen, stepIndex, step, isMobile]);
 
+  // Brighten the active target itself so it remains vivid against the dimmed page.
+  useEffect(() => {
+    if (!isOpen || !step) return;
+    const el = document.querySelector<HTMLElement>(`[data-tutorial="${step.target}"]`);
+    if (!el) return;
+
+    const previousFilter = el.style.filter;
+    const previousTransition = el.style.transition;
+    el.style.transition = `${previousTransition ? `${previousTransition}, ` : ''}filter 250ms ease`;
+    el.style.filter = 'brightness(1.22) saturate(1.15)';
+
+    return () => {
+      el.style.filter = previousFilter;
+      el.style.transition = previousTransition;
+    };
+  }, [isOpen, stepIndex, step]);
+
   // We re-compute position whenever stepIndex changes or window resizes.
   useEffect(() => {
     if (!isOpen || !step) return;
@@ -479,7 +496,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     ? { top: rect.top - PAD, left: rect.left - PAD, width: rect.width + PAD * 2, height: rect.height + PAD * 2 }
     : null;
 
-  const overlayBg = isLight ? 'rgba(15, 23, 42, 0.45)' : 'rgba(0, 0, 0, 0.75)';
+  const overlayBg = isLight ? 'rgba(15, 23, 42, 0.4)' : 'rgba(0, 0, 0, 0.68)';
 
   return createPortal(
     <div
@@ -487,11 +504,13 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       style={{ touchAction: 'pan-x pan-y' }}
     >
 
-      {/* Backdrop — absorbs all background clicks silently; only Skip Explanation closes the tutorial */}
-      <div
-        className="absolute inset-0 transition-opacity duration-300"
-        style={{ background: overlayBg, opacity: visible ? 1 : 0 }}
-      />
+      {/* Use the spotlight shadow as the dimming layer so the highlighted area stays clear. */}
+      {!spotlight && (
+        <div
+          className="absolute inset-0 transition-opacity duration-300"
+          style={{ background: overlayBg, opacity: visible ? 1 : 0 }}
+        />
+      )}
 
       {/* Spotlight cutout — shown on all devices once element is in view */}
       {spotlight && (
@@ -504,6 +523,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             height: spotlight.height,
             boxShadow: `0 0 0 9999px ${overlayBg}`,
             border: `2px solid ${theme.spotlightBorder}`,
+            outline: `1px solid ${theme.spotlightBorder}`,
+            outlineOffset: '2px',
             opacity: visible ? 1 : 0,
           }}
         />

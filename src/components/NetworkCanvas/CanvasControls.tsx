@@ -4,7 +4,8 @@ import { useTheme } from '../../context/ThemeContext';
 interface CanvasControlsProps {
   // Zoom
   zoom: number;
-  setZoom: React.Dispatch<React.SetStateAction<number>>;
+  zoomIn: () => void;
+  zoomOut: () => void;
   resetZoom: () => void;
   // Floors
   isLayeredMap: boolean;
@@ -22,7 +23,7 @@ interface CanvasControlsProps {
 }
 
 export const CanvasControls: React.FC<CanvasControlsProps> = ({
-  zoom, setZoom, resetZoom,
+  zoom, zoomIn, zoomOut, resetZoom,
   isLayeredMap, activeFloor, setActiveFloor, uniqueFloors = [],
   visibleAlgos, toggleAlgo, followAlgo, setFollowAlgo,
   activeAlgorithms,
@@ -88,33 +89,41 @@ export const CanvasControls: React.FC<CanvasControlsProps> = ({
       )}
 
       {/* Zoom Controls */}
-      <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-20">
-        <div className={`border rounded px-2 py-1 text-[10px] font-mono select-none text-center ${
+      <div className="absolute bottom-3 right-1 z-20 flex w-[72px] flex-col items-stretch gap-1">
+        <div className={`border rounded px-1 py-1 text-[10px] font-mono select-none text-center ${
           isLight
             ? 'bg-white/90 border-slate-300 text-slate-700 font-bold shadow-sm'
             : 'bg-gray-900/80 border-gray-700 text-gray-400'
         }`}>
           Zoom: {zoom.toFixed(1)}x
         </div>
+        <div className="flex gap-1">
+          <button
+            type="button"
+            aria-label="Zoom in, centered on map"
+            onClick={zoomIn}
+            className={`h-8 flex-1 border rounded flex items-center justify-center cursor-pointer text-xl font-bold transition-colors ${
+              isLight
+                ? 'bg-white hover:bg-slate-100 border-slate-300 text-slate-800 shadow-sm'
+                : 'bg-gray-800 hover:bg-gray-700 border-gray-600 text-white'
+            }`}
+          >+</button>
+          <button
+            type="button"
+            aria-label="Zoom out, centered on map"
+            onClick={zoomOut}
+            className={`h-8 flex-1 border rounded flex items-center justify-center cursor-pointer text-xl font-bold transition-colors ${
+              isLight
+                ? 'bg-white hover:bg-slate-100 border-slate-300 text-slate-800 shadow-sm'
+                : 'bg-gray-800 hover:bg-gray-700 border-gray-600 text-white'
+            }`}
+          >-</button>
+        </div>
         <button 
-          onClick={() => setZoom(z => Math.min(z * 1.5, 30))} 
-          className={`w-8 h-8 border rounded flex items-center justify-center cursor-pointer text-xl font-bold transition-colors ${
-            isLight
-              ? 'bg-white hover:bg-slate-100 border-slate-300 text-slate-800 shadow-sm'
-              : 'bg-gray-800 hover:bg-gray-700 border-gray-600 text-white'
-          }`}
-        >+</button>
-        <button 
-          onClick={() => setZoom(z => Math.max(z / 1.5, 0.1))} 
-          className={`w-8 h-8 border rounded flex items-center justify-center cursor-pointer text-xl font-bold transition-colors ${
-            isLight
-              ? 'bg-white hover:bg-slate-100 border-slate-300 text-slate-800 shadow-sm'
-              : 'bg-gray-800 hover:bg-gray-700 border-gray-600 text-white'
-          }`}
-        >-</button>
-        <button 
+          type="button"
+          aria-label="Reset map zoom"
           onClick={resetZoom} 
-          className={`px-2 py-1 border rounded text-xs font-bold cursor-pointer transition-colors ${
+          className={`w-full px-2 py-1 border rounded text-xs font-bold cursor-pointer transition-colors ${
             isLight
               ? 'bg-white hover:bg-slate-100 border-slate-300 text-slate-800 shadow-sm'
               : 'bg-gray-800 hover:bg-gray-700 border-gray-600 text-gray-300'
