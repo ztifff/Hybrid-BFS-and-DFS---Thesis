@@ -25,7 +25,7 @@ import { ExpertModePanel } from './ExpertModePanel';
 import { TopologyEditor } from './TopologyEditor';
 import { ThemeToggle } from '../ThemeToggle';
 import { useTheme } from '../../context/ThemeContext';
-import { PenLine, Move, Save, RotateCcw, Check } from 'lucide-react';
+import { PenLine, Move, Save, Check, RotateCcw } from 'lucide-react';
 
 const SIZE_ADJUSTER_THEME: Record<string, { border: string; text: string }> = {
   robotics: { border: 'focus-within:border-orange-500', text: 'text-orange-300' },
@@ -297,9 +297,18 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const [renameInput, setRenameInput] = useState<string>('');
 
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+  const [manualEditGraph, setManualEditGraph] = useState<ScenarioGraph | null>(null);
+  const [topologyConfirmation, setTopologyConfirmation] = useState<'clear' | 'reset-saved' | 'reset-original' | null>(null);
+  const canvasGraph = manualEditGraph ?? patchedGraph;
   const [isSavedRecently, setIsSavedRecently] = useState<boolean>(false);
   const [isDefaultSavedRecently, setIsDefaultSavedRecently] = useState<boolean>(false);
   const [defaultUndoSeconds, setDefaultUndoSeconds] = useState(0);
+  const topologyEditUndoBaseline = useRef<{
+    hasUnsavedChanges: boolean;
+    hasCustomPositions: boolean;
+    isLayoutAtDefault: boolean;
+    isSavedRecently: boolean;
+  } | null>(null);
   const defaultLayoutUndoSnapshot = useRef<{
     defaultRaw: string | null;
     savedRaw: string | null;
@@ -311,11 +320,13 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const defaultUndoInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const [hasCustomPositions, setHasCustomPositions] = useState<boolean>(false);
   const [isLayoutAtDefault, setIsLayoutAtDefault] = useState<boolean>(true);
-  const shouldShowResetLayout = hasUnsavedChanges || (hasCustomPositions && !isLayoutAtDefault);
+  const shouldShowResetLayout = hasUnsavedChanges || (hasCustomPositions && !isLayoutAtDefault) || manualEditGraph !== null;
   const [undoHistory, setUndoHistory] = useState<ScenarioGraph[]>([]);
 
   useEffect(() => {
     setUndoHistory([]);
+    setManualEditGraph(null);
+    topologyEditUndoBaseline.current = null;
   }, [scenario, sim.mapId]);
 
   useEffect(() => {
@@ -339,6 +350,38 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     else sim.handleReset();
   };
 
+  const stageManualGraphEdit = (edit: (graph: ScenarioGraph) => ScenarioGraph) => {
+    const baseGraph = manualEditGraph ?? patchedGraph ?? sim.currentGraph;
+    if (!baseGraph) return;
+    const nextGraph = edit(baseGraph);
+    const originalGraph = patchedGraph ?? sim.currentGraph;
+    setManualEditGraph(originalGraph && JSON.stringify(nextGraph) === JSON.stringify(originalGraph) ? null : nextGraph);
+  };
+
+  const applyManualGraphEdits = () => {
+    if (!manualEditGraph) return;
+    const commit = () => {
+      prepareForTopologyMutation();
+      if (undoHistory.length === 0) {
+        topologyEditUndoBaseline.current = {
+          hasUnsavedChanges,
+          hasCustomPositions,
+          isLayoutAtDefault,
+          isSavedRecently,
+        };
+      }
+      recordUndo();
+      sim.setCurrentGraph?.(() => manualEditGraph);
+      markTopologyUnsaved();
+      setManualEditGraph(null);
+    };
+    if (sim.status === 'running' || sim.status === 'paused' || (sim.status === 'done' && !sim.isCurrentSaved)) {
+      sim.requestTopologyEdit(commit, sim.status, sim.isCurrentSaved);
+    } else {
+      commit();
+    }
+  };
+
   const handleUndoTopology = () => {
     const previous = undoHistory[undoHistory.length - 1];
     if (!previous) return;
@@ -346,7 +389,16 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
       prepareForTopologyMutation();
       setUndoHistory(history => history.slice(0, -1));
       sim.setCurrentGraph?.(() => previous);
-      markTopologyUnsaved();
+      if (undoHistory.length === 1 && topologyEditUndoBaseline.current) {
+        const baseline = topologyEditUndoBaseline.current;
+        setHasUnsavedChanges(baseline.hasUnsavedChanges);
+        setHasCustomPositions(baseline.hasCustomPositions);
+        setIsLayoutAtDefault(baseline.isLayoutAtDefault);
+        setIsSavedRecently(baseline.isSavedRecently);
+        topologyEditUndoBaseline.current = null;
+      } else {
+        markTopologyUnsaved();
+      }
     };
     if (sim.status === 'running' || sim.status === 'paused' || (sim.status === 'done' && !sim.isCurrentSaved)) {
       sim.requestTopologyEdit(applyUndo, sim.status, sim.isCurrentSaved);
@@ -517,50 +569,39 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     } catch {
       // Continue with the backend default if browser storage is unavailable.
     }
-    const resetMessage = hasSavedDefault
-      ? 'Reset this map to its saved default layout?'
-      : 'Reset all node positions back to the original default layout?';
-    if (window.confirm(resetMessage)) {
-      try {
-        localStorage.removeItem(`saved_node_positions_${scenario}_${sim.mapId}`);
-      } catch (err) {
-        console.error('Failed to remove saved node positions:', err);
-      }
-      try {
-        setHasCustomPositions(Boolean(localStorage.getItem(`default_node_layout_${scenario}_${sim.mapId}`)));
-      } catch {
-        setHasCustomPositions(false);
-      }
-      setHasUnsavedChanges(false);
-      sim.forceRefetchGraph(true);
-      setIsLayoutAtDefault(true);
+    setTopologyConfirmation(hasSavedDefault ? 'reset-saved' : 'reset-original');
+  };
+
+  const confirmTopologyAction = () => {
+    const action = topologyConfirmation;
+    setTopologyConfirmation(null);
+    if (action === 'clear') {
+      stageManualGraphEdit(graph => ({ ...graph, nodes: [], edges: [] }));
+      return;
     }
+    if (!action) return;
+
+    try {
+      localStorage.removeItem(`saved_node_positions_${scenario}_${sim.mapId}`);
+    } catch (err) {
+      console.error('Failed to remove saved node positions:', err);
+    }
+    try {
+      setHasCustomPositions(Boolean(localStorage.getItem(`default_node_layout_${scenario}_${sim.mapId}`)));
+    } catch {
+      setHasCustomPositions(false);
+    }
+    setHasUnsavedChanges(false);
+    setManualEditGraph(null);
+    sim.forceRefetchGraph(true);
+    setIsLayoutAtDefault(true);
   };
 
   const handleNodeMoveEnd = (nodeId: string, x: number, y: number) => {
-    const commitMove = () => {
-      recordUndo();
-      sim.setCurrentGraph?.(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          nodes: prev.nodes.map(n => n.id === nodeId ? { ...n, x, y } : n)
-        };
-      });
-      setHasUnsavedChanges(true);
-      setIsSavedRecently(false);
-      setIsLayoutAtDefault(false);
-    };
-
-    if (sim.status === 'running' || sim.status === 'paused' || (sim.status === 'done' && !sim.isCurrentSaved)) {
-      sim.requestTopologyEdit(() => {
-        prepareForTopologyMutation();
-        commitMove();
-      }, sim.status, sim.isCurrentSaved);
-      return;
-    }
-    if (sim.status !== 'idle') sim.handleReset();
-    commitMove();
+    stageManualGraphEdit(graph => ({
+      ...graph,
+      nodes: graph.nodes.map(n => n.id === nodeId ? { ...n, x, y } : n)
+    }));
   };
 
   const markTopologyUnsaved = () => {
@@ -575,28 +616,11 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     if (!trimmed) return;
     const targetNodeId = renamingNode.id;
 
-    const commitRename = () => {
-      recordUndo();
-      sim.setCurrentGraph?.(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          nodes: prev.nodes.map(n => n.id === targetNodeId ? { ...n, label: trimmed } : n)
-        };
-      });
-      setRenamingNode(null);
-      markTopologyUnsaved();
-    };
-
-    if (sim.status === 'running' || sim.status === 'paused' || (sim.status === 'done' && !sim.isCurrentSaved)) {
-      sim.requestTopologyEdit(() => {
-        prepareForTopologyMutation();
-        commitRename();
-      }, sim.status, sim.isCurrentSaved);
-      return;
-    }
-    if (sim.status !== 'idle') sim.handleReset();
-    commitRename();
+    stageManualGraphEdit(graph => ({
+      ...graph,
+      nodes: graph.nodes.map(n => n.id === targetNodeId ? { ...n, label: trimmed } : n)
+    }));
+    setRenamingNode(null);
   };
 
   // ── Custom blockage helpers ─────────────────────────────────────────────────
@@ -834,6 +858,75 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         );
       })()}
 
+      {topologyConfirmation && (() => {
+        const isClear = topologyConfirmation === 'clear';
+        const title = isClear ? 'Clear Entire Map?' : 'Reset Layout?';
+        const message = isClear
+          ? 'This will remove every node and link from the canvas. The change will be staged until you apply it.'
+          : topologyConfirmation === 'reset-saved'
+            ? 'Restore this map to its saved default layout? Current position changes will be discarded.'
+            : 'Restore all node positions to the original default layout? Current position changes will be discarded.';
+        const actionLabel = isClear ? 'Clear Map' : 'Reset Layout';
+        return (
+          <div
+            className="fixed inset-0 z-[110] flex items-center justify-center bg-black/65 backdrop-blur-sm animate-fadeIn p-4"
+            onClick={() => setTopologyConfirmation(null)}
+          >
+            <div
+              role="alertdialog"
+              aria-modal="true"
+              aria-labelledby="topology-confirm-title"
+              aria-describedby="topology-confirm-description"
+              className={`w-full max-w-md rounded-xl border shadow-2xl overflow-hidden ${
+                isLight ? 'bg-white border-slate-200 text-slate-900' : 'bg-gray-900 border-gray-700 text-white'
+              }`}
+              onClick={event => event.stopPropagation()}
+            >
+              <div className="p-6">
+                <div className="flex items-start gap-3">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl shrink-0 ${
+                    isClear
+                      ? isLight ? 'bg-red-100 text-red-700' : 'bg-red-950/60 text-red-400'
+                      : isLight ? 'bg-amber-100 text-amber-700' : 'bg-amber-950/60 text-amber-400'
+                  }`}>
+                    {isClear ? '⚠️' : <RotateCcw className="w-5 h-5" />}
+                  </div>
+                  <div>
+                    <h3 id="topology-confirm-title" className={`text-lg font-bold ${
+                      isClear ? isLight ? 'text-red-700' : 'text-red-300' : isLight ? 'text-amber-700' : 'text-amber-300'
+                    }`}>{title}</h3>
+                    <p id="topology-confirm-description" className={`mt-2 text-sm leading-relaxed ${
+                      isLight ? 'text-slate-600' : 'text-gray-300'
+                    }`}>{message}</p>
+                  </div>
+                </div>
+              </div>
+              <div className={`border-t p-4 flex justify-end gap-3 ${
+                isLight ? 'bg-slate-50 border-slate-200' : 'bg-gray-950 border-gray-800'
+              }`}>
+                <button
+                  type="button"
+                  onClick={() => setTopologyConfirmation(null)}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors cursor-pointer ${
+                    isLight ? 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-300' : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmTopologyAction}
+                  className={`px-4 py-2 rounded-lg text-sm font-bold text-white transition-colors cursor-pointer shadow-lg ${
+                    isClear ? 'bg-red-600 hover:bg-red-500 shadow-red-900/30' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-900/30'
+                  }`}
+                >
+                  {actionLabel}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       <div className="min-h-screen lg:h-screen w-full max-w-[100vw] bg-transparent text-white flex flex-col relative z-0 lg:overflow-hidden fade-in">
         {/* Help Modal */}
@@ -1341,22 +1434,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     )}
                   </button>
 
-                  {shouldShowResetLayout && (
-                    <button
-                      type="button"
-                      onClick={handleResetPositions}
-                      className={`px-2 py-1 rounded-lg border font-semibold transition-all cursor-pointer flex items-center gap-1 whitespace-nowrap ${
-                        isLight
-                          ? 'bg-white border-slate-300 text-slate-700 hover:bg-red-50 hover:text-red-600 hover:border-red-300 shadow-2xs'
-                          : 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-red-950/30 hover:text-red-400 hover:border-red-800/60'
-                      }`}
-                      title="Reset layout to default backend positions"
-                    >
-                      <RotateCcw className="w-3 h-3" />
-                      <span>Reset</span>
-                    </button>
-                  )}
-
                   <button
                     type="button"
                     onClick={() => setPlacementModeSafe(null)}
@@ -1366,10 +1443,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                   </button>
                 </div>
               )}
-              {patchedGraph ? (
+              {canvasGraph ? (
                 <>
                   <NetworkCanvas
-                    graph={patchedGraph}
+                    graph={canvasGraph}
                     activeSteps={sim.activeSteps}
                     scenario={scenario}
                     stepIndex={sim.stepIndex}
@@ -1380,6 +1457,9 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     cursor={(pickMode || isBlockageMode || (placementMode && placementMode.type !== 'move' && placementMode.type !== 'rename')) ? 'crosshair' : undefined}
                     isMoveMode={placementMode?.type === 'move'}
                     placementModeType={placementMode?.type || null}
+                    edgePreview={placementMode?.type === 'edge' && placementMode.sourceNodeId
+                      ? { sourceNodeId: placementMode.sourceNodeId, edgeType: placementMode.edgeType }
+                      : null}
                     onNodeMoveEnd={handleNodeMoveEnd}
                     onDeselect={() => setHighlightedNodeId(null)}
                     onNodeClick={(nodeId) => {
@@ -1395,7 +1475,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
                       // Topology Editor: Rename Node
                       if (placementMode?.type === 'rename') {
-                        const node = patchedGraph.nodes.find((n: any) => n.id === nodeId);
+                        const node = canvasGraph.nodes.find((n: any) => n.id === nodeId);
                         if (node) {
                           const label = (node.label || node.id).slice(0, MAX_NODE_LABEL_LENGTH);
                           setRenamingNode({ id: nodeId, label, type: node.type });
@@ -1406,33 +1486,11 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                       
                       // Topology Editor: Delete Node
                       if (placementMode?.type === 'delete') {
-                        if (sim.status === 'running' || sim.status === 'paused' || (sim.status === 'done' && !sim.isCurrentSaved)) {
-                          sim.requestTopologyEdit(() => {
-                            prepareForTopologyMutation();
-                            recordUndo();
-                            sim.setCurrentGraph?.(prev => {
-                              if (!prev) return prev;
-                              return {
-                                ...prev,
-                                nodes: prev.nodes.filter(n => n.id !== nodeId),
-                                edges: prev.edges.filter(e => e.from !== nodeId && e.to !== nodeId)
-                              };
-                            });
-                            markTopologyUnsaved();
-                          }, sim.status, sim.isCurrentSaved);
-                          return;
-                        }
-                        if (sim.status !== 'idle') prepareForTopologyMutation();
-                        recordUndo();
-                        sim.setCurrentGraph?.(prev => {
-                          if (!prev) return prev;
-                          return {
-                            ...prev,
-                            nodes: prev.nodes.filter(n => n.id !== nodeId),
-                            edges: prev.edges.filter(e => e.from !== nodeId && e.to !== nodeId)
-                          };
-                        });
-                        markTopologyUnsaved();
+                        stageManualGraphEdit(graph => ({
+                          ...graph,
+                          nodes: graph.nodes.filter(n => n.id !== nodeId),
+                          edges: graph.edges.filter(e => e.from !== nodeId && e.to !== nodeId)
+                        }));
                         return;
                       }
 
@@ -1445,8 +1503,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                           if (src !== nodeId) {
                             let finalEdgeType = placementMode.edgeType;
                             
-                            const t1 = patchedGraph.nodes.find((n: any) => n.id === src)?.type || '';
-                            const t2 = patchedGraph.nodes.find((n: any) => n.id === nodeId)?.type || '';
+                            const t1 = canvasGraph.nodes.find((n: any) => n.id === src)?.type || '';
+                            const t2 = canvasGraph.nodes.find((n: any) => n.id === nodeId)?.type || '';
                             
                             const isSwitch = (t: string) => ['switch', 'multilayer_switch', 'access_switch', 'floor_router'].includes(t);
                             const isRouter = (t: string) => ['router', 'datacenter', 'building_router'].includes(t);
@@ -1489,11 +1547,9 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                               }
                             }
 
-                            if (sim.status !== 'idle') prepareForTopologyMutation();
-                            recordUndo();
-                            sim.setCurrentGraph?.(prev => {
-                              if (!prev) return prev;
-                              const newEdge = {
+                            stageManualGraphEdit(graph => ({
+                              ...graph,
+                              edges: [...graph.edges, {
                                 id: `edge_${Date.now()}`,
                                 from: src,
                                 to: nodeId,
@@ -1501,13 +1557,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                                 bandwidth: 1000,
                                 latency: 1,
                                 status: 'active'
-                              };
-                              return {
-                                ...prev,
-                                edges: [...prev.edges, newEdge]
-                              };
-                            });
-                            markTopologyUnsaved();
+                              }]
+                            }));
                           }
                           setPlacementModeSafe({ ...placementMode, sourceNodeId: undefined });
                         }
@@ -1521,31 +1572,10 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     }}
                     onEdgeClick={(edgeId) => {
                       if (placementMode?.type === 'delete') {
-                        if (sim.status === 'running' || sim.status === 'paused' || (sim.status === 'done' && !sim.isCurrentSaved)) {
-                          sim.requestTopologyEdit(() => {
-                            prepareForTopologyMutation();
-                            recordUndo();
-                            sim.setCurrentGraph?.(prev => {
-                              if (!prev) return prev;
-                              return {
-                                ...prev,
-                                edges: prev.edges.filter(e => e.id !== edgeId)
-                              };
-                            });
-                            markTopologyUnsaved();
-                          }, sim.status, sim.isCurrentSaved);
-                          return;
-                        }
-                        if (sim.status !== 'idle') prepareForTopologyMutation();
-                        recordUndo();
-                        sim.setCurrentGraph?.(prev => {
-                          if (!prev) return prev;
-                          return {
-                            ...prev,
-                            edges: prev.edges.filter(e => e.id !== edgeId)
-                          };
-                        });
-                        markTopologyUnsaved();
+                        stageManualGraphEdit(graph => ({
+                          ...graph,
+                          edges: graph.edges.filter(e => e.id !== edgeId)
+                        }));
                       }
                     }}
                     onCanvasClick={(x, y, activeFloor) => {
@@ -1572,51 +1602,20 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                             return;
                           }
                         }
-                        if (sim.status === 'running' || sim.status === 'paused' || (sim.status === 'done' && !sim.isCurrentSaved)) {
-                          sim.requestTopologyEdit(() => {
-                            prepareForTopologyMutation();
-                            recordUndo();
-                            const newNodeId = `${placementMode.nodeType}_${Date.now()}`;
-                            const newNode = {
-                              id: newNodeId,
-                              type: placementMode.nodeType,
-                              label: placementMode.nodeType.replace(/_/g, ' '),
-                              x,
-                              y,
-                              ...(scenario === 'evacuation' && ['building', 'city', 'synthetic'].includes(sim.mapId ?? '')
-                                ? { buildingId: activeFloor ?? 'GL' }
-                                : {}),
-                              level: 0,
-                              status: 'active'
-                            };
-                            sim.setCurrentGraph?.(prev => prev ? { ...prev, nodes: [...prev.nodes, newNode] } : prev);
-                            markTopologyUnsaved();
-                          }, sim.status, sim.isCurrentSaved);
-                          return;
-                        }
-                        if (sim.status !== 'idle') prepareForTopologyMutation();
-                        recordUndo();
-                        sim.setCurrentGraph?.(prev => {
-                          if (!prev) return prev;
-                          const newNodeId = `${placementMode.nodeType}_${Date.now()}`;
-                          const newNode = {
-                            id: newNodeId,
-                            type: placementMode.nodeType,
-                            label: placementMode.nodeType.replace(/_/g, ' '),
-                            x,
-                            y,
-                            ...(scenario === 'evacuation' && ['building', 'city', 'synthetic'].includes(sim.mapId ?? '')
-                              ? { buildingId: activeFloor ?? 'GL' }
-                              : {}),
-                            level: 0,
-                            status: 'active'
-                          };
-                          return {
-                            ...prev,
-                            nodes: [...prev.nodes, newNode]
-                          };
-                        });
-                        markTopologyUnsaved();
+                        const nodeType = placementMode.nodeType;
+                        const newNode = {
+                          id: `${nodeType}_${Date.now()}`,
+                          type: nodeType,
+                          label: nodeType.replace(/_/g, ' '),
+                          x,
+                          y,
+                          ...(scenario === 'evacuation' && ['building', 'city', 'synthetic'].includes(sim.mapId ?? '')
+                            ? { buildingId: activeFloor ?? 'GL' }
+                            : {}),
+                          level: 0,
+                          status: 'active'
+                        };
+                        stageManualGraphEdit(graph => ({ ...graph, nodes: [...graph.nodes, newNode] }));
                       }
                     }}
                     mapId={sim.mapId}
@@ -1644,7 +1643,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
 
                   {scenario === 'network' && (sim.mapId === 'companybusiness' || sim.mapId === 'campus') && (
                     <div className="absolute bottom-4 left-4 z-10 flex flex-col gap-2">
-                      {patchedGraph.nodes
+                      {canvasGraph.nodes
                         .filter((n: any) => ['mlt_sw1', 'main_router', 'college_router', 'hostel_router'].includes(n.id))
                         .map((n: any) => (
                           <button
@@ -1740,17 +1739,6 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 <button disabled={sim.isComputing || sim.isGraphLoading} onClick={() => sim.requestReroll(sim.handleRerollEvents, sim.status, sim.isCurrentSaved)} className={scenarioBtnClass}>
                   <Ico name="reroll" /> Reroll Events
                 </button>
-
-                {shouldShowResetLayout && (
-                  <button
-                    disabled={sim.isComputing || sim.isGraphLoading}
-                    onClick={handleResetPositions}
-                    title="Reset node positions back to default layout"
-                    className={`${scenarioBtnClass} hover:text-red-400`}
-                  >
-                    <RotateCcw className="w-4 h-4 shrink-0" /> Reset Layout
-                  </button>
-                )}
 
                 {/* Speed Controller */}
                 <SpeedController
@@ -2069,22 +2057,17 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
               mapId={sim.mapId}
               placementMode={placementMode}
               setPlacementMode={setPlacementModeSafe}
-              onClearGraph={() => {
-                sim.requestTopologyEdit(() => {
-                  if (window.confirm('Are you sure you want to clear the entire map? This will delete all nodes.')) {
-                    prepareForTopologyMutation();
-                  recordUndo();
-                    sim.setCurrentGraph?.(prev => prev ? { ...prev, nodes: [], edges: [] } : prev);
-                  markTopologyUnsaved();
-                  }
-                }, sim.status, sim.isCurrentSaved);
-              }}
+              onClearGraph={() => setTopologyConfirmation('clear')}
               onSavePositions={handleSavePositions}
               onSaveAsDefault={handleSaveAsDefault}
               onUndoSaveAsDefault={handleUndoSaveAsDefault}
               defaultUndoSeconds={defaultUndoSeconds}
               onUndo={handleUndoTopology}
-              canUndo={undoHistory.length > 0}
+              onApplyManualEdits={applyManualGraphEdits}
+              hasPendingManualEdits={manualEditGraph !== null}
+              onResetLayout={handleResetPositions}
+              canResetLayout={shouldShowResetLayout}
+              canUndo={undoHistory.length > 0 && manualEditGraph === null}
               hasUnsavedChanges={hasUnsavedChanges}
               isSavedRecently={isSavedRecently}
               isDefaultSavedRecently={isDefaultSavedRecently}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ScenarioType } from '../../types';
 import { NODE_CONFIG, EDGE_CONFIG } from '../NetworkCanvas/types';
-import { Trash2, MousePointer2, Move, PenLine, Save, Undo2, Check, Star } from 'lucide-react';
+import { Trash2, MousePointer2, Move, PenLine, Save, Undo2, Check, Star, RotateCcw } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { getCiscoIconDataUrl, onCiscoIconsChange } from '../../utils/ciscoIcons';
 import { EvacuationNodeIcon } from '../NetworkCanvas/evacuationNodeIcons';
@@ -25,6 +25,10 @@ interface TopologyEditorProps {
   onUndoSaveAsDefault?: () => void;
   defaultUndoSeconds?: number;
   onUndo?: () => void;
+  onApplyManualEdits?: () => void;
+  hasPendingManualEdits?: boolean;
+  onResetLayout?: () => void;
+  canResetLayout?: boolean;
   canUndo?: boolean;
   hasUnsavedChanges?: boolean;
   isSavedRecently?: boolean;
@@ -74,6 +78,10 @@ export const TopologyEditor: React.FC<TopologyEditorProps> = ({
   onUndoSaveAsDefault,
   defaultUndoSeconds = 0,
   onUndo,
+  onApplyManualEdits,
+  hasPendingManualEdits,
+  onResetLayout,
+  canResetLayout,
   canUndo,
   hasUnsavedChanges,
   isSavedRecently,
@@ -148,7 +156,7 @@ export const TopologyEditor: React.FC<TopologyEditorProps> = ({
             <button
               type="button"
               onClick={onSavePositions}
-              disabled={disabled}
+              disabled={disabled || hasPendingManualEdits}
               className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer shadow-sm ${isSavedRecently
                 ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/30'
                 : hasUnsavedChanges
@@ -177,7 +185,7 @@ export const TopologyEditor: React.FC<TopologyEditorProps> = ({
               <button
                 type="button"
                 onClick={onUndo}
-                disabled={disabled || !canUndo}
+                disabled={disabled || hasPendingManualEdits || !canUndo}
                 className={`py-1.5 px-2.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${canUndo
                   ? isLight
                     ? 'bg-white border-slate-300 text-slate-700 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 shadow-2xs'
@@ -196,7 +204,7 @@ export const TopologyEditor: React.FC<TopologyEditorProps> = ({
               <button
                 type="button"
                 onClick={onSaveAsDefault}
-                disabled={disabled}
+                disabled={disabled || hasPendingManualEdits}
                 className={`w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer shadow-sm ${isLight
                   ? 'bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800'
                   : 'bg-amber-950/30 hover:bg-amber-900/40 border border-amber-800/50 text-amber-300'
@@ -221,6 +229,21 @@ export const TopologyEditor: React.FC<TopologyEditorProps> = ({
                 </button>
               )}
             </>
+          )}
+          {canResetLayout && onResetLayout && (
+            <button
+              type="button"
+              onClick={onResetLayout}
+              disabled={disabled}
+              className={`w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg border text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 ${isLight
+                ? 'bg-white border-slate-300 text-slate-700 hover:bg-red-50 hover:text-red-700 hover:border-red-300 shadow-2xs'
+                : 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-red-950/30 hover:text-red-300 hover:border-red-800/60'
+                }`}
+              title="Reset the map layout to its default positions"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset Layout</span>
+            </button>
           )}
           <span className={`text-[9px] leading-tight ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>
             Saved layouts persist after reload. Reset restores the saved default.
@@ -321,7 +344,13 @@ export const TopologyEditor: React.FC<TopologyEditorProps> = ({
                 <button
                   key={nodeType}
                   title={tooltipTitle}
+                  draggable={!disabled}
                   onClick={() => setPlacementMode({ type: 'node', nodeType })}
+                  onDragStart={(event) => {
+                    event.dataTransfer.setData('application/x-topology-node-type', nodeType);
+                    event.dataTransfer.effectAllowed = 'copy';
+                    setPlacementMode({ type: 'node', nodeType });
+                  }}
                   className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-all cursor-pointer ${isActive
                     ? isLight
                       ? 'bg-blue-100 border-2 border-blue-600 shadow-md scale-105'
@@ -403,6 +432,18 @@ export const TopologyEditor: React.FC<TopologyEditorProps> = ({
               </div>
             )}
           </div>
+        )}
+        {hasPendingManualEdits && onApplyManualEdits && (
+          <button
+            type="button"
+            onClick={onApplyManualEdits}
+            disabled={disabled}
+            className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-extrabold shadow-md shadow-emerald-600/20 transition-colors cursor-pointer"
+            title="Apply all staged canvas edits and recalculate once"
+          >
+            <Check className="w-3.5 h-3.5" />
+            <span>Apply Canvas Changes</span>
+          </button>
         )}
       </div>
     </div>

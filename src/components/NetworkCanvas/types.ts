@@ -14,6 +14,7 @@ export interface NetworkCanvasProps {
   onCanvasClick?: (x: number, y: number, activeFloor?: string) => void;
   isMoveMode?: boolean;
   placementModeType?: 'node' | 'edge' | 'delete' | 'move' | 'rename' | null;
+  edgePreview?: { sourceNodeId: string; edgeType: string } | null;
   onNodeMoveEnd?: (nodeId: string, x: number, y: number) => void;
   mapId?: string;
   autoFit?: boolean;

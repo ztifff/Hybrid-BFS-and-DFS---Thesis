@@ -24,6 +24,7 @@ export interface RenderOptions {
   activeBlocked: Set<string>;
   wasHistoricallyBlocked: Set<string>;
   highlightedNodeId?: string | null;
+  edgePreview?: { sourceNodeId: string; edgeType: string; cursorX: number; cursorY: number } | null;
   sourceId: string;
   sourceIds?: string[];
   destinationIds: string[];
@@ -84,6 +85,7 @@ export abstract class BaseRenderer {
 
     this.drawBackground(options);
     this.drawEdges(options);
+    this.drawEdgePreview(options);
     this.drawVisitedEdges(options);
     this.drawActivePaths(options);
     this.drawNodesAndLabels(options);
@@ -120,6 +122,31 @@ export abstract class BaseRenderer {
   }
 
   protected drawBackground(_options: RenderOptions) {}
+
+  protected drawEdgePreview(options: RenderOptions) {
+    const preview = options.edgePreview;
+    if (!preview) return;
+    const source = options.visibleNodeMap.get(preview.sourceNodeId);
+    if (!source) return;
+
+    const { ctx } = options;
+    const config = EDGE_CONFIG[preview.edgeType] ?? EDGE_CONFIG.path;
+    ctx.save();
+    ctx.globalAlpha = 0.85;
+    ctx.strokeStyle = config.color;
+    ctx.lineWidth = Math.max(config.width, 2 / Math.max(options.zoom, 0.1));
+    ctx.setLineDash(config.dash);
+    ctx.beginPath();
+    ctx.moveTo(this.sx(source.x, options), this.sy(source.y, options));
+    ctx.lineTo(this.sx(preview.cursorX, options), this.sy(preview.cursorY, options));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.arc(this.sx(preview.cursorX, options), this.sy(preview.cursorY, options), 4 / Math.max(options.zoom, 0.1), 0, Math.PI * 2);
+    ctx.fillStyle = config.color;
+    ctx.fill();
+    ctx.restore();
+  }
 
   protected drawEdges(options: RenderOptions) {
     const { ctx, visibleEdges, visibleNodeMap, isDatacenter, isMassive, sets, zoom } = options;

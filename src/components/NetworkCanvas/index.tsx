@@ -24,6 +24,7 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
   onCanvasClick,
   isMoveMode,
   placementModeType,
+  edgePreview,
   onNodeMoveEnd,
   mapId,
   autoFit,
@@ -66,6 +67,7 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
   // Node movement and hover states
   const [draggedNodePos, setDraggedNodePos] = useState<{ id: string; x: number; y: number } | null>(null);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  const [edgePreviewCursor, setEdgePreviewCursor] = useState<{ x: number; y: number } | null>(null);
   const nodeDragRef = useRef<{
     nodeId: string;
     initialNodeX: number;
@@ -275,6 +277,9 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
       highlightedNodeId: draggedNodePos 
         ? draggedNodePos.id 
         : (hoveredNodeId && (isMoveMode || placementModeType === 'rename') ? hoveredNodeId : highlightedNodeId),
+      edgePreview: edgePreview && edgePreviewCursor
+        ? { ...edgePreview, cursorX: edgePreviewCursor.x, cursorY: edgePreviewCursor.y }
+        : null,
       sourceId: graph.sourceId,
       sourceIds: graph.sourceIds,
       destinationIds: graph.destinationIds,
@@ -296,7 +301,7 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
     windowDimensions, highlightedNodeId, visibleAlgos, mapId, wasHistoricallyBlocked,
     graph.sourceId, graph.destinationIds, activeSteps, followAlgo, canvasRef,
     workspaceView, isSimulationFinished, showHopBadges, currentTheme, iconRevision, activeFloor,
-    draggedNodePos, hoveredNodeId, isMoveMode, placementModeType
+    draggedNodePos, hoveredNodeId, isMoveMode, placementModeType, edgePreview, edgePreviewCursor
   ]);
 
   // Coordinate helper
@@ -377,6 +382,9 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
 
   const onMouseMoveWrapper = (e: React.MouseEvent<HTMLDivElement>) => {
     const coords = getCanvasCoords(e.clientX, e.clientY);
+    if (edgePreview && coords) {
+      setEdgePreviewCursor({ x: (coords.x - offsetX) / scale, y: (coords.y - offsetY) / scale });
+    }
 
     // Dynamic hover feedback in move or rename mode
     if (coords && !nodeDragRef.current && (isMoveMode || placementModeType === 'rename')) {
@@ -433,6 +441,7 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
       }
     }
     setHoveredNodeId(null);
+    setEdgePreviewCursor(null);
     handleMouseLeave();
   };
 
@@ -550,6 +559,19 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
     }
   };
 
+  const handleNodeDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    const nodeType = e.dataTransfer.getData('application/x-topology-node-type');
+    if (!nodeType || !containerRef.current || !onCanvasClick) return;
+
+    e.preventDefault();
+    const coords = getCanvasCoords(e.clientX, e.clientY);
+    if (!coords) return;
+
+    const nodeX = (coords.x - offsetX) / scale;
+    const nodeY = (coords.y - offsetY) / scale;
+    onCanvasClick(nodeX, nodeY, activeFloor);
+  };
+
   const effectiveCursor = useMemo(() => {
     if (isMoveMode) {
       if (draggedNodePos) return 'grabbing';
@@ -575,6 +597,13 @@ export const NetworkCanvas: React.FC<NetworkCanvasProps> = ({
       onMouseUp={onMouseUpWrapper} 
       onMouseLeave={onMouseLeaveWrapper}
       onClick={handleCanvasClick}
+      onDragOver={(e) => {
+        if (e.dataTransfer.types.includes('application/x-topology-node-type')) {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'copy';
+        }
+      }}
+      onDrop={handleNodeDrop}
       onTouchStart={onTouchStartWrapper}
       onTouchMove={onTouchMoveWrapper}
       onTouchEnd={onTouchEndWrapper}
