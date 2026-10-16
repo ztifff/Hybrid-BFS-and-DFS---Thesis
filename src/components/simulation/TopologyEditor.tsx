@@ -78,7 +78,6 @@ export const TopologyEditor: React.FC<TopologyEditorProps> = ({
   onUndoSaveAsDefault,
   defaultUndoSeconds = 0,
   onUndo,
-  onApplyManualEdits,
   hasPendingManualEdits,
   onResetLayout,
   canResetLayout,
@@ -432,18 +431,6 @@ export const TopologyEditor: React.FC<TopologyEditorProps> = ({
               </div>
             )}
           </div>
-        )}
-        {hasPendingManualEdits && onApplyManualEdits && (
-          <button
-            type="button"
-            onClick={onApplyManualEdits}
-            disabled={disabled}
-            className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-extrabold shadow-md shadow-emerald-600/20 transition-colors cursor-pointer"
-            title="Apply all staged canvas edits and recalculate once"
-          >
-            <Check className="w-3.5 h-3.5" />
-            <span>Apply Canvas Changes</span>
-          </button>
         )}
       </div>
     </div>

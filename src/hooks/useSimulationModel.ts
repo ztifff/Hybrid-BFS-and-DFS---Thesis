@@ -339,7 +339,7 @@ export function useSimulationModel(scenario: ScenarioType, onBack?: () => void) 
   // So they are returned as factory functions that the view/controller can call with
   // those values. The actual guard wiring happens in `useSimulation`.
   const requestBack = useCallback((status: string, saved: boolean) => {
-    if (status === 'running') {
+    if (status === 'running' || status === 'paused') {
       setPendingNavigation({ type: 'back', reason: 'inprogress' });
     } else if (status === 'done' && !saved) {
       setPendingNavigation({ type: 'back', reason: 'unsaved' });

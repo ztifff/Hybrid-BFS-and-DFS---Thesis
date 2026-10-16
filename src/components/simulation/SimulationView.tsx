@@ -232,6 +232,7 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
     activeTabClass,
     primaryBtnClass,
     pickDisabled,
+    showPickToast,
   } = useSimulationViewLogic(scenario, sim);
 
   const getMapTabButtonClass = (isActive: boolean) => {
@@ -725,6 +726,32 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
   const dstValue = currentDestIds.length > 0
     ? `${currentDestIds.length} exit${currentDestIds.length > 1 ? 's' : ''} selected`
     : 'Select exits';
+
+  // ── Run guard: block Run/Replay when there is nothing meaningful to simulate ──
+  const runBlockReason: string | null = (() => {
+    const graphNodes = sim.currentGraph?.nodes ?? [];
+    if (graphNodes.length === 0) return 'No map loaded — add nodes or load a map before running.';
+    if (!currentSourceId) return 'Select a starting point on the map before running.';
+    if (supportsDestPick) {
+      const nodeIds = new Set(graphNodes.map((n: any) => n.id));
+      const graphDests = (sim.currentGraph?.destinationIds || []).filter((d: string) => nodeIds.has(d));
+      if (currentDestIds.length === 0 && graphDests.length === 0) {
+        return 'Select at least one destination (DST) before running.';
+      }
+    }
+    return null;
+  })();
+
+  const guardedRun = () => {
+    if (runBlockReason) {
+      showPickToast(runBlockReason, false);
+      return;
+    }
+    if (isBlockageMode) toggleBlockageMode();
+    sim.handleRun();
+  };
+
+  const runBlockedClass = runBlockReason ? 'opacity-50 cursor-not-allowed' : '';
 
   const showResetDefault =
     (scenario === 'traffic' && (sim.trafficSourceId || sim.trafficDestinationIds.length > 0)) ||
@@ -1334,6 +1361,42 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                 </div>
               )}
 
+              {/* Pending topology edits HUD */}
+              {manualEditGraph !== null && !pickMode && !isBlockageMode && (
+                <div className={`absolute top-3 left-1/2 -translate-x-1/2 z-30 max-w-[95%] flex flex-wrap items-center justify-center gap-2.5 px-4 py-2 rounded-xl border backdrop-blur-md text-xs shadow-2xl animate-in fade-in slide-in-from-top-2 ${
+                  isLight
+                    ? 'border-emerald-500 bg-white/95 text-emerald-950 shadow-emerald-900/10'
+                    : 'border-emerald-500/60 bg-gray-950/90 text-emerald-200 shadow-emerald-950/50'
+                }`}>
+                  <span className="relative flex w-2.5 h-2.5 shrink-0">
+                    <span className="absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                    <span className="relative inline-flex w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                  </span>
+                  <span className="font-bold">The map is being modified</span>
+                  <span className={`hidden md:inline ${isLight ? 'text-emerald-700 font-semibold' : 'text-emerald-400/70'}`}>
+                    · Apply to update the simulation
+                  </span>
+                  <div className="flex items-center gap-2 ml-2">
+                    <button
+                      onClick={applyManualGraphEdits}
+                      className="px-3 py-1 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white font-bold cursor-pointer transition-colors shadow"
+                    >
+                      Apply Changes
+                    </button>
+                    <button
+                      onClick={() => setManualEditGraph(null)}
+                      className={`px-3 py-1 rounded-md font-bold cursor-pointer transition-colors ${
+                        isLight
+                          ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
+                          : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                      }`}
+                    >
+                      Discard
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {isBlockageMode && (
                 <div className={`absolute top-3 left-1/2 -translate-x-1/2 z-30 max-w-[95%] flex flex-wrap items-center justify-center gap-2 px-3.5 py-1.5 rounded-xl border backdrop-blur-md text-xs shadow-2xl animate-in fade-in slide-in-from-top-2 ${
                   isLight
@@ -1695,17 +1758,16 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     <Ico name="play" /> Resume
                   </button>
                 ) : sim.status === 'done' ? (
-                  <button disabled={sim.isComputing || sim.isGraphLoading} onClick={sim.handleRun} className={`${primaryBtnClass} bg-blue-600/20 border border-blue-500/60 text-blue-300 hover:bg-blue-600/40 hover:shadow-blue-900/40`}>
+                  <button disabled={sim.isComputing || sim.isGraphLoading} onClick={guardedRun} title={runBlockReason ?? undefined} aria-disabled={!!runBlockReason} className={`${primaryBtnClass} bg-blue-600/20 border border-blue-500/60 text-blue-300 hover:bg-blue-600/40 hover:shadow-blue-900/40 ${runBlockedClass}`}>
                     <Ico name="play" /> Replay
                   </button>
                 ) : (
                   <button
                     disabled={sim.isComputing || sim.isGraphLoading}
-                    onClick={() => {
-                      if (isBlockageMode) toggleBlockageMode();
-                      sim.handleRun();
-                    }}
-                    className={`${primaryBtnClass} bg-green-600/10 border border-green-500/60 text-green-400 hover:bg-green-600/30 hover:shadow-green-900/40`}
+                    onClick={guardedRun}
+                    title={runBlockReason ?? undefined}
+                    aria-disabled={!!runBlockReason}
+                    className={`${primaryBtnClass} bg-green-600/10 border border-green-500/60 text-green-400 hover:bg-green-600/30 hover:shadow-green-900/40 ${runBlockedClass}`}
                   >
                     {sim.isComputing ? (
                       <>
