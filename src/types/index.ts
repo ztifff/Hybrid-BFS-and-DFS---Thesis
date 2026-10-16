@@ -108,6 +108,18 @@ export interface AlgorithmStep {
   explored: string[];
   frontier: string[];
   frontierLength?: number;
+  frontierDecision?: {
+    pressure: number;
+    previousPressure: number;
+    frontierBeforeSelection: string[];
+    frontierSize: number;
+    budget: number;
+    sizePressure: number;
+    growthPressure: number;
+    selectedRank: number | null;
+    eligibleCount: number;
+    retryPriority: boolean;
+  };
   path: string[];
   current: string | null;
   done: boolean;

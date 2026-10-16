@@ -181,6 +181,21 @@ export const ExpertModePanel: React.FC<ExpertModePanelProps> = ({
   const step = activeSteps[selected] ?? null;
   const meta = ALGO_THEMES[selected];
   const path = step?.path ?? [];
+  const frontier = step?.frontier ?? [];
+  const frontierSize = step?.frontierLength ?? frontier.length;
+  const frontierDecision = selected === 'hybrid' ? step?.frontierDecision : undefined;
+  const displayFrontier = frontierDecision?.frontierBeforeSelection ?? frontier;
+  const displayFrontierSize = frontierDecision?.frontierSize ?? frontierSize;
+  const hiddenFrontierCount = Math.max(0, displayFrontierSize - displayFrontier.length);
+  const pressurePercent = Math.round((frontierDecision?.pressure ?? 0) * 100);
+  const pressureChange = frontierDecision
+    ? Math.round((frontierDecision.pressure - frontierDecision.previousPressure) * 100)
+    : 0;
+  const frontierOrderLabel = selected === 'bfs'
+    ? 'Queue · oldest → newest (FIFO)'
+    : selected === 'dfs'
+      ? 'Stack · oldest → newest (pop newest)'
+      : 'Hybrid frontier · oldest to newest';
 
   // Auto-scroll to the newest node, but only if the user is already near the bottom.
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -432,6 +447,151 @@ export const ExpertModePanel: React.FC<ExpertModePanelProps> = ({
               {step.phaseLabel}
             </div>
           )}
+
+          {/* Pending work is separate from the path already taken. */}
+          <div
+            className={`pt-1.5 border-t ${
+              isLight ? 'border-slate-200' : 'border-gray-800/60'
+            }`}
+          >
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <span className={`text-[10px] font-bold ${isLight ? 'text-slate-700' : 'text-gray-300'}`}>
+                {frontierOrderLabel}
+              </span>
+              <span className={`text-[9px] shrink-0 ${isLight ? 'text-slate-500' : 'text-gray-500'}`}>
+                {displayFrontierSize} waiting
+              </span>
+            </div>
+            <div className={`mb-1 text-[8px] ${isLight ? 'text-slate-500' : 'text-gray-500'}`}>
+              {frontierDecision
+                ? displayFrontier.includes(step.current ?? '')
+                  ? 'Decision snapshot before the pick; the highlighted node is selected.'
+                  : 'Decision snapshot before the pick; selected entry is in the omitted middle.'
+                : 'Current pending nodes; the active node is shown above.'}
+            </div>
+
+            {step.current && (
+              <div className={`mb-1.5 text-[9px] ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>
+                {frontierDecision ? 'Selected this step:' : 'Active node:'}{' '}
+                <button
+                  type="button"
+                  onClick={() => onNodeClick?.(step.current!)}
+                  className={`font-bold underline underline-offset-2 cursor-pointer ${isLight ? meta.text.light : meta.text.dark}`}
+                >
+                  {step.current}
+                </button>
+                <span className={`ml-1 ${isLight ? 'text-slate-400' : 'text-gray-500'}`}>
+                  {frontierDecision ? '(chosen for this expansion)' : selected === 'bfs' || selected === 'dfs' ? '(taken from the queue/stack)' : ''}
+                </span>
+              </div>
+            )}
+
+            {selected === 'dfs' && (
+              <div className={`mb-1 text-[9px] ${isLight ? 'text-purple-700' : 'text-purple-300'}`}>
+                Next pop is at the newest end →
+              </div>
+            )}
+            <div className={`flex items-center gap-1.5 overflow-x-auto py-1 ${isLight ? 'custom-scrollbar' : 'custom-scrollbar'}`}>
+              {displayFrontier.length === 0 ? (
+                <span className={`italic ${isLight ? 'text-slate-400' : 'text-gray-500'}`}>
+                  No nodes waiting
+                </span>
+              ) : (
+                <>
+                  {selected !== 'dfs' && (
+                    <span className={`text-[8px] shrink-0 ${isLight ? 'text-slate-500' : 'text-gray-500'}`}>
+                      front →
+                    </span>
+                  )}
+                  {displayFrontier.slice(0, 10).map((node, index) => (
+                    <button
+                      key={`frontier-${node}-${index}`}
+                      type="button"
+                      onClick={() => onNodeClick?.(node)}
+                      title={`Waiting node: ${getNodeLabel ? getNodeLabel(node) : node}`}
+                      className={`px-1.5 py-0.5 rounded border shrink-0 text-[9px] font-semibold cursor-pointer transition-colors ${
+                        frontierDecision && node === step.current
+                          ? isLight
+                            ? 'bg-amber-200 border-amber-500 text-amber-950 ring-2 ring-amber-300 font-extrabold'
+                            : 'bg-orange-500/30 border-orange-400 text-orange-100 ring-1 ring-orange-300 font-extrabold'
+                          : isLight
+                            ? 'bg-white border-slate-300 text-slate-700 hover:border-blue-400 hover:text-blue-700'
+                            : 'bg-gray-950/70 border-gray-700 text-gray-300 hover:border-blue-500 hover:text-blue-300'
+                      }`}
+                      aria-label={frontierDecision && node === step.current ? `${node}, selected this step` : `${node}, waiting`}
+                    >
+                      {node}
+                    </button>
+                  ))}
+                  {hiddenFrontierCount > 0 && (
+                    <span className={`px-1.5 shrink-0 text-[9px] ${isLight ? 'text-slate-500' : 'text-gray-500'}`}>
+                      … {hiddenFrontierCount} more …
+                    </span>
+                  )}
+                  {displayFrontier.slice(10).map((node, index) => (
+                    <button
+                      key={`frontier-tail-${node}-${index}`}
+                      type="button"
+                      onClick={() => onNodeClick?.(node)}
+                      title={`Waiting node: ${getNodeLabel ? getNodeLabel(node) : node}`}
+                      className={`px-1.5 py-0.5 rounded border shrink-0 text-[9px] font-semibold cursor-pointer transition-colors ${
+                        frontierDecision && node === step.current
+                          ? isLight
+                            ? 'bg-amber-200 border-amber-500 text-amber-950 ring-2 ring-amber-300 font-extrabold'
+                            : 'bg-orange-500/30 border-orange-400 text-orange-100 ring-1 ring-orange-300 font-extrabold'
+                          : isLight
+                            ? 'bg-white border-slate-300 text-slate-700 hover:border-blue-400 hover:text-blue-700'
+                            : 'bg-gray-950/70 border-gray-700 text-gray-300 hover:border-blue-500 hover:text-blue-300'
+                      }`}
+                      aria-label={frontierDecision && node === step.current ? `${node}, selected this step` : `${node}, waiting`}
+                    >
+                      {node}
+                    </button>
+                  ))}
+                  {selected === 'dfs' ? (
+                    <span className={`text-[8px] shrink-0 ${isLight ? 'text-purple-700' : 'text-purple-300'}`}>
+                      ← newest / next pop
+                    </span>
+                  ) : (
+                    <span className={`text-[8px] shrink-0 ${isLight ? 'text-slate-500' : 'text-gray-500'}`}>
+                      → back
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
+
+            {frontierDecision && (
+              <div className={`mt-1.5 rounded-md border p-2 ${isLight ? 'bg-amber-50/70 border-amber-200' : 'bg-orange-950/20 border-orange-900/60'}`}>
+                <div className="flex items-center justify-between gap-2">
+                  <span className={`font-bold ${isLight ? 'text-amber-900' : 'text-orange-300'}`}>
+                    Hybrid pressure
+                  </span>
+                  <span className={`font-bold tabular-nums ${isLight ? 'text-amber-900' : 'text-orange-200'}`}>
+                    {pressurePercent}% {pressureChange > 0 ? `(+${pressureChange})` : pressureChange < 0 ? `(${pressureChange})` : '(no change)'}
+                  </span>
+                </div>
+                <div className={`mt-1 h-1.5 rounded-full overflow-hidden ${isLight ? 'bg-amber-100' : 'bg-gray-800'}`}>
+                  <div className="h-full rounded-full bg-orange-500 transition-all" style={{ width: `${pressurePercent}%` }} />
+                </div>
+                <div className={`mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 ${isLight ? 'text-amber-900/80' : 'text-orange-200/80'}`}>
+                  <span>List: {frontierDecision.frontierSize} / budget {frontierDecision.budget} (soft reference)</span>
+                  <span>Size signal: {Math.round(frontierDecision.sizePressure * 100)}%</span>
+                  <span>Growth signal: {Math.round(frontierDecision.growthPressure * 100)}%</span>
+                </div>
+                <div className={`mt-1 ${isLight ? 'text-amber-900' : 'text-orange-200'}`}>
+                  {frontierDecision.retryPriority
+                    ? 'Pick reason: retry priority (pressure rank bypassed)'
+                    : frontierDecision.selectedRank !== null
+                      ? `Pick rank: ${frontierDecision.selectedRank + 1} of ${frontierDecision.eligibleCount} eligible entries`
+                      : 'Pick rank unavailable'}
+                </div>
+                <div className={`mt-1 text-[8px] ${isLight ? 'text-amber-800/70' : 'text-orange-200/60'}`}>
+                  New reading = 80% list fullness + 20% recent growth; pressure = 65% prior pressure + 35% new reading. Budget is a reference, not a cap.
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Scrollable full path trace */}
           <div
