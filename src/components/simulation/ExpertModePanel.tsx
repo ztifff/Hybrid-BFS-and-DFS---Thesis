@@ -188,14 +188,18 @@ export const ExpertModePanel: React.FC<ExpertModePanelProps> = ({
   const displayFrontierSize = frontierDecision?.frontierSize ?? frontierSize;
   const hiddenFrontierCount = Math.max(0, displayFrontierSize - displayFrontier.length);
   const pressurePercent = Math.round((frontierDecision?.pressure ?? 0) * 100);
-  const pressureChange = frontierDecision
-    ? Math.round((frontierDecision.pressure - frontierDecision.previousPressure) * 100)
-    : 0;
+  const hybridBias = frontierDecision
+    ? frontierDecision.pressure < 1 / 3
+      ? 'BFS-leaning'
+      : frontierDecision.pressure < 2 / 3
+        ? 'Balanced'
+        : 'DFS-leaning'
+    : null;
   const frontierOrderLabel = selected === 'bfs'
-    ? 'Queue · oldest → newest (FIFO)'
+    ? 'Queue'
     : selected === 'dfs'
-      ? 'Stack · oldest → newest (pop newest)'
-      : 'Hybrid frontier · oldest to newest';
+      ? 'Stack'
+      : 'Hybrid frontier';
 
   // Auto-scroll to the newest node, but only if the user is already near the bottom.
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -436,7 +440,7 @@ export const ExpertModePanel: React.FC<ExpertModePanelProps> = ({
             </div>
           </div>
 
-          {step.phaseLabel && (
+          {step.phaseLabel && !(selected === 'hybrid' && frontierDecision) && (
             <div
               className={`pt-1.5 break-words font-medium border-t ${
                 isLight
@@ -465,44 +469,22 @@ export const ExpertModePanel: React.FC<ExpertModePanelProps> = ({
             <div className={`mb-1 text-[8px] ${isLight ? 'text-slate-500' : 'text-gray-500'}`}>
               {frontierDecision
                 ? displayFrontier.includes(step.current ?? '')
-                  ? 'Decision snapshot before the pick; the highlighted node is selected.'
-                  : 'Decision snapshot before the pick; selected entry is in the omitted middle.'
-                : 'Current pending nodes; the active node is shown above.'}
+                  ? 'Before pick · highlighted node is selected'
+                  : 'Before pick · selected node is in the omitted middle'
+                : selected === 'bfs'
+                  ? 'Oldest at front → newest at back'
+                  : selected === 'dfs'
+                    ? 'Oldest at left → newest / next pop at right'
+                    : 'Current waiting list'}
             </div>
-
-            {step.current && (
-              <div className={`mb-1.5 text-[9px] ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>
-                {frontierDecision ? 'Selected this step:' : 'Active node:'}{' '}
-                <button
-                  type="button"
-                  onClick={() => onNodeClick?.(step.current!)}
-                  className={`font-bold underline underline-offset-2 cursor-pointer ${isLight ? meta.text.light : meta.text.dark}`}
-                >
-                  {step.current}
-                </button>
-                <span className={`ml-1 ${isLight ? 'text-slate-400' : 'text-gray-500'}`}>
-                  {frontierDecision ? '(chosen for this expansion)' : selected === 'bfs' || selected === 'dfs' ? '(taken from the queue/stack)' : ''}
-                </span>
-              </div>
-            )}
-
-            {selected === 'dfs' && (
-              <div className={`mb-1 text-[9px] ${isLight ? 'text-purple-700' : 'text-purple-300'}`}>
-                Next pop is at the newest end →
-              </div>
-            )}
-            <div className={`flex items-center gap-1.5 overflow-x-auto py-1 ${isLight ? 'custom-scrollbar' : 'custom-scrollbar'}`}>
+            <div className="flex items-center gap-1.5 overflow-x-auto py-1 custom-scrollbar">
               {displayFrontier.length === 0 ? (
                 <span className={`italic ${isLight ? 'text-slate-400' : 'text-gray-500'}`}>
                   No nodes waiting
                 </span>
               ) : (
                 <>
-                  {selected !== 'dfs' && (
-                    <span className={`text-[8px] shrink-0 ${isLight ? 'text-slate-500' : 'text-gray-500'}`}>
-                      front →
-                    </span>
-                  )}
+                  {selected !== 'dfs' && <span className={`text-[8px] shrink-0 ${isLight ? 'text-slate-500' : 'text-gray-500'}`}>front →</span>}
                   {displayFrontier.slice(0, 10).map((node, index) => (
                     <button
                       key={`frontier-${node}-${index}`}
@@ -550,7 +532,7 @@ export const ExpertModePanel: React.FC<ExpertModePanelProps> = ({
                   ))}
                   {selected === 'dfs' ? (
                     <span className={`text-[8px] shrink-0 ${isLight ? 'text-purple-700' : 'text-purple-300'}`}>
-                      ← newest / next pop
+                      ← newest / pop
                     </span>
                   ) : (
                     <span className={`text-[8px] shrink-0 ${isLight ? 'text-slate-500' : 'text-gray-500'}`}>
@@ -565,29 +547,22 @@ export const ExpertModePanel: React.FC<ExpertModePanelProps> = ({
               <div className={`mt-1.5 rounded-md border p-2 ${isLight ? 'bg-amber-50/70 border-amber-200' : 'bg-orange-950/20 border-orange-900/60'}`}>
                 <div className="flex items-center justify-between gap-2">
                   <span className={`font-bold ${isLight ? 'text-amber-900' : 'text-orange-300'}`}>
-                    Hybrid pressure
+                    Hybrid pressure · {hybridBias}
                   </span>
                   <span className={`font-bold tabular-nums ${isLight ? 'text-amber-900' : 'text-orange-200'}`}>
-                    {pressurePercent}% {pressureChange > 0 ? `(+${pressureChange})` : pressureChange < 0 ? `(${pressureChange})` : '(no change)'}
+                    {pressurePercent}%
                   </span>
                 </div>
                 <div className={`mt-1 h-1.5 rounded-full overflow-hidden ${isLight ? 'bg-amber-100' : 'bg-gray-800'}`}>
                   <div className="h-full rounded-full bg-orange-500 transition-all" style={{ width: `${pressurePercent}%` }} />
                 </div>
-                <div className={`mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 ${isLight ? 'text-amber-900/80' : 'text-orange-200/80'}`}>
-                  <span>List: {frontierDecision.frontierSize} / budget {frontierDecision.budget} (soft reference)</span>
-                  <span>Size signal: {Math.round(frontierDecision.sizePressure * 100)}%</span>
-                  <span>Growth signal: {Math.round(frontierDecision.growthPressure * 100)}%</span>
-                </div>
-                <div className={`mt-1 ${isLight ? 'text-amber-900' : 'text-orange-200'}`}>
+                <div className={`mt-1.5 flex flex-wrap justify-between gap-x-2 gap-y-0.5 ${isLight ? 'text-amber-900/80' : 'text-orange-200/80'}`}>
+                  <span>{frontierDecision.frontierSize} waiting · budget {frontierDecision.budget}</span>
                   {frontierDecision.retryPriority
-                    ? 'Pick reason: retry priority (pressure rank bypassed)'
+                    ? <span>Retry picked first</span>
                     : frontierDecision.selectedRank !== null
-                      ? `Pick rank: ${frontierDecision.selectedRank + 1} of ${frontierDecision.eligibleCount} eligible entries`
-                      : 'Pick rank unavailable'}
-                </div>
-                <div className={`mt-1 text-[8px] ${isLight ? 'text-amber-800/70' : 'text-orange-200/60'}`}>
-                  New reading = 80% list fullness + 20% recent growth; pressure = 65% prior pressure + 35% new reading. Budget is a reference, not a cap.
+                      ? <span>Pick {frontierDecision.selectedRank + 1} of {frontierDecision.eligibleCount}</span>
+                      : <span>Pick unavailable</span>}
                 </div>
               </div>
             )}
@@ -618,7 +593,7 @@ export const ExpertModePanel: React.FC<ExpertModePanelProps> = ({
             <div
               ref={scrollRef}
               onScroll={handleScroll}
-              className="max-h-[28vh] overflow-y-auto pr-1 custom-scrollbar"
+              className="max-h-[40vh] overflow-y-auto pr-1 custom-scrollbar"
             >
               {path.length === 0 ? (
                 <span className={`italic ${isLight ? 'text-slate-400' : 'text-gray-500'}`}>
