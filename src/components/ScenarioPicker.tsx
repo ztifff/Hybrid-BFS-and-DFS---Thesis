@@ -43,10 +43,23 @@ export const ScenarioPicker: React.FC<Props> = ({
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
 
+  // Theme-aware classes shared by the Terms / Privacy modals.
+  const modalPanelClass = isLight
+    ? 'bg-white text-slate-700 border border-slate-200 rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[90vh] overflow-hidden'
+    : 'bg-[#0d1224] text-gray-300 border border-gray-700 rounded-2xl shadow-[0_0_30px_rgba(0,0,0,0.8)] w-full max-w-3xl flex flex-col max-h-[90vh] overflow-hidden';
+  const modalHeaderClass = isLight
+    ? 'bg-slate-50 text-slate-900 border-b border-slate-200 px-6 py-4 flex items-center justify-between'
+    : 'bg-[#0a0f1e] text-white border-b border-gray-700 px-6 py-4 flex items-center justify-between';
+  const modalTitleClass = `text-xl font-bold tracking-widest uppercase ${isLight ? 'text-blue-600' : 'text-blue-400'}`;
+  const modalCloseClass = isLight
+    ? 'w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-900 flex items-center justify-center transition-colors cursor-pointer'
+    : 'w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer';
+  const modalStrongClass = isLight ? 'text-slate-900' : 'text-gray-100';
+
   useEffect(() => {
     const fetchScenarios = async () => {
       try {
-        const response = await fetch('https://backend-1e4y.onrender.com/api/scenarios');
+        const response = await fetch('/api/scenarios');
         if (!response.ok) return;
         const json = await response.json();
         if (json.success && Array.isArray(json.data)) {
@@ -299,21 +312,21 @@ export const ScenarioPicker: React.FC<Props> = ({
 
       {/* TERMS OF USE MODAL */}
       {isTermsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setIsTermsOpen(false)}>
-          <div className="bg-[#0d1224] text-gray-300 border border-gray-700 rounded-2xl shadow-[0_0_30px_rgba(0,0,0,0.8)] w-full max-w-3xl flex flex-col max-h-[90vh] overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="bg-[#0a0f1e] text-white border-b border-gray-700 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold tracking-widest uppercase text-blue-400" style={{ fontFamily: 'monospace' }}>TERMS OF USE</h2>
-              <button onClick={() => setIsTermsOpen(false)} className="w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer">
+        <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm ${isLight ? 'bg-slate-900/40' : 'bg-black/80'}`} onClick={() => setIsTermsOpen(false)}>
+          <div className={modalPanelClass} onClick={e => e.stopPropagation()}>
+            <div className={modalHeaderClass}>
+              <h2 className={modalTitleClass} style={{ fontFamily: 'monospace' }}>TERMS OF USE</h2>
+              <button onClick={() => setIsTermsOpen(false)} className={modalCloseClass}>
                 ✕
               </button>
             </div>
-            <div className="p-6 overflow-y-auto text-sm space-y-4" style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}>
-              <p>This Algorithm Benchmarking Tool is generously offered at no cost to the global Computer Science community. If you appreciate this tool, we kindly request that you <strong className="text-gray-100">spread the word about its existence to fellow Computer Science students and instructors.</strong> You can share this tool through social media platforms, course webpages, blog reviews, emails, and more.</p>
+            <div className="p-6 overflow-y-auto text-sm space-y-4" style={{ scrollbarWidth: 'thin', scrollbarColor: isLight ? '#cbd5e1 transparent' : '#4b5563 transparent' }}>
+              <p>This Algorithm Benchmarking Tool is generously offered at no cost to the global Computer Science community. If you appreciate this tool, we kindly request that you <strong className={modalStrongClass}>spread the word about its existence to fellow Computer Science students and instructors.</strong> You can share this tool through social media platforms, course webpages, blog reviews, emails, and more.</p>
               <p>Data Structures and Algorithms (DSA) students and instructors are welcome to use this website directly for their classes. If you capture screenshots or videos from this site, feel free to use them elsewhere, provided that you cite the URL of this website or the list of publications below as references. However, please refrain from downloading the client-side files and hosting them on your website, as this constitutes plagiarism.</p>
               <p>Please note that this evaluation tool has a substantial simulation engine, and it is not easy to save server-side scripts and databases locally. Currently, the general public can access the core pathfinding system only through the interactive mode.</p>
-              <h3 className="font-bold text-base mt-6 text-gray-100">List of Publications</h3>
+              <h3 className={`font-bold text-base mt-6 ${modalStrongClass}`}>List of Publications</h3>
               <p>This work is presented as an Academic Thesis for the evaluation of hybrid pathfinding algorithms. You can refer to our upcoming paper about this system for a detailed breakdown of the BFS, DFS, and Hybrid metrics.</p>
-              <h3 className="font-bold text-base mt-6 text-gray-100">Bug Reports or Request for New Features</h3>
+              <h3 className={`font-bold text-base mt-6 ${modalStrongClass}`}>Bug Reports or Request for New Features</h3>
               <p>This benchmarking tool is not a finished product. The developers are still actively improving the visualizations and analytics. If you are using this tool and spot a bug in any of our visualization pages or if you want to request for new features, please contact the authors.</p>
             </div>
           </div>
@@ -322,16 +335,16 @@ export const ScenarioPicker: React.FC<Props> = ({
 
       {/* PRIVACY POLICY MODAL */}
       {isPrivacyOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setIsPrivacyOpen(false)}>
-          <div className="bg-[#0d1224] text-gray-300 border border-gray-700 rounded-2xl shadow-[0_0_30px_rgba(0,0,0,0.8)] w-full max-w-3xl flex flex-col max-h-[90vh] overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="bg-[#0a0f1e] text-white border-b border-gray-700 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold tracking-widest uppercase text-blue-400" style={{ fontFamily: 'monospace' }}>PRIVACY POLICY</h2>
-              <button onClick={() => setIsPrivacyOpen(false)} className="w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer">
+        <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm ${isLight ? 'bg-slate-900/40' : 'bg-black/80'}`} onClick={() => setIsPrivacyOpen(false)}>
+          <div className={modalPanelClass} onClick={e => e.stopPropagation()}>
+            <div className={modalHeaderClass}>
+              <h2 className={modalTitleClass} style={{ fontFamily: 'monospace' }}>PRIVACY POLICY</h2>
+              <button onClick={() => setIsPrivacyOpen(false)} className={modalCloseClass}>
                 ✕
               </button>
             </div>
-            <div className="p-6 overflow-y-auto text-sm space-y-4" style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 transparent' }}>
-              <p className="font-bold text-gray-100 border-b border-gray-800 pb-2">Version 1.0 (Updated {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })})</p>
+            <div className="p-6 overflow-y-auto text-sm space-y-4" style={{ scrollbarWidth: 'thin', scrollbarColor: isLight ? '#cbd5e1 transparent' : '#4b5563 transparent' }}>
+              <p className={`font-bold border-b pb-2 ${modalStrongClass} ${isLight ? 'border-slate-200' : 'border-gray-800'}`}>Version 1.0 (Updated {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })})</p>
               <p>Since the initial deployment, we do not use Google Analytics or invasive tracking scripts. Thus, all cookies that we use now are solely for the operations of this website. The annoying cookie-consent popup is now turned off even for first-time visitors.</p>
               <p>Since this is an Academic Thesis project, anyone in the world can self-create a local benchmarking session to test algorithms on various topologies (e.g., Datacenters, Robotics, ISP Networks, Traffic, Game AI).</p>
               <p>Additionally, for students and researchers, by using the export features, you are taking a localized copy of your data. We do not store any personal data on our server side. Your simulation logs and performance evaluations are kept on your local machine.</p>

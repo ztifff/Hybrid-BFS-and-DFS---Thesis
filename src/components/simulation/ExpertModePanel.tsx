@@ -221,6 +221,20 @@ export const ExpertModePanel: React.FC<ExpertModePanelProps> = ({
     stickToBottom.current = true;
   }, [selected]);
 
+  // Auto-scroll the horizontal waiting list as it changes: keep the Hybrid-selected
+  // chip centered when present, otherwise follow the newest (back) end.
+  const frontierScrollRef = useRef<HTMLDivElement>(null);
+  const frontierKey = displayFrontier.join('|');
+  useEffect(() => {
+    const el = frontierScrollRef.current;
+    if (!el) return;
+    const target = el.querySelector<HTMLElement>('[data-frontier-selected="true"]');
+    const left = target
+      ? target.offsetLeft - (el.clientWidth - target.offsetWidth) / 2
+      : el.scrollWidth;
+    el.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+  }, [frontierKey, displayFrontierSize, step?.current, selected]);
+
   const getChipStyle = (node: string, isLast: boolean) => {
     const isHighlighted = highlightedNodeId === node;
     if (isHighlighted) {
@@ -477,7 +491,7 @@ export const ExpertModePanel: React.FC<ExpertModePanelProps> = ({
                     ? 'Oldest at left → newest / next pop at right'
                     : 'Current waiting list'}
             </div>
-            <div className="flex items-center gap-1.5 overflow-x-auto py-1 custom-scrollbar">
+            <div ref={frontierScrollRef} className="relative flex items-center gap-1.5 overflow-x-auto py-1 custom-scrollbar">
               {displayFrontier.length === 0 ? (
                 <span className={`italic ${isLight ? 'text-slate-400' : 'text-gray-500'}`}>
                   No nodes waiting
@@ -490,6 +504,7 @@ export const ExpertModePanel: React.FC<ExpertModePanelProps> = ({
                       key={`frontier-${node}-${index}`}
                       type="button"
                       onClick={() => onNodeClick?.(node)}
+                      data-frontier-selected={frontierDecision && node === step.current ? 'true' : undefined}
                       title={`Waiting node: ${getNodeLabel ? getNodeLabel(node) : node}`}
                       className={`px-1.5 py-0.5 rounded border shrink-0 text-[9px] font-semibold cursor-pointer transition-colors ${
                         frontierDecision && node === step.current
@@ -515,6 +530,7 @@ export const ExpertModePanel: React.FC<ExpertModePanelProps> = ({
                       key={`frontier-tail-${node}-${index}`}
                       type="button"
                       onClick={() => onNodeClick?.(node)}
+                      data-frontier-selected={frontierDecision && node === step.current ? 'true' : undefined}
                       title={`Waiting node: ${getNodeLabel ? getNodeLabel(node) : node}`}
                       className={`px-1.5 py-0.5 rounded border shrink-0 text-[9px] font-semibold cursor-pointer transition-colors ${
                         frontierDecision && node === step.current
