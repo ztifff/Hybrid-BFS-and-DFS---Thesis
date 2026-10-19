@@ -272,7 +272,7 @@ export function useSimulationViewLogic(scenario: ScenarioType, sim: any) {
   }, [scenario]);
 
   const previewDynamicEvents = useMemo(() => {
-    if (sim.status !== 'idle' && sim.simResults) {
+    if (draftBlockedNodes === null && sim.status !== 'idle' && sim.simResults) {
       return (sim.simResults.hybrid.dynamicEvents || []).map((e: any) => {
         if (e.label && e.label.includes(' at ')) return e;
         const node = sim.currentGraph?.nodes.find((n: any) => n.id === e.nodeId);

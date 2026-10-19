@@ -25,7 +25,7 @@ import { ExpertModePanel } from './ExpertModePanel';
 import { TopologyEditor } from './TopologyEditor';
 import { ThemeToggle } from '../ThemeToggle';
 import { useTheme } from '../../context/ThemeContext';
-import { PenLine, Move, Save, Check, RotateCcw } from 'lucide-react';
+import { PenLine, RotateCcw } from 'lucide-react';
 
 const SIZE_ADJUSTER_THEME: Record<string, { border: string; text: string }> = {
   robotics: { border: 'focus-within:border-orange-500', text: 'text-orange-300' },
@@ -680,13 +680,30 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
         : current.map(b => b.nodeId === nodeId ? { nodeId, label: labelWithNode } : b)
       : [...current, { nodeId, label: labelWithNode }];
 
-    if (sim.status === 'paused') sim.preservePausedProgressForEdit();
+    // Only update the draft; the simulation recalculates once on Done.
     setDraftBlockedNodes(next);
+  };
+
+  const blockedSignature = (list: { nodeId: string; label: string }[]) =>
+    list.map(b => `${b.nodeId}::${b.label}`).sort().join('|');
+  const hasPendingBlockageChanges =
+    draftBlockedNodes !== null &&
+    blockedSignature(draftBlockedNodes) !== blockedSignature((sim as any).customBlockedNodes ?? []);
+
+  const commitBlockageDraft = () => {
+    if (!setCustomBlocked || draftBlockedNodes === null || !hasPendingBlockageChanges) return;
+    const next = draftBlockedNodes;
+    if (sim.status === 'paused') sim.preservePausedProgressForEdit();
     setCustomBlocked(() => next);
   };
 
+  const discardBlockageDraft = () => {
+    setDraftBlockedNodes(null);
+    setIsBlockageMode(false);
+  };
+
   const toggleBlockageMode = () => {
-    if (blockageDisabled) return;
+    if (!isBlockageMode && blockageDisabled) return;
     if (!isBlockageMode) {
       cancelPicking();
       const existing: { nodeId: string; label: string }[] = (sim as any).customBlockedNodes ?? [];
@@ -699,6 +716,8 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
       setDraftBlockedNodes(normalized);
       setIsBlockageMode(true);
     } else {
+      // Leaving the editor (Done / toolbar toggle) applies the draft once.
+      commitBlockageDraft();
       setDraftBlockedNodes(null);
       setIsBlockageMode(false);
     }
@@ -747,7 +766,15 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
       showPickToast(runBlockReason, false);
       return;
     }
-    if (isBlockageMode) toggleBlockageMode();
+    if (isBlockageMode) {
+      if (hasPendingBlockageChanges) {
+        // Apply the pending blockages first; the route needs to recalculate before running.
+        toggleBlockageMode();
+        showPickToast('Blockages applied — press Run again once the route updates.', true);
+        return;
+      }
+      discardBlockageDraft();
+    }
     sim.handleRun();
   };
 
@@ -1422,18 +1449,15 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                     </button>
                   ))}
                   <span className={`ml-1 text-xs ${isLight ? 'text-amber-800 font-semibold' : 'text-amber-300/80'}`}>
-                    {sim.isComputing ? 'Updating route…' : `Click nodes to apply immediately (${blockedList.length} blocked)`}
+                    {sim.isComputing
+                      ? 'Updating route…'
+                      : `Click nodes to mark blockages (${blockedList.length} blocked${hasPendingBlockageChanges ? ' · unapplied' : ''})`}
                   </span>
                   
                   <div className="flex items-center gap-2 ml-2">
                     {blockedList.length > 0 && setCustomBlocked && (
                       <button
-                        onClick={() => {
-                          if (sim.isComputing) return;
-                          if (sim.status === 'paused') sim.preservePausedProgressForEdit();
-                          setDraftBlockedNodes([]);
-                          setCustomBlocked(() => []);
-                        }}
+                        onClick={() => setDraftBlockedNodes([])}
                         disabled={sim.isComputing}
                         className={`px-2.5 py-1 rounded-md border font-bold cursor-pointer transition-colors ${
                           isLight
@@ -1445,67 +1469,28 @@ export const SimulationView: React.FC<Props> = ({ scenario, onBack }) => {
                       </button>
                     )}
                     <button
-                      onClick={toggleBlockageMode}
-                      className="px-3.5 py-1 rounded-md bg-amber-600 hover:bg-amber-500 text-white font-bold cursor-pointer transition-colors shadow-lg shadow-amber-500/20"
+                      onClick={discardBlockageDraft}
+                      className={`px-2.5 py-1 rounded-md border font-bold cursor-pointer transition-colors ${
+                        isLight
+                          ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700'
+                          : 'bg-gray-800 hover:bg-gray-700 border-gray-600 text-gray-300'
+                      }`}
+                      title="Exit without applying changes"
                     >
-                      Exit
+                      Cancel
+                    </button>
+                    <button
+                      onClick={toggleBlockageMode}
+                      disabled={sim.isComputing}
+                      className="px-3.5 py-1 rounded-md bg-amber-600 hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold cursor-pointer transition-colors shadow-lg shadow-amber-500/20"
+                      title={hasPendingBlockageChanges ? 'Apply blockages and recalculate the route' : 'Exit blockage mode'}
+                    >
+                      Done
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* Floating Move Mode Action Banner */}
-              {placementMode?.type === 'move' && (
-                <div className={`absolute top-3 left-1/2 -translate-x-1/2 z-30 max-w-[95%] flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl border backdrop-blur-md text-xs shadow-2xl animate-in fade-in slide-in-from-top-2 ${
-                  isLight
-                    ? 'border-indigo-500 bg-white/95 text-indigo-950 shadow-indigo-900/10'
-                    : 'border-indigo-500/60 bg-gray-950/95 text-indigo-200 shadow-indigo-950/50'
-                }`}>
-                  <div className="flex items-center gap-1.5 font-bold whitespace-nowrap text-[11px] sm:text-xs">
-                    <Move className="w-3.5 h-3.5 text-indigo-500 animate-pulse shrink-0" />
-                    <span>Move Mode: Drag nodes to position</span>
-                  </div>
-
-                  <div className={`h-3.5 w-px ${isLight ? 'bg-slate-300' : 'bg-white/20'} shrink-0`} />
-
-                  <button
-                    type="button"
-                    onClick={handleSavePositions}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer shadow-sm whitespace-nowrap ${
-                      isSavedRecently
-                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/30'
-                        : hasUnsavedChanges
-                          ? isLight
-                            ? 'bg-blue-600 hover:bg-blue-700 text-white ring-2 ring-blue-400/50 shadow-md shadow-blue-500/20'
-                            : 'bg-blue-600 hover:bg-blue-500 text-white ring-2 ring-blue-400/40 shadow-blue-500/30'
-                          : isLight
-                            ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300'
-                            : 'bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700'
-                    }`}
-                    title="Save all node positions to persist even after reloading the page"
-                  >
-                    {isSavedRecently ? (
-                      <>
-                        <Check className="w-3.5 h-3.5 text-white" />
-                        <span>Saved ✓</span>
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-3.5 h-3.5" />
-                        <span>{hasUnsavedChanges ? 'Save Positions •' : 'Save Positions'}</span>
-                      </>
-                    )}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setPlacementModeSafe(null)}
-                    className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold cursor-pointer transition-colors shadow-lg shadow-indigo-500/20 whitespace-nowrap text-xs"
-                  >
-                    Done
-                  </button>
-                </div>
-              )}
               {canvasGraph ? (
                 <>
                   <NetworkCanvas
