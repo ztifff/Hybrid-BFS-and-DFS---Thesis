@@ -33,6 +33,10 @@ export const CanvasControls: React.FC<CanvasControlsProps> = ({
   const visibleEnabledCount = (['bfs', 'dfs', 'hybrid'] as const).filter(
     algo => visibleAlgos[algo] && (activeAlgorithms ? activeAlgorithms[algo] : true),
   ).length;
+  const algoLabels = { bfs: 'BFS', dfs: 'DFS', hybrid: 'HYB' } as const;
+  const algoText = { bfs: 'text-green-600', dfs: 'text-purple-600', hybrid: 'text-orange-600' } as const;
+  const algoTextDark = { bfs: 'text-green-400', dfs: 'text-purple-400', hybrid: 'text-orange-400' } as const;
+  const pillBase = 'h-5 min-w-[34px] px-1.5 rounded-full border-2 text-[9px] font-extrabold tracking-wider leading-none flex items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2';
 
   return (
     <>
@@ -45,7 +49,7 @@ export const CanvasControls: React.FC<CanvasControlsProps> = ({
             const isVisible = visibleAlgos[algo];
             const isLastVisible = isVisible && isEnabled && visibleEnabledCount <= 1;
             const ring = { bfs: 'border-green-500', dfs: 'border-purple-500', hybrid: 'border-orange-500' }[algo];
-            return <React.Fragment key={algo}>{index > 0 && <span className={`h-3 w-px ${isLight ? 'bg-slate-300' : 'bg-gray-700'}`} />}<button type="button" aria-label={`${isVisible ? 'Hide' : 'Show'} ${algo.toUpperCase()} on canvas`} aria-pressed={isVisible} title={!isEnabled ? `${algo.toUpperCase()} is disabled in the algorithm selector` : isLastVisible ? `At least one algorithm must stay visible` : `${isVisible ? 'Hide' : 'Show'} ${algo.toUpperCase()}`} disabled={!isEnabled || isLastVisible} onClick={() => toggleAlgo(algo)} className={`h-5 w-5 rounded-full border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${ring} ${isVisible && isEnabled ? colors[algo] : `${isLight ? 'bg-white' : 'bg-gray-950'} opacity-50`} ${isEnabled && !isLastVisible ? 'cursor-pointer hover:scale-110' : 'cursor-not-allowed opacity-30'}`} /></React.Fragment>;
+            return <React.Fragment key={algo}>{index > 0 && <span className={`h-3 w-px ${isLight ? 'bg-slate-300' : 'bg-gray-700'}`} />}<button type="button" aria-label={`${isVisible ? 'Hide' : 'Show'} ${algo.toUpperCase()} on canvas`} aria-pressed={isVisible} title={!isEnabled ? `${algo.toUpperCase()} is disabled in the algorithm selector` : isLastVisible ? `At least one algorithm must stay visible` : `${isVisible ? 'Hide' : 'Show'} ${algo.toUpperCase()}`} disabled={!isEnabled || isLastVisible} onClick={() => toggleAlgo(algo)} className={`${pillBase} ${ring} ${isVisible && isEnabled ? `${colors[algo]} text-white` : `${isLight ? `bg-white ${algoText[algo]}` : `bg-gray-950 ${algoTextDark[algo]}`} opacity-60`} ${isEnabled && !isLastVisible ? 'cursor-pointer hover:scale-110' : 'cursor-not-allowed opacity-40'}`}>{algoLabels[algo]}</button></React.Fragment>;
           })}
         </div>
       </div>
@@ -58,7 +62,7 @@ export const CanvasControls: React.FC<CanvasControlsProps> = ({
             const isFollowing = followAlgo === algo;
             const isVisible = visibleAlgos[algo];
             const ring = { bfs: 'border-green-500', dfs: 'border-purple-500', hybrid: 'border-orange-500' }[algo];
-            return <React.Fragment key={algo}>{index > 0 && <span className={`h-3 w-px ${isLight ? 'bg-slate-300' : 'bg-gray-700'}`} />}<button type="button" aria-label={`${isFollowing ? 'Stop following' : 'Follow'} ${algo.toUpperCase()}`} aria-pressed={isFollowing} title={!isEnabled ? `${algo.toUpperCase()} is disabled in the algorithm selector` : !isVisible ? `Show ${algo.toUpperCase()} before following it` : `${isFollowing ? 'Stop following' : 'Follow'} ${algo.toUpperCase()}`} disabled={!isVisible || !isEnabled} onClick={() => setFollowAlgo(isFollowing ? null : algo)} className={`h-5 w-5 rounded-full border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${ring} ${isFollowing ? colors[algo] : `${isLight ? 'bg-white' : 'bg-gray-950'}`} ${isVisible && isEnabled ? 'cursor-pointer hover:scale-110' : 'cursor-not-allowed opacity-30'}`} /></React.Fragment>;
+            return <React.Fragment key={algo}>{index > 0 && <span className={`h-3 w-px ${isLight ? 'bg-slate-300' : 'bg-gray-700'}`} />}<button type="button" aria-label={`${isFollowing ? 'Stop following' : 'Follow'} ${algo.toUpperCase()}`} aria-pressed={isFollowing} title={!isEnabled ? `${algo.toUpperCase()} is disabled in the algorithm selector` : !isVisible ? `Show ${algo.toUpperCase()} before following it` : `${isFollowing ? 'Stop following' : 'Follow'} ${algo.toUpperCase()}`} disabled={!isVisible || !isEnabled} onClick={() => setFollowAlgo(isFollowing ? null : algo)} className={`${pillBase} ${ring} ${isFollowing ? `${colors[algo]} text-white` : `${isLight ? `bg-white ${algoText[algo]}` : `bg-gray-950 ${algoTextDark[algo]}`}`} ${isVisible && isEnabled ? 'cursor-pointer hover:scale-110' : 'cursor-not-allowed opacity-30'}`}>{algoLabels[algo]}</button></React.Fragment>;
           })}
         </div>
       </div>

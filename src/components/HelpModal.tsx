@@ -288,13 +288,13 @@ export const HelpModal: React.FC<Props> = ({ scenario, onClose, onStartTutorial 
           {tab === 'canvas' && (
             <>
               <Section title="Show Panel (Top-Left of Canvas)">
-                <p className="text-sm text-gray-400 mb-2">Use the three always-visible circles below <strong>SHOW</strong> to toggle each algorithm's path coloring on the canvas. A filled circle means that algorithm is visible; hover to see its name.</p>
+                <p className="text-sm text-gray-400 mb-2">Use the three labeled buttons (BFS, DFS, HYB) below <strong>SHOW</strong> to toggle each algorithm's path coloring on the canvas. A filled button means that algorithm is visible.</p>
                 <Item label="BFS / DFS / Hybrid toggle" icon="👁️">Click to hide or show that algorithm's explored regions, path lines, and search head rings. Useful for isolating one algorithm for comparison — e.g., hide BFS and DFS to see only the Hybrid path in orange.</Item>
                 <Item label="ON / OFF indicator">Shows the current visibility state. Dot color matches the algorithm's color scheme.</Item>
               </Section>
               <Section title="Follow Panel (Top-Right of Canvas)">
-                <p className="text-sm text-gray-400 mb-2">Use the three always-visible circles below <strong>FOLLOW</strong> to choose which algorithm's search head the camera tracks. A filled circle marks the selected algorithm; hover to see its name.</p>
-                <Item label="Stop Following">Click the selected circle again to release camera control. Following also stops automatically when you drag the canvas.</Item>
+                <p className="text-sm text-gray-400 mb-2">Use the three labeled buttons (BFS, DFS, HYB) below <strong>FOLLOW</strong> to choose which algorithm's search head the camera tracks. A filled button marks the selected algorithm.</p>
+                <Item label="Stop Following">Click the selected button again to release camera control. Following also stops automatically when you drag the canvas.</Item>
               </Section>
               <Section title="Zoom Controls (Bottom-Right of Canvas)">
                 <Item label="+ Button" icon="🔍">Zooms into the canvas at the current view center (1.5× per click).</Item>

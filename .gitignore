@@ -55,4 +55,9 @@ __pycache__/
 
 # scratch & QA output folders
 scratch/
-docx_qa_*/
+docx_qa_*/# one-off fix scripts
+fix_*.cjs
+
+# manuscript notes / change logs
+*Manuscript*.md
+*manuscript*.md
